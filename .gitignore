@@ -1,0 +1,36 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Dependencies
+/vendor/
+/node_modules/
+
+# Build output
+/public/build/
+/public/hot
+
+# Runtime
+/storage/*.key
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+/writable/cache/*
+/writable/logs/*
+/writable/session/*
+
+# Uploads (stored outside web root in production)
+/storage/app/uploads/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+
+# Local Claude settings
+.claude/settings.local.json
