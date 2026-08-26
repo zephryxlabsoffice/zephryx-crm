@@ -53,19 +53,16 @@ class ClientPresenter
     }
 
     /**
-     * A stable identity tint for a client, derived from the name.
-     *
-     * Derived rather than assigned so the same client always gets the same
-     * colour and the eighth one does not fall through to a default — the
-     * handover hand-numbered av-1..av-7 against seven sample rows.
+     * Identity tint and initial. Shared with every other list that shows an
+     * avatar — see App\Support\Avatar.
      */
     public static function tint(string $name): string
     {
-        return 'tint-'.((crc32(mb_strtolower(trim($name))) % 7) + 1);
+        return Avatar::tint($name);
     }
 
     public static function initial(string $name): string
     {
-        return mb_strtoupper(mb_substr(trim($name), 0, 1)) ?: '?';
+        return Avatar::letter($name);
     }
 }

@@ -695,6 +695,39 @@ pagination, KPI tiles, rail cards and quick-action tiles are in
 `components/ui.css`; only the grid, identity tints and meeting rows are in
 `pages/clients.css`.
 
+### Employees (decided 2026-08-26)
+
+Structurally parallel to Clients, and mostly built from the shared components
+that module produced. New pieces: the stacked name/staff-ID cell, the
+department donut, and the person rows used by the rail lists.
+
+- **The legend uses classes, not `style="--dot:#15A848"`.** The handover set
+  each department's colour with an inline style attribute, which our
+  Content-Security-Policy blocks outright (§6) — the legend would have rendered
+  colourless. Departments are master data, so the palette cycles by position
+  rather than being keyed to a fixed list of names; the ninth department still
+  gets a colour.
+- **The donut's arcs are computed from the data.** The handover's SVG had fixed
+  segments that would not have matched real headcounts. A unit test asserts the
+  segments tile the full circle and each starts where the last ended.
+- **The donut is `aria-hidden` and the legend is a real list.** A chart that is
+  the only source of its own numbers is unreadable to a screen reader and to
+  anyone who cannot separate the colours.
+- **Birthdays render empty.** Date of birth is a field this module does not
+  have yet; a wrong birthday is worse than an absent one.
+- **"20% vs last month" is dropped, not zeroed.** Nothing records last month's
+  headcount, so the comparison cannot exist yet in any form.
+- **`white-space: nowrap` is on the name column only.** The handover put it on
+  every cell, which is what forced the horizontal scroll. The identity column
+  is the one people scan, so it holds its line; everything else may wrap, and
+  the email truncates with the full address in its `title` and `href`.
+- **Import and Export render disabled.** Import creates accounts and needs
+  per-row validation, a dry-run and an audit entry; export of the staff list
+  carries personal data. Both need their own permission first.
+
+Avatars, tints and person rows moved from `pages/clients.css` into
+`components/ui.css` — they belong to every list that shows a name.
+
 ### Viewport fit on mobile (decided 2026-08-26)
 
 Every public page fits the phone viewport without scrolling. Verified at

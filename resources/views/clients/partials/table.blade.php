@@ -63,17 +63,17 @@
                     <tr role="row">
                         <td role="cell" class="cell-lead" data-label="Client">
                             <a class="row-link cl-name" href="{{ route('clients.show', ['client' => \Illuminate\Support\Str::slug($client['name'])]) }}">
-                                <span class="cl-avatar {{ P::tint($client['name']) }}" aria-hidden="true">{{ P::initial($client['name']) }}</span>
+                                <span class="avatar {{ P::tint($client['name']) }}" aria-hidden="true">{{ P::initial($client['name']) }}</span>
                                 <strong>{{ $client['name'] }}</strong>
                             </a>
                         </td>
                         <td role="cell" data-label="Industry">{{ $client['industry'] }}</td>
                         <td role="cell" data-label="Project">{{ $client['project'] }}</td>
-                        <td role="cell" data-label="Status">
+                        <td role="cell" class="cell-tight" data-label="Status">
                             <span class="pill {{ $statusPill['tone'] }}">{{ $statusPill['label'] }}</span>
                         </td>
-                        <td role="cell" data-label="Last activity">{{ $client['activity'] }}</td>
-                        <td role="cell" data-label="Payment">
+                        <td role="cell" class="cell-tight" data-label="Last activity">{{ $client['activity'] }}</td>
+                        <td role="cell" class="cell-tight" data-label="Payment">
                             <span class="pill {{ $paymentPill['tone'] }}">{{ $paymentPill['label'] }}</span>
                         </td>
                         <td role="cell" class="cell-actions">

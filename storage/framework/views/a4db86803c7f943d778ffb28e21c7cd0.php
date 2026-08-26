@@ -56,17 +56,17 @@
                     <tr role="row">
                         <td role="cell" class="cell-lead" data-label="Client">
                             <a class="row-link cl-name" href="<?php echo e(route('clients.show', ['client' => \Illuminate\Support\Str::slug($client['name'])])); ?>">
-                                <span class="cl-avatar <?php echo e(P::tint($client['name'])); ?>" aria-hidden="true"><?php echo e(P::initial($client['name'])); ?></span>
+                                <span class="avatar <?php echo e(P::tint($client['name'])); ?>" aria-hidden="true"><?php echo e(P::initial($client['name'])); ?></span>
                                 <strong><?php echo e($client['name']); ?></strong>
                             </a>
                         </td>
                         <td role="cell" data-label="Industry"><?php echo e($client['industry']); ?></td>
                         <td role="cell" data-label="Project"><?php echo e($client['project']); ?></td>
-                        <td role="cell" data-label="Status">
+                        <td role="cell" class="cell-tight" data-label="Status">
                             <span class="pill <?php echo e($statusPill['tone']); ?>"><?php echo e($statusPill['label']); ?></span>
                         </td>
-                        <td role="cell" data-label="Last activity"><?php echo e($client['activity']); ?></td>
-                        <td role="cell" data-label="Payment">
+                        <td role="cell" class="cell-tight" data-label="Last activity"><?php echo e($client['activity']); ?></td>
+                        <td role="cell" class="cell-tight" data-label="Payment">
                             <span class="pill <?php echo e($paymentPill['tone']); ?>"><?php echo e($paymentPill['label']); ?></span>
                         </td>
                         <td role="cell" class="cell-actions">

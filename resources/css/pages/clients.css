@@ -32,42 +32,8 @@
   transition: color 0.14s;
 }
 
-/* ── identity tints ──
-   Decorative, and deliberately not brand green: a wall of identical green
-   circles is no easier to scan than no avatars at all. The tint is derived
-   from the client's name in PHP, so it is stable for a given client and there
-   is no eighth client falling through to a default.
-
-   These are literal values rather than tokens because they are one closed
-   palette used in one place; promoting them to tokens would imply they carry
-   meaning elsewhere. */
-.cl-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-  font-size: 13px;
-  flex-shrink: 0;
-  color: var(--avatar-fg);
-  background: var(--avatar-bg);
-}
-.cl-avatar.tint-1 { --avatar-fg: #15A848; --avatar-bg: #DFF3E6; }
-.cl-avatar.tint-2 { --avatar-fg: #B86A1E; --avatar-bg: #FDEBD4; }
-.cl-avatar.tint-3 { --avatar-fg: #2563EB; --avatar-bg: #DBEAFE; }
-.cl-avatar.tint-4 { --avatar-fg: #16A34A; --avatar-bg: #DCFCE7; }
-.cl-avatar.tint-5 { --avatar-fg: #D97706; --avatar-bg: #FEF3C7; }
-.cl-avatar.tint-6 { --avatar-fg: #4F46E5; --avatar-bg: #E0E7FF; }
-.cl-avatar.tint-7 { --avatar-fg: #DB2777; --avatar-bg: #FCE7F3; }
-
-[data-theme="dark"] .cl-avatar.tint-1 { --avatar-fg: #4FC97A; --avatar-bg: #16321F; }
-[data-theme="dark"] .cl-avatar.tint-2 { --avatar-fg: #F2A65A; --avatar-bg: #2B2010; }
-[data-theme="dark"] .cl-avatar.tint-3 { --avatar-fg: #60A5FA; --avatar-bg: #142036; }
-[data-theme="dark"] .cl-avatar.tint-4 { --avatar-fg: #66D182; --avatar-bg: #0F2417; }
-[data-theme="dark"] .cl-avatar.tint-5 { --avatar-fg: #FBBF24; --avatar-bg: #2A1F10; }
-[data-theme="dark"] .cl-avatar.tint-6 { --avatar-fg: #A5B4FC; --avatar-bg: #1A1F38; }
-[data-theme="dark"] .cl-avatar.tint-7 { --avatar-fg: #F472B6; --avatar-bg: #2A1226; }
+/* Avatars and their tints are shared by every list that shows a name — see
+   components/ui.css. */
 
 /* ── meetings rail ── */
 /* Flex with wrap rather than three fixed grid columns: in a 300px rail the
