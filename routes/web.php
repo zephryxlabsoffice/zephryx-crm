@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ModulePlaceholderController;
 use App\Http\Controllers\ShellPreferenceController;
@@ -86,8 +87,11 @@ Route::post('/shell', [ShellPreferenceController::class, 'store'])
 
 Route::get('/dashboard', fn () => app(ModulePlaceholderController::class)('dashboard'))->name('dashboard');
 
+Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
+Route::get('/clients/create', fn () => app(ModulePlaceholderController::class)('clients'))->name('clients.create');
+Route::get('/clients/{client}', fn () => app(ModulePlaceholderController::class)('clients'))->name('clients.show');
+
 foreach ([
-    'clients' => 'clients.index',
     'employees' => 'employees.index',
     'teams' => 'teams.index',
     'projects' => 'projects.index',

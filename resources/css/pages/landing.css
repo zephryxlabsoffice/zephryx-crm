@@ -271,7 +271,7 @@
   }
   .hero-title { font-size: clamp(40px, 5vw, 60px); margin-bottom: 22px; }
   .hero-lede { font-size: 16px; margin-bottom: 32px; }
-  .btn { min-width: 170px; padding: 14px 24px; font-size: 15px; }
+  .cta { min-width: 170px; padding: 14px 24px; font-size: 15px; }
   .cta-row { margin-bottom: 48px; }
 
   .hero-visual { height: 520px; }
@@ -342,7 +342,7 @@
     gap: 10px;
     margin-bottom: 0;
   }
-  .btn { width: 100%; }
+  .cta { width: 100%; }
 
   .info-strip {
     max-width: 100%;

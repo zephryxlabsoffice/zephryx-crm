@@ -158,11 +158,26 @@ function initNotifications() {
     }
 }
 
+/* ── filter controls ─────────────────────────────────────────────────────── */
+
+/**
+ * Submits a list's filter form as soon as a select changes, so choosing a
+ * status does not also need a click on "Search". An enhancement only — the
+ * submit button is always there, and inline `onchange` is not an option under
+ * our Content-Security-Policy.
+ */
+function initAutoSubmit() {
+    document.querySelectorAll('[data-auto-submit]').forEach((control) => {
+        control.addEventListener('change', () => control.form?.submit());
+    });
+}
+
 /* ── boot ────────────────────────────────────────────────────────────────── */
 
 function init() {
     initSidebar();
     initNotifications();
+    initAutoSubmit();
 }
 
 if (document.readyState === 'loading') {

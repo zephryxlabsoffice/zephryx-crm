@@ -1,0 +1,550 @@
+/* ============================================================================
+   App UI primitives.
+
+   Taken from the handover (refference/clients.css), but these are not
+   Clients-page styles: buttons, fields, tables, pagination, KPI tiles and rail
+   cards are what every module is built from. Only genuinely Clients-specific
+   rules live in pages/clients.css.
+
+   `.cta` on the public pages is a different, larger button — see base.css.
+   ========================================================================= */
+
+/* ─────────────────────────  buttons  ───────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 18px;
+  height: 44px;
+  border-radius: var(--r-btn);
+  font: 600 14px/1 var(--font-sans);
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  white-space: nowrap;
+  transition: transform 0.14s, box-shadow 0.14s, background-color 0.14s, color 0.14s;
+}
+.btn svg { width: 18px; height: 18px; }
+
+.btn-primary {
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 8px 18px -8px color-mix(in oklab, var(--green) 70%, transparent);
+}
+.btn-primary:hover {
+  background: var(--green-2);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px -8px color-mix(in oklab, var(--green) 80%, transparent);
+}
+
+.btn-outline {
+  background: var(--surface);
+  color: var(--ink-2);
+  border-color: var(--line-strong);
+}
+.btn-outline:hover {
+  border-color: var(--ink-3);
+  background: var(--surface-2);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-2);
+  border-color: transparent;
+}
+.btn-ghost:hover { background: var(--surface-2); }
+
+/* A disabled control must not merely look dimmer — it must not respond to the
+   pointer either, or people keep clicking it. */
+.btn[disabled],
+.btn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+/* ─────────────────────────  page header  ───────────────────────── */
+.page-hd-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+.page-hd-row .page-hd { margin-bottom: 0; flex: 1; min-width: 240px; }
+.hd-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────  inline fields  ───────────────────────── */
+.search-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-btn);
+  padding: 0 14px;
+  height: 38px;
+  min-width: 200px;
+  transition: border-color 0.14s, box-shadow 0.14s;
+}
+.search-input:focus-within {
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--green) 14%, transparent);
+}
+.search-input svg { width: 15px; height: 15px; color: var(--muted); flex-shrink: 0; }
+.search-input input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: 500 13px/1 var(--font-sans);
+  color: var(--ink);
+}
+.search-input input::placeholder { color: var(--muted-2); }
+
+.chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-btn);
+  font: 500 13px/1 var(--font-sans);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color 0.14s, background 0.14s;
+}
+.chip-btn:hover { border-color: var(--line-strong); background: var(--surface-2); }
+.chip-btn svg { width: 14px; height: 14px; color: var(--muted); }
+
+.chip-btn-accent {
+  color: var(--green);
+  border-color: var(--green-soft);
+  background: var(--green-tint);
+}
+.chip-btn-accent:hover { background: var(--green-soft); border-color: var(--green); }
+
+/* ─────────────────────────  data table  ───────────────────────── */
+.table-card { display: flex; flex-direction: column; }
+.table-card .card-hd {
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 20px 22px 16px;
+}
+.table-card .card-hd > .card-title { flex-shrink: 0; }
+.table-tools {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.data-table thead th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.data-table thead th:first-child { padding-left: 22px; }
+.data-table thead th:last-child { padding-right: 22px; text-align: right; }
+
+.data-table tbody td {
+  padding: 16px 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13.5px;
+  color: var(--ink-2);
+  vertical-align: middle;
+}
+.data-table tbody td:first-child { padding-left: 22px; }
+.data-table tbody td:last-child { padding-right: 22px; text-align: right; }
+.data-table tbody tr:last-child td { border-bottom: 0; }
+.data-table tbody tr { transition: background 0.14s; }
+.data-table tbody tr:hover { background: var(--green-tint); }
+/* The handover put `cursor: pointer` on the row. A row is not focusable and
+   cannot be opened from the keyboard, so the pointer is on the link inside it
+   instead — the whole row is not actually clickable. */
+.data-table a.row-link { color: inherit; }
+.data-table a.row-link:hover strong { color: var(--green); }
+
+.row-menu {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-grid;
+  place-items: center;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+}
+.row-menu:hover { background: var(--surface-2); color: var(--ink); }
+.row-menu svg { width: 16px; height: 16px; }
+
+.table-empty {
+  padding: 56px 22px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+.table-empty strong {
+  display: block;
+  color: var(--ink);
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+/* ─────────────────────────  pagination  ───────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 22px 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.pagination-meta {
+  font-size: 13px;
+  color: var(--muted);
+}
+.pagination-pages {
+  display: flex;
+  gap: 6px;
+}
+.pg-btn {
+  appearance: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font: 600 12.5px/1 var(--font-sans);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color 0.14s, background 0.14s, color 0.14s;
+}
+.pg-btn:hover { border-color: var(--line-strong); background: var(--surface-2); }
+.pg-btn.active {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+}
+.pg-btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.pg-btn svg { width: 14px; height: 14px; }
+.pg-ellipsis {
+  padding: 0 4px;
+  color: var(--muted);
+  align-self: center;
+  font-weight: 600;
+}
+
+/* ─────────────────────────  KPI tiles  ───────────────────────── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--density-gap);
+  margin-bottom: var(--density-gap);
+}
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 22px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+.kpi-ic {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--green-soft);
+  color: var(--green);
+}
+.kpi-ic svg { width: 28px; height: 28px; }
+.kpi-ic.tone-soft   { background: var(--green-softer);      color: var(--green); }
+.kpi-ic.tone-warn   { background: var(--warning-soft);      color: var(--warning); }
+.kpi-ic.tone-accent { background: var(--accent-blue-soft);  color: var(--accent-blue); }
+
+.kpi-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.kpi-lbl {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.kpi-val {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  line-height: 1;
+}
+.kpi-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.kpi-sub.up { color: var(--green); }
+.kpi-sub.down { color: var(--danger); }
+.kpi-sub svg { width: 12px; height: 12px; }
+
+/* ─────────────────────────  right rail  ───────────────────────── */
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-gap);
+  min-width: 0;
+}
+.rail-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 18px 20px;
+}
+.rail-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.rail-hd strong {
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+.rail-empty {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 0;
+  padding: 10px 0 4px;
+}
+
+/* rows shared by the rail lists */
+.rail-list { display: flex; flex-direction: column; }
+.rail-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.rail-row:last-child { border-bottom: 0; }
+.rail-ic {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--green-soft);
+  color: var(--green);
+}
+.rail-ic svg { width: 16px; height: 16px; }
+.rail-ic.tone-accent { background: var(--accent-blue-soft);   color: var(--accent-blue); }
+.rail-ic.tone-alt    { background: var(--accent-purple-soft); color: var(--accent-purple); }
+.rail-ic.tone-warn   { background: var(--warning-soft);       color: var(--warning); }
+.rail-body { flex: 1; min-width: 0; }
+.rail-body strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+}
+.rail-body span {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.rail-time {
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────  quick actions  ───────────────────────── */
+.qa-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.qa-tile {
+  appearance: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.14s, border-color 0.14s, box-shadow 0.14s;
+  text-align: center;
+  font-family: inherit;
+}
+.qa-tile:hover {
+  transform: translateY(-1px);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-pop);
+}
+.qa-ic {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--green-soft);
+  color: var(--green);
+}
+.qa-ic svg { width: 18px; height: 18px; }
+.qa-tile.tone-warn   .qa-ic { background: var(--warning-soft);       color: var(--warning); }
+.qa-tile.tone-accent .qa-ic { background: var(--accent-blue-soft);   color: var(--accent-blue); }
+.qa-tile.tone-danger .qa-ic { background: var(--danger-soft);        color: var(--danger); }
+.qa-tile.tone-alt    .qa-ic { background: var(--accent-indigo-soft); color: var(--accent-indigo); }
+.qa-tile span {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  letter-spacing: -0.005em;
+  line-height: 1.25;
+}
+
+/* ─────────────────────────  responsive  ───────────────────────── */
+@media (max-width: 980px) {
+  .kpi { padding: 18px; gap: 14px; }
+  .kpi-ic { width: 54px; height: 54px; }
+  .kpi-ic svg { width: 24px; height: 24px; }
+  .kpi-val { font-size: 24px; }
+  .data-table thead th,
+  .data-table tbody td { padding: 12px 8px; }
+  .data-table thead th:first-child,
+  .data-table tbody td:first-child { padding-left: 16px; }
+  .data-table thead th:last-child,
+  .data-table tbody td:last-child { padding-right: 16px; }
+}
+
+/* ── the table becomes cards on a phone ──
+   The handover kept the table and scrolled it sideways at `min-width: 680px`.
+   On a 390px screen that hides four of seven columns behind a swipe *per row*.
+   Below 760px each row becomes a card instead, so every field is readable and
+   nothing scrolls horizontally.
+
+   Setting `display: block` on table elements drops their implicit ARIA roles,
+   which is why the markup states role="table"/"row"/"cell" explicitly — the
+   structure still reads correctly to a screen reader either way. */
+@media (max-width: 760px) {
+  .data-table-stack thead { display: none; }
+
+  .data-table-stack,
+  .data-table-stack tbody,
+  .data-table-stack tr,
+  .data-table-stack td {
+    display: block;
+    width: 100%;
+  }
+
+  .data-table-stack tr {
+    border: 1px solid var(--line);
+    border-radius: var(--r-card);
+    padding: 14px 16px;
+    margin: 0 16px 12px;
+    width: auto;
+    background: var(--surface);
+  }
+  .data-table-stack tbody tr:hover { background: var(--surface); }
+
+  .data-table-stack td {
+    border-bottom: 0;
+    padding: 5px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    text-align: right;
+  }
+  .data-table-stack td:first-child,
+  .data-table-stack td:last-child { padding-left: 0; padding-right: 0; }
+
+  /* The column name, since the header row is gone. */
+  .data-table-stack td::before {
+    content: attr(data-label);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--muted);
+    flex-shrink: 0;
+    text-align: left;
+  }
+
+  /* The client's name leads the card: full width, no label, no repetition. */
+  .data-table-stack td.cell-lead {
+    justify-content: flex-start;
+    padding-bottom: 10px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+  }
+  .data-table-stack td.cell-lead::before { content: none; }
+
+  /* Row actions sit with the name rather than as a labelled field. */
+  .data-table-stack td.cell-actions {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: auto;
+    padding: 0;
+  }
+  .data-table-stack td.cell-actions::before { content: none; }
+  .data-table-stack tr { position: relative; }
+}
+
+@media (max-width: 760px) {
+  .page-hd-row { flex-direction: column; }
+  .hd-actions { width: 100%; }
+  .hd-actions .btn { flex: 1; }
+  .table-tools { width: 100%; margin-left: 0; }
+  /* Sharing a line with the status select and the submit button leaves the
+     search box about 50px wide. It takes the row. */
+  .table-tools .search-input { flex: 1 1 100%; min-width: 0; }
+  .table-tools .chip-btn { flex: 1 1 auto; justify-content: center; }
+  .qa-grid { grid-template-columns: repeat(2, 1fr); }
+  .pagination { justify-content: center; }
+  .pagination-meta { width: 100%; text-align: center; }
+}

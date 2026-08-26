@@ -654,6 +654,47 @@ The shell also collided with existing class names. `.card` and `.topbar` are
 now the app shell's; the landing page's became `.hero-card*` and
 `.public-topbar`.
 
+### Clients (decided 2026-08-26)
+
+**Build order follows the sidebar, not §12's dependency order** — the owner
+asked for it so progress is easy to track against the navigation. Clients is
+safe to take first: it depends on nothing that must exist. Dashboard stays last
+regardless, since it is assembled from other modules.
+
+- **Every figure comes from data.** The handover hardcoded `58+`, `42`,
+  `₹1,85,000` and `12` tickets. Three of the four KPIs are sourced from modules
+  that do not exist (Invoices, Tickets) and read zero until they land.
+  `App\Support\Demo\DemoClients` supplies sample rows for design review and is
+  inert outside local + debug, like the login `?preview=` states.
+- **Search, status filter and pagination are real** and operate on whatever
+  collection they are handed, so swapping the source for an Eloquent query is a
+  one-method change. They live in the URL as a GET form, so a filtered list can
+  be bookmarked and shared, and paging preserves the filter.
+- **The table becomes cards below 760px.** The handover kept seven columns and
+  scrolled sideways at `min-width: 680px`, which on a phone hides four columns
+  behind a swipe *per row*. Roles are stated explicitly in the markup because
+  `display: block` drops a table's implicit ARIA semantics.
+- **"View All" became "Clear filters"**, and only appears when a filter is on —
+  beside a search box on the clients list it had nothing to view-all *to*.
+- **Identity tints are derived from the name**, not hand-assigned. The handover
+  numbered `av-1`..`av-7` against exactly seven sample rows; the eighth client
+  would have had none.
+- **Rows are not clickable; the name is a link.** A `<tr>` cannot be focused or
+  opened from the keyboard, so `cursor: pointer` on it promised something it
+  could not deliver.
+- **Quick actions are links, not buttons** — each one navigates.
+- **Export renders disabled.** It streams a whole table out of the building, so
+  it needs its own permission and an audit entry (§6) before it does anything.
+
+**Class reconciliation.** `refference/clients.css` redefined `.btn`,
+`.btn-primary` and `.btn-outline`, which the landing page already used at a
+larger size. The public pages' call-to-action buttons are now `.cta*`, and
+`.btn*` belongs to the app, where every module will use it. The handover's
+`clients.css` was mostly *not* Clients-specific — buttons, search field, table,
+pagination, KPI tiles, rail cards and quick-action tiles are in
+`components/ui.css`; only the grid, identity tints and meeting rows are in
+`pages/clients.css`.
+
 ### Viewport fit on mobile (decided 2026-08-26)
 
 Every public page fits the phone viewport without scrolling. Verified at

@@ -47,6 +47,22 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Currency
+    |--------------------------------------------------------------------------
+    |
+    | Single-currency by design: this is one company's internal software, not a
+    | product sold across markets. Amounts are stored as integer minor units to
+    | avoid float rounding on invoices and payroll.
+    |
+    */
+
+    'currency' => [
+        'code' => env('ZEPHRYX_CURRENCY', 'INR'),
+        'symbol' => env('ZEPHRYX_CURRENCY_SYMBOL', '₹'),
+    ],
+
     'theme' => [
         'default'     => 'dark',
         'available'   => ['dark', 'light'],

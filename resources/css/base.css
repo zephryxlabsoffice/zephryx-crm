@@ -74,7 +74,7 @@ a { text-decoration: none; color: inherit; }
 .skip-link:focus { top: 16px; }
 
 /* ── buttons ── */
-.btn {
+.cta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -92,23 +92,23 @@ a { text-decoration: none; color: inherit; }
               background-color var(--dur-fast) ease, color var(--dur-fast) ease;
 }
 
-.btn-primary {
+.cta-primary {
   background: var(--green);
   color: #fff;
   box-shadow: 0 10px 22px -10px color-mix(in oklab, var(--green) 75%, transparent);
 }
-.btn-primary:hover {
+.cta-primary:hover {
   background: var(--green-2);
   transform: translateY(-1px);
   box-shadow: 0 14px 28px -10px color-mix(in oklab, var(--green) 80%, transparent);
 }
 
-.btn-outline {
+.cta-outline {
   background: transparent;
   color: var(--green);
   border-color: var(--green);
 }
-.btn-outline:hover {
+.cta-outline:hover {
   background: var(--green-soft);
   transform: translateY(-1px);
 }
@@ -185,5 +185,5 @@ a { text-decoration: none; color: inherit; }
   .public-topbar .brand-mark { width: 36px; height: 36px; }
   .brand-name { font-size: 20px; }
   .theme-toggle { width: 38px; height: 38px; }
-  .btn { min-width: 0; padding: 15px 20px; font-size: 15px; }
+  .cta { min-width: 0; padding: 15px 20px; font-size: 15px; }
 }
