@@ -87,7 +87,9 @@
             </span>
             <input type="password"
                    name="password_confirmation"
-                   placeholder="Confirm new password"
+                   {{-- Shorter than the label on purpose: the full wording runs
+                        under the reveal button on a 320px screen. --}}
+                   placeholder="Confirm password"
                    autocomplete="new-password"
                    required>
 

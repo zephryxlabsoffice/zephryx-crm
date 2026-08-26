@@ -68,6 +68,13 @@ class LandingPageTest extends TestCase
         $this->assertSame(0, preg_match_all('/<script(?![^>]*\ssrc=)/i', $html), 'inline <script> block');
     }
 
+    public function test_it_carries_the_body_class_the_viewport_fit_rules_need(): void
+    {
+        // resources/css/pages/landing.css scopes its 100dvh rule to this class;
+        // losing it would silently reintroduce mobile scrolling.
+        $this->get('/')->assertSee('class="landing-body"', false);
+    }
+
     public function test_it_is_not_indexed(): void
     {
         // Internal software, not a marketing surface (spec §1 non-goals).

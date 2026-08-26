@@ -1,6 +1,7 @@
 @extends('layouts.public')
 
 @section('title', 'ZephryxLabs CRM — Build Stronger Relationships')
+@section('body-class', 'landing-body')
 @section('description', 'The ZephryxLabs workspace — projects, teams, invoices and support in one place.')
 
 @php

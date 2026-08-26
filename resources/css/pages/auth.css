@@ -13,6 +13,9 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: 100vh;
+  /* dvh, not vh: on mobile the address bar shrinks and grows, and 100vh is the
+     *tallest* state — using it would push the submit button under the bar. */
+  min-height: 100dvh;
 }
 
 /* The auth pages paint the form panel edge to edge rather than sitting on the
@@ -468,54 +471,150 @@ body.auth-body { background: var(--surface); }
 
 /* ─────────────────────  stacked  ───────────────────── */
 @media (max-width: 900px) {
+  /* The page is sized to fit the viewport without scrolling. It is a
+     min-height, never a fixed height with hidden overflow: in landscape, or
+     with a large system font, the content must still be reachable rather than
+     clipped under the fold. */
   .auth {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto;
+    grid-template-rows: auto 1fr;
   }
-  .visual-panel {
-    padding: 36px 20px 60px;
-    min-height: 58vh;
-  }
-  .composition { width: min(380px, 92%); }
-  .lightning-badge {
-    width: 72px;
-    height: 72px;
-    left: -3%;
-    bottom: 10%;
-  }
-  .lightning-badge svg { width: 32px; height: 32px; }
 
-  /* The form rises over the green panel as a rounded sheet. */
+  /* The green panel is decorative, so it yields the space. A 4/5 card needs
+     height a phone does not have; on this band it becomes landscape. */
+  .visual-panel {
+    padding: 18px 20px 44px;
+    min-height: 0;
+    height: clamp(190px, 30dvh, 290px);
+  }
+  .composition {
+    height: 100%;
+    width: auto;
+    max-width: 92%;
+    aspect-ratio: 4 / 3;
+    max-height: none;
+  }
+  .manifesto {
+    top: 10%;
+    left: 8%;
+    right: 30%;
+  }
+  .manifesto span { font-size: clamp(22px, 6.4vw, 30px); }
+  .lightning-badge {
+    width: 62px;
+    height: 62px;
+    left: -3%;
+    bottom: 8%;
+  }
+  .lightning-badge svg { width: 28px; height: 28px; }
+
+  /* The form rises over the green panel as a rounded sheet, and takes all the
+     height the panel gave up. */
   .form-panel {
     border-radius: 32px 32px 0 0;
     margin-top: -32px;
-    padding: 48px 28px 40px;
+    padding: 34px 24px 26px;
     z-index: 5;
     box-shadow: 0 -24px 48px -24px rgba(15, 30, 22, 0.12);
+    align-content: center;
   }
-  .form-panel .theme-toggle-slot { top: 16px; right: 16px; }
+  .form-panel .theme-toggle-slot { top: 14px; right: 14px; }
 
-  .auth-form { gap: 20px; max-width: 100%; }
-  .form-brand .brand-mark { width: 56px; height: 56px; }
-  .auth-heading { font-size: 19px; }
-  .field { height: 62px; padding: 0 24px; gap: 14px; }
+  .auth-form { gap: 16px; max-width: 100%; }
+  .form-brand .brand-mark { width: 52px; height: 52px; }
+  .auth-heading { font-size: 19px; margin: -2px 0 2px; }
+  .auth-subheading { font-size: 14px; margin: -8px 0 2px; }
+  .field { height: 60px; padding: 0 24px; gap: 14px; }
   .field-ic svg { width: 20px; height: 20px; }
   .field input { font-size: 15px; }
-  .btn-auth { width: 100%; max-width: 280px; height: 56px; }
+  .field-hint { margin: -10px 0 0 24px; font-size: 12.5px; }
+  .field-error { margin-top: -8px; }
+  .btn-auth { width: 100%; max-width: 280px; height: 54px; margin-top: 4px; }
   .otp-row input { width: 48px; height: 58px; font-size: 21px; }
+  .form-foot { margin-top: 2px; }
 }
 
 @media (max-width: 480px) {
-  .visual-panel { padding: 28px 16px 56px; min-height: 52vh; }
-  .composition  { width: 95%; }
-  .manifesto    { top: 10%; left: 8%; right: 45%; }
-  .manifesto span { font-size: clamp(28px, 8.5vw, 40px); }
-  .lightning-badge { width: 62px; height: 62px; left: -2%; bottom: 8%; }
-  .lightning-badge svg { width: 26px; height: 26px; }
-  .form-panel { padding: 40px 20px 32px; }
-  .field { height: 58px; padding: 0 22px; gap: 12px; }
+  .visual-panel { padding: 16px 16px 40px; height: clamp(170px, 27dvh, 250px); }
+  .lightning-badge { width: 56px; height: 56px; left: -2%; bottom: 8%; }
+  .lightning-badge svg { width: 24px; height: 24px; }
+  .form-panel { padding: 30px 20px 24px; }
+  .field { height: 56px; padding: 0 22px; gap: 12px; }
   .field-error { margin-left: 22px; }
-  .btn-auth { width: 100%; max-width: 240px; height: 54px; }
+  .field-hint { margin-left: 22px; }
+  .btn-auth { width: 100%; max-width: 240px; height: 52px; }
   .otp-row { gap: 7px; }
   .otp-row input { width: 44px; height: 54px; font-size: 19px; }
+}
+
+/* Six fixed-width boxes plus gaps stop fitting below ~360px. Size them off the
+   viewport so the row always fits rather than pushing the page sideways. */
+@media (max-width: 380px) {
+  .otp-row { gap: clamp(4px, 1.8vw, 7px); }
+  .otp-row input {
+    width: clamp(38px, 11.5vw, 44px);
+    height: 50px;
+    font-size: 18px;
+  }
+}
+
+/* ── short viewports ──
+   Height, not width, is what runs out on a phone. Two tiers. */
+
+/* Tier 1 — a smaller or older handset (≈360×640). Everything still fits;
+   the decoration just gives up more room. */
+@media (max-width: 900px) and (max-height: 740px) {
+  .visual-panel { height: clamp(130px, 22dvh, 180px); padding: 14px 18px 34px; }
+
+  /* The band is now too short for a 4/3 card — holding the ratio would squeeze
+     it to ~120px wide, which puts the badge on top of the manifesto. Let the
+     card fill the band instead, and drop the badge: there is no room for it
+     that is not on top of something else. */
+  .composition {
+    width: 100%;
+    max-width: 460px;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+  .glass-card { border-radius: 24px; }
+  .manifesto {
+    top: 50%;
+    transform: translateY(-50%);
+    left: 7%;
+    right: 38%;
+  }
+  .manifesto span { font-size: clamp(17px, 5vw, 22px); }
+  .hero-figure { inset: 8% 5% 8% 58%; }
+  .lightning-badge { display: none; }
+  .form-panel { padding: 26px 20px 20px; }
+  .auth-form { gap: 14px; }
+  .form-brand .brand-mark { width: 46px; height: 46px; }
+  .field { height: 56px; }
+  .btn-auth { height: 50px; margin-top: 2px; }
+  .otp-row input { height: 54px; }
+}
+
+/* Tier 1b — a very small handset (≈320×568). Squeeze the spacing, but never
+   the content: the OTP page's masked address and the reset page's hint are the
+   only guidance those screens carry, so they stay. */
+@media (max-width: 900px) and (max-height: 620px) {
+  .visual-panel { height: clamp(100px, 16dvh, 140px); padding: 12px 16px 30px; }
+  .form-panel { padding: 20px 18px 16px; }
+  .auth-form { gap: 12px; }
+  .form-brand .brand-mark { width: 40px; height: 40px; }
+  .auth-heading { font-size: 18px; }
+  .auth-subheading { font-size: 13px; }
+  .field { height: 52px; }
+  .field-hint { font-size: 12px; margin-top: -8px; }
+  .btn-auth { height: 48px; }
+  .otp-row input { height: 46px; }
+}
+
+/* Tier 2 — a phone in landscape. No arrangement fits here, so stop
+   pretending: drop the decoration to a token strip and let the form scroll
+   rather than clipping the submit button out of reach. */
+@media (max-width: 900px) and (max-height: 560px) {
+  .visual-panel { height: 90px; padding: 10px 16px 24px; }
+  .composition { display: none; }
+  .form-panel { align-content: start; }
 }

@@ -545,6 +545,12 @@ made during implementation:
   cell stacks its icon above the text.
 - **A theme toggle was added to the topbar.** §7 requires one; the handover's
   landing nav carries the brand only.
+- **The hero composition is hidden on phones.** Decided 2026-08-26: the public
+  pages must fit the viewport without scrolling. The floating-card visual costs
+  ~360px — more than everything the page actually says — and is already
+  `aria-hidden` ornament, so below 760px it gives way to the copy, the calls to
+  action and the feature strip. The tagline card (the handover's own
+  mobile-specific element) stays, and is itself dropped below 720px of height.
 
 On the login page (§9.2):
 
@@ -590,3 +596,25 @@ On the password reset pages (§4.6, §4.7):
 - **The reset token route is constrained** to `[A-Za-z0-9._-]{1,128}`, so
   anything unexpected 404s at the router instead of reaching a view that
   echoes it into a hidden input.
+
+### Viewport fit on mobile (decided 2026-08-26)
+
+Every public page fits the phone viewport without scrolling. Verified at
+320×568, 360×640, 375×667, 390×844, 412×915, 430×932 and 768×1024 — zero
+vertical or horizontal overflow on any of the five pages.
+
+Three rules govern this and should be kept when new surfaces are added:
+
+1. **`dvh`, never `vh`.** `100vh` on mobile is the *address-bar-hidden* height,
+   so a `100vh` layout pushes its primary action under the bar.
+2. **`min-height`, never a fixed height with hidden overflow.** In landscape,
+   or with a large system font, the content must stay reachable. Below 560px of
+   viewport height the auth pages deliberately give up and scroll rather than
+   clip the submit button out of reach.
+3. **Decoration yields first, content never.** The green panel shrinks to a
+   band and drops its lightning badge; the landing hero composition disappears
+   entirely. The OTP page's masked address and the reset page's password hint
+   stay at every size — they are the only guidance those screens carry.
+
+Height, not width, is what runs out on a phone, so the auth breakpoints are
+tiered on `max-height` (740px, 620px, 560px) rather than width alone.

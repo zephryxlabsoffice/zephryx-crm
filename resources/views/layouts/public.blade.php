@@ -20,7 +20,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body>
+<body class="@yield('body-class')">
     <a class="skip-link" href="#main">Skip to content</a>
 
     <div class="container">

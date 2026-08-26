@@ -97,7 +97,8 @@ unset($__errorArgs, $__bag); ?>
             </span>
             <input type="password"
                    name="password_confirmation"
-                   placeholder="Confirm new password"
+                   
+                   placeholder="Confirm password"
                    autocomplete="new-password"
                    required>
 

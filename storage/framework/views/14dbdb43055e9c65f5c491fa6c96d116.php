@@ -1,4 +1,5 @@
 <?php $__env->startSection('title', 'ZephryxLabs CRM — Build Stronger Relationships'); ?>
+<?php $__env->startSection('body-class', 'landing-body'); ?>
 <?php $__env->startSection('description', 'The ZephryxLabs workspace — projects, teams, invoices and support in one place.'); ?>
 
 <?php

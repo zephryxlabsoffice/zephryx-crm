@@ -306,15 +306,26 @@
 
 /* ─────────────────  mobile: < 760 (single column)  ───────────────── */
 @media (max-width: 760px) {
+  /* The page is sized to fit the viewport without scrolling. dvh, not vh: on
+     mobile 100vh is the address-bar-hidden height, which would push the CTAs
+     below the fold. It stays a min-height so nothing is ever clipped. */
+  .landing-body { min-height: 100dvh; }
+
   .hero {
     grid-template-columns: 1fr;
-    gap: 28px;
-    padding: 16px 0 32px;
+    gap: 24px;
+    padding: 12px 0 24px;
     min-height: 0;
     align-items: stretch;
   }
-  .hero-copy   { order: 1; }
-  .hero-visual { order: 2; }
+  .hero-copy { order: 1; }
+
+  /* The floating-card composition costs ~360px — more than everything the
+     page actually needs to say. It is decorative and already aria-hidden, so
+     on a phone it gives way to the copy, the calls to action and the feature
+     strip, which is the whole job of this page. The tagline card below stays;
+     it is the handover's mobile-specific element. */
+  .hero-visual { display: none; }
 
   .hero-title {
     font-size: clamp(40px, 11.5vw, 56px);
@@ -332,48 +343,6 @@
     margin-bottom: 0;
   }
   .btn { width: 100%; }
-
-  .hero-visual {
-    height: clamp(360px, 95vw, 440px);
-    margin: 0;
-    overflow: visible;
-  }
-  .hero-art {
-    top: 0;
-    right: -12px;
-    bottom: 0;
-    width: 58%;
-    height: 100%;
-  }
-  .card-sales {
-    width: min(280px, 78%);
-    top: 12px;
-    left: 0;
-    padding: 16px 18px;
-    border-radius: 18px;
-  }
-  .card-sales .spark { height: 62px; }
-  .card-sales .card-title { font-size: 14px; }
-  .card-sales .card-pct { font-size: 13px; }
-  .card-sales .spark-axis span { font-size: 10px; }
-
-  .card-activity {
-    width: min(250px, 72%);
-    bottom: 24px;
-    left: 16px;
-    top: auto;
-    padding: 14px 16px;
-    border-radius: 18px;
-  }
-  .card-activity .card-title { font-size: 14px; }
-  .card-activity .act-ic { width: 30px; height: 30px; }
-  .card-activity .act-ic svg { width: 14px; height: 14px; }
-  .card-activity .act-txt strong { font-size: 12.5px; }
-  .card-activity .act-txt span { font-size: 11px; }
-
-  .float-badge { right: 8px; top: 48%; width: 50px; height: 50px; }
-  .float-badge svg { width: 22px; height: 22px; }
-  .decor-rings { display: none; }
 
   .info-strip {
     max-width: 100%;
@@ -398,21 +367,6 @@
 @media (max-width: 420px) {
   .hero { gap: 24px; }
 
-  .hero-visual { height: 360px; }
-  .card-sales {
-    width: min(240px, 76%);
-    padding: 14px 16px;
-  }
-  .card-sales .spark { height: 54px; }
-  .card-activity {
-    width: min(220px, 72%);
-    bottom: 16px;
-    left: 8px;
-    padding: 12px 14px;
-  }
-  .float-badge { width: 44px; height: 44px; right: 4px; }
-  .float-badge svg { width: 20px; height: 20px; }
-
   .info-strip { padding: 18px 6px; }
   .info-item {
     flex-direction: column;
@@ -430,4 +384,17 @@
   .tagline-ic { width: 44px; height: 44px; }
   .tagline-ic svg { width: 22px; height: 22px; }
   .tagline-card p { font-size: 14px; }
+}
+
+/* ─────────────────  short viewports  ─────────────────
+   On a smaller handset the tagline card is what has to go: it restates the
+   lede, so losing it costs the reader nothing, while losing the calls to
+   action below the fold would cost them the page's only purpose. */
+@media (max-width: 760px) and (max-height: 720px) {
+  .tagline-card { display: none; }
+  .topbar { padding: 16px 0 4px; }
+  .hero { gap: 18px; padding: 8px 0 16px; }
+  .hero-title { margin-bottom: 14px; }
+  .hero-lede { margin-bottom: 20px; }
+  .info-strip { padding: 16px 8px; margin-bottom: 8px; }
 }
