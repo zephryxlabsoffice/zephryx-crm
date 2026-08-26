@@ -272,6 +272,14 @@ body.auth-body { background: var(--surface); }
 .eye-toggle[aria-pressed="true"] .icon-show { display: none; }
 .eye-toggle[aria-pressed="true"] .icon-hide { display: block; }
 
+/* Guidance under a field — not an error, so it stays quiet. */
+.field-hint {
+  margin: -14px 0 0 30px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
 /* ── options row ── */
 .form-row {
   display: flex;

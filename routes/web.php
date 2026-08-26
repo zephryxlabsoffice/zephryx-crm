@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Route;
@@ -46,3 +47,15 @@ Route::post('/login/verify', [LoginController::class, 'verify'])
 Route::post('/login/resend', [LoginController::class, 'resend'])
     ->middleware('throttle:5,1')
     ->name('login.resend');
+
+Route::get('/forgot-password', [PasswordResetController::class, 'showRequest'])->name('password.forgot');
+Route::post('/forgot-password', [PasswordResetController::class, 'request'])
+    ->middleware('throttle:5,1')
+    ->name('password.request');
+
+Route::get('/reset-password/{token}', [PasswordResetController::class, 'showReset'])
+    ->where('token', '[A-Za-z0-9._-]{1,128}')
+    ->name('password.reset.form');
+Route::post('/reset-password', [PasswordResetController::class, 'reset'])
+    ->middleware('throttle:5,1')
+    ->name('password.reset');

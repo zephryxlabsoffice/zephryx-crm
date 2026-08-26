@@ -1,40 +1,29 @@
-<?php $__env->startSection('title', 'Login'); ?>
+<?php $__env->startSection('title', 'Choose a new password'); ?>
 
 <?php $__env->startSection('form'); ?>
-    <form class="auth-form" id="auth-form" method="POST" action="<?php echo e(route('login.attempt')); ?>" novalidate data-auth-form>
+    <form class="auth-form" id="auth-form" method="POST" action="<?php echo e(route('password.reset')); ?>" novalidate data-auth-form>
         <?php echo csrf_field(); ?>
+
+        
+        <input type="hidden" name="token" value="<?php echo e($token); ?>">
 
         <div class="form-brand">
             <?php echo $__env->make('partials.brand-mark', ['alt' => config('zephryx.brand.name')], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
         </div>
 
-        <h1 class="auth-heading">Welcome Back !</h1>
+        <h1 class="auth-heading">Choose a new password</h1>
 
-        
-        <?php if($lockedUntil ?? null): ?>
-            
-            <?php echo $__env->make('partials.notice', [
-                'tone' => 'warning',
-                'title' => 'Too many attempts',
-                'message' => 'Sign-in is paused for this account. Try again in about '
-                    .max(1, (int) ceil($lockedUntil / 60)).' minute'
-                    .(ceil($lockedUntil / 60) === 1.0 ? '' : 's').'.',
-            ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-            <p class="sr-only" data-lockout-seconds="<?php echo e((int) $lockedUntil); ?>"></p>
-        <?php elseif($errors->has('auth')): ?>
-            
+        <p class="auth-subheading">
+            Signing you out everywhere else — you'll need to sign in again on your other devices.
+        </p>
+
+        <?php if($errors->has('token')): ?>
             <?php echo $__env->make('partials.notice', [
                 'tone' => 'danger',
-                'message' => $errors->first('auth'),
-            ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-        <?php elseif(session('status')): ?>
-            <?php echo $__env->make('partials.notice', [
-                'tone' => session('status_tone', 'info'),
-                'message' => session('status'),
+                'message' => $errors->first('token'),
             ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
         <?php endif; ?>
 
-        
         <label class="field <?php echo e($errors->has('identifier') ? 'has-error' : ''); ?>">
             <span class="sr-only">Email or User ID</span>
             <span class="field-ic" aria-hidden="true">
@@ -45,27 +34,26 @@
             </span>
             <input type="text"
                    name="identifier"
-                   value="<?php echo e(old('identifier')); ?>"
+                   value="<?php echo e(old('identifier', $identifier)); ?>"
                    placeholder="Email or User ID"
                    autocomplete="username"
                    autocapitalize="none"
                    spellcheck="false"
-                   required
-                   <?php if($errors->has('identifier')): ?> aria-invalid="true" aria-describedby="identifier-error" <?php endif; ?>>
+                   required>
         </label>
         <?php $__errorArgs = ['identifier'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-            <span class="field-error" id="identifier-error"><?php echo e($message); ?></span>
+            <span class="field-error"><?php echo e($message); ?></span>
         <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
 
         <label class="field <?php echo e($errors->has('password') ? 'has-error' : ''); ?>">
-            <span class="sr-only">Password</span>
+            <span class="sr-only">New password</span>
             <span class="field-ic" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="4" y="11" width="16" height="10" rx="2"/>
@@ -74,10 +62,10 @@ unset($__errorArgs, $__bag); ?>
             </span>
             <input type="password"
                    name="password"
-                   placeholder="Password"
-                   autocomplete="current-password"
+                   placeholder="New password"
+                   autocomplete="new-password"
                    required
-                   <?php if($errors->has('password')): ?> aria-invalid="true" aria-describedby="password-error" <?php endif; ?>>
+                   aria-describedby="password-hint">
 
             <button type="button" class="eye-toggle" data-eye-toggle aria-pressed="false" aria-label="Show password">
                 <?php echo $__env->make('partials.eye-icons', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
@@ -88,30 +76,44 @@ $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-            <span class="field-error" id="password-error"><?php echo e($message); ?></span>
+            <span class="field-error"><?php echo e($message); ?></span>
         <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
 
-        <div class="form-row">
-            <label class="check">
-                <input type="checkbox" name="remember" value="1" <?php if(old('remember')): echo 'checked'; endif; ?>>
-                <span class="box" aria-hidden="true"></span>
-                <span>Remember me</span>
-            </label>
+        
+        <p class="field-hint" id="password-hint">
+            At least 12 characters. A short phrase you'll remember beats a
+            scrambled word.
+        </p>
 
-            <a class="link-quiet" href="<?php echo e(route('password.forgot')); ?>">Forgot password?</a>
-        </div>
+        <label class="field <?php echo e($errors->has('password') ? 'has-error' : ''); ?>">
+            <span class="sr-only">Confirm new password</span>
+            <span class="field-ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 6 9 17l-5-5"/>
+                </svg>
+            </span>
+            <input type="password"
+                   name="password_confirmation"
+                   placeholder="Confirm new password"
+                   autocomplete="new-password"
+                   required>
+
+            <button type="button" class="eye-toggle" data-eye-toggle aria-pressed="false" aria-label="Show password">
+                <?php echo $__env->make('partials.eye-icons', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+            </button>
+        </label>
 
         <button type="submit" class="btn-auth" data-auth-submit>
-            <span class="btn-label">Login Now</span>
+            <span class="btn-label">Update password</span>
         </button>
 
         <p class="form-foot">
-            Need access? Contact your <a href="<?php echo e($supportMailto); ?>">administrator</a>.
+            <a href="<?php echo e(route('login')); ?>">Back to sign in</a>
         </p>
     </form>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.auth', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Santanu Dev\Downloads\PROJECT - ZEPHRYX CRM\CRM\resources\views/auth/login.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.auth', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Santanu Dev\Downloads\PROJECT - ZEPHRYX CRM\CRM\resources\views/auth/reset-password.blade.php ENDPATH**/ ?>

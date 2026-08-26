@@ -567,3 +567,19 @@ On the login page (§9.2):
   entered code is never carried along with a resend request.
 - **`?preview=lockout`** renders the lockout banner for design review. It is
   gated to local + debug and returns nothing anywhere else; a test pins that.
+
+On the password reset pages (§4.6, §4.7):
+
+- **The common-password blocklist is local**, not HaveIBeenPwned. Laravel's
+  `uncompromised()` rule calls that API and treats an unreachable API as a
+  pass, so on shared hosting with blocked outbound traffic the check would
+  silently do nothing. `App\Rules\NotACommonPassword` reads
+  `resources/security/common-passwords.txt` and always runs. It normalises the
+  candidate — case, leet substitutions, trailing digits and punctuation — so
+  one entry catches `Password123!`, `p@ssw0rd` and `PASSWORD`. **The file must
+  be deployed with the application**; the rule reports an error rather than
+  passing silently if it is missing. Add company-specific guesses to it as
+  they come up.
+- **The reset token route is constrained** to `[A-Za-z0-9._-]{1,128}`, so
+  anything unexpected 404s at the router instead of reaching a view that
+  echoes it into a hidden input.

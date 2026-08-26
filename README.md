@@ -71,8 +71,12 @@ php artisan test
 
 Phase 0 in progress.
 
-**Built (front end):** landing page, login page, OTP verify step, theme system,
-notice component, security headers.
+**Built (front end):** landing page, login page, OTP verify step, forgot
+password, reset password, theme system, notice component, security headers.
+
+**Built (real, not a stub):** the password policy — `App\Rules\NotACommonPassword`
+plus a 12-character minimum — and the no-enumeration guarantee on
+`POST /forgot-password`.
 
 **Not built:** authentication itself. `Auth\LoginController::attempt()`,
 `verify()` and `resend()` are stubs — field validation is real, everything past
