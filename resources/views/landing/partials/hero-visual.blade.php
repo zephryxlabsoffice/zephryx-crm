@@ -52,10 +52,10 @@
          and "Deal Closed" are replaced: this is not a sales CRM, Leads is
          deferred to v2 (§12), and an invented growth figure on a page real
          clients read is the same problem §9.1 removed from the stat strip. --}}
-    <div class="card card-sales">
-        <div class="card-head">
-            <span class="card-title">Project Activity</span>
-            <span class="card-pct">This quarter</span>
+    <div class="hero-card hero-card-sales">
+        <div class="hero-card-head">
+            <span class="hero-card-title">Project Activity</span>
+            <span class="hero-card-pct">This quarter</span>
         </div>
         <svg class="spark" viewBox="0 0 280 90" preserveAspectRatio="none">
             <defs>
@@ -76,30 +76,30 @@
         </div>
     </div>
 
-    <div class="card card-activity">
-        <div class="card-head">
-            <span class="card-title">Recent Activity</span>
+    <div class="hero-card hero-card-activity">
+        <div class="hero-card-head">
+            <span class="hero-card-title">Recent Activity</span>
         </div>
-        <div class="act-list">
-            <div class="act-item">
-                <div class="act-ic">
+        <div class="hero-act-list">
+            <div class="hero-act-item">
+                <div class="hero-act-ic">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <path d="M14 2v6h6"/>
                     </svg>
                 </div>
-                <div class="act-txt">
+                <div class="hero-act-txt">
                     <strong>Invoice sent</strong>
                     <span>2 min ago</span>
                 </div>
             </div>
-            <div class="act-item">
-                <div class="act-ic">
+            <div class="hero-act-item">
+                <div class="hero-act-ic">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <polyline points="20 6 9 17 4 12"/>
                     </svg>
                 </div>
-                <div class="act-txt">
+                <div class="hero-act-txt">
                     <strong>Task completed</strong>
                     <span>10 min ago</span>
                 </div>

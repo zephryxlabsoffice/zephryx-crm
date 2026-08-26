@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\SecurityHeaders;
+use App\Support\Shell;
 use App\Support\Theme;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -24,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // clear keeps it cheap and inspectable; everything else stays encrypted.
         $middleware->encryptCookies(except: [
             Theme::COOKIE,
+            Shell::SIDEBAR_COOKIE,
+            Shell::DENSITY_COOKIE,
         ]);
 
         // Login throttling and the audit log are keyed on the client IP (§4.2,

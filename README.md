@@ -60,6 +60,12 @@ refference/                 the designer's original handover, for reference only
   the wrong palette and no need for a blocking inline script.
 - **New route groups inherit their guards.** Realm enforcement (spec §3.1)
   belongs on the group, never on individual routes.
+- **Sidebar entries live in `config/navigation.php`**, each with a permission
+  key. Adding a module means adding a line there and replacing its placeholder
+  route — not editing a Blade file.
+- **`App\Support\Navigation\PermissiveGate` allows everything and throws in
+  production.** Replace the binding in `AppServiceProvider` with the real RBAC
+  gate before anything ships.
 
 ## Tests
 
@@ -72,7 +78,8 @@ php artisan test
 Phase 0 in progress.
 
 **Built (front end):** landing page, login page, OTP verify step, forgot
-password, reset password, theme system, notice component, security headers.
+password, reset password, app shell (sidebar + topbar + navigation), theme
+system, notice component, security headers.
 
 **Built (real, not a stub):** the password policy — `App\Rules\NotACommonPassword`
 plus a 12-character minimum — and the no-enumeration guarantee on

@@ -22,11 +22,14 @@
   /* ── surfaces & ink ── */
   --page:         #F5F8F6;
   --surface:      #FFFFFF;
+  --surface-2:    #F2F6F3;   /* recessed rows, hover fills */
   --ink:          #0F1714;
   --ink-2:        #1A2620;
+  --ink-3:        #4B5852;   /* nav labels, secondary body text */
   --muted:        #5C6B65;
-  --line:         #E4EBE6;
-  --line-strong:  #D5DED8;
+  --muted-2:      #94A099;   /* placeholders, timestamps */
+  --line:         #E8EDE9;
+  --line-strong:  #DCE3DE;
 
   --green-deep:   #0A6B2C;
   --yellow:       #F5C518;
@@ -49,15 +52,41 @@
   --info-soft:     #EAF3FA;
   --info-line:     #C7DEEF;
 
+  /* ── categorical accents ──
+     For status pills that classify rather than warn — a project stage, a
+     ticket priority, a leave type. Never reuse the feedback colours above for
+     these: a blue "In progress" pill next to a blue "session expired" banner
+     teaches people that colour means nothing. */
+  --accent-blue:        #3B82F6;
+  --accent-blue-soft:   #DBEAFE;
+  --accent-indigo:      #6366F1;
+  --accent-indigo-soft: #E0E7FF;
+  --accent-purple:      #8B5CF6;
+  --accent-purple-soft: #EDE9FE;
+
   /* ── elevation ── */
   --shadow-card:  0 28px 60px -28px rgba(15, 30, 22, 0.22), 0 6px 14px -8px rgba(15, 30, 22, 0.07);
   --shadow-soft:  0 12px 32px -18px rgba(15, 30, 22, 0.14);
   --shadow-btn:   0 18px 32px -12px rgba(14, 122, 54, 0.55);
+  --shadow-flat:  0 1px 2px rgba(15, 23, 20, 0.04), 0 1px 1px rgba(15, 23, 20, 0.03);
+  --shadow-pop:   0 18px 40px -18px rgba(15, 30, 22, 0.18), 0 4px 10px -4px rgba(15, 30, 22, 0.06);
 
-  /* ── geometry ── */
-  --radius-card:  22px;
+  /* ── geometry ──
+     Two scales on purpose. The public pages (landing, auth) are spacious and
+     use the larger radii; the app shell is dense, and a 22px radius on a data
+     table row reads as a toy. */
+  --radius-card:  22px;   /* public surfaces */
   --radius-btn:   12px;
   --radius-pill:  999px;
+  --r-card:       14px;   /* app surfaces */
+  --r-btn:        10px;
+
+  /* ── app shell sizing ── */
+  --sidebar-w:      252px;
+  --sidebar-w-mini: 76px;
+  --topbar-h:       72px;
+  --page-pad:       28px;
+  --density-gap:    20px;
 
   /* ── typography ── */
   /* The family is served from our own build output; the system stack is the
@@ -89,9 +118,12 @@
 
   --page:         #0A0E0C;
   --surface:      #131915;
+  --surface-2:    #191F1B;
   --ink:          #ECEFEC;
   --ink-2:        #C7CDCA;
+  --ink-3:        #A6AEA9;
   --muted:        #8A938E;
+  --muted-2:      #6A736E;
   --line:         #1E2823;
   --line-strong:  #2A352F;
 
@@ -110,13 +142,29 @@
   --info-soft:     #13212B;
   --info-line:     #23384A;
 
+  --accent-blue:        #60A5FA;
+  --accent-blue-soft:   #102036;
+  --accent-indigo:      #818CF8;
+  --accent-indigo-soft: #1A1F38;
+  --accent-purple:      #A78BFA;
+  --accent-purple-soft: #221A38;
+
   --shadow-card:  0 28px 60px -28px rgba(0, 0, 0, 0.7), 0 6px 14px -8px rgba(0, 0, 0, 0.55);
   --shadow-soft:  0 12px 32px -18px rgba(0, 0, 0, 0.5);
   --shadow-btn:   0 18px 32px -12px rgba(0, 0, 0, 0.6);
+  --shadow-flat:  0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-pop:   0 18px 40px -18px rgba(0, 0, 0, 0.55);
 
   color-scheme: dark;
 }
 
+/* A per-user preference on the app shell: the same screens with tighter
+   spacing, for people who would rather see more rows than more air. */
+[data-density="compact"] {
+  --density-gap: 14px;
+  --page-pad:    22px;
+}
+
 @media (max-width: 1100px) { :root { --container-pad: 40px; } }
-@media (max-width: 760px)  { :root { --container-pad: 24px; } }
+@media (max-width: 760px)  { :root { --container-pad: 24px; --page-pad: 18px; } }
 @media (max-width: 420px)  { :root { --container-pad: 18px; } }

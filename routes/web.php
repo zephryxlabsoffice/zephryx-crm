@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\ModulePlaceholderController;
+use App\Http\Controllers\ShellPreferenceController;
 use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Route;
 
@@ -59,3 +62,52 @@ Route::get('/reset-password/{token}', [PasswordResetController::class, 'showRese
 Route::post('/reset-password', [PasswordResetController::class, 'reset'])
     ->middleware('throttle:5,1')
     ->name('password.reset');
+
+Route::post('/logout', LogoutController::class)->name('logout');
+
+/*
+|--------------------------------------------------------------------------
+| Staff realm
+|--------------------------------------------------------------------------
+|
+| NOT YET GUARDED. Spec §3.1 requires a realm check in middleware on this
+| whole group before any data is read; it is added with authentication in the
+| backend phase. Nothing here reads data yet.
+|
+| Every navigation entry resolves to a real route from the start so the shell's
+| shape never shifts as modules land (§12). Each module replaces its own
+| placeholder when it is built.
+|
+*/
+
+Route::post('/shell', [ShellPreferenceController::class, 'store'])
+    ->middleware('throttle:60,1')
+    ->name('shell.store');
+
+Route::get('/dashboard', fn () => app(ModulePlaceholderController::class)('dashboard'))->name('dashboard');
+
+foreach ([
+    'clients' => 'clients.index',
+    'employees' => 'employees.index',
+    'teams' => 'teams.index',
+    'projects' => 'projects.index',
+    'tasks' => 'tasks.index',
+    'tickets' => 'tickets.index',
+    'invoices' => 'invoices.index',
+    'salary' => 'salary.index',
+    'attendance' => 'attendance.index',
+    'leave' => 'leave.index',
+    'meetings' => 'meetings.index',
+    'reports' => 'reports.index',
+    'announcements' => 'announcements.index',
+] as $segment => $name) {
+    Route::get('/'.$segment, fn () => app(ModulePlaceholderController::class)($segment))->name($name);
+}
+
+Route::get('/profile', fn () => app(ModulePlaceholderController::class)('profile'))->name('profile.show');
+Route::get('/notifications', fn () => app(ModulePlaceholderController::class)('notifications'))->name('notifications.index');
+
+// Deferred to v2. §12 keeps the navigation entries so adding the modules later
+// reshuffles nothing users have learned, but the pages 404 until then.
+Route::get('/leads', [ModulePlaceholderController::class, 'missing'])->name('leads.index');
+Route::get('/calendar', [ModulePlaceholderController::class, 'missing'])->name('calendar.index');

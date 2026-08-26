@@ -597,6 +597,63 @@ On the password reset pages (§4.6, §4.7):
   anything unexpected 404s at the router instead of reaching a view that
   echoes it into a hidden input.
 
+### App shell (decided 2026-08-26)
+
+The handover (`refference/shell.css`, `refference/shell.js`) is drawn for
+**Superadmin — every entry visible**. That is a *superset*, not a role: what
+any one person sees is decided in PHP at render time. The staff realm uses this
+shell; `/client` and `/admin` get their own.
+
+- **Navigation is data, not markup.** `config/navigation.php` lists the whole
+  roadmap in order, each entry carrying a `permission` key.
+  `App\Support\Navigation` drops entries the viewer lacks, and entries whose
+  route does not exist yet — so the file can name modules that have not shipped
+  without breaking the shell.
+- **Hiding an entry is a courtesy, not the access control.** Every route is
+  guarded too (§3.1). A filtered nav without guarded routes is security
+  theatre; guarded routes without a filtered nav teach people to expect 403s.
+- **`PermissiveGate` throws in production.** The RBAC engine (§5) does not
+  exist yet, so the placeholder gate allows everything — and the failure mode of
+  forgetting to swap it is "every user sees every module". It fails loudly at
+  boot instead. Swap the binding in `AppServiceProvider` when §5 lands.
+- **Settings stays in the navigation**, gated on `settings.view` and pointing
+  at `admin.settings`. §12 is unchanged — the *pages* still live in the Admin
+  Panel; only the entry is in the staff nav, and it renders for nobody until
+  that route exists.
+- **Leads and Calendar keep their entries and 404**, exactly as §12 describes.
+- **Every module has a placeholder route from the start**, so the navigation's
+  shape never shifts as modules land one at a time. Each module replaces its
+  own.
+- **Sign-out is `POST /logout`.** The handover linked to a page; as a GET, any
+  `<img src="/logout">` on any page would sign people out.
+- **Notifications are server-rendered** from `notifications` (§8). The handover
+  populated the panel by cloning the host page's "Recent Activity" list in
+  JavaScript, which made it a mirror of whatever was on screen rather than of
+  the viewer's own unread items, and left it empty on pages with no such list.
+- **Hover-to-open is mouse-only**, behind `(hover: hover) and (pointer: fine)`.
+  Bound unconditionally it makes the first tap on a phone open-and-close.
+- **Global search renders disabled.** Cross-module search must run every result
+  through the permission and ownership checks in §6 or it becomes the easiest
+  data-leak surface in the application, so it waits for the backend.
+- **Sidebar collapse and density persist** in cookies, resolved server-side onto
+  `<html>` for the same reason the theme is — read in JavaScript, every
+  navigation would show the default for a frame and then jump.
+
+**Token and class reconciliation.** `refference/shell.css` carried its own
+`:root` block with values slightly different from the ones already shipped
+(`--page`, `--line`, radii). Adopting it wholesale would have silently shifted
+the landing and auth pages, so it is folded into `tokens.css` instead (§7). Two
+radius scales are kept deliberately: the public pages are spacious
+(`--radius-card: 22px`), the app is dense (`--r-card: 14px`). The handover's
+`--red/--amber/--blue` map onto the existing feedback tokens; `--accent-*` are
+added for categorical pills, which must never reuse feedback colours — a blue
+"In progress" pill beside a blue "session expired" banner teaches people that
+colour means nothing.
+
+The shell also collided with existing class names. `.card` and `.topbar` are
+now the app shell's; the landing page's became `.hero-card*` and
+`.public-topbar`.
+
 ### Viewport fit on mobile (decided 2026-08-26)
 
 Every public page fits the phone viewport without scrolling. Verified at

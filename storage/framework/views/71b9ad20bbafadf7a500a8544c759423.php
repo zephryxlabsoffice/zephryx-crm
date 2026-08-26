@@ -20,7 +20,7 @@
     <a class="skip-link" href="#main">Skip to content</a>
 
     <div class="container">
-        <header class="topbar">
+        <header class="public-topbar">
             <a class="brand" href="<?php echo e(route('landing')); ?>" aria-label="<?php echo e(config('zephryx.brand.name')); ?> <?php echo e(config('zephryx.brand.suffix')); ?> home">
                 <img class="brand-mark brand-mark-light" src="<?php echo e(asset('assets/brand/z-black.svg')); ?>" alt="" width="42" height="42">
                 <img class="brand-mark brand-mark-dark" src="<?php echo e(asset('assets/brand/z-white.svg')); ?>" alt="" width="42" height="42">
