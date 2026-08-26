@@ -1,27 +1,27 @@
-# Secrets — never commit
+# Secrets — never commit (spec §11.1)
 .env
 .env.*
 !.env.example
+/auth.json
 
 # Dependencies
-/vendor/
-/node_modules/
+/vendor
+/node_modules
 
 # Build output
-/public/build/
+/public/build
 /public/hot
+/public/fonts-manifest.dev.json
+/public/storage
 
 # Runtime
 /storage/*.key
-/storage/framework/cache/*
-/storage/framework/sessions/*
-/storage/framework/views/*
-/storage/logs/*
-/writable/cache/*
-/writable/logs/*
-/writable/session/*
+/storage/pail
+*.log
+.phpunit.result.cache
+/.phpunit.cache
 
-# Uploads (stored outside web root in production)
+# Uploads (stored outside the web root in production, spec §6)
 /storage/app/uploads/
 
 # Editor / OS
@@ -30,6 +30,10 @@ Thumbs.db
 desktop.ini
 .idea/
 .vscode/
+.zed/
+.nova/
+.phpactor.json
+_ide_helper.php
 *.swp
 
 # Local Claude settings

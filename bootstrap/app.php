@@ -1,0 +1,40 @@
+<?php
+
+use App\Http\Middleware\SecurityHeaders;
+use App\Support\Theme;
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware): void {
+        // Applied to every response so new surfaces inherit the hardening
+        // headers rather than opting into them (foundation spec §6).
+        $middleware->append(SecurityHeaders::class);
+
+        // The theme cookie carries a display preference, not a secret, and is
+        // never an input to an authorisation decision — App\Support\Theme
+        // re-validates it against the allow-list on every read. Leaving it in
+        // clear keeps it cheap and inspectable; everything else stays encrypted.
+        $middleware->encryptCookies(except: [
+            Theme::COOKIE,
+        ]);
+
+        // Login throttling and the audit log are keyed on the client IP (§4.2,
+        // §6), so X-Forwarded-For is only honoured from proxies we name. Left
+        // empty, the connecting address is used and cannot be spoofed.
+        if ($proxies = env('TRUSTED_PROXIES')) {
+            $middleware->trustProxies(at: explode(',', $proxies));
+        }
+    })
+    ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->shouldRenderJsonWhen(
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
+        );
+    })->create();

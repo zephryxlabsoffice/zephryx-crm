@@ -500,11 +500,48 @@ the designer's existing base design rather than being decided globally here.
 
 ## 13. Open items
 
-1. **cPanel capability check** — Terminal/SSH, Composer, PHP version. Decides
-   Laravel vs CodeIgniter 4. Blocks implementation, not this spec.
-2. **Canonical Z SVG** — the landing and login handovers carry two different Z
-   marks. Awaiting the authoritative asset.
-3. **Support destination** — `/support` needs either a mailbox address or a
-   contact form. Required before the landing page is complete.
-4. **Idle timeouts** — 12 hours staff/client, 30 minutes admin, stated as an
-   assumption in §4.4 and awaiting confirmation.
+### Resolved (2026-08-26)
+
+1. **cPanel capability check** — confirmed: Terminal/SSH and Composer are
+   available. **Laravel** is the framework; the application is scaffolded on
+   Laravel 13 / PHP 8.3.
+2. **Canonical Z SVG** — supplied as two authored marks, `z-black.svg` for
+   light surfaces and `z-white.svg` for dark. Cropped to their path bounding
+   box and installed at `public/assets/brand/`; swapped by `[data-theme]`.
+3. **Support destination** — a **`mailto:` link**, not a form. A public
+   unauthenticated write endpoint on the landing page was not worth the spam
+   and abuse surface for a six-person company. The address is
+   `ZEPHRYX_SUPPORT_EMAIL` in the environment (`config/zephryx.php`).
+
+### Still open
+
+4. **Support mailbox address** — `support@zephryxlabs.com` is a placeholder in
+   `.env.example`. Confirm the real mailbox before deploying.
+5. **Idle timeouts** — 12 hours staff/client, 30 minutes admin, stated as an
+   assumption in §4.4 and awaiting confirmation. `SESSION_LIFETIME=720`
+   encodes the staff/client value; the admin window needs its own middleware
+   when that realm is built.
+
+### Deviations from the handover, recorded
+
+These are changes to the landing page beyond the copy and CTA edits in §9.1,
+made during implementation:
+
+- **The `@fonts` Blade directive is not used.** It emits an inline `<style>`
+  block for the `@font-face` rules, which would force `'unsafe-inline'` into
+  the `style-src` CSP. Plus Jakarta Sans is imported from `@fontsource` in
+  `resources/css/app.css` instead, so the faces are bundled into the same
+  linked stylesheet. The page renders zero inline styles and zero inline
+  scripts, and a test enforces that.
+- **The hero's floating cards were relabelled.** "Sales Overview +25.4%",
+  "New Lead Added" and "Deal Closed" became "Project Activity / This quarter",
+  "Invoice sent" and "Task completed" — this is not a sales CRM, Leads is
+  deferred to v2 (§12), and an invented growth figure is the same problem
+  §9.1 removed from the stat strip.
+- **The feature strip was resized.** The handover sized it around the `stats`
+  values ("50+", "30%"); the words §9.1 chose instead are longer and
+  overflowed their dividers. Icon 48→44px, value 22→18px, and the text cell
+  given `min-width: 0` so it wraps rather than spilling. Below 1100px each
+  cell stacks its icon above the text.
+- **A theme toggle was added to the topbar.** §7 requires one; the handover's
+  landing nav carries the brand only.

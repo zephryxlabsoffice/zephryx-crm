@@ -1,0 +1,84 @@
+/* ============================================================================
+   ZephryxLabs CRM — design tokens
+   ----------------------------------------------------------------------------
+   Foundation spec §7. These are the single source of colour truth for every
+   module. Values are taken unchanged from the designer's handover
+   (refference/Landing Page.html, refference/Login Page.html).
+
+   Never hard-code a colour in a module stylesheet — add a token here instead.
+   `data-theme` is always rendered server-side on <html>, so there is no
+   unthemed state and no flash of the wrong palette on first paint.
+   ========================================================================= */
+
+:root {
+  /* ── brand ── */
+  --green:        #15A848;
+  --green-2:      #119A40;
+  --green-dim:    #0E8A39;
+  --green-soft:   #E6F4EB;
+  --green-softer: #EEF6F1;
+  --green-tint:   #F1F7F3;
+
+  /* ── surfaces & ink ── */
+  --page:         #F5F8F6;
+  --surface:      #FFFFFF;
+  --ink:          #0F1714;
+  --ink-2:        #1A2620;
+  --muted:        #5C6B65;
+  --line:         #E4EBE6;
+  --line-strong:  #D5DED8;
+
+  /* ── elevation ── */
+  --shadow-card:  0 28px 60px -28px rgba(15, 30, 22, 0.22), 0 6px 14px -8px rgba(15, 30, 22, 0.07);
+  --shadow-soft:  0 12px 32px -18px rgba(15, 30, 22, 0.14);
+
+  /* ── geometry ── */
+  --radius-card:  22px;
+  --radius-btn:   12px;
+  --radius-pill:  999px;
+
+  /* ── typography ── */
+  /* The family is served from our own build output; the system stack is the
+     fallback if the font files are unavailable. */
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* ── layout ── */
+  --container-max: 1280px;
+  --container-pad: 64px;
+
+  /* ── motion ── */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 0.16s;
+  --dur-theme: 0.25s;
+
+  /* ── focus ── */
+  --focus-ring: 0 0 0 3px color-mix(in oklab, var(--green) 45%, transparent);
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --green:        #25C95A;
+  --green-2:      #1FB04E;
+  --green-dim:    #19953E;
+  --green-soft:   #16321F;
+  --green-softer: #0F2017;
+  --green-tint:   #0D1A12;
+
+  --page:         #0A0E0C;
+  --surface:      #131915;
+  --ink:          #ECEFEC;
+  --ink-2:        #C7CDCA;
+  --muted:        #8A938E;
+  --line:         #1E2823;
+  --line-strong:  #2A352F;
+
+  --shadow-card:  0 28px 60px -28px rgba(0, 0, 0, 0.7), 0 6px 14px -8px rgba(0, 0, 0, 0.55);
+  --shadow-soft:  0 12px 32px -18px rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
+}
+
+@media (max-width: 1100px) { :root { --container-pad: 40px; } }
+@media (max-width: 760px)  { :root { --container-pad: 24px; } }
+@media (max-width: 420px)  { :root { --container-pad: 18px; } }

@@ -1,0 +1,187 @@
+/* ============================================================================
+   Reset + primitives shared by every ZephryxLabs CRM surface.
+   Anything here is expected to be reused by later modules; page-specific rules
+   belong in their own stylesheet (e.g. pages/landing.css).
+   ========================================================================= */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--page);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  transition: background-color var(--dur-theme) ease, color var(--dur-theme) ease;
+}
+
+img, svg { max-width: 100%; display: block; }
+a { text-decoration: none; color: inherit; }
+
+/* Keyboard focus is visible everywhere; pointer focus is not. */
+:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── layout ── */
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--container-pad);
+}
+
+/* ── accessibility helpers ── */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 100;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-btn);
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: top var(--dur-fast) var(--ease);
+}
+.skip-link:focus { top: 16px; }
+
+/* ── buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 30px;
+  border-radius: var(--radius-btn);
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: -0.005em;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  min-width: 200px;
+  transition: transform var(--dur-fast) ease, box-shadow var(--dur-fast) ease,
+              background-color var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+.btn-primary {
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 10px 22px -10px color-mix(in oklab, var(--green) 75%, transparent);
+}
+.btn-primary:hover {
+  background: var(--green-2);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px -10px color-mix(in oklab, var(--green) 80%, transparent);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--green);
+  border-color: var(--green);
+}
+.btn-outline:hover {
+  background: var(--green-soft);
+  transform: translateY(-1px);
+}
+
+/* ── brand lockup ── */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+/* Two authored marks: black for light surfaces, white for dark ones. */
+[data-theme="dark"]  .brand-mark-light,
+[data-theme="light"] .brand-mark-dark {
+  display: none;
+}
+.brand-name {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+.brand-name em {
+  color: var(--green);
+  font-style: normal;
+  margin-left: 6px;
+}
+
+/* ── theme toggle ── */
+.theme-toggle {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease,
+              background-color var(--dur-fast) ease;
+}
+.theme-toggle:hover {
+  color: var(--green);
+  border-color: var(--green);
+  background: var(--green-soft);
+}
+.theme-toggle svg { width: 20px; height: 20px; }
+/* Show the icon for the theme the button switches *to*. */
+[data-theme="dark"]  .theme-toggle .icon-moon,
+[data-theme="light"] .theme-toggle .icon-sun {
+  display: none;
+}
+
+/* ── topbar ── */
+.topbar {
+  padding: 36px 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+@media (max-width: 760px) {
+  .topbar { padding: 22px 0 8px; }
+  .brand-mark { width: 36px; height: 36px; }
+  .brand-name { font-size: 20px; }
+  .theme-toggle { width: 38px; height: 38px; }
+  .btn { min-width: 0; padding: 15px 20px; font-size: 15px; }
+}
