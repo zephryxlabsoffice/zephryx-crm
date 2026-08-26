@@ -81,13 +81,57 @@ class LoginPageTest extends TestCase
             ->assertSee('data-theme="light"', false);
     }
 
-    public function test_the_lockout_preview_is_unavailable_outside_local_debug(): void
+    /**
+     * The preview parameter exists so the form-level states can be reviewed
+     * while the page is designed. Outside local + debug it must do nothing —
+     * otherwise anyone could put "Session expired" or "Cannot sign in" on the
+     * live sign-in page and use it to mislead staff.
+     *
+     * @return list<array{0: string, 1: string}>
+     */
+    public static function previewProvider(): array
     {
-        // The query parameter exists so the banner can be reviewed while the
-        // page is designed. It must not be a way to fake a lockout notice on a
-        // deployed site.
-        $this->get('/login?preview=lockout')
-            ->assertDontSee('Too many attempts', false);
+        return [
+            'lockout'  => ['lockout', 'Too many attempts'],
+            'expired'  => ['expired', 'Session expired'],
+            'disabled' => ['disabled', 'Cannot sign in'],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('previewProvider')]
+    public function test_previews_are_unavailable_outside_local_debug(string $preview, string $text): void
+    {
+        $this->get('/login?preview='.$preview)->assertDontSee($text, false);
+    }
+
+    public function test_an_unknown_preview_value_is_ignored(): void
+    {
+        $this->get('/login?preview=<script>alert(1)</script>')
+            ->assertOk()
+            ->assertDontSee('<script>alert(1)</script>', false);
+    }
+
+    public function test_the_resend_cooldown_preview_is_unavailable_outside_local_debug(): void
+    {
+        $this->get('/login/verify?preview=cooldown')
+            ->assertSee('Send a new code', false)
+            ->assertDontSee('Resend in 45s', false);
+    }
+
+    public function test_a_failed_attempt_takes_precedence_over_any_other_banner(): void
+    {
+        // The user just did something; telling them their session expired
+        // instead of that the attempt failed would be actively misleading.
+        $response = $this->withSession([
+            'status' => 'You were signed out after a period of inactivity.',
+            'status_tone' => 'info',
+        ])->from('/login')->followingRedirects()->post('/login', [
+            'identifier' => 'santanu@zephryxlabs.com',
+            'password' => 'whatever-it-is',
+        ]);
+
+        $response->assertSee('not connected yet', false);
+        $response->assertDontSee('period of inactivity', false);
     }
 
     public function test_the_verify_step_renders_six_code_boxes(): void

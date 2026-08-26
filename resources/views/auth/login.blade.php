@@ -12,31 +12,25 @@
 
         <h1 class="auth-heading">Welcome Back !</h1>
 
-        {{-- Form-level state. Only one banner shows at a time; they are mutually
-             exclusive outcomes of a single sign-in attempt (spec §9.2). --}}
-        @if ($lockedUntil ?? null)
-            {{-- Lockout: too many attempts. The countdown is filled in by
-                 resources/js/auth.js and degrades to the static minute figure. --}}
-            @include('partials.notice', [
-                'tone' => 'warning',
-                'title' => 'Too many attempts',
-                'message' => 'Sign-in is paused for this account. Try again in about '
-                    .max(1, (int) ceil($lockedUntil / 60)).' minute'
-                    .(ceil($lockedUntil / 60) === 1.0 ? '' : 's').'.',
-            ])
-            <p class="sr-only" data-lockout-seconds="{{ (int) $lockedUntil }}"></p>
-        @elseif ($errors->has('auth'))
+        {{-- One form-level banner at a time. Which one is decided in the
+             controller (spec §9.2); a failed attempt takes precedence because
+             it describes what the user just did. --}}
+        @if ($errors->has('auth'))
             {{-- Deliberately generic: never distinguishes an unknown identifier
                  from a wrong password (spec §4.2). --}}
             @include('partials.notice', [
                 'tone' => 'danger',
                 'message' => $errors->first('auth'),
             ])
-        @elseif (session('status'))
-            @include('partials.notice', [
-                'tone' => session('status_tone', 'info'),
-                'message' => session('status'),
-            ])
+        @elseif ($notice)
+            @include('partials.notice', $notice)
+
+            @if ($lockedUntil)
+                {{-- Read by resources/js/auth.js, which counts the notice down
+                     and holds the submit button. Without JavaScript the static
+                     minute figure in the message still stands. --}}
+                <p class="sr-only" data-lockout-seconds="{{ $lockedUntil }}"></p>
+            @endif
         @endif
 
         {{-- A single field accepting either an email address or a user ID

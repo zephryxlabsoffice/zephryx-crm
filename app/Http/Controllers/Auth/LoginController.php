@@ -32,9 +32,12 @@ class LoginController extends Controller
             return redirect(Realm::dashboardFor($request->user()));
         }
 
+        $lockedUntil = $this->lockedUntil($request);
+
         return response()->view('auth.login', [
             'supportMailto' => $this->supportMailto(),
-            'lockedUntil' => $this->previewedLockout($request),
+            'lockedUntil' => $lockedUntil,
+            'notice' => $this->notice($request, $lockedUntil),
         ]);
     }
 
@@ -52,7 +55,9 @@ class LoginController extends Controller
             // (masked) address in the session.
             'maskedEmail' => $request->session()->get('otp.masked_email', 'y•••••@zephryxlabs.com'),
             'expiresInMinutes' => 10,
-            'resendCooldown' => (int) $request->session()->get('otp.resend_cooldown', 0),
+            'resendCooldown' => $this->preview($request) === 'cooldown'
+                ? 45
+                : (int) $request->session()->get('otp.resend_cooldown', 0),
         ]);
     }
 
@@ -112,18 +117,89 @@ class LoginController extends Controller
     }
 
     /**
-     * Renders the lockout banner on demand while the page is being designed.
+     * The single banner shown above the form, or null for none.
      *
-     * Local, debug-mode only: in every other environment this returns null, so
-     * the query parameter cannot be used to fake a lockout notice on a
-     * deployed site.
+     * Every form-level state resolves through here — lockout, session expiry,
+     * a disabled account — so there is one place that decides what the user
+     * sees and one rendering path. Field-level errors are separate and handled
+     * in the view.
+     *
+     * @return array{tone: string, title?: string, message: string}|null
      */
-    protected function previewedLockout(Request $request): ?int
+    protected function notice(Request $request, ?int $lockedUntil): ?array
+    {
+        if ($lockedUntil !== null) {
+            $minutes = max(1, (int) ceil($lockedUntil / 60));
+
+            return [
+                'tone' => 'warning',
+                'title' => 'Too many attempts',
+                'message' => 'Sign-in is paused for this account. Try again in about '
+                    .$minutes.' minute'.($minutes === 1 ? '' : 's').'.',
+            ];
+        }
+
+        if ($previewed = $this->previewNotice($request)) {
+            return $previewed;
+        }
+
+        if ($request->session()->has('status')) {
+            return [
+                'tone' => (string) $request->session()->get('status_tone', 'info'),
+                'message' => (string) $request->session()->get('status'),
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Design-time previews of states that only the backend can produce.
+     *
+     * @return array{tone: string, title?: string, message: string}|null
+     */
+    protected function previewNotice(Request $request): ?array
+    {
+        return match ($this->preview($request)) {
+            // §4.4 — the session reached its idle timeout.
+            'expired' => [
+                'tone' => 'info',
+                'title' => 'Session expired',
+                'message' => 'You were signed out after a period of inactivity. Sign in again to continue.',
+            ],
+            // §4.2 step 4 — inactive or suspended. Deliberately says nothing
+            // about which, or why; that detail is for an administrator.
+            'disabled' => [
+                'tone' => 'danger',
+                'title' => 'Cannot sign in',
+                'message' => 'This account is not able to sign in. Contact your administrator.',
+            ],
+            default => null,
+        };
+    }
+
+    protected function lockedUntil(Request $request): ?int
+    {
+        return $this->preview($request) === 'lockout' ? 300 : null;
+    }
+
+    /**
+     * The requested design preview, or null.
+     *
+     * Local + debug only. Everywhere else this returns null, so the query
+     * parameter cannot be used to put a fabricated notice — "session expired",
+     * "cannot sign in" — on a deployed sign-in page.
+     */
+    protected function preview(Request $request): ?string
     {
         if (! app()->environment('local') || ! config('app.debug')) {
             return null;
         }
 
-        return $request->query('preview') === 'lockout' ? 300 : null;
+        $requested = $request->query('preview');
+
+        return in_array($requested, ['lockout', 'expired', 'disabled', 'cooldown'], true)
+            ? $requested
+            : null;
     }
 }

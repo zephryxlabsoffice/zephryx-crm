@@ -565,8 +565,15 @@ On the login page (§9.2):
   submitted with the form, and disabling it on click can drop the request.
 - **Resend posts from a separate form** outside the verify form, so the
   entered code is never carried along with a resend request.
-- **`?preview=lockout`** renders the lockout banner for design review. It is
-  gated to local + debug and returns nothing anywhere else; a test pins that.
+- **`?preview=…`** renders the states only the backend can produce, for design
+  review: `lockout`, `expired`, `disabled` on `/login`, and `cooldown` on
+  `/login/verify`. Gated to local + debug and inert everywhere else — a fake
+  "Session expired" or "Cannot sign in" on a live sign-in page is a phishing
+  aid, so tests pin that each one does nothing outside local.
+- **One banner, decided in the controller.** `LoginController::notice()` is the
+  single place that chooses which form-level state is shown. A failed attempt
+  outranks everything else: it describes what the user just did, so showing
+  "session expired" over it would be actively misleading.
 
 On the password reset pages (§4.6, §4.7):
 

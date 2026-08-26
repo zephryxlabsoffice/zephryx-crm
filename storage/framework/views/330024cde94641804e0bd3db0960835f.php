@@ -11,27 +11,19 @@
         <h1 class="auth-heading">Welcome Back !</h1>
 
         
-        <?php if($lockedUntil ?? null): ?>
-            
-            <?php echo $__env->make('partials.notice', [
-                'tone' => 'warning',
-                'title' => 'Too many attempts',
-                'message' => 'Sign-in is paused for this account. Try again in about '
-                    .max(1, (int) ceil($lockedUntil / 60)).' minute'
-                    .(ceil($lockedUntil / 60) === 1.0 ? '' : 's').'.',
-            ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-            <p class="sr-only" data-lockout-seconds="<?php echo e((int) $lockedUntil); ?>"></p>
-        <?php elseif($errors->has('auth')): ?>
+        <?php if($errors->has('auth')): ?>
             
             <?php echo $__env->make('partials.notice', [
                 'tone' => 'danger',
                 'message' => $errors->first('auth'),
             ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-        <?php elseif(session('status')): ?>
-            <?php echo $__env->make('partials.notice', [
-                'tone' => session('status_tone', 'info'),
-                'message' => session('status'),
-            ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+        <?php elseif($notice): ?>
+            <?php echo $__env->make('partials.notice', $notice, array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+            <?php if($lockedUntil): ?>
+                
+                <p class="sr-only" data-lockout-seconds="<?php echo e($lockedUntil); ?>"></p>
+            <?php endif; ?>
         <?php endif; ?>
 
         
