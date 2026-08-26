@@ -545,3 +545,25 @@ made during implementation:
   cell stacks its icon above the text.
 - **A theme toggle was added to the topbar.** §7 requires one; the handover's
   landing nav carries the brand only.
+
+On the login page (§9.2):
+
+- **The Z monogram is the authored asset**, not the handover's inline
+  `currentColor` path — the two marks are the resolved canonical asset above.
+- **The form panel gained a floating theme toggle.** §9.2 requires a light
+  toggle and the auth pages have no topbar to hang one from.
+- **Feedback tokens were added.** The handover defines no error, warning or
+  success colour, and §9.2 requires a failure banner, a lockout notice, a
+  session-expired notice and a disabled-account notice. `--danger`,
+  `--warning` and `--info` (plus soft/line variants for both themes) now sit
+  in `tokens.css` beside the brand green, and drive a reusable `.notice`
+  component rather than login-only styling.
+- **The OTP step is six single-character boxes** in a `fieldset`, not one
+  input. Focus advance, backspace, arrow keys and paste-distribution are
+  progressive enhancement; the boxes work as plain inputs without JavaScript.
+- **The submit button is marked busy, not disabled.** A disabled submit is not
+  submitted with the form, and disabling it on click can drop the request.
+- **Resend posts from a separate form** outside the verify form, so the
+  entered code is never carried along with a resend request.
+- **`?preview=lockout`** renders the lockout banner for design review. It is
+  gated to local + debug and returns nothing anywhere else; a test pins that.

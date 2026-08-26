@@ -69,5 +69,13 @@ php artisan test
 
 ## Status
 
-Phase 0 in progress. Built: landing page, theme system, security headers.
-Next: the login page and the authentication flow (spec §4, §9.2).
+Phase 0 in progress.
+
+**Built (front end):** landing page, login page, OTP verify step, theme system,
+notice component, security headers.
+
+**Not built:** authentication itself. `Auth\LoginController::attempt()`,
+`verify()` and `resend()` are stubs — field validation is real, everything past
+it is not. The credential check, rate limiting, OTP issue/verify, trusted
+devices and sessions described in spec §4 land in the backend phase, and
+**this page must not be deployed anywhere reachable before then.**

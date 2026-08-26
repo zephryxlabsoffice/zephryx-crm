@@ -1,0 +1,513 @@
+/* ============================================================================
+   Authentication surfaces — /login, /login/verify, /forgot-password.
+   Foundation spec §9.2.
+
+   Layout and visual treatment are taken unchanged from the handover
+   (refference/Login Page.html). The design-time variants are baked to the
+   recorded decisions and their toggle machinery removed:
+     · hero visual → abstract
+     · remember me, forgot password and the footer note → all shown
+   ========================================================================= */
+
+.auth {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+}
+
+/* The auth pages paint the form panel edge to edge rather than sitting on the
+   page background used elsewhere. */
+body.auth-body { background: var(--surface); }
+
+/* ─────────────────────  green visual panel  ───────────────────── */
+.visual-panel {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: 64px 56px;
+  background: radial-gradient(120% 90% at 10% 0%,
+              #1AB85A 0%, #15A848 40%, #119A40 75%, #0E8A39 100%);
+}
+
+.visual-panel .waves {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(50px);
+  pointer-events: none;
+}
+.orb-1 {
+  width: 460px; height: 460px;
+  background: #3BE07A;
+  top: -140px; right: -120px;
+  opacity: 0.55;
+}
+.orb-2 {
+  width: 360px; height: 360px;
+  background: #07591F;
+  bottom: -140px; left: -90px;
+  opacity: 0.7;
+}
+.orb-3 {
+  width: 320px; height: 320px;
+  background: #2DD56F;
+  top: 40%; left: 22%;
+  opacity: 0.35;
+}
+
+/* card, figure and badge all share this coordinate space */
+.composition {
+  position: relative;
+  width: min(440px, 100%);
+  aspect-ratio: 4 / 5;
+  max-height: calc(100vh - 128px);
+}
+
+.glass-card {
+  position: absolute;
+  inset: 0;
+  border-radius: 40px;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(36px) saturate(160%);
+  -webkit-backdrop-filter: blur(36px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  box-shadow: 0 28px 60px -24px rgba(0, 0, 0, 0.35),
+              inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  overflow: hidden;
+}
+
+.manifesto {
+  position: absolute;
+  top: 12%;
+  left: 9%;
+  right: 38%;
+  z-index: 2;
+  pointer-events: none;
+}
+.manifesto span {
+  display: block;
+  font-size: clamp(28px, 2.85vw, 44px);
+  line-height: 1.05;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.038em;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* `heroStyle = abstract` is the recorded decision, so the figure is contained
+   inside the card rather than bleeding past its bottom edge. */
+.hero-figure {
+  position: absolute;
+  inset: 8% 6% 8% 40%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  pointer-events: none;
+  z-index: 3;
+}
+.hero-figure svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.lightning-badge {
+  position: absolute;
+  left: -5%;
+  bottom: 14%;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 18px 36px -12px rgba(0, 0, 0, 0.30),
+              0 4px 10px -2px rgba(0, 0, 0, 0.12);
+  z-index: 4;
+}
+.lightning-badge svg { width: 42px; height: 42px; color: var(--yellow); }
+
+/* ─────────────────────  form panel  ───────────────────── */
+.form-panel {
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  padding: 56px 64px;
+  position: relative;
+}
+
+/* The theme toggle floats in the panel's corner: the auth pages have no
+   topbar to hang it from. */
+.form-panel .theme-toggle-slot {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 6;
+}
+
+.auth-form {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.form-brand {
+  display: flex;
+  justify-content: center;
+}
+.form-brand .brand-mark {
+  width: 72px;
+  height: 72px;
+}
+
+.auth-heading {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--ink-2);
+  margin: -6px 0 4px;
+  letter-spacing: -0.005em;
+}
+.auth-subheading {
+  text-align: center;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: -14px 0 4px;
+}
+.auth-subheading strong {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+/* ── pill fields ── */
+.field {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--field-bg);
+  border-radius: var(--radius-pill);
+  padding: 0 30px;
+  height: 70px;
+  border: 1.5px solid transparent;
+  transition: border-color 0.18s ease, background-color 0.18s ease,
+              box-shadow 0.18s ease;
+}
+.field:hover { background: var(--field-bg-2); }
+.field:focus-within {
+  border-color: var(--green);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--green) 16%, transparent);
+}
+/* A field that failed validation, so the error is visible without relying on
+   the message alone. */
+.field.has-error {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+.field.has-error:focus-within {
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--danger) 18%, transparent);
+}
+
+.field-ic {
+  color: var(--ink);
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+.field-ic svg { width: 22px; height: 22px; }
+
+.field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: 500 16px/1 var(--font-sans);
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+.field input::placeholder {
+  color: var(--ink-2);
+  opacity: 0.6;
+  font-weight: 500;
+}
+/* Chrome paints its own background on autofilled inputs, which fights the
+   pill. Fill the field with the token colour instead. */
+.field input:-webkit-autofill,
+.field input:-webkit-autofill:hover,
+.field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--ink);
+  -webkit-box-shadow: 0 0 0 100px var(--field-bg) inset;
+  caret-color: var(--ink);
+}
+
+.eye-toggle {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 6px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  transition: color var(--dur-fast), background var(--dur-fast);
+}
+.eye-toggle:hover { color: var(--ink); background: rgba(0, 0, 0, 0.04); }
+[data-theme="dark"] .eye-toggle:hover { background: rgba(255, 255, 255, 0.06); }
+.eye-toggle svg { width: 20px; height: 20px; }
+/* Show the icon for what the button does next. */
+.eye-toggle .icon-hide { display: none; }
+.eye-toggle[aria-pressed="true"] .icon-show { display: none; }
+.eye-toggle[aria-pressed="true"] .icon-hide { display: block; }
+
+/* ── options row ── */
+.form-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: -4px;
+}
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  cursor: pointer;
+  user-select: none;
+}
+.check input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.check .box {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid var(--line-strong);
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  transition: background var(--dur-fast), border-color var(--dur-fast);
+  flex-shrink: 0;
+}
+.check .box::after {
+  content: "";
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translate(1px, -1px);
+  opacity: 0;
+  transition: opacity 0.14s;
+}
+.check input:checked + .box { background: var(--green); border-color: var(--green); }
+.check input:checked + .box::after { opacity: 1; }
+.check:hover .box { border-color: var(--green); }
+/* The visually hidden input still owns focus, so mirror the ring onto the box. */
+.check input:focus-visible + .box {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.link-quiet {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--green);
+}
+.link-quiet:hover { color: var(--green-2); text-decoration: underline; }
+
+/* ── submit — narrower than the fields, centred ── */
+.btn-auth {
+  align-self: center;
+  width: 240px;
+  height: 60px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #18B651 0%, #0E7A36 100%);
+  color: #fff;
+  font: 700 16.5px/1 var(--font-sans);
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  box-shadow: var(--shadow-btn);
+  margin-top: 12px;
+  transition: transform var(--dur-fast), box-shadow var(--dur-fast), filter var(--dur-fast);
+}
+.btn-auth:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 38px -12px rgba(14, 122, 54, 0.65);
+}
+.btn-auth:active { transform: translateY(0); }
+.btn-auth[disabled] { cursor: not-allowed; filter: saturate(0.6); transform: none; }
+
+.btn-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+/* Set by resources/js/auth.js while the real POST is in flight, so a slow
+   network cannot be mistaken for a dead button. */
+.btn-auth.is-busy .btn-label::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: auth-spin 0.7s linear infinite;
+  margin-left: 4px;
+}
+@keyframes auth-spin { to { transform: rotate(360deg); } }
+
+.form-foot {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.form-foot a {
+  color: var(--green);
+  font-weight: 600;
+}
+.form-foot a:hover { text-decoration: underline; }
+
+/* ─────────────────────  one-time code entry  ───────────────────── */
+/* A fieldset, so the six boxes are announced as one labelled group — but its
+   default border, padding and min-width have to be cleared. */
+.otp-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.otp-row input {
+  width: 56px;
+  height: 66px;
+  text-align: center;
+  border-radius: 14px;
+  border: 1.5px solid transparent;
+  background: var(--field-bg);
+  color: var(--ink);
+  font: 700 24px/1 var(--font-sans);
+  transition: border-color 0.18s ease, background-color 0.18s ease,
+              box-shadow 0.18s ease;
+  /* The row is one logical field; the browser's number spinners are noise. */
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.otp-row input::-webkit-outer-spin-button,
+.otp-row input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.otp-row input:hover { background: var(--field-bg-2); }
+.otp-row input:focus {
+  outline: 0;
+  border-color: var(--green);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--green) 16%, transparent);
+}
+.otp-row.has-error input { border-color: var(--danger); background: var(--danger-soft); }
+
+.resend-row {
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--muted);
+  margin: 0;
+}
+.resend-row form { display: inline; }
+.resend-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: 600 13.5px var(--font-sans);
+  color: var(--green);
+  cursor: pointer;
+}
+.resend-btn:hover { text-decoration: underline; }
+.resend-btn[disabled] {
+  color: var(--muted);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+/* ─────────────────────  tablet  ───────────────────── */
+@media (max-width: 1100px) {
+  .visual-panel { padding: 48px 40px; }
+  .form-panel   { padding: 48px 40px; }
+  .lightning-badge { width: 76px; height: 76px; }
+  .lightning-badge svg { width: 34px; height: 34px; }
+}
+
+/* ─────────────────────  stacked  ───────────────────── */
+@media (max-width: 900px) {
+  .auth {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+  .visual-panel {
+    padding: 36px 20px 60px;
+    min-height: 58vh;
+  }
+  .composition { width: min(380px, 92%); }
+  .lightning-badge {
+    width: 72px;
+    height: 72px;
+    left: -3%;
+    bottom: 10%;
+  }
+  .lightning-badge svg { width: 32px; height: 32px; }
+
+  /* The form rises over the green panel as a rounded sheet. */
+  .form-panel {
+    border-radius: 32px 32px 0 0;
+    margin-top: -32px;
+    padding: 48px 28px 40px;
+    z-index: 5;
+    box-shadow: 0 -24px 48px -24px rgba(15, 30, 22, 0.12);
+  }
+  .form-panel .theme-toggle-slot { top: 16px; right: 16px; }
+
+  .auth-form { gap: 20px; max-width: 100%; }
+  .form-brand .brand-mark { width: 56px; height: 56px; }
+  .auth-heading { font-size: 19px; }
+  .field { height: 62px; padding: 0 24px; gap: 14px; }
+  .field-ic svg { width: 20px; height: 20px; }
+  .field input { font-size: 15px; }
+  .btn-auth { width: 100%; max-width: 280px; height: 56px; }
+  .otp-row input { width: 48px; height: 58px; font-size: 21px; }
+}
+
+@media (max-width: 480px) {
+  .visual-panel { padding: 28px 16px 56px; min-height: 52vh; }
+  .composition  { width: 95%; }
+  .manifesto    { top: 10%; left: 8%; right: 45%; }
+  .manifesto span { font-size: clamp(28px, 8.5vw, 40px); }
+  .lightning-badge { width: 62px; height: 62px; left: -2%; bottom: 8%; }
+  .lightning-badge svg { width: 26px; height: 26px; }
+  .form-panel { padding: 40px 20px 32px; }
+  .field { height: 58px; padding: 0 22px; gap: 12px; }
+  .field-error { margin-left: 22px; }
+  .btn-auth { width: 100%; max-width: 240px; height: 54px; }
+  .otp-row { gap: 7px; }
+  .otp-row input { width: 44px; height: 54px; font-size: 19px; }
+}

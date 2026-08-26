@@ -13,4 +13,6 @@
 
 @import './tokens.css';
 @import './base.css';
+@import './components/notice.css';
 @import './pages/landing.css';
+@import './pages/auth.css';

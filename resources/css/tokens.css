@@ -28,9 +28,31 @@
   --line:         #E4EBE6;
   --line-strong:  #D5DED8;
 
+  --green-deep:   #0A6B2C;
+  --yellow:       #F5C518;
+
+  /* ── form fields (from the login handover) ── */
+  --field-bg:     #DFF1E5;
+  --field-bg-2:   #D2EBDB;
+
+  /* ── feedback ──
+     Not in the handover: it defines no error, warning or success colour. These
+     are derived to sit beside the brand green at comparable weight, and are the
+     single source for every banner and inline message in the application. */
+  --danger:        #C03B3B;
+  --danger-soft:   #FCECEC;
+  --danger-line:   #F0CDCD;
+  --warning:       #96690F;
+  --warning-soft:  #FDF4E0;
+  --warning-line:  #EFDCB0;
+  --info:          #2C6A9B;
+  --info-soft:     #EAF3FA;
+  --info-line:     #C7DEEF;
+
   /* ── elevation ── */
   --shadow-card:  0 28px 60px -28px rgba(15, 30, 22, 0.22), 0 6px 14px -8px rgba(15, 30, 22, 0.07);
   --shadow-soft:  0 12px 32px -18px rgba(15, 30, 22, 0.14);
+  --shadow-btn:   0 18px 32px -12px rgba(14, 122, 54, 0.55);
 
   /* ── geometry ── */
   --radius-card:  22px;
@@ -73,8 +95,24 @@
   --line:         #1E2823;
   --line-strong:  #2A352F;
 
+  --green-deep:   #0A6B2C;
+
+  --field-bg:     #142A1D;
+  --field-bg-2:   #183626;
+
+  --danger:        #F08585;
+  --danger-soft:   #2A1618;
+  --danger-line:   #4A2427;
+  --warning:       #E5BC55;
+  --warning-soft:  #2A2313;
+  --warning-line:  #46391B;
+  --info:          #7FB6DD;
+  --info-soft:     #13212B;
+  --info-line:     #23384A;
+
   --shadow-card:  0 28px 60px -28px rgba(0, 0, 0, 0.7), 0 6px 14px -8px rgba(0, 0, 0, 0.55);
   --shadow-soft:  0 12px 32px -18px rgba(0, 0, 0, 0.5);
+  --shadow-btn:   0 18px 32px -12px rgba(0, 0, 0, 0.6);
 
   color-scheme: dark;
 }

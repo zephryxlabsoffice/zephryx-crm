@@ -1,0 +1,72 @@
+/* ============================================================================
+   Notices — the banner used for form-level feedback.
+
+   Four tones: danger (a failure), warning (a temporary block, e.g. lockout),
+   info (a neutral fact, e.g. "your session expired"), success. Every module
+   reuses this rather than styling its own messages.
+   ========================================================================= */
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--notice-line);
+  background: var(--notice-soft);
+  color: var(--notice-ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.notice-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  color: var(--notice-accent);
+}
+.notice-icon svg { width: 20px; height: 20px; }
+
+.notice-body { min-width: 0; }
+.notice-body strong {
+  display: block;
+  font-weight: 700;
+  color: var(--notice-accent);
+  margin-bottom: 2px;
+}
+.notice-body p { margin: 0; }
+
+.notice-danger {
+  --notice-accent: var(--danger);
+  --notice-soft: var(--danger-soft);
+  --notice-line: var(--danger-line);
+  --notice-ink: var(--ink-2);
+}
+.notice-warning {
+  --notice-accent: var(--warning);
+  --notice-soft: var(--warning-soft);
+  --notice-line: var(--warning-line);
+  --notice-ink: var(--ink-2);
+}
+.notice-info {
+  --notice-accent: var(--info);
+  --notice-soft: var(--info-soft);
+  --notice-line: var(--info-line);
+  --notice-ink: var(--ink-2);
+}
+.notice-success {
+  --notice-accent: var(--green);
+  --notice-soft: var(--green-soft);
+  --notice-line: var(--green-soft);
+  --notice-ink: var(--ink-2);
+}
+
+/* ── inline field-level validation ── */
+.field-error {
+  display: block;
+  margin: -12px 0 0 30px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--danger);
+}
