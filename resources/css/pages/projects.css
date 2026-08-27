@@ -1,0 +1,130 @@
+/* ============================================================================
+   Projects — /projects, /projects/mine, /projects/updates, /projects/{project}.
+
+   As with Teams, the handover's four stylesheets largely re-derived the table,
+   KPI tiles, rail cards and pagination under new names (`.kpi-row-5`,
+   `.proj-table`, `.po-table`, `.po-kpi`, `.pu-table`, `.rr-card`). Those map
+   onto components/ui.css. Progress bars, priority chips and deadline cells
+   were genuinely new and went there too, since Tasks will want all three.
+   ========================================================================= */
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.7fr) minmax(300px, 1fr);
+  gap: var(--density-gap);
+  align-items: flex-start;
+}
+
+/* ── the project cell: icon chip beside a stacked name and reference ── */
+.proj-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.proj-cell-text { min-width: 0; }
+.proj-cell strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  transition: color 0.14s;
+}
+.proj-cell span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ── the project manager cell ── */
+.pm-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.pm-cell .avatar { width: 30px; height: 30px; font-size: 11.5px; }
+.pm-cell strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.pm-empty {
+  font-size: 12.5px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ── detail page header ── */
+.proj-hd-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.proj-hd-title h1 { margin: 0; }
+.proj-ref {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The status control on the overview. The handover had a custom listbox that
+   changed the status in place; that is a write, and there is no backend for
+   it yet, so it renders as a disabled select — the shape of the control is
+   preserved and nothing pretends to work. */
+.status-select {
+  appearance: none;
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 13px/1 var(--font-sans);
+}
+.status-select[disabled] { opacity: 0.75; cursor: not-allowed; }
+
+/* ── EOD updates ── */
+.eod-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--r-btn);
+  background: var(--green-tint);
+  border: 1px solid var(--green-soft);
+  color: var(--green);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.14s, border-color 0.14s;
+}
+.eod-link:hover { background: var(--green-soft); border-color: var(--green); }
+.eod-link svg { width: 14px; height: 14px; }
+
+/* ─────────────────────────  responsive  ───────────────────────── */
+@media (max-width: 1280px) {
+  .projects-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+  /* In the stacked card layout the bar has the width of the card. */
+  .progress { width: 100%; }
+  .progress-cell { width: 100%; }
+}

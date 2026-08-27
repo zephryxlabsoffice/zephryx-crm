@@ -1,0 +1,190 @@
+/* ───────────────────────────────────────────────────────────────
+   Projects page styles — extends clients.css for shared table/rail base.
+   ─────────────────────────────────────────────────────────────── */
+
+/* KPI strip — 5 cards on this page */
+.kpi-row-5 {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--density-gap);
+  margin-bottom: var(--density-gap);
+}
+
+/* KPI variants */
+.kpi-c.kp-total    .kpi-c-ic { background: var(--green-soft);   color: var(--green); }
+.kpi-c.kp-active   .kpi-c-ic { background: var(--green-softer); color: var(--green); }
+.kpi-c.kp-done     .kpi-c-ic { background: var(--amber-soft);   color: var(--amber); }
+.kpi-c.kp-hold     .kpi-c-ic { background: var(--blue-soft);    color: var(--blue); }
+.kpi-c.kp-overdue  .kpi-c-ic { background: var(--red-soft);     color: var(--red); }
+
+/* ─────────────  project row cell (icon + name + project-id)  ───────────── */
+.proj-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+.proj-ic {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.proj-ic svg { width: 18px; height: 18px; }
+.proj-ic.t-purple { background: var(--purple-soft); color: var(--purple); }
+.proj-ic.t-pink   { background: #FCE7F3; color: #DB2777; }
+.proj-ic.t-amber  { background: var(--amber-soft);  color: var(--amber); }
+.proj-ic.t-blue   { background: var(--blue-soft);   color: var(--blue); }
+.proj-ic.t-green  { background: var(--green-soft);  color: var(--green); }
+.proj-ic.t-indigo { background: var(--indigo-soft); color: var(--indigo); }
+.proj-ic.t-red    { background: var(--red-soft);    color: var(--red); }
+.proj-ic.t-cyan   { background: #CFFAFE; color: #0891B2; }
+
+[data-theme="dark"] .proj-ic.t-pink { background: #2A1226; color: #F472B6; }
+[data-theme="dark"] .proj-ic.t-cyan { background: #062B33; color: #67E8F9; }
+
+.proj-name-body strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+}
+.proj-name-body span {
+  font-size: 11.5px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+/* keep table cells on one line */
+.proj-table .cl-table tbody td { white-space: nowrap; }
+
+/* ─────────────  Project Manager cell  ───────────── */
+.pm-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+.pm-cell .cl-avatar { width: 30px; height: 30px; font-size: 11.5px; }
+.pm-cell strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ─────────────  Progress bar cell  ───────────── */
+.prog-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+.prog-pct {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 32px;
+  display: inline-block;
+}
+.prog-bar {
+  position: relative;
+  width: 100px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.prog-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--green);
+  transition: width 0.4s ease;
+}
+/* When complete, fill becomes deeper green; almost-done is amber */
+.prog-cell.is-complete .prog-bar > span { background: var(--green); }
+.prog-cell.is-low      .prog-bar > span { background: var(--amber); }
+
+/* ─────────────  Deadline cell (with calendar icon)  ───────────── */
+.dl-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.dl-cell svg { width: 14px; height: 14px; color: var(--muted); flex-shrink: 0; }
+
+/* Priority pill (rounded square style, soft tints) */
+.priority {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.005em;
+}
+.priority.high   { background: var(--red-soft);   color: var(--red); }
+.priority.medium { background: var(--amber-soft); color: var(--amber); }
+.priority.low    { background: var(--surface-2);  color: var(--ink-3); }
+
+/* ─────────────  Right rail: Project Status donut (reuses .donut + .dept-leg from employees.css)  ───────────── */
+/* Upcoming Deadlines list */
+.dl-list { display: flex; flex-direction: column; }
+.dl-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.dl-row:last-child { border-bottom: 0; }
+.dl-row .proj-ic { width: 38px; height: 38px; }
+.dl-body strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+}
+.dl-body span {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.dl-meta {
+  text-align: right;
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  line-height: 1.3;
+}
+.dl-meta strong {
+  display: block;
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 12.5px;
+}
+.dl-meta em {
+  font-style: normal;
+  color: var(--red);
+  font-weight: 600;
+}
+
+/* ─────────────  responsive  ───────────── */
+@media (max-width: 1280px) {
+  .kpi-row-5 { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 980px) {
+  .kpi-row-5 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 680px) {
+  .kpi-row-5 { grid-template-columns: 1fr; }
+  .prog-bar { width: 70px; }
+}

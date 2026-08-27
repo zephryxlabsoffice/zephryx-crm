@@ -8,7 +8,8 @@
 
     <nav class="sb-nav">
         <?php $__currentLoopData = $navigation; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-            <a class="sb-link <?php if($item['active']): ?> active <?php endif; ?>"
+            
+            <a class="<?php echo \Illuminate\Support\Arr::toCssClasses(['sb-link', 'active' => $item['active']]); ?>"
                href="<?php echo e($item['url']); ?>"
                <?php if($item['active']): ?> aria-current="page" <?php endif; ?>>
                 <span class="sb-ic" aria-hidden="true">

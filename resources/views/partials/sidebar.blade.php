@@ -15,7 +15,9 @@
 
     <nav class="sb-nav">
         @foreach ($navigation as $item)
-            <a class="sb-link @if ($item['active']) active @endif"
+            {{-- @class rather than an inline @if, so the rendered attribute is
+                 exactly "sb-link" or "sb-link active" with no stray space. --}}
+            <a @class(['sb-link', 'active' => $item['active']])
                href="{{ $item['url'] }}"
                @if ($item['active']) aria-current="page" @endif>
                 <span class="sb-ic" aria-hidden="true">

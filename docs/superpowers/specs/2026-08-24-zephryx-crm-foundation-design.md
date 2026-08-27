@@ -783,6 +783,41 @@ child pushed the whole page sideways instead of shrinking or scrolling.
 Tables now scroll inside their card in the band between the stacking
 breakpoint and a comfortable desktop; the page itself never scrolls sideways.
 
+### Projects (decided 2026-08-27)
+
+Four pages: `/projects` (managing), `/projects/mine` (personal),
+`/projects/updates` (end-of-day submissions) and `/projects/{project}`
+(overview). As with Teams, the handover's four stylesheets largely re-derived
+components that already exist; progress bars, priority chips and deadline cells
+were genuinely new and went into `components/ui.css`, since Tasks will want all
+three.
+
+- **Progress bars use the native `<progress>` element.** The handover sized a
+  `<div>` with `style="width:75%"`, which our Content-Security-Policy blocks
+  outright (§6) — every bar would have rendered empty. `<progress>` takes an
+  attribute rather than a style, and announces itself to a screen reader
+  without any ARIA of our own.
+- **Deadlines are stored as an offset from today** in the sample data, not as
+  fixed dates. The handover's were all in 2024, which by now reads as
+  universally overdue and makes the deadline states impossible to review.
+- **A delivered project past its date is not overdue.** It landed late, which
+  is history, not an outstanding risk; the handover coloured every past date
+  red regardless of status. The Overdue tile counts only unfinished work.
+- **Countdowns are coloured only when they are a problem** — within a week, or
+  already passed.
+- **Progress under 20% is tinted amber.** A bar that is a fifth full reads as
+  an achievement; with a deadline running it is closer to a warning.
+- **The status control is a disabled `<select>`.** The handover had a custom
+  listbox that changed status in place — that is a write, and there is no
+  backend for it, so the control keeps its shape and does not pretend.
+- **My Projects has no back button**, for the same reason My Teams does not.
+
+One shared fix: `.kpi-row`'s minimum track dropped from 230px to 200px, because
+Projects has five tiles and the fifth wrapped to a row of its own on a normal
+desktop. And `.cell-actions` gained a `cell-actions-wide` variant — the mobile
+card layout positions row actions absolutely for an icon button, and a labelled
+button ("Submit EOD") landed on top of the row's name.
+
 ### Viewport fit on mobile (decided 2026-08-26)
 
 Every public page fits the phone viewport without scrolling. Verified at

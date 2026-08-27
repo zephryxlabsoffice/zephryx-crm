@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-density="comfortable">
+<head>
+  <meta charset="UTF-8" />
+  <title>Project Overview · ZephryxLabs CRM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shell.css" />
+  <link rel="stylesheet" href="project-overview.css" />
+</head>
+<body data-active="projects">
+
+  <div class="app">
+    <div class="main">
+
+      <main class="page" data-screen-label="04 · Project Overview">
+
+        <span class="po-back" onclick="history.back()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Back to Projects
+        </span>
+
+        <div class="po-head">
+          <div class="po-head-l">
+            <h1 class="po-title">Website Redesign</h1>
+            <span class="po-idbadge">WD-2024-001</span>
+            <p class="po-sub">Manage assigned teams and monitor project collaboration.</p>
+          </div>
+          <div class="po-head-actions">
+            <button class="btn btn-primary" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+              Assign New Team
+            </button>
+            <button class="btn btn-outline" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit Project Teams
+            </button>
+          </div>
+        </div>
+
+        <section class="po-grid">
+          <div class="po-left">
+
+            <!-- KPI strip -->
+            <section class="po-kpis">
+              <div class="po-kpi teams">
+                <div class="po-kpi-top">
+                  <div class="po-kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                  <div class="po-kpi-body">
+                    <div class="po-kpi-lbl">Total Teams</div>
+                    <div class="po-kpi-val">5</div>
+                    <div class="po-kpi-foot">Teams assigned</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="po-kpi pm">
+                <div class="po-kpi-lbl">Project Manager</div>
+                <div class="po-pm">
+                  <span class="po-pm-av av-7">RS</span>
+                  <span class="po-pm-body"><strong>Riya Sharma</strong><span><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="a2d0cbdbc38cd1cac3d0cfc3e2d8c7d2cad0dbda8cc1cdcf">[email&#160;protected]</a></span></span>
+                </div>
+              </div>
+
+              <div class="po-kpi status">
+                <div class="po-kpi-lbl">Status</div>
+                <div class="po-statwrap" id="po-statwrap">
+                  <button class="po-statbtn" id="po-statbtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="lead"><span class="dot dot-inprogress"></span><span id="po-statlabel">In Progress</span></span>
+                    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </button>
+                  <div class="po-statmenu" role="listbox">
+                    <div class="po-statopt" role="option" data-dot="dot-notstarted"><span class="dot dot-notstarted"></span>Not Started</div>
+                    <div class="po-statopt active" role="option" data-dot="dot-inprogress"><span class="dot dot-inprogress"></span>In Progress</div>
+                    <div class="po-statopt" role="option" data-dot="dot-onhold"><span class="dot dot-onhold"></span>On Hold</div>
+                    <div class="po-statopt" role="option" data-dot="dot-completed"><span class="dot dot-completed"></span>Completed</div>
+                    <div class="po-statopt" role="option" data-dot="dot-cancelled"><span class="dot dot-cancelled"></span>Cancelled</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="po-kpi deadline">
+                <div class="po-kpi-top">
+                  <div class="po-kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+                  <div class="po-kpi-body">
+                    <div class="po-kpi-lbl">Deadline</div>
+                    <div class="po-kpi-val">25 May 2024</div>
+                    <div class="po-kpi-foot warn">In 5 days</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Assigned Teams -->
+            <div class="po-card">
+              <div class="po-card-hd">Assigned Teams</div>
+              <div class="po-table-wrap">
+                <table class="po-table">
+                  <thead>
+                    <tr>
+                      <th>Team Name</th>
+                      <th>Team Lead</th>
+                      <th>Members</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><span class="po-team"><span class="po-chip c-green">DT</span><span class="po-team-body"><strong>Design Team</strong><span>UI/UX and Visual Design</span></span></span></td>
+                      <td><span class="po-lead"><span class="po-lead-av av-3">RS</span><span class="po-lead-body"><strong>Rahul Sharma</strong><span>UI/UX Designer</span></span></span></td>
+                      <td><span class="po-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg><strong>6</strong><span>Members</span></span></td>
+                      <td><button class="po-go" aria-label="Open Design Team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td><span class="po-team"><span class="po-chip c-blue">FT</span><span class="po-team-body"><strong>Frontend Team</strong><span>Frontend Development</span></span></span></td>
+                      <td><span class="po-lead"><span class="po-lead-av av-7">NP</span><span class="po-lead-body"><strong>Neha Patel</strong><span>Frontend Developer</span></span></span></td>
+                      <td><span class="po-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg><strong>8</strong><span>Members</span></span></td>
+                      <td><button class="po-go" aria-label="Open Frontend Team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td><span class="po-team"><span class="po-chip c-purple">BT</span><span class="po-team-body"><strong>Backend Team</strong><span>Backend Development</span></span></span></td>
+                      <td><span class="po-lead"><span class="po-lead-av av-2">AM</span><span class="po-lead-body"><strong>Arjun Mehta</strong><span>Backend Developer</span></span></span></td>
+                      <td><span class="po-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg><strong>7</strong><span>Members</span></span></td>
+                      <td><button class="po-go" aria-label="Open Backend Team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td><span class="po-team"><span class="po-chip c-amber">QA</span><span class="po-team-body"><strong>QA Team</strong><span>Quality Assurance</span></span></span></td>
+                      <td><span class="po-lead"><span class="po-lead-av av-7">PS</span><span class="po-lead-body"><strong>Pooja Singh</strong><span>QA Engineer</span></span></span></td>
+                      <td><span class="po-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg><strong>5</strong><span>Members</span></span></td>
+                      <td><button class="po-go" aria-label="Open QA Team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td><span class="po-team"><span class="po-chip c-pink">MT</span><span class="po-team-body"><strong>Marketing Team</strong><span>Marketing &amp; Promotion</span></span></span></td>
+                      <td><span class="po-lead"><span class="po-lead-av av-5">KM</span><span class="po-lead-body"><strong>Karan Malhotra</strong><span>Marketing Manager</span></span></span></td>
+                      <td><span class="po-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg><strong>4</strong><span>Members</span></span></td>
+                      <td><button class="po-go" aria-label="Open Marketing Team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- right rail -->
+          <div class="po-right">
+            <section class="rr-card">
+              <div class="rr-hd">Project Summary</div>
+              <div class="ps-list">
+                <div class="ps-row">
+                  <span class="ps-lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg> Client Name</span>
+                  <span class="ps-val link">DGL International School</span>
+                </div>
+                <div class="ps-row">
+                  <span class="ps-lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Start Date</span>
+                  <span class="ps-val">10 Apr 2024</span>
+                </div>
+                <div class="ps-row">
+                  <span class="ps-lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Deadline</span>
+                  <span class="ps-val">25 May 2024</span>
+                </div>
+                <div class="ps-row">
+                  <span class="ps-lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> Priority</span>
+                  <span class="pill-pri-high">High</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="rr-card">
+              <div class="rr-hd">Quick Actions</div>
+              <div class="qa-grid">
+                <button class="qa-tile t-green" type="button"><div class="qa-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div><span>Add Team</span></button>
+                <button class="qa-tile t-blue" type="button"><div class="qa-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12l2 2 4-4"/></svg></div><span>Assign Task</span></button>
+                <button class="qa-tile t-purple" type="button"><div class="qa-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></div><span>View Timeline</span></button>
+                <button class="qa-tile t-amber" type="button"><div class="qa-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div><span>Open Files</span></button>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <div class="act-list" style="display:none" aria-hidden="true">
+          <div class="act-row"><div class="act-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="act-body"><strong>Marketing Team assigned to Website Redesign</strong><span>by Santanu</span></div><div class="act-time">10:30 AM</div></div>
+          <div class="act-row"><div class="act-ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12l2 2 4-4"/></svg></div><div class="act-body"><strong>3 tasks assigned to Frontend Team</strong><span>by Riya Sharma</span></div><div class="act-time">09:15 AM</div></div>
+          <div class="act-row"><div class="act-ic amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="act-body"><strong>Project deadline approaching in 5 days</strong><span>by System</span></div><div class="act-time">08:00 AM</div></div>
+        </div>
+
+        <style>
+          .act-list .act-ic { width:34px; height:34px; border-radius:9px; display:grid; place-items:center; background:var(--green-softer); color:var(--green); flex-shrink:0; }
+          .act-list .act-ic svg { width:16px; height:16px; }
+          .act-list .act-ic.blue { background:var(--blue-soft); color:var(--blue); }
+          .act-list .act-ic.green { background:var(--green-soft); color:var(--green); }
+          .act-list .act-ic.amber { background:var(--amber-soft); color:var(--amber); }
+        </style>
+
+      </main>
+    </div>
+  </div>
+
+  <div id="tweaks-root"></div>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="shell.js"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+
+  <script>
+    // Status dropdown
+    (function () {
+      const wrap = document.getElementById('po-statwrap');
+      const btn = document.getElementById('po-statbtn');
+      const label = document.getElementById('po-statlabel');
+      const leadDot = btn.querySelector('.lead .dot');
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const open = wrap.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      wrap.querySelectorAll('.po-statopt').forEach((opt) => {
+        opt.addEventListener('click', () => {
+          wrap.querySelectorAll('.po-statopt').forEach((o) => o.classList.remove('active'));
+          opt.classList.add('active');
+          label.textContent = opt.textContent.trim();
+          leadDot.className = 'dot ' + opt.dataset.dot;
+          wrap.classList.remove('open');
+          btn.setAttribute('aria-expanded', 'false');
+        });
+      });
+      document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) { wrap.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); } });
+    })();
+  </script>
+
+  <script type="text/babel">
+    const PO_TWEAKS = /*EDITMODE-BEGIN*/{"dark":false,"sidebarCollapsed":false,"density":"comfortable"}/*EDITMODE-END*/;
+    function applyPo(t) {
+      const html = document.documentElement;
+      html.setAttribute('data-theme', t.dark ? 'dark' : 'light');
+      html.setAttribute('data-density', t.density);
+      document.body.dataset.sidebar = t.sidebarCollapsed ? 'collapsed' : 'expanded';
+    }
+    function PoTweaks() {
+      const [t, setTweak] = useTweaks(PO_TWEAKS);
+      React.useEffect(() => { applyPo(t); }, [t]);
+      return (
+        <TweaksPanel title="Tweaks">
+          <TweakSection label="Theme" />
+          <TweakToggle label="Dark mode" value={t.dark} onChange={(v) => setTweak('dark', v)} />
+          <TweakSection label="Layout" />
+          <TweakToggle label="Sidebar collapsed" value={t.sidebarCollapsed} onChange={(v) => setTweak('sidebarCollapsed', v)} />
+          <TweakRadio label="Density" value={t.density}
+                      options={[{value:'compact',label:'Compact'},{value:'comfortable',label:'Comfy'}]}
+                      onChange={(v) => setTweak('density', v)} />
+        </TweaksPanel>
+      );
+    }
+    applyPo(PO_TWEAKS);
+    const root = ReactDOM.createRoot(document.getElementById('tweaks-root'));
+    root.render(<PoTweaks />);
+  </script>
+</body>
+</html>

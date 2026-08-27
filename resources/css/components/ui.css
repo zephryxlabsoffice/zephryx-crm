@@ -287,9 +287,12 @@
 }
 
 /* ─────────────────────────  KPI tiles  ───────────────────────── */
+/* 200px, not 230px: Projects has five tiles, and at 230 the fifth wrapped to a
+   row of its own on a normal desktop, which reads as an afterthought rather
+   than part of the set. */
 .kpi-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--density-gap);
   margin-bottom: var(--density-gap);
 }
@@ -490,6 +493,8 @@
   color: var(--avatar-fg);
   background: var(--avatar-bg);
 }
+/* The same chip carrying an icon instead of initials. */
+.chip svg { width: 18px; height: 18px; }
 
 /* ─────────────────────────  tabs  ─────────────────────────
    Links, not buttons: each tab is a filtered view with its own URL, so it can
@@ -565,6 +570,89 @@
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
+
+/* ─────────────────────────  progress  ─────────────────────────
+   A native <progress>, not a div with `style="width:75%"`. The handover used
+   the latter, which our Content-Security-Policy blocks outright (§6) — every
+   bar would have rendered empty. The element also announces itself to a screen
+   reader without any ARIA of our own. */
+.progress-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+.progress-pct {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 34px;
+  font-variant-numeric: tabular-nums;
+}
+.progress {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 84px;
+  height: 6px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.progress::-webkit-progress-bar { background: var(--surface-2); border-radius: 999px; }
+.progress::-webkit-progress-value { background: var(--progress-fill, var(--green)); border-radius: 999px; }
+.progress::-moz-progress-bar { background: var(--progress-fill, var(--green)); border-radius: 999px; }
+/* Barely started reads as a risk, not an achievement. */
+.progress-cell.is-early .progress { --progress-fill: var(--warning); }
+
+/* ─────────────────────────  priority  ─────────────────────────
+   A squarer chip than `.pill`, so priority and status do not read as the same
+   kind of thing sitting side by side in a row. */
+.priority {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+}
+.priority-high { background: var(--danger-soft); color: var(--danger); }
+.priority-medium { background: var(--warning-soft); color: var(--warning); }
+.priority-low { background: var(--surface-2); color: var(--ink-3); }
+
+/* An inline date with a leading icon. */
+.date-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.date-cell svg { width: 14px; height: 14px; color: var(--muted); flex-shrink: 0; }
+.date-cell.is-overdue { color: var(--danger); }
+.date-cell.is-overdue svg { color: var(--danger); }
+
+/* A two-line right-hand column in a rail row — a date above a countdown. */
+.rail-meta {
+  text-align: right;
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  line-height: 1.35;
+  flex-shrink: 0;
+}
+.rail-meta strong {
+  display: block;
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: 12.5px;
+}
+.rail-meta em { font-style: normal; font-weight: 600; }
+.rail-meta em.is-soon { color: var(--warning); }
+.rail-meta em.is-overdue { color: var(--danger); }
 
 /* An inline count with a leading icon — "6 members". */
 .count-inline {
@@ -740,7 +828,9 @@
   }
   .data-table-stack td.cell-lead::before { content: none; }
 
-  /* Row actions sit with the name rather than as a labelled field. */
+  /* Row actions sit with the name rather than as a labelled field. This is
+     sized for an icon button; a wider control needs `cell-actions-wide`, or it
+     lands on top of the row's name. */
   .data-table-stack td.cell-actions {
     position: absolute;
     top: 12px;
@@ -750,6 +840,17 @@
   }
   .data-table-stack td.cell-actions::before { content: none; }
   .data-table-stack tr { position: relative; }
+
+  /* A full control — a button with a label — stays in the flow, at the foot of
+     the card where it reads as the card's action. */
+  .data-table-stack td.cell-actions.cell-actions-wide {
+    position: static;
+    width: 100%;
+    justify-content: flex-end;
+    padding-top: 10px;
+    margin-top: 6px;
+    border-top: 1px solid var(--line);
+  }
 }
 
 @media (max-width: 760px) {

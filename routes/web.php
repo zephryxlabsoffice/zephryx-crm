@@ -7,6 +7,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ModulePlaceholderController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ShellPreferenceController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\ThemeController;
@@ -108,8 +109,22 @@ Route::get('/teams/{team}/edit', fn () => app(ModulePlaceholderController::class
     ->where('team', '[A-Za-z0-9-]{1,32}')
     ->name('teams.edit');
 
+Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
+// These sit before /projects/{project} or they are read as project references.
+Route::get('/projects/mine', [ProjectController::class, 'mine'])->name('projects.mine');
+Route::get('/projects/updates', [ProjectController::class, 'updates'])->name('projects.updates');
+Route::get('/projects/create', fn () => app(ModulePlaceholderController::class)('projects'))->name('projects.create');
+Route::get('/projects/{project}', [ProjectController::class, 'show'])
+    ->where('project', '[A-Za-z0-9-]{1,32}')
+    ->name('projects.show');
+Route::get('/projects/{project}/edit', fn () => app(ModulePlaceholderController::class)('projects'))
+    ->where('project', '[A-Za-z0-9-]{1,32}')
+    ->name('projects.edit');
+Route::get('/projects/{project}/eod', fn () => app(ModulePlaceholderController::class)('projects'))
+    ->where('project', '[A-Za-z0-9-]{1,32}')
+    ->name('projects.updates.create');
+
 foreach ([
-    'projects' => 'projects.index',
     'tasks' => 'tasks.index',
     'tickets' => 'tickets.index',
     'invoices' => 'invoices.index',
