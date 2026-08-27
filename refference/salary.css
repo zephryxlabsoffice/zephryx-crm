@@ -1,0 +1,323 @@
+/* Salary Management (v2 redesign) styles */
+
+/* Header My Salary CTA */
+.sl-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 22px;
+  background: var(--green);
+  color: #fff;
+  border: 0;
+  border-radius: 10px;
+  font: 700 14px/1 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 8px 18px -8px color-mix(in oklab, var(--green) 70%, transparent);
+  transition: background 0.14s, transform 0.14s;
+  text-decoration: none;
+}
+.sl-cta:hover { background: var(--green-2); transform: translateY(-1px); }
+.sl-cta svg { width: 16px; height: 16px; }
+
+/* Top KPI row: 3 cards — 2 stat + 1 generate-action */
+.sl-top-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: var(--density-gap);
+  margin-bottom: var(--density-gap);
+}
+.sl-kpi {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 22px 26px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.sl-kpi-ic {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.sl-kpi-ic svg { width: 28px; height: 28px; }
+.sl-kpi.t-paid    .sl-kpi-ic { background: var(--green-soft);  color: var(--green); }
+.sl-kpi.t-pending .sl-kpi-ic { background: var(--amber-soft);  color: var(--amber); }
+.sl-kpi-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sl-kpi-lbl { font-size: 13px; color: var(--muted); font-weight: 500; }
+.sl-kpi-val { font-size: 32px; font-weight: 800; letter-spacing: -0.025em; color: var(--ink); line-height: 1; }
+.sl-kpi-unit { font-size: 12px; color: var(--muted); font-weight: 500; }
+.sl-kpi-link { font-size: 13px; font-weight: 600; margin-top: 4px; }
+.sl-kpi.t-paid    .sl-kpi-link { color: var(--green); }
+.sl-kpi.t-pending .sl-kpi-link { color: var(--amber); }
+
+.sl-generate {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 22px 26px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.sl-gen-ic {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: var(--blue-soft);
+  color: var(--blue);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.sl-gen-ic svg { width: 28px; height: 28px; }
+.sl-gen-body strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+  margin-bottom: 4px;
+}
+.sl-gen-body p {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.sl-gen-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 8px;
+  background: var(--green);
+  color: #fff;
+  font: 700 13px/1 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  border: 0;
+  transition: background 0.14s, transform 0.14s;
+}
+.sl-gen-btn:hover { background: var(--green-2); transform: translateY(-1px); }
+
+@media (max-width: 1280px) {
+  .sl-top-row { grid-template-columns: 1fr 1fr; }
+  .sl-generate { grid-column: 1 / -1; }
+}
+@media (max-width: 680px) { .sl-top-row { grid-template-columns: 1fr; } }
+
+/* Filter row */
+.sl-filters {
+  display: grid;
+  grid-template-columns: 200px 220px 220px minmax(0, 1fr) auto;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.sl-filter, .sl-search {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: 500 13.5px/1 'Plus Jakarta Sans', sans-serif;
+  color: var(--ink-2);
+  cursor: pointer;
+  gap: 10px;
+}
+.sl-filter { justify-content: space-between; }
+.sl-filter svg { width: 15px; height: 15px; color: var(--muted); flex-shrink: 0; }
+.sl-filter > span { display: inline-flex; align-items: center; gap: 8px; }
+.sl-search svg { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0; }
+.sl-search input {
+  flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
+  font: 500 13.5px/1 'Plus Jakarta Sans', sans-serif; color: var(--ink);
+}
+.sl-filter-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 44px; padding: 0 18px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  font: 500 13.5px/1 'Plus Jakarta Sans', sans-serif; color: var(--ink-2); cursor: pointer;
+}
+.sl-filter-btn svg { width: 15px; height: 15px; color: var(--muted); }
+
+@media (max-width: 1280px) { .sl-filters { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 680px)  { .sl-filters { grid-template-columns: 1fr; } }
+
+/* Main grid */
+.sl-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.4fr) minmax(330px, 1fr);
+  gap: var(--density-gap);
+  align-items: flex-start;
+}
+
+/* Salary table */
+.sl-table { width: 100%; border-collapse: collapse; }
+.sl-table thead th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 14px 8px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.sl-table thead th:first-child { padding-left: 22px; }
+.sl-table thead th:last-child  { padding-right: 22px; text-align: right; }
+.sl-table tbody td {
+  padding: 14px 8px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13.5px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.sl-table tbody td:first-child { padding-left: 22px; }
+.sl-table tbody td:last-child  { padding-right: 22px; text-align: right; }
+.sl-table tbody tr { transition: background 0.14s; cursor: pointer; }
+.sl-table tbody tr:hover { background: var(--green-tint); }
+.sl-table tbody tr:last-child td { border-bottom: 0; }
+
+.sl-emp {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+.sl-emp .cl-avatar { width: 36px; height: 36px; font-size: 13px; }
+.sl-emp strong {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.sl-amount {
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Right rail: Salary Details */
+.sd-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 24px;
+}
+.sd-card + .sd-card { margin-top: var(--density-gap); }
+.sd-head h3 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.sd-head p {
+  margin: 0 0 18px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.sd-emp {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 14px;
+}
+.sd-emp .cl-avatar {
+  width: 50px;
+  height: 50px;
+  font-size: 16px;
+}
+.sd-emp-body { flex: 1; min-width: 0; }
+.sd-emp-body strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.sd-emp-body span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.sd-row {
+  display: grid;
+  grid-template-columns: 22px 140px 1fr;
+  gap: 10px;
+  padding: 8px 0;
+  align-items: center;
+  font-size: 13px;
+}
+.sd-row > svg { width: 14px; height: 14px; color: var(--muted); }
+.sd-row b {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 12.5px;
+}
+.sd-row > span {
+  color: var(--ink);
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Salary History */
+.sd-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 18px 0 16px;
+}
+.sd-subhead {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.sh-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.sh-row:last-child { border-bottom: 0; }
+.sh-row strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.sh-amount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.sh-date {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.sh-view {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green);
+  float: right;
+  text-decoration: none;
+}
+.sh-view:hover { text-decoration: underline; }
+.sh-view svg { width: 14px; height: 14px; }
+
+@media (max-width: 1280px) { .sl-grid { grid-template-columns: 1fr; } }

@@ -9,6 +9,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ModulePlaceholderController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\ShellPreferenceController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TicketController;
@@ -189,8 +190,41 @@ Route::post('/invoices/{invoice}/cancel', fn () => abort(501))
     ->where('invoice', '[A-Za-z0-9-]{1,32}')
     ->name('invoices.cancel');
 
+/*
+ * Salary. The most sensitive routes in the application — see
+ * App\Http\Controllers\SalaryController for what the backend owes them.
+ *
+ * Note the shape of the payslip route: it takes a period and no employee, so
+ * the person is resolved from the session and there is no identifier to tamper
+ * with. The management view of someone else's run is separate and separately
+ * guarded. A safe common path beats an ownership check somebody has to remember
+ * to write.
+ */
+Route::get('/salary', [SalaryController::class, 'index'])->name('salary.index');
+// Before /salary/{employee}/{period}, or these are read as employee references.
+Route::get('/salary/mine', [SalaryController::class, 'mine'])->name('salary.mine');
+Route::get('/salary/payslip/{period}', [SalaryController::class, 'payslip'])
+    ->where('period', '[0-9]{4}-[0-9]{2}')
+    ->name('salary.payslip');
+Route::get('/salary/{employee}/{period}', [SalaryController::class, 'show'])
+    ->where('employee', '[A-Za-z0-9-]{1,32}')
+    ->where('period', '[0-9]{4}-[0-9]{2}')
+    ->name('salary.show');
+
+/*
+ * Generating payroll is a bulk financial write, and the backend must make it
+ * IDEMPOTENT: running it twice for one month produces one set of runs, not two,
+ * and pays nobody twice. §6 also wants an audit entry naming who ran it. The
+ * handover offered a single "Generate Salary" button with no review step; the
+ * page here generates into an unpaid state that somebody then releases.
+ */
+Route::post('/salary/generate', fn () => abort(501))->name('salary.generate');
+Route::post('/salary/{employee}/{period}/pay', fn () => abort(501))
+    ->where('employee', '[A-Za-z0-9-]{1,32}')
+    ->where('period', '[0-9]{4}-[0-9]{2}')
+    ->name('salary.pay');
+
 foreach ([
-    'salary' => 'salary.index',
     'attendance' => 'attendance.index',
     'leave' => 'leave.index',
     'meetings' => 'meetings.index',

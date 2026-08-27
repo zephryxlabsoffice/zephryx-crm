@@ -1276,3 +1276,36 @@
   padding: 18px 22px 22px;
 }
 .form-grid .form-field { min-width: 0; }
+
+/* `.kpi-ic.tone-danger` was missing while `.qa-tile.tone-danger` existed, so
+   the Invoices "Overdue" tile and the Salary "On hold" tile both fell back to
+   the default green — the most alarming figure on each page rendering as if it
+   were fine. Feedback tones are defined for every element that takes one. */
+.kpi-ic.tone-danger  { background: var(--danger-soft);  color: var(--danger); }
+.rail-ic.tone-danger { background: var(--danger-soft);  color: var(--danger); }
+.rail-ic.tone-soft   { background: var(--green-softer); color: var(--green); }
+.stat-ic.tone-danger { background: var(--danger-soft);  color: var(--danger); }
+.field-ic.tone-danger { background: var(--danger-soft); color: var(--danger); }
+
+/* Money cells align with their right-aligned headers. `.cell-money` is the td
+   counterpart of the `.col-money` th; both need the two-class weight to beat
+   the table's own `thead th` / `tbody td` alignment. */
+.data-table tbody td.cell-money,
+.data-table tfoot td.cell-money { text-align: right; }
+
+/* A stat row whose value is a sentence rather than a figure. Side by side, a
+   long value forces the label to wrap and the two interleave — "What it Held
+   back deliberately - someone decided this means". */
+.stat-row-block {
+  display: block;
+}
+.stat-row-block .stat-label {
+  display: block;
+  margin-bottom: 4px;
+}
+.stat-row-block .stat-value {
+  display: block;
+  text-align: left;
+  font-weight: 500;
+  line-height: 1.55;
+}

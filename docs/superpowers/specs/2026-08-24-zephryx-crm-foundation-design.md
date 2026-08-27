@@ -1049,6 +1049,118 @@ One name collision found doing it: `.field` and `.field-lbl` were already taken
 by the auth pages and by `.field-grid` respectively, so the promoted form
 control is `.form-field` / `.form-field-lbl`.
 
+### Salary (decided 2026-08-27)
+
+The most sensitive module in the application. It holds what every person earns,
+their bank account, their PAN and their Aadhaar. Three pages: payroll
+(`/salary`), a person's own pay (`/salary/mine`) and a payslip
+(`/salary/payslip/{period}`), plus the management view of one run at
+`/salary/{employee}/{period}`.
+
+**Four owner decisions taken 2026-08-27:**
+
+1. **Aadhaar is kept**, against the recommendation to drop it. The
+   recommendation stood on the fact that payroll runs on PAN and bank details,
+   and that holding Aadhaar brings the Aadhaar Act 2016 and the UIDAI
+   regulations with it — consent and purpose limitation, encryption, breach
+   reporting, and penalties that reach private companies. **The owner elected to
+   keep it; it is recorded here as their decision.** Since it is held, it is
+   held properly: masked to the last four digits per UIDAI's own rule, shown to
+   nobody but the person themselves, and encrypted at rest when the column
+   lands.
+2. **Salary has a structure** — earnings less deductions equals net.
+3. **Nothing is deducted today.** No EPF (not mandatory below twenty
+   employees), no ESI (below ten), no professional tax, no TDS. Gross is net.
+4. **The payslip was built**, not just the two handover pages.
+
+**Where the security actually lives.** `App\Support\Sensitive` masks in PHP,
+before the value reaches a view. The rule it exists to enforce: the full number
+must never be written into the HTML and hidden with CSS, never put in a data
+attribute, never included in a payload the page filters client-side. Whatever
+the browser was sent has already been read by whoever is sitting at the browser;
+"hidden" markup is a decoration over a leak. There is deliberately no accessor a
+Blade template could call to get an unmasked value.
+
+Three tests assert this against rendered HTML rather than against the helper,
+because the question is what reached the browser: every unmasked identifier in
+the sample data is searched for on the payroll list, on somebody else's payslip
+and on the viewer's own pages.
+
+- **The payroll list carries no bank, PAN or Aadhaar at all** — absent, not
+  masked. A masked value on a list of everybody still confirms an account exists
+  and hands over twelve people's last four digits at once.
+- **`salary.view.all` is its own permission.** Seeing what a colleague earns is
+  itself the harm; there is no "read-only so it is fine" here. It must not be
+  implied by `employees.view`.
+- **The payslip route takes a period and no employee.** The person is resolved
+  from the session, so there is no identifier to tamper with and no ownership
+  check anybody can forget to write. The management view of someone else's run
+  is a separate, separately guarded route. A safe common path beats a check that
+  has to be remembered — and a test asserts the route's only parameter stays
+  `period`.
+- **The IFSC is deliberately unmasked.** It identifies a branch, not a person,
+  is published by the RBI and is printed on every cheque; masking it would imply
+  the fields beside it are protected by obscurity too.
+- **The account mask does not reveal length.** Indian account numbers run nine
+  to eighteen digits, and rendering the true length narrows a guess while
+  helping the reader not at all.
+
+**What the backend still owes** (recorded in `Sensitive`'s own header so it is
+read before the class is changed): encrypted at rest via the `encrypted` cast,
+never plaintext columns, because a cPanel database backup is a file somebody can
+email; revealing a full value is a dedicated route that checks a permission and
+writes an audit entry naming who looked at whose record, not something a page
+renders; and these fields go in the framework's redaction list so an exception
+report cannot spill them into a log that is easier to read than the database.
+
+**Payroll arithmetic.** Net is computed on every render, never stored — the
+person most likely to be reading it is the one being paid, and a total that
+disagrees with its own lines in front of that audience is the worst version of
+the bug. The three earning lines are basic (50%), HRA (20%) and the balance as a
+special allowance; **the last is computed as the remainder rather than as its
+own percentage**, so the three always sum to the gross exactly, which three
+independently-rounded shares do not. CTC is twelve times the gross, derived, so
+it cannot contradict it.
+
+Other decisions:
+
+- **Deductions are stated, not omitted.** The section exists and reads "Nothing
+  deducted… so your gross is your net". An employee should be able to *see* that
+  nothing was withheld, which is different from not being told — and loss of pay
+  lands in that list the moment Attendance and Leave exist.
+- **The page shows who is *missing* from payroll.** The handover had no
+  equivalent, and it is the module's most dangerous gap: a list of everyone
+  being paid says nothing about the person who is not on it, and that person
+  simply does not get paid. Two states, kept apart — "no run generated yet" is a
+  step to take, "no salary structure at all" is a decision somebody has to make
+  first.
+- **Generating produces unpaid runs that somebody then releases.** The handover
+  had one button that generated *and* processed. The destructive half is now a
+  second, deliberate act, and the button says what it is about to do and to how
+  many people.
+- **Generating must be idempotent**, enforced by a unique key on
+  (employee, period) rather than by checking first and hoping. Pressed twice, it
+  must not pay anybody twice.
+- **Gross and net are separate columns.** "Salary" alone does not say which, and
+  it is the figure somebody reconciles against a bank statement.
+- **An unpaid row reads "Not paid yet"**, not the handover's `--`, which reads
+  as missing data rather than as something that has not happened.
+- **"On hold" reads as a decision somebody made**, never as a system state.
+
+**Errors found in the handover, none copied:** it showed forty salary records
+and "28 paid / 12 pending" for a company of twelve; CTC ₹12,60,000
+(= ₹1,05,000/month), net ₹85,800 and a table figure of ₹80,000 for the same
+person, with nothing connecting the three; a "Salary" column that never said
+gross or net; every employee's bank account and IFSC on a rail of the *payroll
+list*; `style="clear:both"` and `style="border-top:…"` that our CSP blocks; and
+a payslip control that was an `<a href="#">` opening nothing.
+
+**One pre-existing bug found here and fixed:** `.kpi-ic.tone-danger` was never
+defined although `.qa-tile.tone-danger` was, so the Invoices "Overdue" tile —
+already shipped — and the Salary "On hold" tile both fell back to the default
+green. The most alarming figure on each page was rendering as though it were
+fine. Feedback tones are now defined for every element that takes one.
+
 ### Error pages (decided 2026-08-27)
 
 Branded pages for 403, 404, 419, 429, 500 and 503. The last four were not asked

@@ -44,7 +44,7 @@
             <span class="stat-label">Currency</span>
             <span class="stat-value">{{ $invoice['currency'] }}</span>
         </div>
-        <div class="stat-row">
+        <div class="stat-row stat-row-block">
             <span class="stat-label">What it means</span>
             <span class="stat-value stat-value-quiet">{{ $pill['meaning'] }}</span>
         </div>
