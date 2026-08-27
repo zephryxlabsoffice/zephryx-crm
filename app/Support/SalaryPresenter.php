@@ -5,47 +5,75 @@ namespace App\Support;
 use Illuminate\Support\Carbon;
 
 /**
- * Turns a salary run into the things its pages need to draw it.
+ * Turns a salary record into the things its pages need to draw it.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * NET IS COMPUTED, NEVER STORED
+ * THIS APPLICATION DOES NOT CALCULATE PAYROLL
  *
- * A payslip is an arithmetic claim: these earnings, less these deductions,
- * equals this amount, and it was paid on this date. If net were a column, it
- * could disagree with the lines above it — and the person it disagrees with is
- * an employee looking at their own pay, which is the worst possible audience
- * for a number that does not add up.
+ * Decided 2026-08-27. Payroll is worked out in Excel today and will come from
+ * payroll software over an API later. The CRM's job is to hold the payslip that
+ * calculation produced, record the net figure it states, and track whether the
+ * money has gone.
  *
- * So net = sum(earnings) − sum(deductions), computed on every render, and a
- * test asserts it reconciles for every run in the system.
+ * So there is no basic/HRA split here, no deductions engine and no derived CTC.
+ * Holding our own version of a calculation somebody else owns would give the
+ * company two sources of truth for what it pays people, and they would
+ * eventually disagree — in front of the employee.
  *
- * ─────────────────────────────────────────────────────────────────────────────
- * DEDUCTIONS TODAY: NONE
- *
- * Decided 2026-08-27. ZephryxLabs runs no statutory deduction at present — EPF
- * is not mandatory below twenty employees, ESI below ten, and no professional
- * tax or TDS is being withheld. So gross equals net.
- *
- * The deductions section still exists and reads "None", rather than the concept
- * being absent. Two reasons: an employee should be able to see that nothing was
- * withheld, which is different from not being told; and loss-of-pay is a
- * deduction that lands the moment Attendance and Leave exist.
+ * The net amount IS stored, typed once when the payslip is added, because a
+ * payroll page that cannot say what was paid out this month is not much of a
+ * payroll page. It is one number, taken from the document beside it.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 class SalaryPresenter
 {
-    public const NOT_GENERATED = 'not_generated';
-    public const PENDING = 'pending';
-    public const ON_HOLD = 'on_hold';
+    /** Nothing has been added for this person this month. */
+    public const NO_PAYSLIP = 'no_payslip';
+
+    /** The payslip is on file; the money has not gone yet. */
+    public const AWAITING_PAYMENT = 'awaiting_payment';
+
+    /** Paid. */
     public const PAID = 'paid';
 
     /** @var array<string, array{0: string, 1: string, 2: string}> tone, label, meaning */
     protected const STATUSES = [
-        self::NOT_GENERATED => ['pill-gray', 'Not generated', 'No run exists for this month yet'],
-        self::PENDING => ['pill-amber', 'Pending', 'Generated but not yet paid'],
-        self::ON_HOLD => ['pill-red', 'On hold', 'Held back deliberately — someone decided this'],
-        self::PAID => ['pill-green', 'Paid', 'Sent to the employee’s bank'],
+        self::NO_PAYSLIP => ['pill-gray', 'No payslip', 'Nothing has been added for this month'],
+        self::AWAITING_PAYMENT => ['pill-amber', 'Awaiting payment', 'Payslip is on file; the transfer has not been made'],
+        self::PAID => ['pill-green', 'Paid', 'The transfer has been made'],
     ];
+
+    /**
+     * Where a record stands.
+     *
+     * Derived from two facts — is there a payslip, and has it been paid — so
+     * there is no status column anybody can set to something the record does
+     * not support. Nobody marks a person paid who has no payslip on file.
+     *
+     * @param  array<string, mixed>  $record
+     */
+    public static function statusOf(array $record): string
+    {
+        if ($record['payslip'] === null) {
+            return self::NO_PAYSLIP;
+        }
+
+        return $record['paid_on'] === null ? self::AWAITING_PAYMENT : self::PAID;
+    }
+
+    /**
+     * Whether this record is ready to be paid.
+     *
+     * The guard behind both the single and the bulk "payment done" action: you
+     * cannot pay against a payslip that does not exist, and you cannot pay
+     * twice.
+     *
+     * @param  array<string, mixed>  $record
+     */
+    public static function isPayable(array $record): bool
+    {
+        return self::statusOf($record) === self::AWAITING_PAYMENT;
+    }
 
     /**
      * @return array{tone: string, label: string, meaning: string}
@@ -67,65 +95,13 @@ class SalaryPresenter
     }
 
     /**
-     * The net of a run: earnings less deductions.
-     *
-     * @param  array<string, mixed>  $run
-     */
-    public static function net(array $run): Money
-    {
-        return self::totalEarnings($run)->minus(self::totalDeductions($run));
-    }
-
-    /**
-     * @param  array<string, mixed>  $run
-     */
-    public static function totalEarnings(array $run): Money
-    {
-        return array_reduce(
-            $run['earnings'],
-            fn (Money $carry, array $line) => $carry->plus($line['amount']),
-            Money::zero($run['currency'] ?? Money::DEFAULT_CURRENCY)
-        );
-    }
-
-    /**
-     * @param  array<string, mixed>  $run
-     */
-    public static function totalDeductions(array $run): Money
-    {
-        return array_reduce(
-            $run['deductions'],
-            fn (Money $carry, array $line) => $carry->plus($line['amount']),
-            Money::zero($run['currency'] ?? Money::DEFAULT_CURRENCY)
-        );
-    }
-
-    /**
-     * Cost to company, annualised from the monthly gross.
-     *
-     * Derived, not stored, so it cannot drift from the structure beneath it —
-     * the handover showed a CTC of ₹12,60,000 (₹1,05,000 a month) beside a net
-     * of ₹85,800 and a table row reading ₹80,000, three figures for one person
-     * with nothing connecting them.
-     *
-     * @param  array<string, mixed>  $run
-     */
-    public static function annualCtc(array $run): Money
-    {
-        return self::totalEarnings($run)->times(12);
-    }
-
-    /**
-     * `May 2026` — the month a run belongs to.
+     * `May 2026` — the month a record belongs to.
      */
     public static function period(string $period): string
     {
         return Carbon::createFromFormat('Y-m', $period)->format('F Y');
     }
 
-    /**
-     * `May 2026` shortened for a table cell.
-     */
     public static function periodShort(string $period): string
     {
         return Carbon::createFromFormat('Y-m', $period)->format('M Y');
@@ -142,8 +118,7 @@ class SalaryPresenter
         $cursor = Carbon::today()->startOfMonth();
 
         for ($i = 0; $i < $months; $i++) {
-            $key = $cursor->format('Y-m');
-            $options[$key] = $cursor->format('F Y');
+            $options[$cursor->format('Y-m')] = $cursor->format('F Y');
             $cursor = $cursor->subMonth();
         }
 
@@ -161,12 +136,23 @@ class SalaryPresenter
      * The handover printed "--" for unpaid rows, which reads as missing data
      * rather than as a thing that has not happened yet.
      *
-     * @param  array<string, mixed>  $run
+     * @param  array<string, mixed>  $record
      */
-    public static function paidOn(array $run): string
+    public static function paidOn(array $record): string
     {
-        return $run['status'] === self::PAID && $run['paid_on'] !== null
-            ? self::date($run['paid_on'])
-            : 'Not paid yet';
+        return $record['paid_on'] === null ? 'Not paid yet' : self::date($record['paid_on']);
+    }
+
+    /**
+     * What the net figure reads as before a payslip has been added.
+     *
+     * Deliberately not "₹0.00" — nothing has been recorded, and a zero is a
+     * claim that somebody was paid nothing.
+     *
+     * @param  array<string, mixed>  $record
+     */
+    public static function net(array $record): string
+    {
+        return $record['net'] === null ? 'Not recorded' : $record['net']->format();
     }
 }

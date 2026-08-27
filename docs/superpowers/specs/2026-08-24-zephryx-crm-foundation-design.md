@@ -1052,12 +1052,34 @@ control is `.form-field` / `.form-field-lbl`.
 ### Salary (decided 2026-08-27)
 
 The most sensitive module in the application. It holds what every person earns,
-their bank account, their PAN and their Aadhaar. Three pages: payroll
-(`/salary`), a person's own pay (`/salary/mine`) and a payslip
-(`/salary/payslip/{period}`), plus the management view of one run at
-`/salary/{employee}/{period}`.
+their bank account, their PAN and their Aadhaar. Four pages: payroll
+(`/salary`), a person's own pay (`/salary/mine`), one month's record
+(`/salary/{employee}/{period}`, and `/salary/payslip/{period}` for your own),
+and the payment confirmation.
 
-**Four owner decisions taken 2026-08-27:**
+> **Rewritten the same day.** It was first built as a payroll engine — salary
+> structures, an earnings/deductions breakdown, a derived CTC. The owner then
+> established that **this application must not calculate pay at all**: it is
+> worked out in Excel today and will come from payroll software over an API
+> later. That is the better boundary, and the section below describes what
+> replaced it. The abandoned design is recorded only because its absence is now
+> load-bearing.
+
+**THIS APPLICATION DOES NOT CALCULATE PAYROLL.** A salary record holds three
+things and no more: the **payslip** produced by whatever worked the pay out, the
+**net** figure that document states, and **when the transfer was made**. There
+is no basic/HRA split, no deductions engine and no derived CTC, because holding
+our own version of a calculation somebody else owns gives the company two
+sources of truth for what it pays people — and they disagree eventually, in
+front of the employee. Tests assert `totalEarnings`, `totalDeductions` and
+`annualCtc` stay absent from the presenter; if they come back, the question is
+which system owns the figures.
+
+The net **is** stored, typed once alongside the payslip, because a payroll page
+that cannot say what was paid out this month is not much of a payroll page. It
+is one number, taken from the document beside it.
+
+**Three owner decisions taken 2026-08-27:**
 
 1. **Aadhaar is kept**, against the recommendation to drop it. The
    recommendation stood on the fact that payroll runs on PAN and bank details,
@@ -1068,10 +1090,26 @@ their bank account, their PAN and their Aadhaar. Three pages: payroll
    held properly: masked to the last four digits per UIDAI's own rule, shown to
    nobody but the person themselves, and encrypted at rest when the column
    lands.
-2. **Salary has a structure** — earnings less deductions equals net.
-3. **Nothing is deducted today.** No EPF (not mandatory below twenty
-   employees), no ESI (below ten), no professional tax, no TDS. Gross is net.
-4. **The payslip was built**, not just the two handover pages.
+2. **Adding a payslip captures the file and the net figure**, not a breakdown.
+3. **Marking people paid in bulk goes through a confirmation** that names them.
+
+**The two states, and how they are reached.** A record moves *No payslip →
+Awaiting payment → Paid*, and status is derived from those two facts rather than
+being a column anybody sets. **Nobody can be marked paid without a payslip on
+file** — there would be nothing to check the amount against and nothing to give
+them if they ask what they were paid for. A row that cannot be paid gets **no
+checkbox at all**, not a disabled one: a greyed box invites the click anyway.
+
+**Marking paid is a two-step flow.** Ticking rows and pressing the button posts
+to a confirmation page that names every person, states the total, and asks.
+Marking twelve people paid by mis-click is hard to notice and awkward to undo,
+so the destructive step is always the second one. The confirmation is a **POST
+that renders** rather than a GET, so a dozen employee ids never reach a URL that
+gets bookmarked, shared or written to an access log. Rows that cannot be paid
+are dropped from it and the gap is stated — "1 row left out" — rather than the
+list silently shrinking. A single record needs no confirmation page: its button
+already names who and for how much, which is the thing the bulk flow has to stop
+and spell out.
 
 **Where the security actually lives.** `App\Support\Sensitive` masks in PHP,
 before the value reaches a view. The rule it exists to enforce: the full number
@@ -1113,39 +1151,37 @@ writes an audit entry naming who looked at whose record, not something a page
 renders; and these fields go in the framework's redaction list so an exception
 report cannot spill them into a log that is easier to read than the database.
 
-**Payroll arithmetic.** Net is computed on every render, never stored — the
-person most likely to be reading it is the one being paid, and a total that
-disagrees with its own lines in front of that audience is the worst version of
-the bug. The three earning lines are basic (50%), HRA (20%) and the balance as a
-special allowance; **the last is computed as the remainder rather than as its
-own percentage**, so the three always sum to the gross exactly, which three
-independently-rounded shares do not. CTC is twelve times the gross, derived, so
-it cannot contradict it.
-
 Other decisions:
 
-- **Deductions are stated, not omitted.** The section exists and reads "Nothing
-  deducted… so your gross is your net". An employee should be able to *see* that
-  nothing was withheld, which is different from not being told — and loss of pay
-  lands in that list the moment Attendance and Leave exist.
+- **The portal shows no pay-for-this-month card.** The month's figure is already
+  the first row of the history, and the breakdown behind it lives in the
+  payslip; restating either would be a second place to keep correct. My Salary
+  shows a status tile, the net, the payslip count, the history, and the masked
+  identifiers. No gross anywhere on it.
+- **My Salary has a back link to payroll**, because unlike My Teams and My
+  Projects it is reached by a button on Salary Management rather than from the
+  navigation. It must render only for a viewer holding `salary.view.all`:
+  showing an employee a link into everyone's pay is a door they should not be
+  shown.
 - **The page shows who is *missing* from payroll.** The handover had no
   equivalent, and it is the module's most dangerous gap: a list of everyone
   being paid says nothing about the person who is not on it, and that person
-  simply does not get paid. Two states, kept apart — "no run generated yet" is a
-  step to take, "no salary structure at all" is a decision somebody has to make
-  first.
-- **Generating produces unpaid runs that somebody then releases.** The handover
-  had one button that generated *and* processed. The destructive half is now a
-  second, deliberate act, and the button says what it is about to do and to how
-  many people.
-- **Generating must be idempotent**, enforced by a unique key on
-  (employee, period) rather than by checking first and hoping. Pressed twice, it
-  must not pay anybody twice.
-- **Gross and net are separate columns.** "Salary" alone does not say which, and
-  it is the figure somebody reconciles against a bank statement.
+  simply does not get paid. Two states, kept apart — "not on this month's list
+  at all" and "no bank details on file", the second being worse because they
+  cannot be paid by any route.
+- **Marking paid must be idempotent.** Running it against an already-paid record
+  must not move that record's payment date.
+- **A missing net reads "Not recorded", never ₹0.00.** A zero is a claim that
+  somebody was paid nothing.
 - **An unpaid row reads "Not paid yet"**, not the handover's `--`, which reads
   as missing data rather than as something that has not happened.
-- **"On hold" reads as a decision somebody made**, never as a system state.
+- **The select-all box is an enhancement, not the mechanism.** Every row box is
+  a real form control and the form submits without JavaScript — which matters
+  when the form marks people paid, because a bulk action that only works when a
+  script loads is one that half-works. The header box also goes indeterminate
+  when some rows are ticked rather than lying about the state.
+- **No route deletes a salary record**, and a test walks the route table to keep
+  it so.
 
 **Errors found in the handover, none copied:** it showed forty salary records
 and "28 paid / 12 pending" for a company of twelve; CTC ₹12,60,000
@@ -1154,20 +1190,6 @@ person, with nothing connecting the three; a "Salary" column that never said
 gross or net; every employee's bank account and IFSC on a rail of the *payroll
 list*; `style="clear:both"` and `style="border-top:…"` that our CSP blocks; and
 a payslip control that was an `<a href="#">` opening nothing.
-
-**Owner revisions, same day:**
-
-- **The portal shows net only.** My Salary states what was paid and points at
-  the payslip for the breakup; the earnings-and-deductions table renders once,
-  on the payslip. Two renderings of one calculation is two places to change and
-  two places to disagree, and the payslip is the one that has to be right
-  because it is the document. Gross is gone from the portal entirely — the KPI
-  tile and the history table both state net.
-- **My Salary gained a back link to payroll**, because unlike My Teams and My
-  Projects it is reached by a button on Salary Management rather than from the
-  navigation. It must render only for a viewer holding `salary.view.all`:
-  showing an employee a link into everyone's pay is a door they should not be
-  shown.
 
 **How payroll gets paid without anybody browsing bank details.** The owner
 asked the right question: if bank details are visible only to the person

@@ -14,8 +14,9 @@
             <thead>
                 <tr role="row">
                     <th role="columnheader" scope="col">Month</th>
-                    {{-- No Gross column: the portal states what was paid, and
-                         the figures behind it are on the payslip. --}}
+                    {{-- Net only. What was paid is a fact; the figures behind it
+                         are on the payslip, which is the document that states
+                         them. --}}
                     <th role="columnheader" scope="col" class="col-money">Net pay</th>
                     <th role="columnheader" scope="col">Status</th>
                     <th role="columnheader" scope="col">Paid on</th>
@@ -23,31 +24,31 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($history as $run)
-                    @php $pill = P::status($run['status']); @endphp
+                @foreach ($history as $record)
+                    @php $pill = P::status(P::statusOf($record)); @endphp
                     <tr role="row">
                         <td role="cell" class="cell-lead" data-label="Month">
-                            <strong>{{ P::period($run['period']) }}</strong>
+                            <strong>{{ P::period($record['period']) }}</strong>
                         </td>
                         <td role="cell" class="cell-money" data-label="Net pay">
-                            <span class="money">{{ P::net($run)->format() }}</span>
+                            <span class="money {{ $record['net'] === null ? 'money-quiet' : '' }}">{{ P::net($record) }}</span>
                         </td>
                         <td role="cell" class="cell-tight" data-label="Status">
                             <span class="pill {{ $pill['tone'] }}">{{ $pill['label'] }}</span>
                         </td>
                         <td role="cell" class="cell-tight" data-label="Paid on">
-                            <span class="{{ $run['status'] === P::PAID ? '' : 'sl-unpaid' }}">{{ P::paidOn($run) }}</span>
+                            <span class="{{ $record['paid_on'] ? '' : 'sl-unpaid' }}">{{ P::paidOn($record) }}</span>
                         </td>
-                        <td role="cell" class="cell-actions">
-                            {{-- A real link to a real page. The handover's
-                                 payslip control was an <a href="#"> that opened
-                                 nothing. --}}
-                            <a class="row-menu" href="{{ route('salary.payslip', ['period' => $run['period']]) }}">
-                                <span class="sr-only">Payslip for {{ P::period($run['period']) }}</span>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/>
-                                </svg>
-                            </a>
+                        <td role="cell" class="cell-actions cell-actions-wide" data-label="Payslip">
+                            @if ($record['payslip'])
+                                {{-- A real link to a real route. The handover's
+                                     payslip control was an <a href="#">. --}}
+                                <a class="btn btn-outline btn-sm" href="{{ route('salary.payslip', ['period' => $record['period']]) }}">
+                                    View payslip
+                                </a>
+                            @else
+                                <span class="sl-slip-off">Not added</span>
+                            @endif
                         </td>
                     </tr>
                 @endforeach

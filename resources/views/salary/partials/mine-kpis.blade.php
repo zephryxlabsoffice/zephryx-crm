@@ -1,19 +1,23 @@
 @php
     use App\Support\SalaryPresenter as P;
-    $pill = P::status($latest['status']);
+    $status = P::statusOf($latest);
+    $pill = P::status($status);
+    $payslips = $history->reject(fn (array $r) => $r['payslip'] === null)->count();
 @endphp
 
 {{--
-    Four tiles. The handover's CTC (₹12,60,000), its net (₹85,800) and the
-    management table's figure for the same person (₹80,000) were three unrelated
-    numbers; all of these come from one structure, so they reconcile by
-    construction — CTC is twelve times the gross, and net is the gross less
-    deductions.
+    Three tiles, and no CTC.
+
+    The handover showed CTC ₹12,60,000, net ₹85,800 and a management figure of
+    ₹80,000 for one person with nothing connecting them. The salary structure
+    that would produce a CTC is gone (decided 2026-08-27) — pay is worked out in
+    Excel, and holding our own version of somebody else's calculation is how two
+    numbers for one salary come to exist.
 --}}
 <section class="kpi-row" aria-label="Your salary summary">
 
     <div class="kpi">
-        <div class="kpi-ic {{ $latest['status'] === P::PAID ? 'tone-soft' : 'tone-warn' }}" aria-hidden="true">
+        <div class="kpi-ic {{ $status === P::PAID ? 'tone-soft' : 'tone-warn' }}" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/>
             </svg>
@@ -33,40 +37,21 @@
         </div>
         <div class="kpi-body">
             <div class="kpi-lbl">Net this month</div>
-            <div class="kpi-val kpi-val-money">{{ P::net($latest)->format() }}</div>
-            {{-- Gross is deliberately not shown on the portal: net is what
-                 lands in the account, and the figures behind it belong on the
-                 payslip rather than being restated here. --}}
+            <div class="kpi-val kpi-val-money">{{ P::net($latest) }}</div>
             <span class="kpi-sub">Breakup is on the payslip</span>
-        </div>
-    </div>
-
-    <div class="kpi">
-        <div class="kpi-ic" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-        </div>
-        <div class="kpi-body">
-            <div class="kpi-lbl">Annual CTC</div>
-            <div class="kpi-val kpi-val-money">{{ P::annualCtc($latest)->format() }}</div>
-            {{-- Says where the number came from, because a CTC figure that
-                 cannot be traced to a monthly one is a figure people
-                 distrust. --}}
-            <span class="kpi-sub">Twelve months at your current salary</span>
         </div>
     </div>
 
     <div class="kpi">
         <div class="kpi-ic tone-soft" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>
+                <path d="M9 13h6"/><path d="M9 17h4"/>
             </svg>
         </div>
         <div class="kpi-body">
-            <div class="kpi-lbl">Employment</div>
-            <div class="kpi-val kpi-val-status">{{ $identity['type'] ?? '—' }}</div>
+            <div class="kpi-lbl">Payslips</div>
+            <div class="kpi-val">{{ number_format($payslips) }}</div>
             <span class="kpi-sub">Joined {{ P::date($employee['joined']) }}</span>
         </div>
     </div>

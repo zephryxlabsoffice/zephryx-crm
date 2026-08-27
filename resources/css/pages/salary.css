@@ -1,10 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    SALARY
 
-   The handover's salary.css and my-salary.css came to ~14KB that re-derived the
-   KPI tile (.sl-kpi, .ms-kpi), the table (.sl-table), the filter row
-   (.sl-filter) and the detail row (.sd-row, .ms-row) — five components that
-   already exist. Only what is genuinely specific to payroll is here.
+   The handover's salary.css and my-salary.css came to ~14KB re-deriving the KPI
+   tile (.sl-kpi, .ms-kpi), the table (.sl-table), the filter row (.sl-filter)
+   and the detail row (.sd-row, .ms-row) — components that already exist. Only
+   what is specific to payroll is here.
    ─────────────────────────────────────────────────────────────────────────── */
 
 .ms-grid {
@@ -31,91 +31,75 @@
   font-style: italic;
 }
 
-/* ─────────────────────────  earnings / deductions  ───────────────────────── */
-
-.sl-breakdown {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 0;
-  padding: 18px 22px 4px;
-}
-/* The two columns are separated by a rule rather than by whitespace alone: they
-   are being subtracted from one another, and the division should look like
-   part of the sum. */
-.sl-breakdown .sl-column + .sl-column {
-  border-left: 1px solid var(--line);
-  padding-left: 22px;
-  margin-left: 22px;
-}
-.sl-column { min-width: 0; }
-.sl-column-hd {
-  margin: 0 0 12px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.sl-lines { margin: 0; }
-.sl-line {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 16px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--line);
-}
-.sl-line dt {
-  font-size: 12.5px;
+/* ── whether a payslip is on file ── */
+.sl-slip-on {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
   color: var(--ink-2);
-  min-width: 0;
 }
-.sl-line dd {
-  margin: 0;
-  font-size: 13px;
-  white-space: nowrap;
-}
-.sl-line-note {
-  display: block;
-  font-size: 10.5px;
+.sl-slip-on svg { width: 14px; height: 14px; color: var(--green); flex-shrink: 0; }
+.sl-slip-off {
+  font-size: 12px;
   color: var(--muted);
-  margin-top: 2px;
+  font-style: italic;
 }
-.sl-line-total {
-  border-bottom: 0;
-  border-top: 1px solid var(--line-strong, var(--line));
-  margin-top: 2px;
-  padding-top: 11px;
-}
-.sl-line-total dt { font-weight: 700; color: var(--ink); }
-.sl-line-total dd { font-weight: 700; }
 
-/* Nothing withheld — stated, not omitted. */
-.sl-none {
+/* ── row selection ── */
+.col-check { width: 1%; white-space: nowrap; }
+.sl-table input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--green);
+  cursor: pointer;
+}
+
+/* ── the bulk action bar ──
+   Sits under the table rather than floating over it: the button is the end of
+   the form it belongs to, and a floating bar hides the last row on a short
+   screen. */
+.sl-bulk {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px 22px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-2, var(--page));
+}
+.sl-bulk-note {
+  flex: 1 1 280px;
+  min-width: 0;
   margin: 0;
-  padding: 14px 16px;
-  border-radius: var(--r-btn);
-  background: var(--green-soft);
-  border: 1px solid var(--green-line, var(--line));
   font-size: 12.5px;
   line-height: 1.6;
   color: var(--ink-2);
 }
-.sl-none strong { display: block; color: var(--green); margin-bottom: 3px; }
 
-/* ── the answer the whole card is working towards ── */
+.sl-confirm-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 18px 22px 22px;
+  border-top: 1px solid var(--line);
+}
+
+/* ─────────────────────────  the net figure  ───────────────────────── */
+
 .sl-net {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 4px 14px;
-  margin: 18px 22px 22px;
+  margin: 0 22px 22px;
   padding: 16px 20px;
   border-radius: var(--r-card);
   background: var(--surface-2, var(--page));
   border: 1px solid var(--line);
 }
+.sl-net-lone { margin-top: 4px; }
 .sl-net-lbl {
   font-size: 12px;
   font-weight: 700;
@@ -136,26 +120,14 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── the portal's net-only card ──
-   No breakdown here; the payslip is the one place the calculation is shown, so
-   there is only ever one rendering of it to keep correct. */
-.sl-net-lone { margin-top: 18px; }
-.sl-net-cta {
-  margin: 0;
-  padding: 0 22px 20px;
-  font-size: 12.5px;
-  line-height: 1.6;
-  color: var(--ink-2);
-}
-
-/* ─────────────────────────  the payslip header  ───────────────────────── */
+/* ─────────────────────────  the person header  ───────────────────────── */
 
 .sl-slip-person {
   display: flex;
   align-items: center;
   gap: 14px;
   flex-wrap: wrap;
-  padding: 18px 26px 20px;
+  padding: 20px 22px;
 }
 .sl-slip-person .avatar { width: 42px; height: 42px; font-size: 14px; }
 .sl-slip-person-body { flex: 1 1 auto; min-width: 0; }
@@ -189,7 +161,7 @@
   color: var(--warning);
   margin-bottom: 4px;
 }
-/* No structure at all is the worse of the two: nothing can be generated. */
+/* No bank details is the worse of the two: they cannot be paid at all. */
 .sl-gap-severe .sl-gap-hd { color: var(--danger); }
 .sl-gap-note {
   margin: 0 0 12px;
@@ -226,22 +198,6 @@
   line-height: 1.3;
 }
 
-/* ─────────────────────────  generate  ───────────────────────── */
-
-.sl-generate { margin-top: var(--density-gap); }
-.sl-generate-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-  padding: 0 22px 22px;
-}
-.sl-generate-actions .pay-hint {
-  flex: 1 1 260px;
-  min-width: 0;
-  margin-top: 0;
-}
-
 /* ─────────────────────────  masked identifiers  ───────────────────────── */
 
 /* Tabular figures so a masked number reads as a number, and the last four
@@ -269,18 +225,11 @@
 }
 
 @media (max-width: 760px) {
-  /* Side by side, the two columns of a subtraction become two narrow columns of
-     wrapped text. Stacked, the rule between them becomes a rule above. */
-  .sl-breakdown { grid-template-columns: minmax(0, 1fr); }
-  .sl-breakdown .sl-column + .sl-column {
-    border-left: 0;
-    border-top: 1px solid var(--line);
-    padding-left: 0;
-    margin-left: 0;
-    padding-top: 18px;
-    margin-top: 18px;
-  }
   .sl-net { margin-left: 18px; margin-right: 18px; }
   .sl-net-val { margin-left: 0; flex-basis: 100%; }
   .sl-slip-person { padding-left: 18px; padding-right: 18px; }
+
+  /* On the stacked card the select box needs its label beside it, or it is an
+     unexplained tick box floating above somebody's name. */
+  .data-table-stack .col-check { width: auto; }
 }

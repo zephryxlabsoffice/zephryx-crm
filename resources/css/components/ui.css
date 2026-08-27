@@ -1336,3 +1336,36 @@
    it. */
 .kpi-row { margin-bottom: 0; }
 .sl-generate { margin-top: 0; }
+
+/* A smaller button, for a table row where a full-height one makes the row tall
+   enough to lose the scan. */
+.btn-sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+.btn-sm svg { width: 14px; height: 14px; }
+
+/* The action row at the foot of a form grid: spans every column so the submit
+   sits under the fields rather than becoming one of them. */
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.form-actions-padded { padding: 0 22px 22px; }
+
+/* A file input styled to match the other controls. Left mostly alone otherwise:
+   the button inside it is drawn by the browser and fighting that produces a
+   control that behaves differently from every other file field the user meets. */
+.form-field input[type="file"] {
+  height: auto;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+/* A quieter paragraph inside running text — a caveat under a statement. */
+.prose-quiet { color: var(--muted); font-size: 12.5px; }

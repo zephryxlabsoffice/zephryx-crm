@@ -2,10 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Support\Demo\DemoEmployees;
 use App\Support\Demo\DemoSalaries;
 use App\Support\Money;
-use App\Support\SalaryPresenter;
+use App\Support\SalaryPresenter as P;
 use Tests\TestCase;
 
 class SalaryPageTest extends TestCase
@@ -21,13 +20,30 @@ class SalaryPageTest extends TestCase
         return now()->format('Y-m');
     }
 
+    /**
+     * POST with a real CSRF token.
+     *
+     * `withDemoData()` moves the environment to `local`, which switches CSRF
+     * verification back on — Laravel only skips it while the app reports it is
+     * running tests. Rather than disabling the middleware, these posts carry a
+     * token, so the tests exercise the same path a browser does and a form that
+     * forgot `@csrf` would fail here.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    protected function postForm(string $url, array $payload): \Illuminate\Testing\TestResponse
+    {
+        return $this->withSession(['_token' => 'test-token'])
+            ->post($url, $payload + ['_token' => 'test-token']);
+    }
+
     public function test_the_pages_render(): void
     {
         $this->withDemoData();
 
         $this->get('/salary')->assertOk()->assertSee('Salary Management', false);
         $this->get('/salary/mine')->assertOk()->assertSee('My Salary', false);
-        $this->get('/salary/payslip/'.$this->period())->assertOk()->assertSee('Payslip', false);
+        $this->get('/salary/payslip/'.$this->period())->assertOk();
         $this->get('/salary/EMP004/'.$this->period())->assertOk();
     }
 
@@ -40,28 +56,277 @@ class SalaryPageTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       THE TESTS THIS MODULE EXISTS FOR
+       THIS APPLICATION DOES NOT CALCULATE PAYROLL
+
+       Decided 2026-08-27: pay is worked out in Excel, and later by payroll
+       software over an API. Holding a second version of somebody else's
+       calculation is how two numbers for one salary come to exist.
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_a_record_holds_the_payslip_and_the_net_and_nothing_derived(): void
+    {
+        $this->withDemoData();
+
+        foreach (DemoSalaries::all() as $record) {
+            $this->assertArrayNotHasKey('earnings', $record);
+            $this->assertArrayNotHasKey('deductions', $record);
+            $this->assertArrayNotHasKey('structure', $record);
+            $this->assertArrayNotHasKey('gross', $record);
+        }
+    }
+
+    public function test_the_presenter_no_longer_computes_pay(): void
+    {
+        // If any of these come back, the question to ask is where the figures
+        // are coming from and which system owns them.
+        $this->assertFalse(method_exists(P::class, 'totalEarnings'));
+        $this->assertFalse(method_exists(P::class, 'totalDeductions'));
+        $this->assertFalse(method_exists(P::class, 'annualCtc'));
+    }
+
+    public function test_no_page_shows_a_gross_figure_or_a_ctc(): void
+    {
+        $this->withDemoData();
+
+        foreach (['/salary', '/salary/mine', '/salary/payslip/'.$this->period(), '/salary/EMP004/'.$this->period()] as $url) {
+            $html = $this->get($url)->getContent();
+
+            $this->assertStringNotContainsString('>Gross<', $html, "a gross column in {$url}");
+            $this->assertStringNotContainsStringIgnoringCase('Annual CTC', $html, "a CTC figure in {$url}");
+            $this->assertStringNotContainsString('House rent allowance', $html);
+        }
+    }
+
+    public function test_the_portal_has_no_pay_for_this_month_card(): void
+    {
+        // The month's figure is the first row of the history, and the breakdown
+        // is in the payslip. Restating either would be a second place to keep
+        // correct.
+        $this->withDemoData();
+
+        $html = $this->get('/salary/mine')->getContent();
+
+        $this->assertStringNotContainsString('Pay for this month', $html);
+        $this->assertStringContainsString('Salary History', $html);
+    }
+
+    public function test_a_missing_net_reads_as_not_recorded_rather_than_zero(): void
+    {
+        // A zero is a claim that somebody was paid nothing.
+        $this->withDemoData();
+
+        $record = DemoSalaries::all()->first(fn (array $r) => $r['payslip'] === null);
+
+        $this->assertNotNull($record, 'no sample record without a payslip');
+        $this->assertNull($record['net']);
+        $this->assertSame('Not recorded', P::net($record));
+
+        $this->get('/salary')->assertSee('Not recorded', false);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       STATUS, AND WHAT CAN BE PAID
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_status_falls_out_of_the_payslip_and_the_payment(): void
+    {
+        $this->withDemoData();
+
+        foreach (DemoSalaries::all() as $record) {
+            $expected = match (true) {
+                $record['payslip'] === null => P::NO_PAYSLIP,
+                $record['paid_on'] === null => P::AWAITING_PAYMENT,
+                default => P::PAID,
+            };
+
+            $this->assertSame($expected, P::statusOf($record), "{$record['id']}: wrong status");
+        }
+    }
+
+    public function test_nobody_is_paid_without_a_payslip_on_file(): void
+    {
+        // Nothing to check the amount against, and nothing to give them if they
+        // ask what they were paid for.
+        $this->withDemoData();
+
+        foreach (DemoSalaries::all() as $record) {
+            if ($record['paid_on'] !== null) {
+                $this->assertNotNull($record['payslip'], "{$record['id']}: paid with no payslip");
+                $this->assertNotNull($record['net'], "{$record['id']}: paid with no net recorded");
+            }
+        }
+    }
+
+    public function test_only_a_record_awaiting_payment_is_payable(): void
+    {
+        $this->withDemoData();
+
+        foreach (DemoSalaries::all() as $record) {
+            $this->assertSame(
+                P::statusOf($record) === P::AWAITING_PAYMENT,
+                P::isPayable($record),
+                "{$record['id']}: payable does not match status"
+            );
+        }
+    }
+
+    public function test_only_payable_rows_get_a_checkbox(): void
+    {
+        // A greyed-out box invites the click anyway; an absent one does not.
+        $this->withDemoData();
+
+        $html = $this->get('/salary')->getContent();
+        $payable = DemoSalaries::forPeriod($this->period())->filter(fn (array $r) => P::isPayable($r));
+        $notPayable = DemoSalaries::forPeriod($this->period())->reject(fn (array $r) => P::isPayable($r));
+
+        $this->assertNotEmpty($payable);
+        $this->assertNotEmpty($notPayable);
+
+        foreach ($payable as $record) {
+            $this->assertStringContainsString('value="'.$record['employee'].'"', $html);
+        }
+
+        foreach ($notPayable as $record) {
+            $this->assertStringNotContainsString('id="pay-'.$record['employee'].'"', $html);
+        }
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       THE TWO-STEP BULK FLOW
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_selecting_rows_reaches_a_confirmation_rather_than_marking_anyone_paid(): void
+    {
+        $this->withDemoData();
+
+        $payable = DemoSalaries::forPeriod($this->period())
+            ->filter(fn (array $r) => P::isPayable($r))
+            ->pluck('employee')
+            ->all();
+
+        $response = $this->postForm('/salary/pay/confirm', [
+            'period' => $this->period(),
+            'employees' => $payable,
+        ]);
+
+        $response->assertOk();
+        $response->assertSee('Confirm payment', false);
+        $response->assertSee('About to be marked paid', false);
+        // The commit button is on the confirmation, not on the list.
+        $response->assertSee('Yes, mark', false);
+    }
+
+    public function test_the_confirmation_names_everybody_and_totals_them(): void
+    {
+        $this->withDemoData();
+
+        $payable = DemoSalaries::forPeriod($this->period())->filter(fn (array $r) => P::isPayable($r));
+
+        $response = $this->postForm('/salary/pay/confirm', [
+            'period' => $this->period(),
+            'employees' => $payable->pluck('employee')->all(),
+        ]);
+
+        foreach ($payable as $record) {
+            $response->assertSee($record['employee_record']['name'], false);
+        }
+
+        $total = Money::zero();
+        foreach ($payable as $record) {
+            $total = $total->plus($record['net']);
+        }
+
+        $response->assertSee($total->short(), false);
+    }
+
+    public function test_a_row_that_cannot_be_paid_is_dropped_from_the_confirmation_and_the_gap_is_stated(): void
+    {
+        // Somebody ticks, then a colleague pays one of them first. The
+        // confirmation must not promise something it cannot do, and must not
+        // silently shrink either.
+        $this->withDemoData();
+
+        $notPayable = DemoSalaries::forPeriod($this->period())
+            ->reject(fn (array $r) => P::isPayable($r))
+            ->first();
+
+        $payable = DemoSalaries::forPeriod($this->period())
+            ->filter(fn (array $r) => P::isPayable($r))
+            ->first();
+
+        $response = $this->postForm('/salary/pay/confirm', [
+            'period' => $this->period(),
+            'employees' => [$payable['employee'], $notPayable['employee']],
+        ]);
+
+        $response->assertOk();
+        $response->assertSee($payable['employee_record']['name'], false);
+        $response->assertSee('1 row left out', false);
+    }
+
+    public function test_a_confirmation_with_nothing_payable_says_so_and_offers_no_commit(): void
+    {
+        $this->withDemoData();
+
+        $notPayable = DemoSalaries::forPeriod($this->period())
+            ->reject(fn (array $r) => P::isPayable($r))
+            ->first();
+
+        $response = $this->postForm('/salary/pay/confirm', [
+            'period' => $this->period(),
+            'employees' => [$notPayable['employee']],
+        ]);
+
+        $response->assertOk();
+        $response->assertSee('Nothing here can be marked paid', false);
+        $response->assertDontSee('Yes, mark', false);
+    }
+
+    public function test_the_confirmation_refuses_a_malformed_request(): void
+    {
+        $this->withDemoData();
+
+        $this->postForm('/salary/pay/confirm', ['period' => 'banana', 'employees' => ['EMP002']])
+            ->assertSessionHasErrors('period');
+
+        $this->postForm('/salary/pay/confirm', ['period' => $this->period()])
+            ->assertSessionHasErrors('employees');
+
+        $this->postForm('/salary/pay/confirm', ['period' => $this->period(), 'employees' => []])
+            ->assertSessionHasErrors('employees');
+    }
+
+    public function test_the_confirmation_is_a_post_so_a_dozen_ids_never_reach_a_url(): void
+    {
+        $route = app('router')->getRoutes()->getByName('salary.pay.confirm');
+
+        $this->assertNotNull($route);
+        $this->assertContains('POST', $route->methods());
+        $this->assertNotContains('GET', $route->methods());
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       SENSITIVE DATA
 
        A leak here is somebody's bank account or government ID. These assert
-       against the rendered HTML, not against a helper, because the question is
-       what reached the browser.
+       against rendered HTML, because the question is what reached the browser.
        ══════════════════════════════════════════════════════════════════════ */
 
     /**
-     * Every unmasked identifier in the sample data, so a leak anywhere is
-     * caught rather than only the ones somebody thought to check.
-     *
      * @return list<string>
      */
     protected function everySecret(): array
     {
         $secrets = [];
 
-        foreach (DemoSalaries::all() as $run) {
-            $structure = $run['structure'];
-            $secrets[] = $structure['account'];
-            $secrets[] = $structure['pan'];
-            $secrets[] = $structure['aadhaar'];
+        foreach (DemoSalaries::all() as $record) {
+            if ($record['banking'] === null) {
+                continue;
+            }
+
+            $secrets[] = $record['banking']['account'];
+            $secrets[] = $record['banking']['pan'];
+            $secrets[] = $record['banking']['aadhaar'];
         }
 
         return array_values(array_unique($secrets));
@@ -70,22 +335,21 @@ class SalaryPageTest extends TestCase
     public function test_the_payroll_list_contains_no_bank_pan_or_aadhaar_at_all(): void
     {
         // Not masked — absent. A masked value on a list of everybody still
-        // confirms an account exists and hands over its last four digits for
-        // twelve people at once.
+        // confirms an account exists and hands over twelve people's last four
+        // digits at once.
         $this->withDemoData();
 
         $html = $this->get('/salary')->getContent();
 
         foreach ($this->everySecret() as $secret) {
-            $this->assertStringNotContainsString($secret, $html, 'an identifier reached the payroll list');
+            $this->assertStringNotContainsString($secret, $html);
         }
 
-        // And not even the masked forms.
         $this->assertStringNotContainsString('••••', $html);
         $this->assertStringNotContainsString('XXXX XXXX', $html);
     }
 
-    public function test_another_persons_payslip_carries_none_of_their_identifiers(): void
+    public function test_another_persons_record_carries_none_of_their_identifiers(): void
     {
         $this->withDemoData();
 
@@ -96,8 +360,30 @@ class SalaryPageTest extends TestCase
         }
 
         $this->assertStringNotContainsString('••••', $html);
-        // And it says so, rather than looking broken.
         $this->assertStringContainsString('are not shown here', $html);
+    }
+
+    public function test_the_confirmation_page_shows_no_bank_details_either(): void
+    {
+        // It is a list of people about to be paid — precisely the screen where
+        // somebody might think account numbers belong.
+        $this->withDemoData();
+
+        $payable = DemoSalaries::forPeriod($this->period())
+            ->filter(fn (array $r) => P::isPayable($r))
+            ->pluck('employee')
+            ->all();
+
+        $html = $this->postForm('/salary/pay/confirm', [
+            'period' => $this->period(),
+            'employees' => $payable,
+        ])->getContent();
+
+        foreach ($this->everySecret() as $secret) {
+            $this->assertStringNotContainsString($secret, $html);
+        }
+
+        $this->assertStringNotContainsString('••••', $html);
     }
 
     public function test_your_own_page_shows_masked_values_and_never_the_full_ones(): void
@@ -105,28 +391,24 @@ class SalaryPageTest extends TestCase
         $this->withDemoData();
 
         $viewer = DemoSalaries::VIEWER;
-        $run = DemoSalaries::latestFor($viewer);
-        $structure = $run['structure'];
+        $banking = DemoSalaries::banked($viewer);
 
         foreach (['/salary/mine', '/salary/payslip/'.$this->period()] as $url) {
             $html = $this->get($url)->getContent();
 
-            // The full values are not there.
-            $this->assertStringNotContainsString($structure['account'], $html, "full account number in {$url}");
-            $this->assertStringNotContainsString($structure['pan'], $html, "full PAN in {$url}");
-            $this->assertStringNotContainsString($structure['aadhaar'], $html, "full Aadhaar in {$url}");
+            $this->assertStringNotContainsString($banking['account'], $html, "full account number in {$url}");
+            $this->assertStringNotContainsString($banking['pan'], $html, "full PAN in {$url}");
+            $this->assertStringNotContainsString($banking['aadhaar'], $html, "full Aadhaar in {$url}");
 
-            // The masked ones are.
-            $this->assertStringContainsString('•••• •••• '.substr($structure['account'], -4), $html);
-            $this->assertStringContainsString('XXXX XXXX '.substr($structure['aadhaar'], -4), $html);
+            $this->assertStringContainsString('•••• •••• '.substr($banking['account'], -4), $html);
+            $this->assertStringContainsString('XXXX XXXX '.substr($banking['aadhaar'], -4), $html);
         }
     }
 
     public function test_no_identifier_is_hidden_in_an_attribute_rather_than_omitted(): void
     {
         // The specific failure this guards: masking in the browser instead of
-        // in PHP. Anything sent to the browser has already been read by whoever
-        // is at the browser — a `data-` attribute or a title is not a control.
+        // in PHP.
         $this->withDemoData();
 
         foreach (['/salary', '/salary/mine', '/salary/EMP004/'.$this->period(), '/salary/payslip/'.$this->period()] as $url) {
@@ -138,10 +420,8 @@ class SalaryPageTest extends TestCase
         }
     }
 
-    public function test_the_payslip_route_takes_no_employee_to_tamper_with(): void
+    public function test_the_own_payslip_route_takes_no_employee_to_tamper_with(): void
     {
-        // The common path is safe by construction: the person comes from the
-        // session, so there is no ownership check anybody can forget to write.
         $route = app('router')->getRoutes()->getByName('salary.payslip');
 
         $this->assertNotNull($route);
@@ -149,160 +429,44 @@ class SalaryPageTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       PAYROLL ARITHMETIC
-       ══════════════════════════════════════════════════════════════════════ */
-
-    public function test_net_is_earnings_less_deductions_for_every_run(): void
-    {
-        $this->withDemoData();
-
-        foreach (DemoSalaries::all() as $run) {
-            $earnings = Money::zero($run['currency']);
-            foreach ($run['earnings'] as $line) {
-                $earnings = $earnings->plus($line['amount']);
-            }
-
-            $deductions = Money::zero($run['currency']);
-            foreach ($run['deductions'] as $line) {
-                $deductions = $deductions->plus($line['amount']);
-            }
-
-            $this->assertTrue(
-                $earnings->minus($deductions)->equals(SalaryPresenter::net($run)),
-                "{$run['id']}: net does not reconcile with its lines"
-            );
-        }
-    }
-
-    public function test_the_earning_lines_always_sum_to_the_gross_exactly(): void
-    {
-        // The last line is the remainder, not its own percentage, so three
-        // independently-rounded shares can never leave a stray paisa.
-        $this->withDemoData();
-
-        foreach (DemoSalaries::all() as $run) {
-            $sum = array_sum(array_map(fn (array $l) => $l['amount']->minor, $run['earnings']));
-
-            $this->assertSame(
-                $sum,
-                SalaryPresenter::totalEarnings($run)->minor,
-                "{$run['id']}: earning lines do not sum to the gross"
-            );
-        }
-    }
-
-    public function test_ctc_is_twelve_times_the_gross_so_it_cannot_contradict_it(): void
-    {
-        // The handover showed CTC ₹12,60,000, net ₹85,800 and a table figure of
-        // ₹80,000 for the same person, with nothing connecting them.
-        $this->withDemoData();
-
-        $run = DemoSalaries::latestFor(DemoSalaries::VIEWER);
-
-        $this->assertSame(
-            SalaryPresenter::totalEarnings($run)->minor * 12,
-            SalaryPresenter::annualCtc($run)->minor
-        );
-    }
-
-    public function test_no_amount_is_held_as_a_float(): void
-    {
-        $this->withDemoData();
-
-        foreach (DemoSalaries::all() as $run) {
-            foreach ($run['earnings'] as $line) {
-                $this->assertInstanceOf(Money::class, $line['amount']);
-                $this->assertIsInt($line['amount']->minor);
-            }
-        }
-    }
-
-    public function test_deductions_are_empty_but_the_concept_is_not(): void
-    {
-        // Decided 2026-08-27: nothing is withheld today. An employee should be
-        // able to see that, which is different from not being told.
-        $this->withDemoData();
-
-        foreach (DemoSalaries::all() as $run) {
-            $this->assertSame([], $run['deductions']);
-        }
-
-        // On the payslip, which is the one place the calculation is shown.
-        $payslip = $this->get('/salary/payslip/'.$this->period());
-        $payslip->assertSee('Nothing deducted', false);
-        $payslip->assertSee('your gross is your net', false);
-    }
-
-    public function test_the_portal_shows_net_only_and_sends_you_to_the_payslip(): void
-    {
-        // Decided 2026-08-27: the breakup is rendered once, on the payslip.
-        // Two renderings of one calculation is two places to change and two
-        // places to disagree.
-        $this->withDemoData();
-
-        $html = $this->get('/salary/mine')->getContent();
-
-        $this->assertStringContainsString('Net pay', $html);
-        $this->assertStringContainsString('detailed salary breakup', $html);
-
-        // No breakdown, and no gross anywhere on the portal.
-        $this->assertStringNotContainsString('Nothing deducted', $html);
-        $this->assertStringNotContainsString('House rent allowance', $html);
-        $this->assertStringNotContainsString('Gross', $html);
-        $this->assertStringNotContainsString('>Basic<', $html);
-    }
-
-    public function test_my_salary_has_a_way_back_to_payroll(): void
-    {
-        // It is reached by a button on Salary Management, unlike My Teams and
-        // My Projects which are navigation destinations.
-        $this->withDemoData();
-
-        $this->get('/salary/mine')->assertSee('class="back-link"', false);
-    }
-
-    /* ══════════════════════════════════════════════════════════════════════
        PAYROLL SANITY
        ══════════════════════════════════════════════════════════════════════ */
 
-    public function test_nobody_is_paid_for_a_month_before_they_joined(): void
+    public function test_nobody_has_a_record_for_a_month_before_they_joined(): void
     {
         $this->withDemoData();
 
-        foreach (DemoSalaries::all() as $run) {
-            $joined = \Illuminate\Support\Carbon::parse($run['employee_record']['joined'])->startOfMonth();
-            $period = \Illuminate\Support\Carbon::createFromFormat('Y-m', $run['period'])->startOfMonth();
+        foreach (DemoSalaries::all() as $record) {
+            $joined = \Illuminate\Support\Carbon::parse($record['employee_record']['joined'])->startOfMonth();
+            $period = \Illuminate\Support\Carbon::createFromFormat('Y-m', $record['period'])->startOfMonth();
 
-            $this->assertTrue(
-                $joined->lessThanOrEqualTo($period),
-                "{$run['id']}: a salary run exists for a month before this person joined"
-            );
+            $this->assertTrue($joined->lessThanOrEqualTo($period), "{$record['id']}: record predates joining");
         }
     }
 
-    public function test_one_run_exists_per_person_per_month(): void
+    public function test_one_record_exists_per_person_per_month(): void
     {
-        // The shape generating must be idempotent against.
         $this->withDemoData();
 
         $ids = DemoSalaries::all()->pluck('id');
 
-        $this->assertSame($ids->count(), $ids->unique()->count(), 'a person has two runs in one month');
+        $this->assertSame($ids->count(), $ids->unique()->count(), 'a person has two records in one month');
     }
 
     public function test_people_missing_from_payroll_are_shown_not_just_the_ones_in_it(): void
     {
-        // The handover had no equivalent, and the person missing from a payroll
-        // list is the one who does not get paid.
+        // A list of everyone being paid says nothing about the person who is
+        // not on it, and that person is the one who quietly does not get paid.
         $this->withDemoData();
 
-        $withoutStructure = DemoSalaries::withoutStructure();
+        $withoutBanking = DemoSalaries::withoutBanking();
 
-        $this->assertNotEmpty($withoutStructure, 'no sample case for the "no structure" state');
+        $this->assertNotEmpty($withoutBanking, 'no sample case for the "no bank details" state');
 
         $html = $this->get('/salary')->getContent();
         $this->assertStringContainsString('Nobody should be missing from payroll', $html);
-        $this->assertStringContainsString($withoutStructure->first()['name'], $html);
+        $this->assertStringContainsString($withoutBanking->first()['name'], $html);
+        $this->assertStringContainsString('cannot be paid at all', $html);
     }
 
     public function test_an_unpaid_row_says_so_rather_than_showing_a_dash(): void
@@ -313,23 +477,16 @@ class SalaryPageTest extends TestCase
         $this->get('/salary')->assertDontSee('>--<', false);
     }
 
-    public function test_on_hold_reads_as_a_decision_somebody_made(): void
+    public function test_every_amount_is_money_not_a_float(): void
     {
         $this->withDemoData();
 
-        $this->get('/salary')->assertSee('Held back deliberately', false);
-        $this->get('/salary/EMP005/'.$this->period())->assertSee('not a system state', false);
-    }
-
-    public function test_the_list_states_gross_and_net_separately(): void
-    {
-        // "Salary" alone does not say which, and it is the figure somebody
-        // reconciles against a bank statement.
-        $this->withDemoData();
-
-        $response = $this->get('/salary');
-        $response->assertSee('Gross', false);
-        $response->assertSee('Net pay', false);
+        foreach (DemoSalaries::all() as $record) {
+            if ($record['net'] !== null) {
+                $this->assertInstanceOf(Money::class, $record['net']);
+                $this->assertIsInt($record['net']->minor);
+            }
+        }
     }
 
     /* ══════════════════════════════════════════════════════════════════════
@@ -344,7 +501,7 @@ class SalaryPageTest extends TestCase
         $this->assertFalse(DemoSalaries::enabled());
         $this->assertTrue(DemoSalaries::all()->isEmpty());
         $this->assertTrue(DemoSalaries::missingFrom(now()->format('Y-m'))->isEmpty());
-        $this->assertTrue(DemoSalaries::withoutStructure()->isEmpty());
+        $this->assertTrue(DemoSalaries::withoutBanking()->isEmpty());
     }
 
     public function test_no_figure_is_written_into_the_markup(): void
@@ -357,10 +514,9 @@ class SalaryPageTest extends TestCase
 
         $response->assertSee('Paid out', false);
         $response->assertDontSee('All Salary Records (40)', false);
-        $this->assertLessThanOrEqual(DemoEmployees::all()->count(), DemoSalaries::forPeriod($this->period())->count());
     }
 
-    public function test_an_unknown_run_or_a_malformed_period_is_not_found(): void
+    public function test_an_unknown_record_or_a_malformed_period_is_not_found(): void
     {
         $this->withDemoData();
 
@@ -378,15 +534,33 @@ class SalaryPageTest extends TestCase
 
     public function test_the_write_routes_exist_so_the_forms_are_real(): void
     {
-        $this->assertTrue(app('router')->has('salary.generate'));
         $this->assertTrue(app('router')->has('salary.pay'));
+        $this->assertTrue(app('router')->has('salary.pay.confirm'));
+        $this->assertTrue(app('router')->has('salary.payslip.store'));
+        $this->assertTrue(app('router')->has('salary.payslip.download'));
+    }
+
+    public function test_no_route_deletes_a_salary_record(): void
+    {
+        foreach (app('router')->getRoutes() as $route) {
+            if (str_starts_with($route->uri(), 'salary')) {
+                $this->assertNotContains('DELETE', $route->methods(), "a DELETE route exists at {$route->uri()}");
+            }
+        }
+    }
+
+    public function test_my_salary_has_a_way_back_to_payroll(): void
+    {
+        $this->withDemoData();
+
+        $this->get('/salary/mine')->assertSee('class="back-link"', false);
     }
 
     public function test_the_pages_render_nothing_the_content_security_policy_would_block(): void
     {
         $this->withDemoData();
 
-        foreach (['/salary', '/salary/mine', '/salary/payslip/'.$this->period(), '/salary/EMP005/'.$this->period()] as $url) {
+        foreach (['/salary', '/salary/mine', '/salary/payslip/'.$this->period(), '/salary/EMP007/'.$this->period()] as $url) {
             $html = $this->get($url)->getContent();
 
             $this->assertSame(0, preg_match_all('/<style[\s>]/i', $html), "inline <style> in {$url}");

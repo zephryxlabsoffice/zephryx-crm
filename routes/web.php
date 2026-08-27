@@ -212,17 +212,34 @@ Route::get('/salary/{employee}/{period}', [SalaryController::class, 'show'])
     ->name('salary.show');
 
 /*
- * Generating payroll is a bulk financial write, and the backend must make it
- * IDEMPOTENT: running it twice for one month produces one set of runs, not two,
- * and pays nobody twice. §6 also wants an audit entry naming who ran it. The
- * handover offered a single "Generate Salary" button with no review step; the
- * page here generates into an unpaid state that somebody then releases.
+ * Marking people paid is a two-step flow on purpose. The first step is a read:
+ * it names who is about to be marked paid and asks. Marking twelve people paid
+ * by mis-click is hard to notice and awkward to undo, so the destructive step
+ * is always the second one.
+ *
+ * `salary.pay.confirm` is a POST that renders — a dozen employee ids should not
+ * end up in a URL that gets bookmarked, shared or written to an access log.
  */
-Route::post('/salary/generate', fn () => abort(501))->name('salary.generate');
-Route::post('/salary/{employee}/{period}/pay', fn () => abort(501))
+Route::post('/salary/pay/confirm', [SalaryController::class, 'confirmPayment'])->name('salary.pay.confirm');
+
+/*
+ * The writes the backend phase implements. Both need an audit entry (§6), both
+ * are restricted to whoever holds the finance permission (§2.6), and marking
+ * paid must be IDEMPOTENT — running it against an already-paid record must not
+ * move its payment date.
+ *
+ * Note what is not here: no route deletes a salary record, and none marks
+ * somebody paid who has no payslip on file.
+ */
+Route::post('/salary/pay', fn () => abort(501))->name('salary.pay');
+Route::post('/salary/{employee}/{period}/payslip', fn () => abort(501))
     ->where('employee', '[A-Za-z0-9-]{1,32}')
     ->where('period', '[0-9]{4}-[0-9]{2}')
-    ->name('salary.pay');
+    ->name('salary.payslip.store');
+Route::get('/salary/{employee}/{period}/payslip/download', fn () => abort(501))
+    ->where('employee', '[A-Za-z0-9-]{1,32}')
+    ->where('period', '[0-9]{4}-[0-9]{2}')
+    ->name('salary.payslip.download');
 
 foreach ([
     'attendance' => 'attendance.index',

@@ -206,6 +206,44 @@ function initCopyButtons() {
     });
 }
 
+/* ── select all ──────────────────────────────────────────────────────────── */
+
+/**
+ * A header checkbox that ticks every row checkbox sharing its group name.
+ *
+ * Strictly an enhancement: every row box is a real form control, and the form
+ * submits without any of this. That matters here because the form it serves
+ * marks people paid — a bulk action that only works when JavaScript loads is a
+ * bulk action that half-works.
+ *
+ * The header box also reflects the rows: tick them all by hand and it fills in,
+ * untick one and it goes indeterminate rather than lying about the state.
+ */
+function initSelectAll() {
+    document.querySelectorAll('[data-select-all]').forEach((master) => {
+        const group = master.dataset.selectAll;
+        const rows = [...document.querySelectorAll(`[data-select-row="${group}"]`)];
+
+        if (rows.length === 0) {
+            return;
+        }
+
+        const sync = () => {
+            const checked = rows.filter((row) => row.checked).length;
+            master.checked = checked === rows.length;
+            master.indeterminate = checked > 0 && checked < rows.length;
+        };
+
+        master.addEventListener('change', () => {
+            rows.forEach((row) => { row.checked = master.checked; });
+            master.indeterminate = false;
+        });
+
+        rows.forEach((row) => row.addEventListener('change', sync));
+        sync();
+    });
+}
+
 /* ── boot ────────────────────────────────────────────────────────────────── */
 
 function init() {
@@ -213,6 +251,7 @@ function init() {
     initNotifications();
     initAutoSubmit();
     initCopyButtons();
+    initSelectAll();
 }
 
 if (document.readyState === 'loading') {

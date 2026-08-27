@@ -14,165 +14,190 @@ use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 
 /**
- * Salary — payroll for the company, and each person's own pay.
- *
- * Three pages: the payroll list (`/salary`), a person's own summary
- * (`/salary/mine`) and a payslip (`/salary/payslip/{period}`).
+ * Salary — recording payslips and tracking who has been paid.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * THIS IS THE MOST SENSITIVE MODULE IN THE APPLICATION
+ * THIS APPLICATION DOES NOT CALCULATE PAYROLL
  *
- * It holds what every person earns, their bank account, their PAN and their
- * Aadhaar. Five obligations the backend must honour:
+ * Decided 2026-08-27. Pay is worked out in Excel today and will come from
+ * payroll software over an API later. Here, somebody adds the payslip that
+ * calculation produced, types the net figure it states, and marks the transfer
+ * done. Nothing is derived.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * AND IT IS STILL THE MOST SENSITIVE MODULE IN THE APPLICATION
  *
  * 1. `salary.view.all` IS ITS OWN PERMISSION. Seeing what a colleague earns is
- *    itself the harm — there is no "read-only so it is fine" here. It must not
- *    be implied by `employees.view`, and holding it must be rare.
+ *    itself the harm; it must not be implied by `employees.view`.
  *
- * 2. THE PAYSLIP ROUTE TAKES NO EMPLOYEE. `/salary/payslip/{period}` resolves
- *    the person from the session, so there is no identifier to tamper with and
- *    no ownership check anybody can forget to write. The management view of
- *    somebody else's run is a separate route, separately guarded. This is
- *    deliberate: the common path is safe by construction.
+ * 2. THE OWN-PAYSLIP ROUTE TAKES NO EMPLOYEE. `/salary/payslip/{period}`
+ *    resolves the person from the session, so there is no identifier to tamper
+ *    with and no ownership check anybody can forget to write. The management
+ *    view of somebody else's record is a separate, separately guarded route.
  *
- * 3. IDENTIFIERS ARE MASKED IN PHP, AND ONLY ON YOUR OWN RECORD. The payroll
- *    list carries no bank, PAN or Aadhaar at all — not masked, absent. A person
- *    sees their own via App\Support\Sensitive; anybody else needs an audited
- *    reveal route that does not exist yet.
+ * 3. IDENTIFIERS ARE MASKED IN PHP, AND ONLY ON YOUR OWN RECORD. Payroll
+ *    screens carry no bank, PAN or Aadhaar at all. Paying people is the bank
+ *    transfer file's job — see App\Support\Sensitive for why that is not the
+ *    same problem as putting the numbers on a page.
  *
- * 4. THE QUERY SCOPES, NOT THE VIEW. §6: ownership is enforced where the data
- *    is fetched. A view that omits a field it was handed has still had that
- *    field in memory, in the response buffer, and possibly in a log.
- *
- * 5. GENERATING PAYROLL MUST BE IDEMPOTENT. See the route comment — running it
- *    twice for one month must not produce two runs, and must not pay anybody
- *    twice.
+ * 4. MARKING PAID IS A FINANCIAL WRITE. Single or bulk, it needs an audit
+ *    entry, and it must be idempotent — marking an already-paid record must
+ *    not move its payment date.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 class SalaryController extends Controller
 {
-    protected const PER_PAGE = 10;
+    protected const PER_PAGE = 12;
 
     /**
-     * GET /salary — payroll for a month.
+     * GET /salary — the month's payroll.
      */
     public function index(Request $request): Response
     {
         $filters = $this->filters($request);
         $period = $filters['period'];
 
-        $runs = DemoSalaries::forPeriod($period);
+        $records = DemoSalaries::forPeriod($period);
 
         return response()->view('salary.index', [
             'activeNav' => 'salary',
-            'runs' => $this->paginate($this->matching($runs, $filters), $request),
-            'stats' => DemoSalaries::stats($runs),
+            'records' => $this->paginate($this->matching($records, $filters), $request),
+            'stats' => DemoSalaries::stats($records),
             'periods' => SalaryPresenter::periodOptions(),
             'departments' => DemoEmployees::all()->pluck('department')->unique()->sort()->values()->all(),
-            // Two different gaps, and the difference matters: one is "payroll
-            // has not been run for them", the other is "there is nothing to run".
             'missing' => DemoSalaries::missingFrom($period),
-            'withoutStructure' => DemoSalaries::withoutStructure(),
+            'withoutBanking' => DemoSalaries::withoutBanking(),
         ] + $filters);
     }
 
     /**
      * GET /salary/mine — the signed-in person's own pay.
-     *
-     * The one page in this module where PAN, Aadhaar and bank details appear,
-     * and only because it is the viewer's own record.
      */
     public function mine(): Response
     {
         $viewer = DemoSalaries::VIEWER;
         $latest = DemoSalaries::latestFor($viewer);
-        $history = DemoSalaries::forEmployee($viewer);
 
         return response()->view('salary.mine', [
             'activeNav' => 'salary',
             'employee' => DemoEmployees::all()->firstWhere('user_id', $viewer),
             'latest' => $latest,
-            'history' => $history,
-            // TODO (backend phase): `salary.view.all`. This page is reached by
-            // a button on payroll, so it needs a way back — but only for the
-            // people who could have come from there. Showing an employee a link
-            // into everyone's pay is a door they should not be shown.
-            'canViewPayroll' => true,
+            'history' => DemoSalaries::forEmployee($viewer),
             // Masked here, in PHP. The unmasked values never enter the view.
-            'identity' => $latest === null ? null : $this->maskedIdentity($latest, $viewer, $viewer),
+            'identity' => $this->maskedIdentity($viewer, $viewer),
+            // TODO (backend phase): `salary.view.all`. This page is reached by a
+            // button on payroll, so it needs a way back — but only for the
+            // people who could have come from there.
+            'canViewPayroll' => true,
         ]);
     }
 
     /**
-     * GET /salary/payslip/{period} — the viewer's own payslip.
+     * GET /salary/payslip/{period} — the viewer's own payslip for a month.
      *
      * No employee parameter by design; see the class comment.
      */
     public function payslip(string $period): Response
     {
-        $viewer = DemoSalaries::VIEWER;
-
         abort_if(! $this->isPeriod($period), 404);
 
-        $run = DemoSalaries::find($period, $viewer);
+        $viewer = DemoSalaries::VIEWER;
+        $record = DemoSalaries::find($period, $viewer);
 
-        abort_if($run === null, 404);
+        abort_if($record === null, 404);
 
-        return response()->view('salary.payslip', [
+        return response()->view('salary.record', [
             'activeNav' => 'salary',
-            'run' => $run,
+            'record' => $record,
             'own' => true,
-            'identity' => $this->maskedIdentity($run, $viewer, $viewer),
+            'identity' => $this->maskedIdentity($viewer, $viewer),
         ]);
     }
 
     /**
-     * GET /salary/{employee}/{period} — the management view of one run.
+     * GET /salary/{employee}/{period} — one person's record, for whoever runs
+     * payroll. This is where a payslip is added and the transfer marked done.
      *
-     * Guarded by `salary.view.all` when the RBAC engine lands (§5). It shows
-     * the pay breakdown, and deliberately NOT the bank, PAN or Aadhaar — those
-     * need an audited reveal, not a page render.
+     * Guarded by `salary.view.all` when the RBAC engine lands (§5).
      */
     public function show(string $employee, string $period): Response
     {
         abort_if(! $this->isPeriod($period), 404);
 
-        $run = DemoSalaries::find($period, $employee);
+        $record = DemoSalaries::find($period, $employee);
 
-        abort_if($run === null, 404);
+        abort_if($record === null, 404);
 
-        return response()->view('salary.payslip', [
+        return response()->view('salary.record', [
             'activeNav' => 'salary',
-            'run' => $run,
+            'record' => $record,
             'own' => $employee === DemoSalaries::VIEWER,
             // Not the viewer's own record, so nothing sensitive is passed at
-            // all — `maskedIdentity` returns null rather than a masked string,
-            // because "•••• 4567" still confirms an account exists.
-            'identity' => $this->maskedIdentity($run, DemoSalaries::VIEWER, $employee),
+            // all — not even a masked string, because "•••• 4567" still
+            // confirms an account exists.
+            'identity' => $this->maskedIdentity(DemoSalaries::VIEWER, $employee),
         ]);
     }
 
     /**
-     * Mask a run's identifiers — or withhold them entirely.
+     * POST /salary/pay/confirm — name who is about to be marked paid.
      *
-     * @param  array<string, mixed>  $run
+     * A read, not a write: it renders the list and asks. Marking twelve people
+     * paid by mis-click is a hard thing to notice and an awkward thing to undo,
+     * so the destructive step is always the second one.
+     *
+     * POST rather than GET so a dozen employee ids do not end up in a URL that
+     * gets bookmarked, shared or logged.
+     */
+    public function confirmPayment(Request $request): Response
+    {
+        $validated = $request->validate([
+            'period' => ['required', 'regex:/^\d{4}-(0[1-9]|1[0-2])$/'],
+            'employees' => ['required', 'array', 'min:1'],
+            'employees.*' => ['string', 'max:32'],
+        ]);
+
+        $records = DemoSalaries::forPeriod($validated['period'])
+            ->whereIn('employee', $validated['employees'])
+            // Only what can actually be paid. A record with no payslip, or one
+            // already paid, is silently dropped here rather than being carried
+            // into a confirmation that promises something it cannot do.
+            ->filter(fn (array $r) => SalaryPresenter::isPayable($r))
+            ->values();
+
+        return response()->view('salary.confirm-payment', [
+            'activeNav' => 'salary',
+            'period' => $validated['period'],
+            'records' => $records,
+            // The gap between what was ticked and what can be paid, stated
+            // rather than swallowed.
+            'skipped' => count($validated['employees']) - $records->count(),
+        ]);
+    }
+
+    /**
+     * Mask a record's identifiers — or withhold them entirely.
+     *
      * @return array<string, string>|null
      */
-    protected function maskedIdentity(array $run, ?string $viewerId, string $subjectId): ?array
+    protected function maskedIdentity(?string $viewerId, string $subjectId): ?array
     {
         if (! Sensitive::viewerMaySee($viewerId, $subjectId)) {
             return null;
         }
 
-        $structure = $run['structure'];
+        $banking = DemoSalaries::banked($subjectId);
+
+        if ($banking === null) {
+            return null;
+        }
 
         return [
-            'bank' => $structure['bank'],
-            'ifsc' => Sensitive::ifsc($structure['ifsc']),
-            'account' => Sensitive::accountNumber($structure['account']),
-            'pan' => Sensitive::pan($structure['pan']),
-            'aadhaar' => Sensitive::aadhaar($structure['aadhaar']),
-            'type' => $structure['type'],
+            'bank' => $banking['bank'],
+            'ifsc' => Sensitive::ifsc($banking['ifsc']),
+            'account' => Sensitive::accountNumber($banking['account']),
+            'pan' => Sensitive::pan($banking['pan']),
+            'aadhaar' => Sensitive::aadhaar($banking['aadhaar']),
         ];
     }
 
@@ -207,23 +232,25 @@ class SalaryController extends Controller
     }
 
     /**
-     * @param  Collection<int, array<string, mixed>>  $runs
+     * @param  Collection<int, array<string, mixed>>  $records
      * @param  array<string, mixed>  $filters
      * @return Collection<int, array<string, mixed>>
      */
-    protected function matching(Collection $runs, array $filters): Collection
+    protected function matching(Collection $records, array $filters): Collection
     {
-        return $runs
+        return $records
             ->when($filters['search'] !== '', fn (Collection $rows) => $rows->filter(
-                fn (array $run) => str_contains(
-                    mb_strtolower($run['employee_record']['name'].' '.$run['employee']),
+                fn (array $r) => str_contains(
+                    mb_strtolower($r['employee_record']['name'].' '.$r['employee']),
                     mb_strtolower($filters['search'])
                 )
             ))
             ->when($filters['department'], fn (Collection $rows) => $rows->filter(
-                fn (array $run) => $run['employee_record']['department'] === $filters['department']
+                fn (array $r) => $r['employee_record']['department'] === $filters['department']
             ))
-            ->when($filters['status'], fn (Collection $rows) => $rows->where('status', $filters['status']))
+            ->when($filters['status'], fn (Collection $rows) => $rows->filter(
+                fn (array $r) => SalaryPresenter::statusOf($r) === $filters['status']
+            ))
             ->values();
     }
 

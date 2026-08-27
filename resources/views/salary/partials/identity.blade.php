@@ -42,10 +42,6 @@
                 <span class="stat-label">Aadhaar</span>
                 <span class="stat-value stat-value-mono">{{ $identity['aadhaar'] }}</span>
             </div>
-            <div class="stat-row">
-                <span class="stat-label">Paid by</span>
-                <span class="stat-value">{{ $latest['method'] }}</span>
-            </div>
         </div>
 
         <p class="sl-privacy">

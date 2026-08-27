@@ -1,17 +1,18 @@
-@php use App\Support\Avatar; @endphp
+@php
+    use App\Support\Avatar;
+    use App\Support\SalaryPresenter as P;
+@endphp
 
 {{--
-    Who is NOT in this month's payroll.
+    Who is not on this month's list at all.
 
     The handover had no equivalent, and its absence is the module's most
-    dangerous gap: a list of everyone who IS being paid tells you nothing about
-    the person who is missing from it, and the person who is missing from it is
-    somebody who does not get paid. A payroll screen has to be as good at
-    showing absence as presence.
+    dangerous gap: a list of everyone being paid tells you nothing about the
+    person missing from it, and that person is the one who quietly does not get
+    paid. A payroll screen has to be as good at showing absence as presence.
 
-    Two different problems, deliberately separated — "nothing has been generated
-    for them yet" is a step to take, "there is no structure to generate from" is
-    a decision somebody has to make first.
+    Note this is a different problem from "no payslip yet", which is a status on
+    the list below and a step somebody is about to take.
 --}}
 <section class="card sl-gaps">
     <div class="section-hd">
@@ -25,11 +26,11 @@
     <div class="card-body sl-gap-grid">
         @if ($missing->isNotEmpty())
             <div class="sl-gap">
-                <strong class="sl-gap-hd">No run this month</strong>
+                <strong class="sl-gap-hd">Not on this month’s list</strong>
                 <p class="sl-gap-note">
                     {{ $missing->count() }} {{ \Illuminate\Support\Str::plural('person', $missing->count()) }}
-                    with a salary structure {{ $missing->count() === 1 ? 'has' : 'have' }} nothing generated for
-                    {{ \App\Support\SalaryPresenter::period($period) }}.
+                    {{ $missing->count() === 1 ? 'has' : 'have' }} no salary record for
+                    {{ P::period($period) }} at all.
                 </p>
                 <ul class="sl-gap-list">
                     @foreach ($missing as $person)
@@ -45,20 +46,21 @@
             </div>
         @endif
 
-        @if ($withoutStructure->isNotEmpty())
+        @if ($withoutBanking->isNotEmpty())
             <div class="sl-gap sl-gap-severe">
-                <strong class="sl-gap-hd">No salary structure at all</strong>
+                <strong class="sl-gap-hd">No bank details on file</strong>
                 <p class="sl-gap-note">
-                    {{ $withoutStructure->count() }} {{ \Illuminate\Support\Str::plural('person', $withoutStructure->count()) }}
-                    cannot be paid until somebody records what {{ $withoutStructure->count() === 1 ? 'they earn' : 'they earn' }}.
+                    {{ $withoutBanking->count() }} {{ \Illuminate\Support\Str::plural('person', $withoutBanking->count()) }}
+                    cannot be paid at all — the bank transfer file has nothing to
+                    send for {{ $withoutBanking->count() === 1 ? 'them' : 'them' }}.
                 </p>
                 <ul class="sl-gap-list">
-                    @foreach ($withoutStructure as $person)
+                    @foreach ($withoutBanking as $person)
                         <li>
                             <span class="avatar {{ Avatar::tint($person['name']) }}" aria-hidden="true">{{ Avatar::initials($person['name']) }}</span>
                             <span class="sl-gap-person">
                                 <strong>{{ $person['name'] }}</strong>
-                                <span>{{ $person['user_id'] }} · joined {{ \App\Support\SalaryPresenter::date($person['joined']) }}</span>
+                                <span>{{ $person['user_id'] }} · joined {{ P::date($person['joined']) }}</span>
                             </span>
                         </li>
                     @endforeach

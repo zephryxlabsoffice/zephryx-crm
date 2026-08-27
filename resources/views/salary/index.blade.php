@@ -8,7 +8,7 @@
     <div class="page-hd-row">
         <div class="page-hd">
             <h1>Salary Management</h1>
-            <p>Payroll for {{ P::period($period) }}.</p>
+            <p>Payslips and payments for {{ P::period($period) }}.</p>
         </div>
 
         <div class="hd-actions">
@@ -16,14 +16,14 @@
                 How payroll actually gets paid.
 
                 The bank file carries account number, IFSC and amount straight
-                to the bank portal — so the person running payroll never has to
-                read anybody's account number off a screen. That is the whole
-                reason bank details are not rendered on this page: paying
-                somebody and browsing their details are different problems.
+                to the bank portal, so nobody has to read an account number off
+                a screen. That is why bank details appear on no payroll page:
+                paying somebody and browsing their details are different
+                problems.
 
                 TODO (backend phase): `salary.disburse`, an audit entry naming
-                who generated it for which period, and the file streamed from a
-                controller rather than written anywhere public (§6).
+                who generated it for which period, streamed from a controller
+                rather than written anywhere public (§6).
             --}}
             <button class="btn btn-primary" type="button" disabled title="Generating the bank file is not built yet">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -42,21 +42,18 @@
     </div>
 
     {{--
-        A standing reminder, on the one page where it is warranted.
-
-        Every figure below is somebody's pay. §6 gives this page its own
-        permission for exactly that reason — there is no "read-only so it is
-        harmless" here, because reading it IS the harm.
+        Two things worth stating on this page and nowhere else: pay is not
+        calculated here, and everyone's is on it.
     --}}
     @include('partials.notice', [
         'tone' => 'info',
-        'title' => 'Everyone’s pay is on this page',
-        'message' => 'Access needs the salary permission in its own right, and is logged. Bank and Aadhaar details are not shown on any payroll screen — the bank transfer file carries them to the bank without anyone having to read them.',
+        'title' => 'Pay is worked out elsewhere; this is the record of it',
+        'message' => 'Add the payslip your payroll produced, record the net it states, then mark the transfer done. Access needs the salary permission in its own right and is logged. Bank and Aadhaar details are shown on no payroll screen.',
     ])
 
     @include('salary.partials.kpis')
 
-    @if ($withoutStructure->isNotEmpty() || $missing->isNotEmpty())
+    @if ($withoutBanking->isNotEmpty() || $missing->isNotEmpty())
         @include('salary.partials.gaps')
     @endif
 
