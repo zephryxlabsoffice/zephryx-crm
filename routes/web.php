@@ -9,6 +9,7 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ModulePlaceholderController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ShellPreferenceController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Route;
@@ -124,8 +125,19 @@ Route::get('/projects/{project}/eod', fn () => app(ModulePlaceholderController::
     ->where('project', '[A-Za-z0-9-]{1,32}')
     ->name('projects.updates.create');
 
+Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
+// Before /tasks/{task}, or these are read as task references.
+Route::get('/tasks/mine', [TaskController::class, 'mine'])->name('tasks.mine');
+Route::get('/tasks/team', [TaskController::class, 'team'])->name('tasks.team');
+Route::get('/tasks/create', fn () => app(ModulePlaceholderController::class)('tasks'))->name('tasks.create');
+Route::get('/tasks/{task}', [TaskController::class, 'show'])
+    ->where('task', '[A-Za-z0-9-]{1,32}')
+    ->name('tasks.show');
+Route::get('/tasks/{task}/edit', fn () => app(ModulePlaceholderController::class)('tasks'))
+    ->where('task', '[A-Za-z0-9-]{1,32}')
+    ->name('tasks.edit');
+
 foreach ([
-    'tasks' => 'tasks.index',
     'tickets' => 'tickets.index',
     'invoices' => 'invoices.index',
     'salary' => 'salary.index',

@@ -818,6 +818,40 @@ desktop. And `.cell-actions` gained a `cell-actions-wide` variant — the mobile
 card layout positions row actions absolutely for an icon button, and a labelled
 button ("Submit EOD") landed on top of the row's name.
 
+### Tasks (decided 2026-08-27)
+
+Four pages: `/tasks` (managing), `/tasks/mine` (personal), `/tasks/team` (the
+team lead's queue) and `/tasks/{task}`. The handover's four stylesheets —
+`tasks.css` alone was 23KB — again re-derived the table, KPI tiles, filters,
+pagination and rail cards under new prefixes (`.tk-*`, `.tt-*`, `.to-*`).
+
+Four genuinely new pieces went into `components/`, because Attendance, Leave
+and Tickets will all want them: the **due-date cell** (date above a countdown),
+the **timeline**, the **field grid** and **attachment cards**.
+
+- **`/tasks/team` holds only unassigned tasks.** The handover drew it as a
+  second copy of the full list; the point of a lead's queue is deciding who
+  picks each one up, so "nobody assigned yet" is the normal case here, and the
+  count leads the page.
+- **The assignee column distinguishes a team from a person by shape** — a
+  square chip for a team, a round avatar for an individual — so scanning the
+  column tells you which without reading it.
+- **KPI percentages are computed.** The handover's sub-labels were written in
+  and did not add up to the numbers above them.
+- **A completed task past its date is not overdue**, matching the rule Projects
+  uses. Priority is delegated to `ProjectPresenter` outright, so "High" cannot
+  come to mean two different things in two modules.
+- **The timeline reflects what actually happened** — a pending task shows only
+  "created", a completed one carries its whole history. The handover showed the
+  same four fixed events on every task.
+- **Each list filters itself.** All three list faces post their filter form to
+  their own route rather than bouncing to the managing view.
+- **"Mark Completed" is disabled.** It is a write, and §2.6 applies — only the
+  assignee, their lead or a manager may do it.
+
+`.kpi-row-compact` was added for six tiles: at the default size they wrapped
+five-plus-one, which reads as an afterthought rather than a set.
+
 ### Viewport fit on mobile (decided 2026-08-26)
 
 Every public page fits the phone viewport without scrolling. Verified at

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-density="comfortable">
+<head>
+  <meta charset="UTF-8" />
+  <title>Task Overview · ZephryxLabs CRM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shell.css" />
+  <link rel="stylesheet" href="tasks.css" />
+</head>
+<body data-active="tasks">
+
+  <div class="app">
+    <div class="main">
+
+      <main class="page" data-screen-label="04 SuperAdmin · Task Overview">
+
+        <div class="page-hd-row">
+          <div class="page-hd">
+            <h1>Task Overview</h1>
+            <p>Track and manage tasks across projects and teams.</p>
+          </div>
+          <div class="hd-actions">
+            <button class="btn btn-primary" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Assign Task
+            </button>
+            <button class="btn btn-outline" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              My Tasks
+            </button>
+            <button class="btn btn-outline" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Team Task
+            </button>
+          </div>
+        </div>
+
+        <section class="tk-kpis">
+          <div class="tk-kpi tot">
+            <div class="tk-kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12l2 2 4-4"/></svg></div>
+            <div class="tk-kpi-body"><span class="tk-kpi-lbl">Total Tasks</span><span class="tk-kpi-val">128</span><span class="tk-kpi-sub">All tasks</span></div>
+          </div>
+          <div class="tk-kpi pend">
+            <div class="tk-kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg></div>
+            <div class="tk-kpi-body"><span class="tk-kpi-lbl">Pending</span><span class="tk-kpi-val">18</span><span class="tk-kpi-sub amber">14.1% of total</span></div>
+          </div>
+          <div class="tk-kpi ip">
+            <div class="tk-kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg></div>
+            <div class="tk-kpi-body"><span class="tk-kpi-lbl">In Progress</span><span class="tk-kpi-val">45</span><span class="tk-kpi-sub up">35.2% of total</span></div>
+          </div>
+          <div class="tk-kpi done">
+            <div class="tk-kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg></div>
+            <div class="tk-kpi-body"><span class="tk-kpi-lbl">Completed</span><span class="tk-kpi-val">62</span><span class="tk-kpi-sub up">48.4% of total</span></div>
+          </div>
+          <div class="tk-kpi od">
+            <div class="tk-kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="tk-kpi-body"><span class="tk-kpi-lbl">Overdue</span><span class="tk-kpi-val">12</span><span class="tk-kpi-sub down">9.4% of total</span></div>
+          </div>
+          <div class="tk-kpi today">
+            <div class="tk-kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <div class="tk-kpi-body"><span class="tk-kpi-lbl">Due Today</span><span class="tk-kpi-val">7</span><span class="tk-kpi-sub">Tasks due today</span></div>
+          </div>
+        </section>
+
+        <section class="tk-grid">
+          <div class="tk-card">
+            <div class="tk-tools">
+              <div class="tk-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="search" placeholder="Search tasks..." />
+              </div>
+              <button class="tk-dd" type="button"><span>All Projects</span><span class="dd-chev"></span></button>
+              <button class="tk-dd" type="button"><span>All Teams</span><span class="dd-chev"></span></button>
+              <button class="tk-dd" type="button"><span>All Status</span><span class="dd-chev"></span></button>
+              <button class="tk-dd" type="button"><span>All Priority</span><span class="dd-chev"></span></button>
+              <button class="tk-dd" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--muted);"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Due Date</span></button>
+              <button class="tk-filter-btn" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                Filter
+              </button>
+            </div>
+
+            <div class="tk-table-wrap">
+              <table class="tk-table">
+                <thead>
+                  <tr>
+                    <th>Task Name</th>
+                    <th>Project</th>
+                    <th>Team / Assignee</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Due Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                      <td>
+                        <span class="tk-task">
+                          <span class="tk-task-ic c-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+                          <span class="tk-task-body"><strong>Website UI Design</strong><span>#TASK-001</span></span>
+                        </span>
+                      </td>
+                      <td><span class="tk-project"><strong>DGL School Website</strong><span>Redesign</span></span></td>
+                      <td><span class="tk-ta"><span class="tk-ta-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="tk-ta-body"><strong>Design Team</strong><span>Team Task</span></span></span></td>
+                      <td><span class="pill pill-progress">In Progress</span></td>
+                      <td><span class="pill pill-priority-high">High</span></td>
+                      <td><span class="tk-due"><strong>25 May 2024</strong><span class="lbl warn">2 days left</span></span></td>
+                      <td><button class="row-menu" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tk-task">
+                          <span class="tk-task-ic c-pink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18l-18-8z"/><path d="M11 14v4a2 2 0 0 0 4 0v-2"/></svg></span>
+                          <span class="tk-task-body"><strong>Social Media Campaign</strong><span>#TASK-002</span></span>
+                        </span>
+                      </td>
+                      <td><span class="tk-project"><strong>GreenLeaf Foods</strong><span>Marketing</span></span></td>
+                      <td><span class="tk-ta"><span class="tk-avatar av-1">NP</span><span class="tk-ta-body"><strong>Neha Patel</strong><span>Design Team</span></span></span></td>
+                      <td><span class="pill pill-progress">In Progress</span></td>
+                      <td><span class="pill pill-priority-medium">Medium</span></td>
+                      <td><span class="tk-due"><strong>28 May 2024</strong><span class="lbl warn">5 days left</span></span></td>
+                      <td><button class="row-menu" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tk-task">
+                          <span class="tk-task-ic c-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.04 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.04H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.65 8.6"/></svg></span>
+                          <span class="tk-task-body"><strong>CRM Module Development</strong><span>#TASK-003</span></span>
+                        </span>
+                      </td>
+                      <td><span class="tk-project"><strong>TechNova Solutions</strong><span>CRM Setup</span></span></td>
+                      <td><span class="tk-ta"><span class="tk-avatar av-2">AV</span><span class="tk-ta-body"><strong>Amit Verma</strong><span>Development Team</span></span></span></td>
+                      <td><span class="pill pill-progress">In Progress</span></td>
+                      <td><span class="pill pill-priority-high">High</span></td>
+                      <td><span class="tk-due"><strong>05 Jun 2024</strong><span class="lbl warn">13 days left</span></span></td>
+                      <td><button class="row-menu" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tk-task">
+                          <span class="tk-task-ic c-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+                          <span class="tk-task-body"><strong>Brand Guidelines</strong><span>#TASK-004</span></span>
+                        </span>
+                      </td>
+                      <td><span class="tk-project"><strong>ABC Pvt Ltd</strong><span>Branding</span></span></td>
+                      <td><span class="tk-ta"><span class="tk-ta-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="tk-ta-body"><strong>Design Team</strong><span>Team Task</span></span></span></td>
+                      <td><span class="pill pill-review-soft">In Review</span></td>
+                      <td><span class="pill pill-priority-medium">Medium</span></td>
+                      <td><span class="tk-due"><strong>15 May 2024</strong><span class="lbl warn">Overdue</span></span></td>
+                      <td><button class="row-menu" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tk-task">
+                          <span class="tk-task-ic c-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+                          <span class="tk-task-body"><strong>Contact Form Integration</strong><span>#TASK-005</span></span>
+                        </span>
+                      </td>
+                      <td><span class="tk-project"><strong>DGL School Website</strong><span>Redesign</span></span></td>
+                      <td><span class="tk-ta"><span class="tk-avatar av-6">KM</span><span class="tk-ta-body"><strong>Karan Malhotra</strong><span>Development Team</span></span></span></td>
+                      <td><span class="pill pill-completed-soft">Completed</span></td>
+                      <td><span class="pill pill-priority-high">High</span></td>
+                      <td><span class="tk-due"><strong>12 May 2024</strong><span class="lbl ok">Completed</span></span></td>
+                      <td><button class="row-menu" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tk-task">
+                          <span class="tk-task-ic c-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/></svg></span>
+                          <span class="tk-task-body"><strong>Blog Writing</strong><span>#TASK-006</span></span>
+                        </span>
+                      </td>
+                      <td><span class="tk-project"><strong>MedicCare Services</strong><span>Content</span></span></td>
+                      <td><span class="tk-ta"><span class="tk-avatar av-4">AD</span><span class="tk-ta-body"><strong>Anjali Desai</strong><span>Content Team</span></span></span></td>
+                      <td><span class="pill pill-gray">Pending</span></td>
+                      <td><span class="pill pill-priority-low">Low</span></td>
+                      <td><span class="tk-due"><strong>30 May 2024</strong><span class="lbl warn">7 days left</span></span></td>
+                      <td><button class="row-menu" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tk-task">
+                          <span class="tk-task-ic c-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v6c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 11v6c0 1.66 4 3 9 3s9-1.34 9-3v-6"/></svg></span>
+                          <span class="tk-task-body"><strong>Database Backup</strong><span>#TASK-007</span></span>
+                        </span>
+                      </td>
+                      <td><span class="tk-project"><strong>TechNova Solutions</strong><span>CRM Setup</span></span></td>
+                      <td><span class="tk-ta"><span class="tk-avatar av-5">VJ</span><span class="tk-ta-body"><strong>Vikram Joshi</strong><span>Development Team</span></span></span></td>
+                      <td><span class="pill pill-gray">Pending</span></td>
+                      <td><span class="pill pill-priority-low">Low</span></td>
+                      <td><span class="tk-due"><strong>31 May 2024</strong><span class="lbl warn">8 days left</span></span></td>
+                      <td><button class="row-menu" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tk-task">
+                          <span class="tk-task-ic c-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.83 7a3 3 0 0 1-.93 4.59L10 14"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></span>
+                          <span class="tk-task-body"><strong>QA and Testing</strong><span>#TASK-008</span></span>
+                        </span>
+                      </td>
+                      <td><span class="tk-project"><strong>Innovate Hub</strong><span>Mobile App</span></span></td>
+                      <td><span class="tk-ta"><span class="tk-avatar av-8">PS</span><span class="tk-ta-body"><strong>Pooja Singh</strong><span>QA Team</span></span></span></td>
+                      <td><span class="pill pill-progress">In Progress</span></td>
+                      <td><span class="pill pill-priority-medium">Medium</span></td>
+                      <td><span class="tk-due"><strong>20 Jun 2024</strong><span class="lbl warn">28 days left</span></span></td>
+                      <td><button class="row-menu" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
+                    </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="tk-foot">
+              <span class="tk-foot-meta">Showing 1 to 8 of 128 tasks</span>
+              <div class="tk-foot-pages">
+                <button class="pg-btn" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+                <button class="pg-btn active">1</button>
+                <button class="pg-btn">2</button>
+                <button class="pg-btn">3</button>
+                <span class="pg-ellipsis">…</span>
+                <button class="pg-btn">16</button>
+                <button class="pg-btn" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+              </div>
+              <button class="tk-pagesize" type="button">10 / page <span class="dd-chev"></span></button>
+            </div>
+          </div>
+
+          <aside class="tk-right">
+            <section class="rr-card">
+              <div class="rr-hd"><strong>Upcoming Deadlines</strong><a class="rr-link" href="#">View All</a></div>
+              <div class="ud-list">
+                <div class="ud-row">
+                  <div class="ud-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 14 11 16 15 12"/></svg></div>
+                  <div class="ud-body"><strong>Website UI Design</strong><span>DGL School Website</span></div>
+                  <div class="ud-when"><strong>25 May 2024</strong><span>2 days left</span></div>
+                </div>
+                <div class="ud-row">
+                  <div class="ud-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 14 11 16 15 12"/></svg></div>
+                  <div class="ud-body"><strong>Social Media Campaign</strong><span>GreenLeaf Foods</span></div>
+                  <div class="ud-when"><strong>28 May 2024</strong><span>5 days left</span></div>
+                </div>
+                <div class="ud-row">
+                  <div class="ud-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 14 11 16 15 12"/></svg></div>
+                  <div class="ud-body"><strong>Blog Writing</strong><span>MedicCare Services</span></div>
+                  <div class="ud-when"><strong>30 May 2024</strong><span>7 days left</span></div>
+                </div>
+                <div class="ud-row">
+                  <div class="ud-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 14 11 16 15 12"/></svg></div>
+                  <div class="ud-body"><strong>Database Backup</strong><span>TechNova Solutions</span></div>
+                  <div class="ud-when"><strong>31 May 2024</strong><span>8 days left</span></div>
+                </div>
+                <div class="ud-row">
+                  <div class="ud-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 14 11 16 15 12"/></svg></div>
+                  <div class="ud-body"><strong>QA and Testing</strong><span>Innovate Hub</span></div>
+                  <div class="ud-when"><strong>20 Jun 2024</strong><span>28 days left</span></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="rr-card">
+              <div class="rr-hd"><strong>Recent Activity</strong><a class="rr-link" href="#">View All</a></div>
+              <div class="tra-list">
+                <div class="tra-row">
+                  <div class="tra-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                  <div class="tra-body"><p><strong>Santanu (PM)</strong> assigned "Website UI Design" to Design Team</p></div>
+                  <span class="tra-time">2 hours ago</span>
+                </div>
+                <div class="tra-row">
+                  <div class="tra-ic purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                  <div class="tra-body"><p><strong>Rahul (Team Lead)</strong> assigned "CRM Module Development" to Amit Verma</p></div>
+                  <span class="tra-time">4 hours ago</span>
+                </div>
+                <div class="tra-row">
+                  <div class="tra-ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg></div>
+                  <div class="tra-body"><p><strong>Amit Verma</strong> marked "CRM Module Development" as In Progress</p></div>
+                  <span class="tra-time">1 day ago</span>
+                </div>
+                <div class="tra-row">
+                  <div class="tra-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg></div>
+                  <div class="tra-body"><p><strong>Karan Malhotra</strong> completed "Contact Form Integration"</p></div>
+                  <span class="tra-time">2 days ago</span>
+                </div>
+              </div>
+            </section>
+          </aside>
+        </section>
+
+        <div class="act-list" style="display:none" aria-hidden="true">
+          <div class="act-row"><div class="act-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="act-body"><strong>Santanu assigned "Website UI Design" to Design Team</strong><span>By Santanu</span></div><div class="act-time">2 hours ago</div></div>
+          <div class="act-row"><div class="act-ic purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="act-body"><strong>Rahul assigned "CRM Module Development" to Amit Verma</strong><span>By Rahul</span></div><div class="act-time">4 hours ago</div></div>
+          <div class="act-row"><div class="act-ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg></div><div class="act-body"><strong>Amit Verma marked "CRM Module Development" as In Progress</strong><span>By Amit Verma</span></div><div class="act-time">1 day ago</div></div>
+          <div class="act-row"><div class="act-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg></div><div class="act-body"><strong>Karan Malhotra completed "Contact Form Integration"</strong><span>By Karan Malhotra</span></div><div class="act-time">2 days ago</div></div>
+        </div>
+
+        <style>
+          .act-list .act-ic { width:34px; height:34px; border-radius:9px; display:grid; place-items:center; background:var(--green-softer); color:var(--green); flex-shrink:0; }
+          .act-list .act-ic svg { width:16px; height:16px; }
+          .act-list .act-ic.blue { background:var(--blue-soft); color:var(--blue); }
+          .act-list .act-ic.green { background:var(--green-soft); color:var(--green); }
+          .act-list .act-ic.amber { background:var(--amber-soft); color:var(--amber); }
+          .act-list .act-ic.purple { background:var(--purple-soft); color:var(--purple); }
+          .act-list .act-ic.red { background:var(--red-soft); color:var(--red); }
+        </style>
+
+      </main>
+    </div>
+  </div>
+
+  <div id="tweaks-root"></div>
+
+  <script src="shell.js"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+
+  <script type="text/babel">
+    const TK_TWEAKS = /*EDITMODE-BEGIN*/{"dark":false,"sidebarCollapsed":false,"density":"comfortable"}/*EDITMODE-END*/;
+    function applyTk(t) {
+      const html = document.documentElement;
+      html.setAttribute('data-theme', t.dark ? 'dark' : 'light');
+      html.setAttribute('data-density', t.density);
+      document.body.dataset.sidebar = t.sidebarCollapsed ? 'collapsed' : 'expanded';
+    }
+    function TkTweaks() {
+      const [t, setTweak] = useTweaks(TK_TWEAKS);
+      React.useEffect(() => { applyTk(t); }, [t]);
+      return (
+        <TweaksPanel title="Tweaks">
+          <TweakSection label="Theme" />
+          <TweakToggle label="Dark mode" value={t.dark} onChange={(v) => setTweak('dark', v)} />
+          <TweakSection label="Layout" />
+          <TweakToggle label="Sidebar collapsed" value={t.sidebarCollapsed} onChange={(v) => setTweak('sidebarCollapsed', v)} />
+          <TweakRadio label="Density" value={t.density}
+                      options={[{value:'compact',label:'Compact'},{value:'comfortable',label:'Comfy'}]}
+                      onChange={(v) => setTweak('density', v)} />
+        </TweaksPanel>
+      );
+    }
+    applyTk(TK_TWEAKS);
+    const root = ReactDOM.createRoot(document.getElementById('tweaks-root'));
+    root.render(<TkTweaks />);
+  </script>
+</body>
+</html>

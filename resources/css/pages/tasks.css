@@ -1,0 +1,152 @@
+/* ============================================================================
+   Tasks — /tasks, /tasks/mine, /tasks/team, /tasks/{task}.
+
+   The handover shipped four stylesheets (tasks.css alone was 23KB) that again
+   re-derived the table, KPI tiles, filters, pagination and rail cards under new
+   prefixes: `.tk-*`, `.tt-*`, `.to-*`, `.kpi-row-6`. Those map onto
+   components/ui.css. The due-date cell, timeline, field grid and attachment
+   cards were genuinely new and went into components too — Attendance, Leave
+   and Tickets will all want them.
+   ========================================================================= */
+
+.tasks-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.7fr) minmax(300px, 1fr);
+  gap: var(--density-gap);
+  align-items: flex-start;
+}
+
+/* ── the task cell: icon chip beside a stacked name and reference ── */
+.task-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.task-cell-text { min-width: 0; }
+.task-cell strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  transition: color 0.14s;
+}
+.task-cell span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── a two-line stacked cell: project over its client, team over its type ── */
+.stack-cell { min-width: 0; }
+.stack-cell strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+}
+.stack-cell span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+/* ── the assignee cell ──
+   A task belongs either to a whole team or to one person. The two read
+   differently on purpose: a square chip for a team, a round avatar for a
+   person, so a glance down the column tells you which is which. */
+.assignee-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.assignee-cell .avatar,
+.assignee-cell .chip {
+  width: 32px;
+  height: 32px;
+  font-size: 11.5px;
+}
+.assignee-cell .chip { border-radius: 9px; }
+.assignee-cell .chip svg { width: 15px; height: 15px; }
+.assignee-empty {
+  font-size: 12.5px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ─────────────────  detail page  ───────────────── */
+.task-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.5fr) minmax(300px, 1fr);
+  gap: var(--density-gap);
+  align-items: flex-start;
+}
+.task-detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-gap);
+  min-width: 0;
+}
+
+.task-hd-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.task-hd-title h1 { margin: 0; }
+
+/* The written description. Styled here rather than left to browser defaults,
+   because it is the one place in the application with prose in it. */
+.prose {
+  padding: 20px 22px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+.prose p { margin: 0 0 12px; }
+.prose h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 16px 0 8px;
+}
+.prose ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.prose li { margin-bottom: 5px; }
+.prose > :last-child { margin-bottom: 0; }
+
+.section-hd {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 18px 22px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.section-hd svg { width: 16px; height: 16px; color: var(--muted); }
+
+/* ── rail actions ── */
+.rail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rail-actions .btn { width: 100%; }
+
+/* ─────────────────────────  responsive  ───────────────────────── */
+@media (max-width: 1280px) {
+  .tasks-grid,
+  .task-detail-grid { grid-template-columns: minmax(0, 1fr); }
+}

@@ -1,0 +1,57 @@
+/* My Tasks (employee self-view) styles */
+
+/* With the checkbox column removed, restore normal first/second column padding */
+.tasks-card .cl-table thead th:first-child,
+.tasks-card .cl-table tbody td:first-child { width: auto; padding-left: 22px; padding-right: 12px; }
+.tasks-card .cl-table thead th:nth-child(2),
+.tasks-card .cl-table tbody td:nth-child(2) { padding-left: 12px; }
+
+/* Pagination footer: align meta / pages / per-page on one row */
+.tasks-card .cl-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+/* 10 / page selector */
+.per-page-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  font: 600 12.5px/1 'Plus Jakarta Sans', sans-serif;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color 0.14s, background 0.14s;
+}
+.per-page-select:hover { border-color: var(--line-strong); background: var(--surface-2); }
+.per-page-select svg { width: 13px; height: 13px; color: var(--muted); }
+
+/* Performance card rows */
+.perf-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+.perf-row:last-child { border-bottom: 0; }
+.perf-ic {
+  width: 40px; height: 40px;
+  border-radius: 11px;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.perf-ic svg { width: 19px; height: 19px; }
+.perf-ic.t-green  { background: var(--green-soft);  color: var(--green); }
+.perf-ic.t-blue   { background: var(--blue-soft);   color: var(--blue); }
+.perf-ic.t-purple { background: var(--purple-soft); color: var(--purple); }
+.perf-lbl { font-size: 13px; color: var(--ink-2); font-weight: 500; }
+.perf-val { font-size: 20px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.perf-note { font-size: 11px; color: var(--muted-2); margin-top: 12px; line-height: 1.4; }

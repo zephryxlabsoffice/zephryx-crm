@@ -28,7 +28,20 @@
 }
 .notice-icon svg { width: 20px; height: 20px; }
 
-.notice-body { min-width: 0; }
+.notice-body { min-width: 0; flex: 1; }
+
+/* A notice that carries its own way out — "nobody is assigned" beside an
+   Assign button. The action wraps below on a narrow screen rather than
+   squeezing the message. */
+.notice-action {
+  flex-shrink: 0;
+  align-self: center;
+}
+@media (max-width: 620px) {
+  .notice { flex-wrap: wrap; }
+  .notice-action { width: 100%; }
+  .notice-action .btn { width: 100%; }
+}
 .notice-body strong {
   display: block;
   font-weight: 700;
