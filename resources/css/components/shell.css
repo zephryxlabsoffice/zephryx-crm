@@ -154,7 +154,10 @@ body.app-body {
   -webkit-backdrop-filter: blur(14px);
   height: var(--topbar-h);
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  /* minmax(0, …), not 1fr: a bare 1fr track has an automatic minimum of its
+     content's width, so the search box refuses to shrink and pushes the whole
+     topbar — navigation included — off the side of the page. */
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 24px;
   padding: 0 var(--page-pad);
@@ -577,7 +580,7 @@ body.app-body {
   /* Search is hidden here, so the middle grid column has nothing in it and the
      right group would slide into it. Drop to two columns and push it over. */
   .topbar {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto minmax(0, 1fr);
     gap: 12px;
   }
   .tb-search { display: none; }

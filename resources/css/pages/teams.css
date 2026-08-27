@@ -1,0 +1,173 @@
+/* ============================================================================
+   Teams — /teams, /teams/mine, /teams/{team}.
+
+   The handover shipped three stylesheets (team.css, team-overview.css,
+   my-teams.css) that between them re-derived the table, KPI tiles, search
+   field, filter buttons, pagination and rail cards under new names —
+   `.tm-table`, `.to-table`, `.tm-kpi`, `.to-kpi`, `.tm-search`, `.tm-foot`.
+   Those all map onto components/ui.css, which is where they stay. What is
+   left here is genuinely specific to teams.
+   ========================================================================= */
+
+.teams-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.7fr) minmax(300px, 1fr);
+  gap: var(--density-gap);
+  align-items: flex-start;
+}
+
+/* ── the team cell: chip beside a stacked name and purpose ── */
+.team-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.team-cell-text { min-width: 0; }
+.team-cell strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  transition: color 0.14s;
+}
+.team-cell span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+/* ── the lead cell: avatar beside a stacked name and role ── */
+.lead-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.lead-cell-text { min-width: 0; }
+.lead-cell strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.lead-cell span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+/* A team without a lead is a real state, and worth seeing. */
+.lead-empty {
+  font-size: 12.5px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ─────────────────  detail page header  ───────────────── */
+.detail-hd {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+.hd-back {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-btn);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  transition: background 0.14s, border-color 0.14s;
+}
+.hd-back:hover { background: var(--surface-2); border-color: var(--line-strong); }
+.hd-back svg { width: 18px; height: 18px; }
+
+.hd-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.hd-title-row h1 { margin: 0; }
+
+.hd-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.hd-id strong {
+  color: var(--ink-2);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.copy-btn {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+}
+.copy-btn:hover { background: var(--surface-2); color: var(--ink); }
+.copy-btn svg { width: 14px; height: 14px; }
+/* Confirmation lives in the button itself: a toast for a one-word action is
+   more interruption than the action is worth. */
+.copy-btn .icon-done { display: none; }
+.copy-btn.is-done { color: var(--green); }
+.copy-btn.is-done .icon-copy { display: none; }
+.copy-btn.is-done .icon-done { display: block; }
+
+/* ── a department/role tag inside a member row ── */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  background: var(--surface-2);
+  color: var(--ink-3);
+}
+
+/* A grouping header inside the members table, for the "By department" view. */
+.group-row td {
+  background: var(--surface-2);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+/* ─────────────────────────  responsive  ───────────────────────── */
+@media (max-width: 1280px) {
+  .teams-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+  .detail-hd { width: 100%; }
+  .group-row td { text-align: left; }
+  .group-row td::before { content: none; }
+}

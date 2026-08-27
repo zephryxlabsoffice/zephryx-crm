@@ -172,12 +172,47 @@ function initAutoSubmit() {
     });
 }
 
+/* ── copy to clipboard ───────────────────────────────────────────────────── */
+
+/**
+ * Copies the value of the nearest `[data-copy-source]` and confirms in the
+ * button itself — a toast for a one-word action is more interruption than the
+ * action is worth.
+ *
+ * The identifier is always visible as text beside the button, so if the
+ * Clipboard API is unavailable (it needs a secure context) nothing is lost:
+ * it can still be selected and copied by hand.
+ */
+function initCopyButtons() {
+    document.querySelectorAll('[data-copy]').forEach((button) => {
+        button.addEventListener('click', async () => {
+            const source = button.closest('*:has([data-copy-source])')?.querySelector('[data-copy-source]')
+                ?? button.parentElement?.querySelector('[data-copy-source]');
+            const value = source?.textContent?.trim();
+
+            if (!value || !navigator.clipboard) {
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(value);
+            } catch {
+                return;
+            }
+
+            button.classList.add('is-done');
+            setTimeout(() => button.classList.remove('is-done'), 1600);
+        });
+    });
+}
+
 /* ── boot ────────────────────────────────────────────────────────────────── */
 
 function init() {
     initSidebar();
     initNotifications();
     initAutoSubmit();
+    initCopyButtons();
 }
 
 if (document.readyState === 'loading') {

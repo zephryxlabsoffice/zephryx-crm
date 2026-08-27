@@ -87,7 +87,7 @@
 /* ─────────────────────────  responsive  ───────────────────────── */
 @media (max-width: 1280px) {
   /* The rail drops below the table rather than squeezing both. */
-  .cl-grid { grid-template-columns: 1fr; }
+  .cl-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 760px) {

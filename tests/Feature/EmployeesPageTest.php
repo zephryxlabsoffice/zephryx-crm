@@ -127,7 +127,7 @@ class EmployeesPageTest extends TestCase
 
         $html = $this->get('/employees')->getContent();
 
-        $this->assertStringContainsString('class="dept-legend"', $html);
+        $this->assertStringContainsString('class="chart-legend"', $html);
         $this->assertStringContainsString('<svg viewBox="0 0 132 132" aria-hidden="true">', $html);
         $this->assertStringContainsString('Development', $html);
     }

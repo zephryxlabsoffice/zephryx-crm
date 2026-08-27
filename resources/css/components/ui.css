@@ -80,6 +80,9 @@
   display: flex;
   gap: 10px;
   flex-shrink: 0;
+  /* Three actions plus a narrow screen is more than one row's worth; they wrap
+     rather than pushing the page sideways. */
+  flex-wrap: wrap;
 }
 
 /* ─────────────────────────  inline fields  ───────────────────────── */
@@ -149,6 +152,19 @@
   align-items: center;
   flex-wrap: wrap;
   margin-left: auto;
+}
+
+/* Between the stacking breakpoint and a comfortable desktop there is a band
+   where a six- or seven-column table is simply wider than the space. It scrolls
+   inside its own card rather than pushing the whole page sideways — a page that
+   scrolls horizontally moves the navigation off screen too. */
+.card-body-table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  /* The card is a flex column, so this would otherwise keep an automatic
+     minimum of the table's own width and the scroll container would itself
+     overflow — leaving the whole page scrolling sideways anyway. */
+  min-width: 0;
 }
 
 .data-table {
@@ -327,6 +343,26 @@
 .kpi-sub.down { color: var(--danger); }
 .kpi-sub svg { width: 12px; height: 12px; }
 
+/* A KPI whose value is a person rather than a number. */
+.kpi-person {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.kpi-person .avatar { width: 30px; height: 30px; font-size: 11.5px; }
+.kpi-person strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.015em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* A date is a value, but "12 Jan 2024" at 28px overflows a tile. */
+.kpi-val.kpi-val-sm { font-size: 19px; }
+
 /* ─────────────────────────  right rail  ───────────────────────── */
 .rail {
   display: flex;
@@ -423,21 +459,124 @@
   color: var(--avatar-fg);
   background: var(--avatar-bg);
 }
-.avatar.tint-1 { --avatar-fg: #15A848; --avatar-bg: #DFF3E6; }
-.avatar.tint-2 { --avatar-fg: #B86A1E; --avatar-bg: #FDEBD4; }
-.avatar.tint-3 { --avatar-fg: #2563EB; --avatar-bg: #DBEAFE; }
-.avatar.tint-4 { --avatar-fg: #16A34A; --avatar-bg: #DCFCE7; }
-.avatar.tint-5 { --avatar-fg: #D97706; --avatar-bg: #FEF3C7; }
-.avatar.tint-6 { --avatar-fg: #4F46E5; --avatar-bg: #E0E7FF; }
-.avatar.tint-7 { --avatar-fg: #DB2777; --avatar-bg: #FCE7F3; }
+.tint-1 { --avatar-fg: #15A848; --avatar-bg: #DFF3E6; }
+.tint-2 { --avatar-fg: #B86A1E; --avatar-bg: #FDEBD4; }
+.tint-3 { --avatar-fg: #2563EB; --avatar-bg: #DBEAFE; }
+.tint-4 { --avatar-fg: #16A34A; --avatar-bg: #DCFCE7; }
+.tint-5 { --avatar-fg: #D97706; --avatar-bg: #FEF3C7; }
+.tint-6 { --avatar-fg: #4F46E5; --avatar-bg: #E0E7FF; }
+.tint-7 { --avatar-fg: #DB2777; --avatar-bg: #FCE7F3; }
 
-[data-theme="dark"] .avatar.tint-1 { --avatar-fg: #4FC97A; --avatar-bg: #16321F; }
-[data-theme="dark"] .avatar.tint-2 { --avatar-fg: #F2A65A; --avatar-bg: #2B2010; }
-[data-theme="dark"] .avatar.tint-3 { --avatar-fg: #60A5FA; --avatar-bg: #142036; }
-[data-theme="dark"] .avatar.tint-4 { --avatar-fg: #66D182; --avatar-bg: #0F2417; }
-[data-theme="dark"] .avatar.tint-5 { --avatar-fg: #FBBF24; --avatar-bg: #2A1F10; }
-[data-theme="dark"] .avatar.tint-6 { --avatar-fg: #A5B4FC; --avatar-bg: #1A1F38; }
-[data-theme="dark"] .avatar.tint-7 { --avatar-fg: #F472B6; --avatar-bg: #2A1226; }
+[data-theme="dark"] .tint-1 { --avatar-fg: #4FC97A; --avatar-bg: #16321F; }
+[data-theme="dark"] .tint-2 { --avatar-fg: #F2A65A; --avatar-bg: #2B2010; }
+[data-theme="dark"] .tint-3 { --avatar-fg: #60A5FA; --avatar-bg: #142036; }
+[data-theme="dark"] .tint-4 { --avatar-fg: #66D182; --avatar-bg: #0F2417; }
+[data-theme="dark"] .tint-5 { --avatar-fg: #FBBF24; --avatar-bg: #2A1F10; }
+[data-theme="dark"] .tint-6 { --avatar-fg: #A5B4FC; --avatar-bg: #1A1F38; }
+[data-theme="dark"] .tint-7 { --avatar-fg: #F472B6; --avatar-bg: #2A1226; }
+
+/* A rounded square rather than a circle — for a thing (a team, a project),
+   where a circle reads as a person. Same tint palette. */
+.chip {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  color: var(--avatar-fg);
+  background: var(--avatar-bg);
+}
+
+/* ─────────────────────────  tabs  ─────────────────────────
+   Links, not buttons: each tab is a filtered view with its own URL, so it can
+   be bookmarked, opened in a new tab and reached with the back button. */
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 14px 22px 0;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  padding: 10px 14px;
+  border-radius: 8px 8px 0 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.14s, background 0.14s, border-color 0.14s;
+}
+.tab:hover { color: var(--ink); background: var(--green-tint); }
+.tab.active {
+  color: var(--green);
+  font-weight: 600;
+  border-bottom-color: var(--green);
+}
+.tab-count {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-left: 5px;
+}
+
+/* ─────────────────────────  stat rows  ─────────────────────────
+   A rail card of labelled figures — "Average tenure: 3.2 months". */
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.stat-row:last-child { border-bottom: 0; }
+.stat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.stat-ic {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--green-soft);
+  color: var(--green);
+}
+.stat-ic svg { width: 15px; height: 15px; }
+.stat-ic.tone-accent { background: var(--accent-blue-soft); color: var(--accent-blue); }
+.stat-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* An inline count with a leading icon — "6 members". */
+.count-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.count-inline svg { width: 15px; height: 15px; color: var(--muted); }
+.count-inline .unit { font-weight: 500; color: var(--muted); }
 
 /* ─────────────────────────  person rows  ─────────────────────────
    A rail list of people — new starters, birthdays, a team roster. */
@@ -616,7 +755,9 @@
 @media (max-width: 760px) {
   .page-hd-row { flex-direction: column; }
   .hd-actions { width: 100%; }
-  .hd-actions .btn { flex: 1; }
+  /* `flex: 1` alone keeps an automatic minimum of the button's own label, so a
+     third action overflows instead of wrapping. */
+  .hd-actions .btn { flex: 1 1 auto; min-width: 0; }
   .table-tools { width: 100%; margin-left: 0; }
   /* Sharing a line with the status select and the submit button leaves the
      search box about 50px wide. It takes the row. */

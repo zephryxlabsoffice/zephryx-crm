@@ -9,7 +9,7 @@
     <?php if($breakdown === []): ?>
         <p class="rail-empty">No departments to show yet.</p>
     <?php else: ?>
-        <div class="dept-grid">
+        <div class="chart-stack">
             
             <div class="donut">
                 <svg viewBox="0 0 132 132" aria-hidden="true">
@@ -31,9 +31,9 @@
                 </div>
             </div>
 
-            <ul class="dept-legend">
+            <ul class="chart-legend">
                 <?php $__currentLoopData = $breakdown; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $dept): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <li class="dept-leg <?php echo e(P::dot($index)); ?>">
+                    <li class="chart-leg <?php echo e(P::dot($index)); ?>">
                         <strong><?php echo e($dept['name']); ?></strong>
                         <em><?php echo e($dept['count']); ?> (<?php echo e($dept['share']); ?>%)</em>
                     </li>

@@ -1,0 +1,65 @@
+/* ───────────────────────────────────────────────────────────────
+   My Teams (Team Lead view) — overrides on top of team.css
+   ─────────────────────────────────────────────────────────────── */
+
+/* full-width table (no right rail) */
+.mt-full {
+  display: block;
+}
+
+/* Back button — shown when My Teams is opened as a sub-page (admin).
+   Hidden by default; PHP/jQuery adds .has-back on the page header
+   when rendered inside the admin flow. */
+.mt-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.back-btn {
+  appearance: none;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line-strong);
+  background: var(--surface);
+  display: none;            /* hidden until .has-back is set on .mt-head */
+  place-items: center;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s, color 0.14s, transform 0.14s;
+}
+.mt-head.has-back .back-btn { display: grid; }
+.back-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--ink-3);
+  color: var(--ink);
+  transform: translateX(-2px);
+}
+.back-btn svg { width: 20px; height: 20px; }
+.mt-head .page-hd { margin-bottom: 0; }
+
+/* KPI strip reuses .tm-kpis / .tm-kpi from team.css */
+
+/* boxed "Go" arrow button in last column */
+.go-btn {
+  appearance: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  display: inline-grid;
+  place-items: center;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s, color 0.14s, transform 0.14s;
+}
+.go-btn:hover {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+  transform: translateX(2px);
+}
+.go-btn svg { width: 16px; height: 16px; }

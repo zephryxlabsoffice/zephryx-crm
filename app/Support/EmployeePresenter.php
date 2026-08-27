@@ -44,34 +44,17 @@ class EmployeePresenter
     }
 
     /**
-     * The donut's geometry for one segment.
-     *
-     * An SVG circle draws its stroke from three o'clock; the container is
-     * rotated -90deg so the first segment starts at the top. `offset` is the
-     * running total of everything before this segment.
-     *
-     * Returned as attribute values rather than CSS, because an inline `style`
-     * attribute is blocked by our Content-Security-Policy (§6) while SVG
-     * presentation attributes are not.
+     * Donut geometry and palette are shared with Teams — see App\Support\Chart.
      *
      * @return array{dash: string, offset: string}
      */
     public static function donutSegment(float $share, float $offsetShare, float $circumference): array
     {
-        $length = $circumference * ($share / 100);
-
-        return [
-            'dash' => round($length, 2).' '.round($circumference - $length, 2),
-            'offset' => (string) round(-$circumference * ($offsetShare / 100), 2),
-        ];
+        return Chart::donutSegment($share, $offsetShare, $circumference);
     }
 
-    /**
-     * Palette position for a department, cycling so master data of any size
-     * always gets a colour. See `.dot-*` in pages/employees.css.
-     */
-    public static function dot(int $index, int $palette = 8): string
+    public static function dot(int $index, int $palette = Chart::PALETTE): string
     {
-        return 'dot-'.(($index % $palette) + 1);
+        return Chart::dot($index, $palette);
     }
 }

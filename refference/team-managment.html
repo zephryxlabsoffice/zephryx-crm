@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-density="comfortable">
+<head>
+  <meta charset="UTF-8" />
+  <title>Team Management · ZephryxLabs CRM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shell.css" />
+  <link rel="stylesheet" href="team.css" />
+</head>
+<body data-active="team">
+
+  <div class="app">
+    <div class="main">
+
+      <main class="page" data-screen-label="03 SuperAdmin · Team Management">
+
+        <div class="page-hd-row">
+          <div class="page-hd">
+            <h1>Team Management</h1>
+            <p>Create, manage and monitor all teams across the organization.</p>
+          </div>
+          <div class="hd-actions">
+            <button class="btn btn-primary" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Create Team
+            </button>
+            <button class="btn btn-outline" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              My Teams
+            </button>
+            <button class="btn btn-outline" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export
+            </button>
+          </div>
+        </div>
+
+        <section class="tm-kpis">
+          <div class="tm-kpi total">
+            <div class="tm-kpi-ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="tm-kpi-body">
+              <span class="tm-kpi-lbl">Total Teams</span>
+              <span class="tm-kpi-val">18</span>
+              <span class="tm-kpi-sub">Across organization</span>
+            </div>
+          </div>
+          <div class="tm-kpi active">
+            <div class="tm-kpi-ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="tm-kpi-body">
+              <span class="tm-kpi-lbl">Active Teams</span>
+              <span class="tm-kpi-val">16</span>
+              <span class="tm-kpi-sub">Currently active</span>
+            </div>
+          </div>
+          <div class="tm-kpi inact">
+            <div class="tm-kpi-ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="tm-kpi-body">
+              <span class="tm-kpi-lbl">Inactive Teams</span>
+              <span class="tm-kpi-val">2</span>
+              <span class="tm-kpi-sub">Not active</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="tm-grid">
+
+          <div class="tm-card">
+            <div class="tm-card-hd">All Teams</div>
+
+            <div class="tm-tools">
+              <div class="tm-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="search" placeholder="Search teams..." />
+              </div>
+              <button class="tm-dd" type="button"><span>All Team Leads</span><span class="dd-chev"></span></button>
+              <button class="tm-dd" type="button"><span>Status: All</span><span class="dd-chev"></span></button>
+              <button class="tm-filter-btn" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                Filter
+              </button>
+            </div>
+
+            <div class="tm-table-wrap">
+              <table class="tm-table">
+                <thead>
+                  <tr>
+                    <th>Team Name</th>
+                    <th>Team Lead</th>
+                    <th>Members</th>
+                    <th>Status</th>
+                    <th>Created On</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                      <td>
+                        <span class="tm-team">
+                          <span class="tm-chip c-green">DT</span>
+                          <span class="tm-team-body">
+                            <strong>Design Team</strong>
+                            <span>UI/UX and Product Design</span>
+                          </span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-lead">
+                          <span class="tm-avatar av-3">RS</span>
+                          <span class="tm-lead-body"><strong>Rahul Sharma</strong><span>UI/UX Designer</span></span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 6 <span class="lbl">Members</span></span>
+                      </td>
+                      <td><span class="pill pill-green">Active</span></td>
+                      <td>12 Jan 2024</td>
+                      <td>
+                        <span class="tm-row-actions">
+                          <button class="icon-btn" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+                          <button class="icon-btn" aria-label="View team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tm-team">
+                          <span class="tm-chip c-blue">WD</span>
+                          <span class="tm-team-body">
+                            <strong>Web Development Team</strong>
+                            <span>Frontend Development</span>
+                          </span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-lead">
+                          <span class="tm-avatar av-7">NP</span>
+                          <span class="tm-lead-body"><strong>Neha Patel</strong><span>Frontend Developer</span></span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 8 <span class="lbl">Members</span></span>
+                      </td>
+                      <td><span class="pill pill-green">Active</span></td>
+                      <td>18 Jan 2024</td>
+                      <td>
+                        <span class="tm-row-actions">
+                          <button class="icon-btn" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+                          <button class="icon-btn" aria-label="View team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tm-team">
+                          <span class="tm-chip c-amber">BD</span>
+                          <span class="tm-team-body">
+                            <strong>Backend Development Team</strong>
+                            <span>Server-side Development</span>
+                          </span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-lead">
+                          <span class="tm-avatar av-2">AM</span>
+                          <span class="tm-lead-body"><strong>Arjun Mehta</strong><span>Backend Developer</span></span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 7 <span class="lbl">Members</span></span>
+                      </td>
+                      <td><span class="pill pill-green">Active</span></td>
+                      <td>22 Jan 2024</td>
+                      <td>
+                        <span class="tm-row-actions">
+                          <button class="icon-btn" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+                          <button class="icon-btn" aria-label="View team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tm-team">
+                          <span class="tm-chip c-purple">QA</span>
+                          <span class="tm-team-body">
+                            <strong>Quality Assurance Team</strong>
+                            <span>Testing and QA</span>
+                          </span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-lead">
+                          <span class="tm-avatar av-8">PS</span>
+                          <span class="tm-lead-body"><strong>Pooja Singh</strong><span>QA Engineer</span></span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 5 <span class="lbl">Members</span></span>
+                      </td>
+                      <td><span class="pill pill-green">Active</span></td>
+                      <td>05 Feb 2024</td>
+                      <td>
+                        <span class="tm-row-actions">
+                          <button class="icon-btn" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+                          <button class="icon-btn" aria-label="View team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tm-team">
+                          <span class="tm-chip c-pink">PM</span>
+                          <span class="tm-team-body">
+                            <strong>Project Management Team</strong>
+                            <span>Project Planning & Delivery</span>
+                          </span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-lead">
+                          <span class="tm-avatar av-5">VJ</span>
+                          <span class="tm-lead-body"><strong>Vikram Joshi</strong><span>Project Manager</span></span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 4 <span class="lbl">Members</span></span>
+                      </td>
+                      <td><span class="pill pill-green">Active</span></td>
+                      <td>15 Feb 2024</td>
+                      <td>
+                        <span class="tm-row-actions">
+                          <button class="icon-btn" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+                          <button class="icon-btn" aria-label="View team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tm-team">
+                          <span class="tm-chip c-red">BA</span>
+                          <span class="tm-team-body">
+                            <strong>Business Analysis Team</strong>
+                            <span>Requirement & Analysis</span>
+                          </span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-lead">
+                          <span class="tm-avatar av-4">AD</span>
+                          <span class="tm-lead-body"><strong>Anjali Desai</strong><span>Business Analyst</span></span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 4 <span class="lbl">Members</span></span>
+                      </td>
+                      <td><span class="pill pill-green">Active</span></td>
+                      <td>01 Mar 2024</td>
+                      <td>
+                        <span class="tm-row-actions">
+                          <button class="icon-btn" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+                          <button class="icon-btn" aria-label="View team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tm-team">
+                          <span class="tm-chip c-indigo">OP</span>
+                          <span class="tm-team-body">
+                            <strong>Operations Team</strong>
+                            <span>Operations & Support</span>
+                          </span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-lead">
+                          <span class="tm-avatar av-6">KM</span>
+                          <span class="tm-lead-body"><strong>Karan Malhotra</strong><span>Operations Manager</span></span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 6 <span class="lbl">Members</span></span>
+                      </td>
+                      <td><span class="pill pill-red">Inactive</span></td>
+                      <td>10 Mar 2024</td>
+                      <td>
+                        <span class="tm-row-actions">
+                          <button class="icon-btn" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+                          <button class="icon-btn" aria-label="View team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <span class="tm-team">
+                          <span class="tm-chip c-teal">HR</span>
+                          <span class="tm-team-body">
+                            <strong>Human Resources Team</strong>
+                            <span>HR and Administration</span>
+                          </span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-lead">
+                          <span class="tm-avatar av-1">RK</span>
+                          <span class="tm-lead-body"><strong>Riya Kapoor</strong><span>HR Executive</span></span>
+                        </span>
+                      </td>
+                      <td>
+                        <span class="tm-members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 3 <span class="lbl">Members</span></span>
+                      </td>
+                      <td><span class="pill pill-green">Active</span></td>
+                      <td>20 Mar 2024</td>
+                      <td>
+                        <span class="tm-row-actions">
+                          <button class="icon-btn" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+                          <button class="icon-btn" aria-label="View team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+                        </span>
+                      </td>
+                    </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="tm-foot">
+              <span class="tm-foot-meta">Showing 1 to 8 of 18 teams</span>
+              <div class="tm-foot-pages">
+                <button class="pg-btn" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+                <button class="pg-btn active">1</button>
+                <button class="pg-btn">2</button>
+                <button class="pg-btn">3</button>
+                <span class="pg-ellipsis">…</span>
+                <button class="pg-btn" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+              </div>
+              <button class="tm-pagesize" type="button">10 / page <span class="dd-chev"></span></button>
+            </div>
+          </div>
+
+          <aside class="tm-right">
+            <section class="rr-card">
+              <div class="rr-hd">
+                <strong>Recent Activity</strong>
+                <a class="rr-link" href="#">View All</a>
+              </div>
+              <div class="ra-list">
+              <div class="ra-row">
+                <div class="ra-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                <div class="ra-body">
+                  <strong>Design Team was created</strong>
+                  <div class="ra-meta"><span class="by">by Santanu</span><span class="at">12 May 2024, 10:30 AM</span></div>
+                </div>
+              </div>
+              <div class="ra-row">
+                <div class="ra-ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                <div class="ra-body">
+                  <strong>Web Development Team updated</strong>
+                  <div class="ra-meta"><span class="by">by Santanu</span><span class="at">11 May 2024, 04:15 PM</span></div>
+                </div>
+              </div>
+              <div class="ra-row">
+                <div class="ra-ic purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></div>
+                <div class="ra-body">
+                  <strong>Quality Assurance Team was updated</strong>
+                  <div class="ra-meta"><span class="by">by Santanu</span><span class="at">11 May 2024, 09:20 AM</span></div>
+                </div>
+              </div>
+              <div class="ra-row">
+                <div class="ra-ic amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                <div class="ra-body">
+                  <strong>New team "Mobile App Team" created</strong>
+                  <div class="ra-meta"><span class="by">by Santanu</span><span class="at">10 May 2024, 03:45 PM</span></div>
+                </div>
+              </div>
+              <div class="ra-row">
+                <div class="ra-ic pink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="9" x2="23" y2="15"/><line x1="23" y1="9" x2="17" y2="15"/></svg></div>
+                <div class="ra-body">
+                  <strong>Operations Team deactivated</strong>
+                  <div class="ra-meta"><span class="by">by Santanu</span><span class="at">10 May 2024, 11:10 AM</span></div>
+                </div>
+              </div>
+              <div class="ra-row">
+                <div class="ra-ic amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                <div class="ra-body">
+                  <strong>Backend Development Team updated</strong>
+                  <div class="ra-meta"><span class="by">by Santanu</span><span class="at">09 May 2024, 05:20 PM</span></div>
+                </div>
+              </div>
+              <div class="ra-row">
+                <div class="ra-ic indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                <div class="ra-body">
+                  <strong>Project Management Team updated</strong>
+                  <div class="ra-meta"><span class="by">by Santanu</span><span class="at">09 May 2024, 11:30 AM</span></div>
+                </div>
+              </div>
+              <div class="ra-row">
+                <div class="ra-ic red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                <div class="ra-body">
+                  <strong>Business Analysis Team was updated</strong>
+                  <div class="ra-meta"><span class="by">by Santanu</span><span class="at">08 May 2024, 02:40 PM</span></div>
+                </div>
+              </div>
+              <div class="ra-row">
+                <div class="ra-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                <div class="ra-body">
+                  <strong>Human Resources Team updated</strong>
+                  <div class="ra-meta"><span class="by">by Santanu</span><span class="at">08 May 2024, 10:15 AM</span></div>
+                </div>
+              </div>
+              <div class="ra-row">
+                <div class="ra-ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+                <div class="ra-body">
+                  <strong>New team "Digital Marketing Team" created</strong>
+                  <div class="ra-meta"><span class="by">by Santanu</span><span class="at">07 May 2024, 04:50 PM</span></div>
+                </div>
+              </div>
+              </div>
+            </section>
+          </aside>
+        </section>
+
+        <!-- Hidden act-list for notification bell -->
+        <div class="act-list" style="display:none" aria-hidden="true">
+          <div class="act-row">
+            <div class="act-ic green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <div class="act-body">
+              <strong>Design Team was created</strong>
+              <span>by Santanu</span>
+            </div>
+            <div class="act-time">10:30 AM</div>
+          </div>
+          <div class="act-row">
+            <div class="act-ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <div class="act-body">
+              <strong>Web Development Team updated</strong>
+              <span>by Santanu</span>
+            </div>
+            <div class="act-time">04:15 PM</div>
+          </div>
+          <div class="act-row">
+            <div class="act-ic purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></div>
+            <div class="act-body">
+              <strong>Quality Assurance Team was updated</strong>
+              <span>by Santanu</span>
+            </div>
+            <div class="act-time">09:20 AM</div>
+          </div>
+          <div class="act-row">
+            <div class="act-ic amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <div class="act-body">
+              <strong>New team "Mobile App Team" created</strong>
+              <span>by Santanu</span>
+            </div>
+            <div class="act-time">03:45 PM</div>
+          </div>
+          <div class="act-row">
+            <div class="act-ic purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="9" x2="23" y2="15"/><line x1="23" y1="9" x2="17" y2="15"/></svg></div>
+            <div class="act-body">
+              <strong>Operations Team deactivated</strong>
+              <span>by Santanu</span>
+            </div>
+            <div class="act-time">11:10 AM</div>
+          </div>
+          <div class="act-row">
+            <div class="act-ic amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <div class="act-body">
+              <strong>Backend Development Team updated</strong>
+              <span>by Santanu</span>
+            </div>
+            <div class="act-time">05:20 PM</div>
+          </div>
+          <div class="act-row">
+            <div class="act-ic indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <div class="act-body">
+              <strong>Project Management Team updated</strong>
+              <span>by Santanu</span>
+            </div>
+            <div class="act-time">11:30 AM</div>
+          </div>
+        </div>
+
+        <style>
+          .act-list .act-ic { width:34px; height:34px; border-radius:9px; display:grid; place-items:center; background:var(--green-softer); color:var(--green); flex-shrink:0; }
+          .act-list .act-ic svg { width:16px; height:16px; }
+          .act-list .act-ic.blue { background:var(--blue-soft); color:var(--blue); }
+          .act-list .act-ic.green { background:var(--green-soft); color:var(--green); }
+          .act-list .act-ic.amber { background:var(--amber-soft); color:var(--amber); }
+          .act-list .act-ic.purple { background:var(--purple-soft); color:var(--purple); }
+          .act-list .act-ic.red { background:var(--red-soft); color:var(--red); }
+          .act-list .act-ic.indigo { background:var(--indigo-soft); color:var(--indigo); }
+        </style>
+
+      </main>
+    </div>
+  </div>
+
+  <div id="tweaks-root"></div>
+
+  <script src="shell.js"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+
+  <script type="text/babel">
+    const TM_TWEAKS = /*EDITMODE-BEGIN*/{
+      "dark": true,
+      "sidebarCollapsed": false,
+      "density": "comfortable"
+    }/*EDITMODE-END*/;
+    function applyTmTweaks(t) {
+      const html = document.documentElement;
+      html.setAttribute('data-theme', t.dark ? 'dark' : 'light');
+      html.setAttribute('data-density', t.density);
+      document.body.dataset.sidebar = t.sidebarCollapsed ? 'collapsed' : 'expanded';
+    }
+    function TmTweaks() {
+      const [t, setTweak] = useTweaks(TM_TWEAKS);
+      React.useEffect(() => { applyTmTweaks(t); }, [t]);
+      return (
+        <TweaksPanel title="Tweaks">
+          <TweakSection label="Theme" />
+          <TweakToggle label="Dark mode" value={t.dark} onChange={(v) => setTweak('dark', v)} />
+          <TweakSection label="Layout" />
+          <TweakToggle label="Sidebar collapsed" value={t.sidebarCollapsed} onChange={(v) => setTweak('sidebarCollapsed', v)} />
+          <TweakRadio label="Density" value={t.density}
+                      options={[{value:'compact',label:'Compact'},{value:'comfortable',label:'Comfy'}]}
+                      onChange={(v) => setTweak('density', v)} />
+        </TweaksPanel>
+      );
+    }
+    applyTmTweaks(TM_TWEAKS);
+    const root = ReactDOM.createRoot(document.getElementById('tweaks-root'));
+    root.render(<TmTweaks />);
+  </script>
+</body>
+</html>

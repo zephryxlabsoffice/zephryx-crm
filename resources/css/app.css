@@ -16,7 +16,9 @@
 @import './components/notice.css';
 @import './components/shell.css';
 @import './components/ui.css';
+@import './components/chart.css';
 @import './pages/landing.css';
 @import './pages/auth.css';
 @import './pages/clients.css';
 @import './pages/employees.css';
+@import './pages/teams.css';

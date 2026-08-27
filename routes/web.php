@@ -8,6 +8,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ModulePlaceholderController;
 use App\Http\Controllers\ShellPreferenceController;
+use App\Http\Controllers\TeamController;
 use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Route;
 
@@ -96,8 +97,18 @@ Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.
 Route::get('/employees/create', fn () => app(ModulePlaceholderController::class)('employees'))->name('employees.create');
 Route::get('/employees/{employee}', fn () => app(ModulePlaceholderController::class)('employees'))->name('employees.show');
 
+Route::get('/teams', [TeamController::class, 'index'])->name('teams.index');
+// Before the {team} route, or "mine" is read as a team ID.
+Route::get('/teams/mine', [TeamController::class, 'mine'])->name('teams.mine');
+Route::get('/teams/create', fn () => app(ModulePlaceholderController::class)('teams'))->name('teams.create');
+Route::get('/teams/{team}', [TeamController::class, 'show'])
+    ->where('team', '[A-Za-z0-9-]{1,32}')
+    ->name('teams.show');
+Route::get('/teams/{team}/edit', fn () => app(ModulePlaceholderController::class)('teams'))
+    ->where('team', '[A-Za-z0-9-]{1,32}')
+    ->name('teams.edit');
+
 foreach ([
-    'teams' => 'teams.index',
     'projects' => 'projects.index',
     'tasks' => 'tasks.index',
     'tickets' => 'tickets.index',

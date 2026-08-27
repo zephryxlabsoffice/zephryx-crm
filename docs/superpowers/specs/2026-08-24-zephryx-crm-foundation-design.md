@@ -728,6 +728,61 @@ department donut, and the person rows used by the rail lists.
 Avatars, tints and person rows moved from `pages/clients.css` into
 `components/ui.css` — they belong to every list that shows a name.
 
+### Teams (decided 2026-08-27)
+
+Three pages: `/teams` (managing), `/teams/mine` (personal) and `/teams/{team}`
+(overview) — the two-faced pattern §12.1 describes, kept as separate routes
+rather than one page with a filter, because the personal face needs no
+`teams.view`.
+
+**The handover's three stylesheets are not used.** `team.css`,
+`team-overview.css` and `my-teams.css` came to ~37KB that between them
+re-derived the table, KPI tiles, search field, filter buttons, pagination and
+rail cards under new names — `.tm-table`, `.to-table`, `.tm-kpi`, `.to-kpi`,
+`.tm-search`, `.tm-foot`, `.rr-card`. Adopting them would have left four
+parallel table implementations. They map onto `components/ui.css`; only the
+team cell, lead cell, detail header and grouping row are in `pages/teams.css`.
+
+- **The donut moved to `components/chart.css`** when Teams needed the same one
+  Employees has. One implementation, so the two cannot drift.
+- **Row clicks, the back button and the hidden activity list are gone.** The
+  handover used `onclick` on `<tr>`, `onclick="history.back()"`,
+  `style="display:none"` and inline `<style>` blocks — all four are blocked by
+  our CSP, and the row click had the same keyboard problem §Clients fixed.
+  `history.back()` also leaves the application entirely when a page is opened
+  in a fresh tab, so the detail page uses a real link.
+- **My Teams has no back button.** It is a destination reached from the
+  navigation, not a step in a flow.
+- **Member tabs are links with their own URLs**, so a filtered view is
+  bookmarkable and the back button works. "By department" groups rather than
+  filters — every member is still listed, with a heading when the department
+  changes.
+- **"Average tenure" and "Active since" are computed** from the member and team
+  records. The handover had "3.2 months" and "4 months" as fixed text beside a
+  table that would have contradicted them.
+- **A team with no lead says so** rather than showing an empty cell.
+- **The team chip drops the word "Team"** — it is on every one of them and
+  distinguishes nothing, so "Web Development Team" is WD, not WT.
+- **The overview drops the handover's "Status" tile.** The status is already a
+  pill beside the team's name; a tile repeating it is a tile wasted.
+
+**Four layout bugs found and fixed here, three of them pre-existing.** All were
+the same mistake: a track or flex item keeping its automatic minimum, so a wide
+child pushed the whole page sideways instead of shrinking or scrolling.
+
+- `.teams-grid`, `.emp-grid`, `.cl-grid` used `1fr` in their single-column
+  media query; they now use `minmax(0, 1fr)`.
+- `.topbar` used `auto 1fr auto`, so the search box pushed the navigation off
+  screen below about 900px.
+- `.card-body-table` gained `overflow-x: auto` **and** `min-width: 0` — without
+  the second, the scroll container itself overflowed and the page scrolled
+  anyway.
+- `.hd-actions .btn` used `flex: 1`, which keeps a minimum of the button's own
+  label, so a third action overflowed rather than wrapping.
+
+Tables now scroll inside their card in the band between the stacking
+breakpoint and a comfortable desktop; the page itself never scrolls sideways.
+
 ### Viewport fit on mobile (decided 2026-08-26)
 
 Every public page fits the phone viewport without scrolling. Verified at

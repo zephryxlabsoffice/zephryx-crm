@@ -9,7 +9,7 @@
     @if ($breakdown === [])
         <p class="rail-empty">No departments to show yet.</p>
     @else
-        <div class="dept-grid">
+        <div class="chart-stack">
             {{--
                 The donut is decorative: it is aria-hidden and every figure it
                 encodes is in the legend below, which is a real list. A chart
@@ -40,9 +40,9 @@
                 </div>
             </div>
 
-            <ul class="dept-legend">
+            <ul class="chart-legend">
                 @foreach ($breakdown as $index => $dept)
-                    <li class="dept-leg {{ P::dot($index) }}">
+                    <li class="chart-leg {{ P::dot($index) }}">
                         <strong>{{ $dept['name'] }}</strong>
                         <em>{{ $dept['count'] }} ({{ $dept['share'] }}%)</em>
                     </li>
