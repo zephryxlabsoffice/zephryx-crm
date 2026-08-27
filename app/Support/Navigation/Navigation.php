@@ -23,6 +23,35 @@ class Navigation
     }
 
     /**
+     * The navigation entry for a path that is deliberately not built yet.
+     *
+     * Leads and Calendar keep their entries and return 404 until v2 (§12).
+     * Without this the 404 page would tell someone who clicked a link we chose
+     * to show them that the page does not exist — which reads as a broken
+     * application rather than a decision.
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function deferredEntryFor(string $path): ?array
+    {
+        $path = '/'.trim($path, '/');
+
+        foreach ((array) config('navigation', []) as $item) {
+            if (empty($item['deferred']) || ! Route::has($item['route'])) {
+                continue;
+            }
+
+            $entryPath = '/'.trim(parse_url(route($item['route'], [], false), PHP_URL_PATH) ?? '', '/');
+
+            if ($entryPath === $path) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @return list<array{key: string, label: string, icon: string, url: string, active: bool}>
      */
     public function for(?Authenticatable $user, ?string $activeKey = null): array

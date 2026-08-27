@@ -1,0 +1,113 @@
+/* ============================================================================
+   Error pages — 403, 404, 419, 429, 500, 503.
+
+   Deliberately self-contained: no sidebar, no topbar, no navigation data. An
+   error page is what renders when something has already gone wrong, so it
+   depends on as little as possible. If the app shell can fail, the page that
+   reports the failure must not fail with it.
+   ========================================================================= */
+
+.error-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: var(--page);
+}
+
+.error-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px var(--page-pad);
+}
+
+.error-body {
+  display: grid;
+  place-items: center;
+  padding: 24px var(--page-pad) 64px;
+}
+
+.error-card {
+  width: 100%;
+  max-width: 520px;
+  text-align: center;
+}
+
+/* The status code, set large and quiet. It is the least useful thing on the
+   page for the person reading it, and the most useful thing to quote when
+   they report the problem — so it is present but not shouting. */
+.error-code {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-radius: var(--radius-pill);
+  padding: 6px 16px;
+  margin-bottom: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.error-mark {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 20px;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.error-mark svg { width: 28px; height: 28px; }
+.error-mark.tone-warn { background: var(--warning-soft); color: var(--warning); }
+.error-mark.tone-danger { background: var(--danger-soft); color: var(--danger); }
+.error-mark.tone-accent { background: var(--accent-blue-soft); color: var(--accent-blue); }
+
+.error-title {
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin: 0 0 12px;
+  text-wrap: balance;
+}
+
+.error-message {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0 auto 28px;
+  max-width: 42ch;
+  text-wrap: pretty;
+}
+
+.error-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* A quiet line for the detail that only matters when reporting the problem. */
+.error-meta {
+  margin-top: 28px;
+  font-size: 12px;
+  color: var(--muted-2);
+  word-break: break-all;
+}
+.error-meta code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  background: var(--surface-2);
+  border-radius: 5px;
+  padding: 2px 6px;
+  color: var(--ink-3);
+}
+
+@media (max-width: 520px) {
+  .error-actions { flex-direction: column; }
+  .error-actions .btn { width: 100%; }
+}

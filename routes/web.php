@@ -154,6 +154,25 @@ Route::get('/profile', fn () => app(ModulePlaceholderController::class)('profile
 Route::get('/notifications', fn () => app(ModulePlaceholderController::class)('notifications'))->name('notifications.index');
 
 // Deferred to v2. §12 keeps the navigation entries so adding the modules later
-// reshuffles nothing users have learned, but the pages 404 until then.
+// reshuffles nothing users have learned, but the pages 404 until then — the
+// 404 view recognises them and says "not built yet" rather than "not found".
 Route::get('/leads', [ModulePlaceholderController::class, 'missing'])->name('leads.index');
 Route::get('/calendar', [ModulePlaceholderController::class, 'missing'])->name('calendar.index');
+
+/*
+|--------------------------------------------------------------------------
+| Error page previews
+|--------------------------------------------------------------------------
+|
+| Error pages are hard to see on purpose, which is how they end up shipping
+| broken. These render them on demand. Local + debug only: registering them
+| anywhere else would let anyone show staff a convincing "session expired" or
+| "maintenance" page at a URL of their choosing.
+|
+*/
+
+if (app()->environment('local') && config('app.debug')) {
+    Route::get('/dev/errors/{code}', fn (string $code) => response()->view("errors.{$code}", [], (int) $code))
+        ->where('code', '403|404|419|429|500|503')
+        ->name('dev.errors');
+}

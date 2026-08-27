@@ -852,6 +852,37 @@ the **timeline**, the **field grid** and **attachment cards**.
 `.kpi-row-compact` was added for six tiles: at the default size they wrapped
 five-plus-one, which reads as an afterthought rather than a set.
 
+### Error pages (decided 2026-08-27)
+
+Branded pages for 403, 404, 419, 429, 500 and 503. The last four were not asked
+for, but they share one template and without them those states fall back to
+Laravel's unstyled defaults — and two of them are reachable today, given CSRF
+tokens on every form and throttles on sign-in.
+
+- **The error layout is deliberately standalone** — no sidebar, no topbar, no
+  navigation query, no view composer. This is what renders when something has
+  already gone wrong, including when the thing that went wrong is the shell, so
+  it depends on as little as possible. The cost is losing the sidebar as a way
+  out, which the page's own buttons replace.
+- **A deferred module says so.** `/leads` and `/calendar` keep their navigation
+  entries and 404 until v2 (§12). The 404 view recognises those paths and says
+  "Leads is not built yet" rather than "we cannot find that page" — someone who
+  clicked a link we chose to show them should not be told it does not exist.
+- **The 403 names nothing.** Not the permission, not the role that would grant
+  it, not whether the record exists. All three tell someone probing the
+  application how it is put together.
+- **419 explains the session.** Laravel's stock wording is "Page Expired",
+  which tells someone who has just lost a half-written form nothing useful.
+  This is the most likely error page in the application.
+- **500 carries no exception, trace or path.** In production those leak
+  internals to whoever tripped the error; in local, Laravel shows its own debug
+  page instead, so nothing is lost.
+- **The 404 escapes the path it echoes back** — a 404 is a classic place to
+  reflect attacker-controlled input straight into the browser.
+- **`/dev/errors/{code}` renders any of them on demand**, registered only in
+  local + debug. In production it would let anyone show staff a convincing
+  "session expired" or "maintenance" page at a URL of their choosing.
+
 ### Viewport fit on mobile (decided 2026-08-26)
 
 Every public page fits the phone viewport without scrolling. Verified at
