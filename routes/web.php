@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ModulePlaceholderController;
 use App\Http\Controllers\ProjectController;
@@ -162,8 +163,33 @@ Route::post('/tickets/{ticket}/triage', fn () => abort(501))
     ->where('ticket', '[A-Za-z0-9-]{1,32}')
     ->name('tickets.triage');
 
+Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+// Before /invoices/{invoice}, or "create" is read as an invoice number.
+Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
+Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])
+    ->where('invoice', '[A-Za-z0-9-]{1,32}')
+    ->name('invoices.show');
+
+/*
+ * Writes the backend phase implements. Named now so the forms are real forms
+ * carrying CSRF tokens rather than dead markup.
+ *
+ * Note what is *not* here: there is no DELETE. An invoice number must never
+ * leave the sequence — withdrawal is a cancellation that keeps the record and
+ * its number. Adding a destroy route later would be a mistake, not a feature.
+ */
+Route::post('/invoices', fn () => abort(501))->name('invoices.store');
+Route::post('/invoices/{invoice}/payments', fn () => abort(501))
+    ->where('invoice', '[A-Za-z0-9-]{1,32}')
+    ->name('invoices.payments.store');
+Route::post('/invoices/{invoice}/send', fn () => abort(501))
+    ->where('invoice', '[A-Za-z0-9-]{1,32}')
+    ->name('invoices.send');
+Route::post('/invoices/{invoice}/cancel', fn () => abort(501))
+    ->where('invoice', '[A-Za-z0-9-]{1,32}')
+    ->name('invoices.cancel');
+
 foreach ([
-    'invoices' => 'invoices.index',
     'salary' => 'salary.index',
     'attendance' => 'attendance.index',
     'leave' => 'leave.index',

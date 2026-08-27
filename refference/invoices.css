@@ -1,0 +1,75 @@
+/* Invoice page styles */
+.kpi-c.ki-total   .kpi-c-ic { background: var(--green-soft);  color: var(--green); }
+.kpi-c.ki-paid    .kpi-c-ic { background: var(--blue-soft);   color: var(--blue); }
+.kpi-c.ki-pending .kpi-c-ic { background: var(--amber-soft);  color: var(--amber); }
+.kpi-c.ki-overdue .kpi-c-ic { background: var(--red-soft);    color: var(--red); }
+.kpi-c.ki-rev     .kpi-c-ic { background: var(--purple-soft); color: var(--purple); }
+
+.inv-id {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+.inv-id:hover { text-decoration: underline; }
+.amount-cell {
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.invoices-card .cl-table tbody td { white-space: nowrap; }
+.invoices-card .cl-table thead th:first-child,
+.invoices-card .cl-table tbody td:first-child {
+  padding-left: 22px; padding-right: 0; width: 32px;
+}
+.invoices-card .cl-table thead th:nth-child(2),
+.invoices-card .cl-table tbody td:nth-child(2) {
+  padding-left: 14px;
+}
+
+/* Recent Payments rows */
+.rp-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.rp-row:last-child { border-bottom: 0; }
+.rp-ic {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green);
+  display: grid; place-items: center;
+}
+.rp-ic svg { width: 18px; height: 18px; }
+.rp-body strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+}
+.rp-body span {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.rp-meta {
+  text-align: right;
+  line-height: 1.3;
+}
+.rp-meta strong {
+  display: block;
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.rp-meta span {
+  font-size: 11px;
+  color: var(--muted);
+}

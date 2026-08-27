@@ -1,0 +1,390 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   INVOICES
+
+   Only what is genuinely specific to this module. Tables, KPI tiles, filters,
+   pagination, rail cards, money cells, form fields and section headings all
+   come from components/ — the handover's `invoices.css` re-derived several of
+   them again under `.kpi-c`, `.cl-table` and `.rp-row`.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────  list layout  ───────────────────────── */
+
+.inv-grid {
+  display: grid;
+  /* minmax(0, …), never 1fr: a wide table forces a bare `1fr` track open and
+     the whole page scrolls sideways. */
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--density-gap);
+  align-items: start;
+}
+
+/* An invoice number is an identifier, not prose — broken over three lines it
+   stops being scannable, which is the whole job of the leading column. It
+   holds its line and the table scrolls inside its card instead. */
+.inv-ref {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.inv-issued {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.inv-ref-mono {
+  font-size: 12px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* A money KPI carries a second currency underneath it. The tile has to stay the
+   same height whether or not that line is there, or a row of five tiles ends up
+   ragged. */
+.kpi-val-money { font-size: 20px; letter-spacing: -0.02em; }
+.kpi-plus {
+  display: block;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* ── donut segments take their status tone, not a cycling palette ──
+   Invoice statuses already mean something in the pills beside them; colouring
+   "Overdue" indigo because it sorted third would teach people that colour
+   carries no meaning. */
+.seg-paid      { --dot: var(--green); }
+.seg-partial   { --dot: var(--warning); }
+.seg-overdue   { --dot: var(--danger); }
+.seg-sent      { --dot: var(--accent-blue); }
+.seg-draft     { --dot: var(--muted); }
+.seg-cancelled { --dot: var(--line-strong, var(--line)); }
+
+/* ─────────────────────────  the document  ───────────────────────── */
+
+.inv-doc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--density-gap);
+  align-items: start;
+}
+.inv-doc-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-gap);
+  min-width: 0;
+}
+
+.inv-doc-hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 24px 26px;
+  border-bottom: 1px solid var(--line);
+}
+.inv-doc-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+/* The shared mark is authored at 72px for the auth pages; on a document header
+   it is a letterhead, not a hero. */
+.inv-doc-brand .brand-mark { width: 40px; height: 40px; }
+.inv-doc-brand div { min-width: 0; }
+.inv-doc-brand strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+.inv-doc-brand span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.inv-doc-meta { text-align: right; min-width: 0; }
+.inv-doc-kind {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+.inv-doc-no {
+  display: block;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  margin-top: 2px;
+}
+/* Naming the currency once, at the top, is what lets every amount below it be
+   read without re-checking the symbol. */
+.inv-doc-cur {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.inv-doc-parties {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  padding: 22px 26px;
+  border-bottom: 1px solid var(--line);
+}
+.inv-doc-party { min-width: 0; }
+.inv-doc-lbl {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+.inv-doc-party strong {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.inv-doc-party span {
+  display: block;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+.inv-doc-ref {
+  font-size: 11px !important;
+  color: var(--muted) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.inv-doc-dates {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  text-align: right;
+}
+.inv-doc-dates div { display: block; }
+.inv-doc-dates dt {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.inv-doc-dates dd {
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.inv-lines tbody td { font-size: 13px; }
+
+/* ── totals ──
+   A definition list rather than three fixed rows: when GST is added, the tax
+   rows drop in here without the block being rebuilt. */
+.inv-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 16px 26px 22px;
+  margin-left: auto;
+  width: min(340px, 100%);
+}
+.inv-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 20px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+.inv-total-row dt {
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.inv-total-row dd { margin: 0; font-size: 13px; }
+
+.inv-total-due {
+  border-bottom: 0;
+  border-top: 2px solid var(--ink);
+  margin-top: 4px;
+  padding-top: 13px;
+}
+.inv-total-due dt {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.inv-total-due dd { font-size: 17px; font-weight: 800; }
+
+.inv-totals-quiet .inv-total-due { border-top-color: var(--line); }
+
+.inv-doc-notes {
+  padding: 0 26px 24px;
+}
+.inv-doc-notes p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+/* ─────────────────────────  rail: summary  ───────────────────────── */
+
+.inv-summary {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.inv-progress-lbl {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.inv-summary .progress { width: 100%; }
+.inv-progress-note {
+  display: block;
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+/* The outstanding figure is the point of this line, so it gets its own row
+   rather than wrapping mid-phrase after the amount above it. */
+.inv-progress-note strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* ─────────────────────────  rail: record a payment  ───────────────────────── */
+
+.pay-form {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding: 16px 20px 20px;
+}
+.pay-field { min-width: 0; }
+.pay-field input,
+.pay-field select {
+  appearance: none;
+  width: 100%;
+  height: 38px;
+  padding: 0 11px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: 500 13px/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.pay-field input[disabled],
+.pay-field select[disabled] { opacity: 0.75; cursor: not-allowed; }
+.pay-hint {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.pay-hint-block { padding: 0 20px 18px; margin-top: 0; }
+.pay-form .btn { width: 100%; justify-content: center; }
+
+.inv-next { padding: 16px 20px 4px; }
+.inv-next .btn { width: 100%; justify-content: center; }
+
+/* ─────────────────────────  create form  ───────────────────────── */
+
+.inv-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--density-gap);
+  align-items: start;
+}
+.inv-form-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-gap);
+  min-width: 0;
+}
+.inv-form .card-body textarea {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: 500 13px/1.55 var(--font-sans);
+  resize: vertical;
+}
+.inv-form .card-body textarea[disabled] { opacity: 0.75; cursor: not-allowed; }
+
+.inv-line-form input {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: 500 13px/1 var(--font-sans);
+}
+.inv-line-form input[disabled] { opacity: 0.75; cursor: not-allowed; }
+.inv-line-form .col-num input,
+.inv-line-form .col-money input { text-align: right; font-variant-numeric: tabular-nums; }
+.inv-line-form .col-num { width: 86px; }
+.inv-line-form .col-money { width: 150px; }
+
+/* ─────────────────────────  responsive  ───────────────────────── */
+
+@media (max-width: 1280px) {
+  .inv-grid,
+  .inv-doc-grid,
+  .inv-form-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+  .inv-doc-hd,
+  .inv-doc-parties { padding-left: 18px; padding-right: 18px; }
+  .inv-doc-parties { grid-template-columns: minmax(0, 1fr); }
+  /* Right-aligned dates under a left-aligned address read as two unrelated
+     blocks once they stack. */
+  .inv-doc-dates { text-align: left; }
+  .inv-doc-meta { text-align: left; }
+  .inv-totals { width: 100%; padding-left: 18px; padding-right: 18px; }
+  .inv-doc-notes { padding-left: 18px; padding-right: 18px; }
+
+  /* The line-item form is four columns of inputs; below this it stops being a
+     table and each line becomes its own stack of labelled fields. */
+  .inv-line-form .col-num,
+  .inv-line-form .col-money { width: auto; }
+}

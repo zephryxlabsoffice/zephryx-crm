@@ -1068,3 +1068,211 @@
   .pagination { justify-content: center; }
   .pagination-meta { width: 100%; text-align: center; }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROMOTED COMPONENTS
+
+   These four started life inside a single page's stylesheet and are now used by
+   several, so they live here instead of being re-derived under a new prefix in
+   each module — the mistake the handover stylesheets make every time.
+
+   Each keeps its original class name as a co-selector so the module that
+   introduced it needs no edit. New code should use the neutral name.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── a card section heading: icon, label, optional count (was tasks.css) ── */
+.section-hd {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 18px 22px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.section-hd svg { width: 16px; height: 16px; color: var(--muted); }
+
+/* ── running text inside a card (was tasks.css) ── */
+.prose {
+  padding: 20px 22px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+.prose p { margin: 0 0 12px; }
+.prose h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 16px 0 8px;
+}
+.prose ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.prose li { margin-bottom: 5px; }
+.prose > :last-child { margin-bottom: 0; }
+
+/* ── a labelled form control (was .triage-* in tickets.css) ── */
+.form-field,
+.triage-field { min-width: 0; }
+.form-field-lbl,
+.triage-lbl {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 7px;
+}
+.form-field select,
+.form-field input,
+.form-field textarea,
+.triage-field select {
+  appearance: none;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: 500 13px/1 var(--font-sans);
+}
+.form-field textarea {
+  height: auto;
+  min-height: 84px;
+  padding: 11px 12px;
+  line-height: 1.55;
+  resize: vertical;
+}
+.form-field select[disabled],
+.form-field input[disabled],
+.form-field textarea[disabled],
+.triage-field select[disabled] { opacity: 0.75; cursor: not-allowed; }
+.form-field input::placeholder,
+.form-field textarea::placeholder { color: var(--muted); }
+
+/* ── an avatar beside a name, inside a table cell (was .tkt-person) ── */
+.name-cell,
+.tkt-person {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.name-cell .avatar,
+.tkt-person .avatar { width: 30px; height: 30px; font-size: 11px; }
+.name-cell-text,
+.tkt-person-text { min-width: 0; }
+.name-cell strong,
+.tkt-person strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.name-cell span,
+.tkt-person span {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MONEY
+
+   Every amount in the application is drawn with these. Tabular figures so
+   columns of numbers line up digit for digit — proportional digits make a
+   column of amounts impossible to scan and, worse, make two different amounts
+   look the same width.
+   ─────────────────────────────────────────────────────────────────────────── */
+.money {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.money-quiet { color: var(--muted); font-weight: 500; }
+.money-in { color: var(--green); }
+
+.col-money { text-align: right; }
+.col-num { text-align: right; width: 1%; white-space: nowrap; }
+
+.money-cell {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+}
+.money-note {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* On the stacked mobile card the label sits left, so the amount stops being a
+   right-aligned column and becomes a value beside its name. */
+@media (max-width: 760px) {
+  .data-table-stack .col-money,
+  .data-table-stack .cell-money { text-align: left; }
+  .data-table-stack .money-cell { align-items: flex-start; }
+}
+
+/* ── a link back to the list a detail page came from ── */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+}
+.back-link:hover { color: var(--green); }
+.back-link svg { width: 14px; height: 14px; }
+
+.stat-value-quiet { color: var(--muted); font-weight: 500; }
+
+/* The table's own `thead th` rule is two classes deep, so a single-class
+   alignment override loses to it. These have to match that weight. */
+.data-table thead th.col-money,
+.data-table tbody td.col-money,
+.data-table tfoot td.col-money { text-align: right; }
+.data-table thead th.col-num,
+.data-table tbody td.col-num { text-align: right; }
+
+/* A tone span sitting inside a stat value needs air, or "09 Aug 2026" and
+   "18 days overdue" read as one run-on string. */
+.stat-value span[class^="is-"],
+.stat-value span[class*=" is-"] {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.stat-value span.is-overdue { color: var(--danger); }
+.stat-value span.is-soon { color: var(--warning); }
+.stat-value span.is-done { color: var(--green); }
+
+/* A grid of labelled form controls. Distinct from `.field-grid`, which is a
+   read-only label/value list — reusing that here squeezed six controls onto one
+   row. auto-fit + minmax so the column count follows the width rather than
+   being declared per breakpoint. */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+  padding: 18px 22px 22px;
+}
+.form-grid .form-field { min-width: 0; }

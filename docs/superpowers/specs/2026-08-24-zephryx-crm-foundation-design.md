@@ -522,7 +522,12 @@ the designer's existing base design rather than being decided globally here.
    for whichever domain sends, and OTP delivery gates every sign-in (§10).
    All four surfaces that link to support now go through
    `App\Support\SupportContact`, so the address is one edit.
-5. **Idle timeouts** — 12 hours staff/client, 30 minutes admin, stated as an
+5. **Currency conversion** — deliberately absent. Money totals across
+   currencies are shown as separate subtotals (see Invoices below). If the owner
+   ever wants a single consolidated figure, the exchange rate must be recorded
+   on each invoice at its issue date; there is no rate feed and inventing one at
+   display time would be worse than not having the figure.
+6. **Idle timeouts** — 12 hours staff/client, 30 minutes admin, stated as an
    assumption in §4.4 and awaiting confirmation. `SESSION_LIFETIME=720`
    encodes the staff/client value; the admin window needs its own middleware
    when that realm is built.
@@ -935,6 +940,114 @@ One layout fix came out of this module: **`.hd-actions` was `flex-shrink: 0`**,
 so a row of five actions kept its full max-content width and pushed the page
 sideways between the stacking breakpoint and a comfortable desktop instead of
 folding onto a second line. It now wraps *and* shrinks.
+
+### Invoices (decided 2026-08-27)
+
+The first module handling money, and the first where being wrong costs
+something measurable. Three pages: the list (`/invoices`), the invoice document
+(`/invoices/{invoice}`) and the create form (`/invoices/create`). Only the list
+was handed over; the other two were designed here.
+
+**Four owner decisions taken 2026-08-27:**
+
+1. **No GST.** ZephryxLabs is not registered, so invoices carry no tax block.
+   The totals block is a definition list rather than fixed rows precisely so
+   the tax rows can drop in later without it being rebuilt.
+2. **Multi-currency** — INR plus USD and others.
+3. **Invoices can be part-paid**, with payments recorded against them.
+4. **Full module** built from the one reference page.
+
+**Money is an integer, never a float.** `0.1 + 0.2 === 0.30000000000000004` in
+PHP as everywhere else; sum a few hundred lines that way and a paisa goes
+missing, and somebody spends an afternoon reconciling it against a bank
+statement. `App\Support\Money` holds an integer count of minor units — paise,
+cents — beside a currency, and only becomes a decimal when printed. The column,
+when it lands, is a BIGINT of minor units: never DECIMAL, never FLOAT.
+
+**A mixed-currency total is not a number.** ₹75,000 + $2,000 has no sum without
+an exchange rate, and this system has no rate source — no feed, no stored rate,
+nobody entering one. `App\Support\MoneyBag` keeps one subtotal per currency and
+the KPI tiles show "₹3,77,000 / plus $2,150" rather than converting. Two honest
+lines beat one confident fiction; a converted figure would look authoritative,
+be wrong by however much the rate has moved, and eventually be quoted in a
+meeting. `MoneyBag` deliberately has no `total()` and no `convertTo()`, and a
+test asserts both stay absent. Adding real conversion means storing the rate on
+each invoice at its issue date — a data-model decision, not a display one.
+
+**Rupees use Indian digit grouping** — 1,20,000 and 1,00,00,000, not 120,000.
+Western grouping on an invoice sent to an Indian client reads as a mistake.
+
+**Status is derived, never stored.** There is no status column and no "mark as
+paid" control anywhere in the module; an invoice becomes paid by recording the
+payment that makes it paid. The order resolves the awkward cases: cancelled
+outranks everything (a cancelled invoice past its date is not overdue — nobody
+owes it), paid outranks overdue (money that arrived late is history, matching
+the rule Projects and Tasks use for late-but-finished work), and overdue
+outranks partly-paid (a half-paid invoice three weeks late is a collection
+problem, and "Partly paid" buries that). A draft is never overdue, because the
+client has not seen it.
+
+**Numbers are gapless and invoices are never deleted.** There is no DELETE route
+and no `invoices.destroy`, and a test walks the route table to keep it that way.
+A gap in the sequence is the first thing an auditor asks about and "we deleted
+it" is the wrong answer in every jurisdiction. Withdrawal is a cancellation that
+keeps the record and its number — INV-2026-004 in the sample set is cancelled
+and still in the sequence. Cancelling is not offered once any money has been
+received: that case needs a credit note, which is its own record. The number is
+shown on the create form but has no `name` and cannot be typed — it is issued by
+the database inside the transaction that writes the invoice, or two simultaneous
+creates collide.
+
+Other decisions:
+
+- **The document is laid out as the printed invoice**, not as another dashboard
+  panel, because it is the one screen where the staff view and the client view
+  should show the same thing. Divergence there is what gets argued about on a
+  call.
+- **Every amount carries its currency symbol on every row.** In a mixed list a
+  bare "2,000" under a header reading "Amount" is genuinely ambiguous, and the
+  ambiguity is worth about eighty times the difference.
+- **Currency is chosen once per invoice and fixed.** Per-line currency is not a
+  feature; it is a total that cannot be computed.
+- **The Amount column on the create form is not an input.** It is qty × unit
+  price, computed on save — letting somebody type an amount that disagrees with
+  the two figures beside it is how an invoice ends up self-contradicting.
+- **Saving and sending are two steps.** An invoice sent by accident has to be
+  chased, apologised for and cancelled, and the cancellation stays in the
+  sequence forever.
+- **The donut takes status tones, not the shared cycling palette.** Employees
+  and Teams break down by department — master data with no inherent meaning, so
+  any colour will do. Invoice statuses already mean something in the pills
+  beside them; colouring "Overdue" indigo because it sorted third is exactly
+  what §7 says categorical accents exist to avoid.
+- **Export and import render disabled.** Export streams every amount ever billed
+  out of the building; import creates financial records. Both need their own
+  permission and an audit entry (§6).
+- **Ownership** is §6's canonical case, quoted there against invoices
+  specifically. The client realm scopes every read to the signed-in client and
+  re-checks on the detail route — a client reading another company's invoice
+  reveals what we charge them.
+
+**Errors found in the handover, none copied:** its counts did not add up
+(16 paid + 8 pending + 4 overdue is the whole 28, leaving no room for the
+"Partial" row its own table showed); "Pending" and "Overdue" were both red on
+the same screen; the revenue tile carried an invented "18.6%" month-on-month
+delta with nothing recording last month; the donut and legend used inline
+`style` attributes our CSP blocks outright, so they would have rendered
+colourless; and `.inv-id` was an `<a>` with `cursor: pointer` and no `href`,
+so it was not keyboard-reachable.
+
+**Five components were promoted out of page stylesheets** rather than
+re-derived: `.section-hd` and `.prose` (from tasks.css), `.field`→`.form-field`
+and `.name-cell` (from tickets.css), plus new `.money`/`.money-cell`,
+`.form-grid` and `.back-link`. Each keeps its original class as a co-selector so
+the module that introduced it needed no edit. Money cells use tabular figures —
+proportional digits make a column of amounts impossible to scan and can make two
+different amounts look the same width.
+
+One name collision found doing it: `.field` and `.field-lbl` were already taken
+by the auth pages and by `.field-grid` respectively, so the promoted form
+control is `.form-field` / `.form-field-lbl`.
 
 ### Error pages (decided 2026-08-27)
 

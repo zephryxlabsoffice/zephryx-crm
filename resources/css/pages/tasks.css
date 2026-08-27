@@ -105,37 +105,9 @@
 
 /* The written description. Styled here rather than left to browser defaults,
    because it is the one place in the application with prose in it. */
-.prose {
-  padding: 20px 22px;
-  font-size: 13.5px;
-  line-height: 1.65;
-  color: var(--ink-2);
-}
-.prose p { margin: 0 0 12px; }
-.prose h4 {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--ink);
-  margin: 16px 0 8px;
-}
-.prose ul {
-  margin: 0;
-  padding-left: 20px;
-}
-.prose li { margin-bottom: 5px; }
-.prose > :last-child { margin-bottom: 0; }
-
-.section-hd {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 18px 22px 0;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--ink);
-  letter-spacing: -0.01em;
-}
-.section-hd svg { width: 16px; height: 16px; color: var(--muted); }
+/* `.prose` and `.section-hd` moved to components/ui.css when Tickets and then
+   Invoices needed them — they belong to any card with a heading or a paragraph
+   in it, not to Tasks. */
 
 /* ── rail actions ── */
 .rail-actions {

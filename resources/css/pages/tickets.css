@@ -53,29 +53,8 @@
 }
 
 /* ── a person cell used in several columns ── */
-.tkt-person {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-.tkt-person .avatar { width: 30px; height: 30px; font-size: 11px; }
-.tkt-person-text { min-width: 0; }
-.tkt-person strong {
-  display: block;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--ink);
-  line-height: 1.3;
-  white-space: nowrap;
-}
-.tkt-person span {
-  display: block;
-  font-size: 11px;
-  color: var(--muted);
-  line-height: 1.3;
-  white-space: nowrap;
-}
+/* `.tkt-person` moved to components/ui.css as `.name-cell` when Invoices needed
+   an avatar-beside-a-name cell too. Both names still work. */
 .tkt-unassigned {
   font-size: 12.5px;
   color: var(--muted);
@@ -197,28 +176,9 @@
   gap: 14px;
   padding: 18px 22px 22px;
 }
-.triage-field { min-width: 0; }
-.triage-lbl {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 7px;
-}
-.triage-field select {
-  appearance: none;
-  width: 100%;
-  height: 40px;
-  padding: 0 12px;
-  border-radius: var(--r-btn);
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--ink);
-  font: 500 13px/1 var(--font-sans);
-}
-.triage-field select[disabled] { opacity: 0.75; cursor: not-allowed; }
+/* `.triage-field` and `.triage-lbl` moved to components/ui.css as `.field` and
+   `.field-lbl` when Invoices needed the same labelled control. Both names still
+   work; new code should use the neutral one. */
 .triage-actions {
   grid-column: 1 / -1;
   display: flex;
