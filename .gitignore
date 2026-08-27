@@ -18,6 +18,19 @@
 /storage/*.key
 /storage/pail
 *.log
+
+# Generated at runtime, never source. Session files in particular carry live
+# session payloads and must not reach a repository or a deploy upload.
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/framework/testing/*
+!/storage/framework/testing/.gitignore
+/storage/logs/*
+!/storage/logs/.gitignore
 .phpunit.result.cache
 /.phpunit.cache
 

@@ -10,6 +10,7 @@ use App\Http\Controllers\ModulePlaceholderController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ShellPreferenceController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Route;
@@ -137,8 +138,31 @@ Route::get('/tasks/{task}/edit', fn () => app(ModulePlaceholderController::class
     ->where('task', '[A-Za-z0-9-]{1,32}')
     ->name('tasks.edit');
 
+Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+// Before /tickets/{ticket}, or these are read as ticket references.
+Route::get('/tickets/mine', [TicketController::class, 'mine'])->name('tickets.mine');
+Route::get('/tickets/assigned', [TicketController::class, 'assigned'])->name('tickets.assigned');
+Route::get('/tickets/projects', [TicketController::class, 'projects'])->name('tickets.projects');
+Route::get('/tickets/escalated', [TicketController::class, 'escalated'])->name('tickets.escalated');
+Route::get('/tickets/create', fn () => app(ModulePlaceholderController::class)('tickets'))->name('tickets.create');
+Route::get('/tickets/{ticket}', [TicketController::class, 'show'])
+    ->where('ticket', '[A-Za-z0-9-]{1,32}')
+    ->name('tickets.show');
+
+/*
+ * Both are writes the backend phase implements. Named now so the forms they
+ * belong to are real forms with CSRF tokens rather than dead markup — and so
+ * the visibility choice on a comment is a submitted value from day one, not
+ * something bolted on later.
+ */
+Route::post('/tickets/{ticket}/comment', fn () => abort(501))
+    ->where('ticket', '[A-Za-z0-9-]{1,32}')
+    ->name('tickets.comment');
+Route::post('/tickets/{ticket}/triage', fn () => abort(501))
+    ->where('ticket', '[A-Za-z0-9-]{1,32}')
+    ->name('tickets.triage');
+
 foreach ([
-    'tickets' => 'tickets.index',
     'invoices' => 'invoices.index',
     'salary' => 'salary.index',
     'attendance' => 'attendance.index',

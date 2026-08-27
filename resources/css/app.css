@@ -17,6 +17,7 @@
 @import './components/shell.css';
 @import './components/ui.css';
 @import './components/chart.css';
+@import './components/thread.css';
 @import './pages/landing.css';
 @import './pages/auth.css';
 @import './pages/clients.css';
@@ -24,4 +25,5 @@
 @import './pages/teams.css';
 @import './pages/projects.css';
 @import './pages/tasks.css';
+@import './pages/tickets.css';
 @import './pages/error.css';

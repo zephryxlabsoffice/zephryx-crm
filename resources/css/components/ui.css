@@ -79,10 +79,14 @@
 .hd-actions {
   display: flex;
   gap: 10px;
-  flex-shrink: 0;
-  /* Three actions plus a narrow screen is more than one row's worth; they wrap
-     rather than pushing the page sideways. */
+  /* Wrap *and* shrink. With `flex-shrink: 0` the group keeps its full
+     max-content width, so a row of five actions pushed the page sideways
+     between the stacking breakpoint and a comfortable desktop instead of
+     folding onto a second line. */
   flex-wrap: wrap;
+  flex-shrink: 1;
+  min-width: 0;
+  justify-content: flex-end;
 }
 
 /* ─────────────────────────  inline fields  ───────────────────────── */

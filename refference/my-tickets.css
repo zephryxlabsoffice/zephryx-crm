@@ -1,0 +1,239 @@
+/* My Tickets (employee self-view) styles */
+
+.mt-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.mt-back-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  display: grid; place-items: center;
+  color: var(--ink-2);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+.mt-back-btn:hover { background: var(--green-tint); border-color: var(--green); color: var(--green); }
+.mt-back-btn svg { width: 18px; height: 18px; }
+
+/* 4 KPI cards */
+.myt-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--density-gap);
+  margin-bottom: var(--density-gap);
+}
+.myt-kpi {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.myt-kpi-ic {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.myt-kpi-ic svg { width: 28px; height: 28px; }
+.myt-kpi.t-total .myt-kpi-ic { background: var(--green-soft); color: var(--green); }
+.myt-kpi.t-open  .myt-kpi-ic { background: var(--blue-soft);  color: var(--blue); }
+.myt-kpi.t-prog  .myt-kpi-ic { background: var(--amber-soft); color: var(--amber); }
+.myt-kpi.t-resv  .myt-kpi-ic { background: var(--green-soft); color: var(--green); }
+.myt-kpi-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.myt-kpi-lbl { font-size: 13px; color: var(--muted); font-weight: 600; }
+.myt-kpi-val { font-size: 30px; font-weight: 800; letter-spacing: -0.025em; color: var(--ink); line-height: 1; }
+.myt-kpi-sub { font-size: 12px; color: var(--muted); }
+
+@media (max-width: 1280px) { .myt-kpi-row { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 680px)  { .myt-kpi-row { grid-template-columns: 1fr; } }
+
+/* Tabs */
+.myt-tabs {
+  display: flex;
+  gap: 28px;
+  border-bottom: 1px solid var(--line);
+  padding: 0 22px;
+}
+.myt-tab {
+  appearance: none; background: transparent; border: 0;
+  font: 600 14px/1 'Plus Jakarta Sans', sans-serif;
+  color: var(--muted);
+  padding: 16px 2px;
+  position: relative; cursor: pointer;
+}
+.myt-tab:hover { color: var(--ink-2); }
+.myt-tab.active { color: var(--green); }
+.myt-tab.active::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -1px;
+  height: 2px; background: var(--green); border-radius: 2px;
+}
+
+/* Toolbar (reuse tk-toolbar/tk-tool-btn from tickets.css) */
+
+/* Table */
+.myt-table { width: 100%; border-collapse: collapse; }
+.myt-table thead th {
+  text-align: left;
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  padding: 12px 8px; border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+.myt-table thead th:first-child { padding-left: 22px; }
+.myt-table thead th:last-child  { padding-right: 22px; }
+.myt-table tbody td {
+  padding: 15px 8px; border-bottom: 1px solid var(--line);
+  font-size: 13px; color: var(--ink-2); vertical-align: middle;
+}
+.myt-table tbody td:first-child { padding-left: 22px; }
+.myt-table tbody td:last-child  { padding-right: 22px; }
+.myt-table tbody tr:last-child td { border-bottom: 0; }
+.myt-table tbody tr:hover { background: var(--green-tint); }
+
+.myt-id { font-size: 13px; font-weight: 700; color: var(--green); font-variant-numeric: tabular-nums; cursor: pointer; white-space: nowrap; }
+.myt-id:hover { text-decoration: underline; }
+.myt-subj strong { display: block; font-size: 13.5px; font-weight: 700; color: var(--ink); line-height: 1.35; }
+.myt-subj span { font-size: 12px; color: var(--muted); display: block; margin-top: 3px; max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.myt-assign { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+.myt-assign .cl-avatar { width: 32px; height: 32px; font-size: 11.5px; }
+.myt-assign strong { display: block; font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+.myt-assign span { font-size: 11px; color: var(--muted); }
+.myt-upd { line-height: 1.35; white-space: nowrap; }
+.myt-upd strong { display: block; font-size: 12.5px; font-weight: 500; color: var(--ink-2); }
+.myt-upd span { font-size: 11.5px; color: var(--muted); }
+
+.myt-arrow {
+  appearance: none; width: 38px; height: 38px; border-radius: 10px;
+  border: 1px solid var(--line-strong); background: var(--surface);
+  display: grid; place-items: center; color: var(--ink-2); cursor: pointer;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+.myt-arrow:hover { background: var(--green); border-color: var(--green); color: #fff; }
+.myt-arrow svg { width: 16px; height: 16px; }
+
+/* ───── Right rail ───── */
+/* Last Ticket Details */
+.ltd-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 22px; }
+.ltd-card + .ltd-card { margin-top: var(--density-gap); }
+.ltd-card > h3 { margin: 0 0 16px; font-size: 16px; font-weight: 700; color: var(--ink); }
+.ltd-top { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 18px; }
+.ltd-ic {
+  width: 46px; height: 46px; border-radius: 12px;
+  background: var(--green-soft); color: var(--green);
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.ltd-ic svg { width: 24px; height: 24px; }
+.ltd-top-body { flex: 1; min-width: 0; }
+.ltd-top-body strong { font-size: 14.5px; font-weight: 700; color: var(--green); font-variant-numeric: tabular-nums; }
+.ltd-top-body p { margin: 4px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.4; }
+.ltd-row { display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 8px 0; font-size: 13px; align-items: center; }
+.ltd-row b { color: var(--muted); font-weight: 500; font-size: 12.5px; }
+.ltd-row span { color: var(--ink-2); font-weight: 600; }
+.ltd-desc { margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--line); }
+.ltd-desc b { display: block; color: var(--muted); font-weight: 500; font-size: 12.5px; margin-bottom: 6px; }
+.ltd-desc p { margin: 0; font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+
+/* Ticket Updates timeline */
+.tu-list { position: relative; padding-left: 4px; }
+.tu-row { position: relative; padding: 0 0 18px 30px; }
+.tu-row:last-child { padding-bottom: 0; }
+.tu-row::before {
+  content: ""; position: absolute; left: 8px; top: 26px; bottom: -4px;
+  width: 1.5px; background: var(--line);
+}
+.tu-row:last-child::before { display: none; }
+.tu-av {
+  position: absolute; left: 0; top: 0;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 11px; font-weight: 700;
+  background: var(--green-soft); color: var(--green);
+  border: 2px solid var(--surface);
+}
+.tu-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.tu-head strong { font-size: 13px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+.tu-head .tu-role { font-size: 11px; color: var(--muted); display: block; margin-top: 1px; }
+.tu-time { font-size: 11px; color: var(--muted); white-space: nowrap; text-align: right; }
+.tu-tag { display: inline-block; margin-top: 4px; padding: 3px 9px; border-radius: 6px; font-size: 10.5px; font-weight: 600; }
+.tu-tag.internal { background: var(--green-soft); color: var(--green); }
+.tu-tag.additional { background: var(--blue-soft); color: var(--blue); }
+.tu-tag.created { background: var(--surface-2); color: var(--ink-3); }
+.tu-msg { margin: 8px 0 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
+
+/* Quick Actions 2x2 */
+.qta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.qta-tile {
+  appearance: none;
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface); padding: 18px 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  cursor: pointer; text-align: center;
+  transition: border-color 0.14s, box-shadow 0.14s, transform 0.14s;
+  font-family: inherit;
+}
+.qta-tile:hover { border-color: var(--green); transform: translateY(-1px); box-shadow: var(--shadow-pop); }
+.qta-tile svg { width: 22px; height: 22px; }
+.qta-tile.t-blue   svg { color: var(--blue); }
+.qta-tile.t-green  svg { color: var(--green); }
+.qta-tile.t-red    svg { color: var(--red); }
+.qta-tile span { font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+
+@media (max-width: 1280px) {
+  .cl-grid.myt-grid { grid-template-columns: 1fr; }
+}
+
+/* Ticket Updates — simple colored-dot timeline */
+.tu2-list { position: relative; padding-left: 6px; }
+.tu2-row { position: relative; padding: 0 0 18px 22px; }
+.tu2-row:last-child { padding-bottom: 0; }
+.tu2-row::before {
+  content: ""; position: absolute; left: 4px; top: 14px; bottom: -4px;
+  width: 1.5px; background: var(--line);
+}
+.tu2-row:last-child::before { display: none; }
+.tu2-dot {
+  position: absolute; left: 0; top: 4px;
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 2px solid var(--surface);
+}
+.tu2-dot.blue  { background: #3B82F6; }
+.tu2-dot.amber { background: #F59E0B; }
+.tu2-dot.green { background: #15A848; }
+.tu2-body strong { display: block; font-size: 13px; font-weight: 700; color: var(--ink); line-height: 1.35; }
+.tu2-body span { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+
+/* Need Help card */
+.help-card {
+  background: var(--green-tint);
+  border: 1px solid var(--green-soft);
+  border-radius: var(--r-card);
+  padding: 22px;
+  margin-top: var(--density-gap);
+}
+.help-ic {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: var(--green-soft); color: var(--green);
+  display: grid; place-items: center; margin-bottom: 12px;
+}
+.help-ic svg { width: 24px; height: 24px; }
+.help-card h4 { margin: 0 0 6px; font-size: 15px; font-weight: 700; color: var(--ink); }
+.help-card p { margin: 0 0 16px; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+.help-contact {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.14s;
+}
+.help-contact:hover { background: color-mix(in oklab, var(--green) 22%, transparent); }
+[data-theme="dark"] .help-contact { color: var(--green); }

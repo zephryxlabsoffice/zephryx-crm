@@ -1,0 +1,161 @@
+/* ============================================================================
+   Comment thread — tickets today, anything with a discussion later.
+
+   The whole component exists to make one distinction impossible to miss: a
+   reply the client reads, versus a note only staff read. A support agent
+   writing "this client is being difficult" into the wrong box is the failure
+   mode this module has, so an internal note does not merely carry a small
+   label — it changes background, gains a rail, and says so in words.
+
+   Visual difference is the second line of defence. The first is that the
+   client realm filters internal notes out server-side and never renders them
+   (foundation spec §6). Neither is trusted alone.
+   ========================================================================= */
+
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 22px 22px;
+  margin: 0;
+  list-style: none;
+}
+
+.thread-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  min-width: 0;
+}
+
+/* An internal note reads as a different kind of object, not a variant of the
+   same one: warm ground, a solid rail down the side, and a label in words. */
+.thread-item.is-internal {
+  background: var(--warning-soft);
+  border-color: var(--warning-line);
+  border-left: 3px solid var(--warning);
+}
+
+.thread-avatar { flex-shrink: 0; }
+
+.thread-body { flex: 1; min-width: 0; }
+
+.thread-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.thread-author {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.thread-role {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.thread-time {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* The word, not just the colour — colour alone fails for anyone who cannot
+   distinguish it, and this is not a distinction to get wrong. */
+.thread-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.thread-tag svg { width: 11px; height: 11px; }
+.thread-tag.is-internal { background: var(--warning); color: #fff; }
+.thread-tag.is-public { background: var(--green-soft); color: var(--green); }
+
+.thread-text {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.thread-empty {
+  padding: 32px 22px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+/* ─────────────────────────  composer  ───────────────────────── */
+.composer {
+  display: flex;
+  gap: 12px;
+  padding: 18px 22px;
+  border-top: 1px solid var(--line);
+}
+.composer-body { flex: 1; min-width: 0; }
+
+.composer textarea {
+  width: 100%;
+  min-height: 82px;
+  resize: vertical;
+  padding: 12px 14px;
+  border-radius: var(--r-card);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: 400 13.5px/1.55 var(--font-sans);
+  transition: border-color 0.14s, box-shadow 0.14s;
+}
+.composer textarea:focus {
+  outline: 0;
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--green) 14%, transparent);
+}
+.composer textarea::placeholder { color: var(--muted-2); }
+
+/* Two buttons, not one button and a toggle. A default is a thing to get
+   wrong; two labelled verbs are a thing to choose. */
+.composer-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.composer-hint {
+  flex: 1 1 100%;
+  font-size: 11.5px;
+  color: var(--muted);
+  margin: 0;
+  order: 3;
+}
+
+/* The internal-note button borrows the warning palette so the two buttons do
+   not read as primary and secondary versions of the same action. */
+.btn-internal {
+  background: var(--warning-soft);
+  color: var(--warning);
+  border-color: var(--warning-line);
+}
+.btn-internal:hover {
+  background: color-mix(in oklab, var(--warning) 18%, var(--surface));
+  border-color: var(--warning);
+}
+
+@media (max-width: 620px) {
+  .composer { padding: 16px; }
+  .composer > .avatar { display: none; }
+  .composer-actions .btn { flex: 1 1 auto; }
+}

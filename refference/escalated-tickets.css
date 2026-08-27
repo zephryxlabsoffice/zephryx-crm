@@ -1,0 +1,132 @@
+/* Escalated Tickets (sub-page of Tickets) styles */
+
+.es-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.es-back-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  display: grid; place-items: center;
+  color: var(--ink-2);
+  cursor: pointer; text-decoration: none;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+.es-back-btn:hover { background: var(--green-tint); border-color: var(--green); color: var(--green); }
+.es-back-btn svg { width: 18px; height: 18px; }
+
+/* 4 KPI cards */
+.es-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--density-gap);
+  margin-bottom: var(--density-gap);
+}
+.es-kpi {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 24px 26px;
+  display: flex; align-items: center; gap: 18px;
+}
+.es-kpi-ic { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; }
+.es-kpi-ic svg { width: 26px; height: 26px; }
+.es-kpi.t-total   .es-kpi-ic { background: var(--purple-soft); color: var(--purple); }
+.es-kpi.t-pending .es-kpi-ic { background: var(--amber-soft);  color: var(--amber); }
+.es-kpi.t-mine    .es-kpi-ic { background: var(--blue-soft);   color: var(--blue); }
+.es-kpi.t-resv    .es-kpi-ic { background: var(--green-soft);  color: var(--green); }
+.es-kpi-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.es-kpi-lbl { font-size: 13.5px; color: var(--ink-2); font-weight: 600; }
+.es-kpi-val { font-size: 30px; font-weight: 800; letter-spacing: -0.025em; color: var(--ink); line-height: 1; }
+
+@media (max-width: 1280px) { .es-kpi-row { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 680px)  { .es-kpi-row { grid-template-columns: 1fr; } }
+
+/* Main grid: table + summary rail */
+.es-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.7fr) minmax(300px, 1fr);
+  gap: var(--density-gap);
+  align-items: flex-start;
+}
+
+/* Table */
+.es-table { width: 100%; border-collapse: collapse; }
+.es-table thead th {
+  text-align: left; font-size: 12px; font-weight: 600; color: var(--muted);
+  padding: 14px 8px; border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+.es-table thead th:first-child { padding-left: 22px; }
+.es-table thead th:last-child  { padding-right: 22px; text-align: center; }
+.es-table tbody td {
+  padding: 14px 8px; border-bottom: 1px solid var(--line);
+  font-size: 13px; color: var(--ink-2); vertical-align: middle; white-space: nowrap;
+}
+.es-table tbody td:first-child { padding-left: 22px; }
+.es-table tbody td:last-child  { padding-right: 22px; text-align: center; }
+.es-table tbody tr:last-child td { border-bottom: 0; }
+.es-table tbody tr:hover { background: var(--green-tint); }
+
+.es-id { font-size: 13px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.es-subj { font-size: 13px; font-weight: 600; color: var(--ink); }
+.es-proj { font-size: 13px; color: var(--ink-2); }
+
+.es-person { display: inline-flex; align-items: center; gap: 10px; }
+.es-person .cl-avatar { width: 32px; height: 32px; font-size: 11.5px; }
+.es-person strong { display: block; font-size: 13px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+.es-person span { font-size: 11px; color: var(--muted); }
+.es-none { color: var(--muted-2); font-weight: 600; }
+
+/* Status pill (rounded square soft) */
+.es-status { display: inline-block; padding: 5px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 600; }
+.es-status.escalated { background: var(--amber-soft); color: var(--amber); }
+.es-status.reassigned { background: var(--blue-soft); color: var(--blue); }
+.es-status.resolved { background: var(--green-soft); color: var(--green); }
+
+.es-go {
+  appearance: none; width: 34px; height: 34px; border-radius: 8px;
+  border: 0; background: transparent;
+  display: inline-grid; place-items: center; color: var(--green); cursor: pointer;
+  transition: background 0.14s;
+}
+.es-go:hover { background: var(--green-soft); }
+.es-go svg { width: 18px; height: 18px; }
+
+/* ───── Right rail: Escalation Summary ───── */
+.esum-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 22px; }
+.esum-card + .esum-card { margin-top: var(--density-gap); }
+.esum-card > h3 { margin: 0 0 18px; font-size: 16px; font-weight: 700; color: var(--ink); }
+.esum-block { margin-bottom: 18px; }
+.esum-block:last-child { margin-bottom: 0; }
+.esum-lbl { font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 6px; }
+.esum-id { font-size: 15px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.esum-person { display: flex; align-items: center; gap: 12px; }
+.esum-person .cl-avatar { width: 40px; height: 40px; font-size: 14px; }
+.esum-person strong { display: block; font-size: 14px; font-weight: 700; color: var(--ink); }
+.esum-person span { font-size: 12px; color: var(--muted); }
+.esum-none { font-size: 18px; color: var(--muted-2); font-weight: 600; }
+.esum-reason { font-size: 13px; color: var(--ink-2); line-height: 1.6; }
+.esum-divider { height: 1px; background: var(--line); margin: 18px 0; }
+
+/* Escalation Statistics */
+.estat-row {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+}
+.estat-ic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; }
+.estat-ic svg { width: 17px; height: 17px; }
+.estat-ic.dev { background: var(--blue-soft); color: var(--blue); }
+.estat-ic.srv { background: var(--amber-soft); color: var(--amber); }
+.estat-ic.sec { background: var(--green-soft); color: var(--green); }
+.estat-ic.db  { background: var(--purple-soft); color: var(--purple); }
+.estat-lbl { font-size: 13px; color: var(--ink-2); font-weight: 500; }
+.estat-val { font-size: 16px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 1280px) { .es-grid { grid-template-columns: 1fr; } }

@@ -857,6 +857,85 @@ the **timeline**, the **field grid** and **attachment cards**.
 `.kpi-row-compact` was added for six tiles: at the default size they wrapped
 five-plus-one, which reads as an afterthought rather than a set.
 
+### Tickets (decided 2026-08-27)
+
+The first module where **two audiences read the same record**. Internal staff
+discussion and client-facing replies live on one thread, and the whole design
+follows from making the difference between them impossible to miss.
+
+Six pages: `/tickets` (managing, with a tab per queue), `/tickets/mine` (raised
+by me), `/tickets/assigned` (assigned to me), `/tickets/projects` (raised
+against projects I work on), `/tickets/escalated` (the review queue) and
+`/tickets/{ticket}`.
+
+**The visibility contract.** This is the part that must not be softened later:
+
+- **There is no method that returns "the comments".** `DemoTickets::commentsFor()`
+  takes the audience as a *required* argument, so forgetting to filter is a
+  syntax error rather than a client reading an internal note. The staff realm
+  passes `AUDIENCE_STAFF`; when `/client` is built it passes `AUDIENCE_CLIENT`
+  and nothing else changes. Do not add an audience-free convenience method.
+- **`TicketPresenter::isInternal()` fails towards secrecy.** Anything not
+  explicitly `'public'` — missing key, null, `'publik'`, `'PUBLIC'`, `' public '`
+  — is treated as internal. A unit test pins every one of those cases.
+- **Every comment states its audience in words**, not only in colour. The amber
+  fill and left rail catch the eye; "Internal only" / "Client can see" is there
+  because colour alone fails for anyone who cannot separate the two, and this is
+  not a distinction to get wrong.
+- **The composer has two submit buttons, not one button and a toggle.** A toggle
+  has a default, and a default is a thing to get wrong on the one occasion it
+  matters. "Reply to client" and "Internal note" are two labelled verbs, and the
+  internal button carries its own colour so the pair never reads as primary and
+  secondary. The visibility travels as a submitted `name="visibility"` value
+  from day one, so the backend cannot inherit an implicit default.
+- **An internal ticket offers no client reply at all** — there is no client on
+  it, so the button would be a lie about who is reading.
+- **A client ticket carries a standing warning in the rail**, naming the client.
+  Not a substitute for the server-side filter, but the person typing is the one
+  choosing which button to press.
+
+**Ownership is the other obligation.** Every client ticket carries a client, and
+the client realm must scope every read to the signed-in client's own tickets and
+verify ownership on the detail route (§6). A client opening another company's
+ticket is the worst failure this module can have; it is recorded at the top of
+both `DemoTickets` and `TicketController` so it is read before either is changed.
+
+Other decisions:
+
+- **Escalation is a flat queue**, not an L1→L2→L3 ladder. With six staff most
+  rungs would be permanently empty, and a ladder mostly adds places for a ticket
+  to sit. One shared review queue that whoever holds the triage permission works
+  through. A test asserts no ticket carries an escalation level, so the ladder
+  cannot creep back in unnoticed.
+- **Triage lives on the ticket, not on a "reviewer" page.** The handover put it
+  on a separate screen, which meant a reviewer had to know which of four URLs to
+  open. The panel appears on the ticket when the ticket needs it — unassigned,
+  or escalated back for someone to route.
+- **Untriaged fields read "Not set", never blank.** A blank cell hides the fact
+  that something still has to be done; priority, category and department are all
+  set *by* triage, so on a fresh ticket they are legitimately empty.
+- **All five lists were built**, rather than one list with a filter. Each one is
+  a different question ("what did I raise" is not "what am I working on"), they
+  will carry different permissions, and only the managing view needs
+  `tickets.view`.
+- **All six KPI figures come from data.** The handover hardcoded 152 / 12 / 8 /
+  54 / 31.
+- **Attachments are treated as untrusted input.** Files on a client ticket are
+  uploaded from outside the company: §6 requires validation by type and size,
+  storage outside the web root and service through an authorising controller —
+  never a direct link, never rendered inline. Recorded in the partial itself.
+- **Posting and assigning render disabled**, with their routes named so the
+  forms are real forms with CSRF tokens. Assigning is also subject to §2.6 —
+  nobody may route a ticket to someone who outranks them in `support`.
+
+`components/thread.css` is new and shared: the comment thread and its composer
+will be wanted by any module that grows a discussion.
+
+One layout fix came out of this module: **`.hd-actions` was `flex-shrink: 0`**,
+so a row of five actions kept its full max-content width and pushed the page
+sideways between the stacking breakpoint and a comfortable desktop instead of
+folding onto a second line. It now wraps *and* shrinks.
+
 ### Error pages (decided 2026-08-27)
 
 Branded pages for 403, 404, 419, 429, 500 and 503. The last four were not asked
