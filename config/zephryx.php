@@ -30,7 +30,7 @@ return [
     */
 
     'support' => [
-        'email' => env('ZEPHRYX_SUPPORT_EMAIL', 'support@zephryxlabs.com'),
+        'email' => env('ZEPHRYX_SUPPORT_EMAIL', 'admin@zephryxlabs.in'),
     ],
 
     /*

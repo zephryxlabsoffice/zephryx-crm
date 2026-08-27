@@ -5,8 +5,7 @@
 @section('description', 'The ZephryxLabs workspace — projects, teams, invoices and support in one place.')
 
 @php
-    $supportSubject = rawurlencode('ZephryxLabs CRM — support request');
-    $supportMailto = 'mailto:'.config('zephryx.support.email').'?subject='.$supportSubject;
+    $supportMailto = \App\Support\SupportContact::mailto();
 @endphp
 
 @section('content')

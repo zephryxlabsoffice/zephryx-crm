@@ -515,8 +515,13 @@ the designer's existing base design rather than being decided globally here.
 
 ### Still open
 
-4. **Support mailbox address** — `support@zephryxlabs.com` is a placeholder in
-   `.env.example`. Confirm the real mailbox before deploying.
+4. ~~**Support mailbox address**~~ — **resolved 2026-08-27**: the mailbox is
+   `admin@zephryxlabs.in`. `MAIL_FROM_ADDRESS` was moved to the same domain
+   (`no-reply@zephryxlabs.in`) on the assumption that `.in` is the company's
+   mail domain — **worth confirming**, because SPF and DKIM must be configured
+   for whichever domain sends, and OTP delivery gates every sign-in (§10).
+   All four surfaces that link to support now go through
+   `App\Support\SupportContact`, so the address is one edit.
 5. **Idle timeouts** — 12 hours staff/client, 30 minutes admin, stated as an
    assumption in §4.4 and awaiting confirmation. `SESSION_LIFETIME=720`
    encodes the staff/client value; the admin window needs its own middleware
@@ -882,6 +887,12 @@ tokens on every form and throttles on sign-in.
 - **`/dev/errors/{code}` renders any of them on demand**, registered only in
   local + debug. In production it would let anyone show staff a convincing
   "session expired" or "maintenance" page at a URL of their choosing.
+- **The second action is Contact Support, not "back to start".** Someone on an
+  error page has already found the thing that did not work; sending them to the
+  landing page just makes them find it again. The mailto subject carries the
+  status code so a reply does not have to begin by asking what they saw. The
+  403 keeps "Contact an administrator" — same address, but the person who can
+  grant access holds the Admin Panel, and saying so points at the right door.
 
 ### Viewport fit on mobile (decided 2026-08-26)
 

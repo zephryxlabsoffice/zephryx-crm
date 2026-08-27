@@ -107,6 +107,28 @@ class ErrorPageTest extends TestCase
         }
     }
 
+    public function test_the_generic_pages_offer_support_rather_than_the_landing_page(): void
+    {
+        // Someone on an error page has already found the thing that did not
+        // work; sending them back to the start just makes them find it again.
+        foreach ([404, 500] as $code) {
+            $html = $this->render($code);
+
+            $this->assertStringContainsString('Contact Support', $html);
+            $this->assertStringContainsString('mailto:'.config('zephryx.support.email'), $html);
+            $this->assertStringNotContainsString('Back to start', $html);
+        }
+    }
+
+    public function test_the_support_subject_carries_the_status_code(): void
+    {
+        // So a reply does not have to start by asking what they saw.
+        $this->assertStringContainsString(
+            rawurlencode('error 404'),
+            $this->render(404)
+        );
+    }
+
     public function test_every_error_page_offers_a_way_out(): void
     {
         // An error page with no exit is a dead end; the shell is not rendered

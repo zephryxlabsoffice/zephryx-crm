@@ -19,7 +19,8 @@
 
 <?php $__env->startSection('actions'); ?>
     <a class="btn btn-primary" href="<?php echo e(url('/dashboard')); ?>">Go to dashboard</a>
-    <a class="btn btn-outline" href="mailto:<?php echo e(config('zephryx.support.email')); ?>?subject=<?php echo e(rawurlencode('ZephryxLabs CRM — access request')); ?>">Contact an administrator</a>
+    
+    <a class="btn btn-outline" href="<?php echo e(\App\Support\SupportContact::mailto('ZephryxLabs CRM — access request')); ?>">Contact an administrator</a>
 <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('errors.layout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\Santanu Dev\Downloads\PROJECT - ZEPHRYX CRM\CRM\resources\views/errors/403.blade.php ENDPATH**/ ?>

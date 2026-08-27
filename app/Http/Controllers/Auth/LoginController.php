@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Support\Realm;
+use App\Support\SupportContact;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -112,8 +113,7 @@ class LoginController extends Controller
 
     protected function supportMailto(): string
     {
-        return 'mailto:'.config('zephryx.support.email')
-            .'?subject='.rawurlencode('ZephryxLabs CRM — account access');
+        return SupportContact::mailto('ZephryxLabs CRM — account access');
     }
 
     /**

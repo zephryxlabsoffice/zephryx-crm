@@ -26,5 +26,8 @@
 
 @section('actions')
     <a class="btn btn-primary" href="{{ url('/dashboard') }}">Go to dashboard</a>
-    <a class="btn btn-outline" href="mailto:{{ config('zephryx.support.email') }}?subject={{ rawurlencode('ZephryxLabs CRM — access request') }}">Contact an administrator</a>
+    {{-- "an administrator", not "support": the person who can grant access is
+         the one holding the Admin Panel, and saying so points them at the
+         right door even though the address is the same. --}}
+    <a class="btn btn-outline" href="{{ \App\Support\SupportContact::mailto('ZephryxLabs CRM — access request') }}">Contact an administrator</a>
 @endsection

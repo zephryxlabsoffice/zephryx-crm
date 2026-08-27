@@ -1,4 +1,7 @@
-@php use App\Support\Theme; @endphp
+@php
+    use App\Support\SupportContact;
+    use App\Support\Theme;
+@endphp
 <!DOCTYPE html>
 {{--
     The shell for every error page.
@@ -51,8 +54,21 @@
                     @hasSection('actions')
                         @yield('actions')
                     @else
+                        {{-- "Contact Support" rather than "back to start": someone
+                             on an error page has already found the thing that did
+                             not work, and sending them to the landing page just
+                             makes them find it again.
+
+                             The subject carries the status code so a reply does
+                             not have to start by asking what they saw. Sections
+                             are resolved before the layout renders, so
+                             yieldContent is safe here. --}}
+                        @php
+                            $supportSubject = config('zephryx.brand.name').' '.config('zephryx.brand.suffix')
+                                .' — error '.trim($__env->yieldContent('code'));
+                        @endphp
                         <a class="btn btn-primary" href="{{ url('/dashboard') }}">Go to dashboard</a>
-                        <a class="btn btn-outline" href="{{ url('/') }}">Back to start</a>
+                        <a class="btn btn-outline" href="{{ SupportContact::mailto($supportSubject) }}">Contact Support</a>
                     @endif
                 </div>
 

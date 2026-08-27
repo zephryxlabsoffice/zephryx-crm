@@ -1,4 +1,7 @@
-<?php use App\Support\Theme; ?>
+<?php
+    use App\Support\SupportContact;
+    use App\Support\Theme;
+?>
 <!DOCTYPE html>
 
 <html lang="en" data-theme="<?php echo e(Theme::forRequest(request())); ?>">
@@ -41,8 +44,13 @@
                     <?php if (! empty(trim($__env->yieldContent('actions')))): ?>
                         <?php echo $__env->yieldContent('actions'); ?>
                     <?php else: ?>
+                        
+                        <?php
+                            $supportSubject = config('zephryx.brand.name').' '.config('zephryx.brand.suffix')
+                                .' — error '.trim($__env->yieldContent('code'));
+                        ?>
                         <a class="btn btn-primary" href="<?php echo e(url('/dashboard')); ?>">Go to dashboard</a>
-                        <a class="btn btn-outline" href="<?php echo e(url('/')); ?>">Back to start</a>
+                        <a class="btn btn-outline" href="<?php echo e(SupportContact::mailto($supportSubject)); ?>">Contact Support</a>
                     <?php endif; ?>
                 </div>
 
