@@ -14,7 +14,8 @@
             <thead>
                 <tr role="row">
                     <th role="columnheader" scope="col">Month</th>
-                    <th role="columnheader" scope="col" class="col-money">Gross</th>
+                    {{-- No Gross column: the portal states what was paid, and
+                         the figures behind it are on the payslip. --}}
                     <th role="columnheader" scope="col" class="col-money">Net pay</th>
                     <th role="columnheader" scope="col">Status</th>
                     <th role="columnheader" scope="col">Paid on</th>
@@ -27,9 +28,6 @@
                     <tr role="row">
                         <td role="cell" class="cell-lead" data-label="Month">
                             <strong>{{ P::period($run['period']) }}</strong>
-                        </td>
-                        <td role="cell" class="cell-money" data-label="Gross">
-                            <span class="money money-quiet">{{ P::totalEarnings($run)->format() }}</span>
                         </td>
                         <td role="cell" class="cell-money" data-label="Net pay">
                             <span class="money">{{ P::net($run)->format() }}</span>

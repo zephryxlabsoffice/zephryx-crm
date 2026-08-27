@@ -93,6 +93,11 @@ class SalaryController extends Controller
             'employee' => DemoEmployees::all()->firstWhere('user_id', $viewer),
             'latest' => $latest,
             'history' => $history,
+            // TODO (backend phase): `salary.view.all`. This page is reached by
+            // a button on payroll, so it needs a way back — but only for the
+            // people who could have come from there. Showing an employee a link
+            // into everyone's pay is a door they should not be shown.
+            'canViewPayroll' => true,
             // Masked here, in PHP. The unmasked values never enter the view.
             'identity' => $latest === null ? null : $this->maskedIdentity($latest, $viewer, $viewer),
         ]);

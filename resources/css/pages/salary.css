@@ -136,6 +136,18 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ── the portal's net-only card ──
+   No breakdown here; the payslip is the one place the calculation is shown, so
+   there is only ever one rendering of it to keep correct. */
+.sl-net-lone { margin-top: 18px; }
+.sl-net-cta {
+  margin: 0;
+  padding: 0 22px 20px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
 /* ─────────────────────────  the payslip header  ───────────────────────── */
 
 .sl-slip-person {

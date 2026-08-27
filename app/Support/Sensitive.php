@@ -138,4 +138,60 @@ class Sensitive
     {
         return $viewerId !== null && $viewerId === $subjectId;
     }
+
+    /**
+     * ─────────────────────────────────────────────────────────────────────────
+     * HOW PAYROLL GETS PAID WITHOUT ANYBODY BROWSING BANK DETAILS
+     *
+     * Fair challenge, raised 2026-08-27: if bank details are visible only to
+     * the person themselves, how does whoever runs payroll actually pay people?
+     *
+     * The answer is that paying somebody does not require reading their account
+     * number off a screen. It requires the number reaching the bank. Those are
+     * different problems, and conflating them is how every employee's account
+     * number ends up on a page that gets left open on a shared desk.
+     *
+     * Three routes out, in the order they should be reached for:
+     *
+     * 1. THE BANK FILE (the normal path). The system generates the NEFT/RTGS
+     *    bulk-transfer file for a period — account number, IFSC, amount, one
+     *    row per person — and hands it over as a download. It is produced by
+     *    `salary.disburse`, written to an audit entry, and never rendered to
+     *    the screen. The person running payroll uploads it to the bank portal
+     *    without ever having read it. This is what the disabled "Bank transfer
+     *    file" action on the payroll page becomes.
+     *
+     * 2. A SINGLE AUDITED REVEAL (the exception path). A transfer bounces and
+     *    somebody has to check one account against what the employee gave them.
+     *    That is one record, revealed deliberately, with an audit entry naming
+     *    who looked at whose details and when. `revealFor()` below is where
+     *    that check will live. It is not a page that shows twelve accounts
+     *    because of who is logged in.
+     *
+     * 3. AADHAAR IS NOT ON EITHER PATH. It is not needed to pay anybody — banks
+     *    settle on account number and IFSC. It would be needed for EPF or ESI
+     *    filings, and ZephryxLabs makes neither (decided 2026-08-27). So it
+     *    stays visible to the person themselves alone, whatever anyone's role.
+     *
+     * When the automated payroll portal lands and pays over an API, that is
+     * path 1 with the download removed — the numbers go machine to machine and
+     * still never appear on a screen. Building it this way now means that
+     * change is a swap of one step, not a rework of who can see what.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * @param  string  $purpose  why the reveal is being asked for — written to
+     *                           the audit entry alongside who asked
+     */
+    public static function revealFor(?string $viewerId, string $subjectId, string $purpose): never
+    {
+        // Deliberately unimplemented rather than stubbed permissive. A reveal
+        // without a permission check and an audit entry is exactly the thing
+        // this class exists to prevent, and a version of it that "works for now"
+        // is the one that ships.
+        throw new \RuntimeException(
+            'Revealing another person’s identifiers requires the RBAC engine and the audit log '
+            .'(foundation spec §5, §6). Pay people with the bank transfer file instead — see the '
+            .'note above this method.'
+        );
+    }
 }

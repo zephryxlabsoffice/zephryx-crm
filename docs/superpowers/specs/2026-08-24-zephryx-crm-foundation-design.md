@@ -1155,6 +1155,58 @@ gross or net; every employee's bank account and IFSC on a rail of the *payroll
 list*; `style="clear:both"` and `style="border-top:…"` that our CSP blocks; and
 a payslip control that was an `<a href="#">` opening nothing.
 
+**Owner revisions, same day:**
+
+- **The portal shows net only.** My Salary states what was paid and points at
+  the payslip for the breakup; the earnings-and-deductions table renders once,
+  on the payslip. Two renderings of one calculation is two places to change and
+  two places to disagree, and the payslip is the one that has to be right
+  because it is the document. Gross is gone from the portal entirely — the KPI
+  tile and the history table both state net.
+- **My Salary gained a back link to payroll**, because unlike My Teams and My
+  Projects it is reached by a button on Salary Management rather than from the
+  navigation. It must render only for a viewer holding `salary.view.all`:
+  showing an employee a link into everyone's pay is a door they should not be
+  shown.
+
+**How payroll gets paid without anybody browsing bank details.** The owner
+asked the right question: if bank details are visible only to the person
+themselves, how does whoever runs payroll pay people? The answer is that paying
+somebody does not require reading their account number off a screen — it
+requires the number reaching the bank, and conflating the two is how every
+employee's account number ends up on a page left open on a shared desk. Three
+routes, in the order they should be reached for:
+
+1. **The bank file, the normal path.** The system generates the NEFT/RTGS
+   bulk-transfer file for a period — account, IFSC, amount, one row per person —
+   as a download produced under `salary.disburse`, written to an audit entry and
+   never rendered to screen. Whoever runs payroll uploads it to the bank portal
+   without having read it. This is the disabled "Bank transfer file" action now
+   on the payroll page.
+2. **A single audited reveal, the exception path.** A transfer bounces and one
+   account has to be checked. That is one record, revealed deliberately, with an
+   audit entry naming who looked at whose details.
+   `Sensitive::revealFor()` is where that check lands; it currently **throws**
+   rather than being stubbed permissive, because a reveal without a permission
+   check and an audit entry is precisely what the class exists to prevent, and
+   the version that "works for now" is the one that ships.
+3. **Aadhaar is on neither path.** Banks settle on account number and IFSC; it
+   would be needed for EPF or ESI filings, and ZephryxLabs makes neither. It
+   stays visible to the person themselves alone, whatever anyone's role.
+
+When the automated payroll portal lands and pays over an API, that is path 1
+with the download removed — machine to machine, still never on a screen.
+Building it this way now makes that a swap of one step rather than a rework of
+who can see what.
+
+**One layout bug fixed globally.** `.page` was a plain block, so the space
+between one section and the next came from whatever bottom margin each component
+happened to carry — `.kpi-row` had one, `.notice` and `.card` did not, which is
+why banners sat flush against the tiles below them and stacked cards touched. It
+is now a flex column with a single `--density-gap`, so spacing is a property of
+the page rather than something each component has to remember, and compact mode
+tightens the whole page together.
+
 **One pre-existing bug found here and fixed:** `.kpi-ic.tone-danger` was never
 defined although `.qa-tile.tone-danger` was, so the Invoices "Overdue" tile —
 already shipped — and the Salary "On hold" tile both fell back to the default

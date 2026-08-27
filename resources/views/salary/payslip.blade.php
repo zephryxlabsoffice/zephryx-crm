@@ -54,7 +54,7 @@
         @include('partials.notice', [
             'tone' => 'info',
             'title' => 'Bank, PAN and Aadhaar are not shown here',
-            'message' => 'Those appear only on a person’s own salary page. Needing them for a transfer or a filing is a separate, logged request — not something a page hands over because of who is looking at it.',
+            'message' => 'Paying somebody does not need them on screen — the bank transfer file on the payroll page carries account number, IFSC and amount straight to the bank. If a transfer bounces and one account has to be checked, that is a separate, logged reveal of that one record.',
         ])
     @endif
 

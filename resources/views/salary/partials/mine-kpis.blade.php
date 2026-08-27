@@ -34,7 +34,10 @@
         <div class="kpi-body">
             <div class="kpi-lbl">Net this month</div>
             <div class="kpi-val kpi-val-money">{{ P::net($latest)->format() }}</div>
-            <span class="kpi-sub">From {{ P::totalEarnings($latest)->format() }} gross</span>
+            {{-- Gross is deliberately not shown on the portal: net is what
+                 lands in the account, and the figures behind it belong on the
+                 payslip rather than being restated here. --}}
+            <span class="kpi-sub">Breakup is on the payslip</span>
         </div>
     </div>
 
@@ -49,8 +52,9 @@
             <div class="kpi-lbl">Annual CTC</div>
             <div class="kpi-val kpi-val-money">{{ P::annualCtc($latest)->format() }}</div>
             {{-- Says where the number came from, because a CTC figure that
-                 cannot be traced to a monthly gross is one people distrust. --}}
-            <span class="kpi-sub">Twelve months at the current gross</span>
+                 cannot be traced to a monthly one is a figure people
+                 distrust. --}}
+            <span class="kpi-sub">Twelve months at your current salary</span>
         </div>
     </div>
 

@@ -1309,3 +1309,30 @@
   font-weight: 500;
   line-height: 1.55;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PAGE FLOW
+
+   `.page` was a plain block, so the space between one section and the next came
+   from whatever bottom margin each component happened to carry. `.kpi-row` had
+   one; `.notice` and `.card` did not — which is why a banner sat flush against
+   the tiles below it, and two stacked cards touched.
+
+   A flex column with one gap makes the spacing a property of the page rather
+   than something each component has to remember, and it is the same
+   `--density-gap` the grids inside already use, so compact mode tightens the
+   whole page together.
+   ─────────────────────────────────────────────────────────────────────────── */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-gap);
+}
+/* The heading carries its own larger separation from the first section. */
+.page > .page-hd,
+.page > .page-hd-row { margin-bottom: 0; }
+
+/* Now that the page supplies the gap, a component adding its own would double
+   it. */
+.kpi-row { margin-bottom: 0; }
+.sl-generate { margin-top: 0; }

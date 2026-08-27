@@ -227,8 +227,38 @@ class SalaryPageTest extends TestCase
             $this->assertSame([], $run['deductions']);
         }
 
-        $this->get('/salary/mine')->assertSee('Nothing deducted', false);
-        $this->get('/salary/mine')->assertSee('your gross is your net', false);
+        // On the payslip, which is the one place the calculation is shown.
+        $payslip = $this->get('/salary/payslip/'.$this->period());
+        $payslip->assertSee('Nothing deducted', false);
+        $payslip->assertSee('your gross is your net', false);
+    }
+
+    public function test_the_portal_shows_net_only_and_sends_you_to_the_payslip(): void
+    {
+        // Decided 2026-08-27: the breakup is rendered once, on the payslip.
+        // Two renderings of one calculation is two places to change and two
+        // places to disagree.
+        $this->withDemoData();
+
+        $html = $this->get('/salary/mine')->getContent();
+
+        $this->assertStringContainsString('Net pay', $html);
+        $this->assertStringContainsString('detailed salary breakup', $html);
+
+        // No breakdown, and no gross anywhere on the portal.
+        $this->assertStringNotContainsString('Nothing deducted', $html);
+        $this->assertStringNotContainsString('House rent allowance', $html);
+        $this->assertStringNotContainsString('Gross', $html);
+        $this->assertStringNotContainsString('>Basic<', $html);
+    }
+
+    public function test_my_salary_has_a_way_back_to_payroll(): void
+    {
+        // It is reached by a button on Salary Management, unlike My Teams and
+        // My Projects which are navigation destinations.
+        $this->withDemoData();
+
+        $this->get('/salary/mine')->assertSee('class="back-link"', false);
     }
 
     /* ══════════════════════════════════════════════════════════════════════
