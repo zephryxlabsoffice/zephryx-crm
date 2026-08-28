@@ -1334,6 +1334,103 @@ a day of casual leave; "Reporting To: Santanu (HR)" was hardcoded; and
 `style="clear:both"`, the inline tab script and the donut's inline styles are
 all CSP-blocked.
 
+### Meetings (decided 2026-08-28)
+
+Three pages: the list (`/meetings`), one meeting (`/meetings/{meeting}`) and the
+scheduling form (`/meetings/schedule`).
+
+**This server hosts nothing.** Every meeting is a Google Meet, created through
+the Google Calendar API on the company Workspace account. The CRM organises: it
+holds who is meeting whom about what, and a reference to the Google event. It
+does not host, record or proxy a call, and **it never constructs a Meet URL** —
+the link comes back from Google or there is no link. Google Calendar is the
+source of truth for the event and for every RSVP; we read those back and never
+write one. There is deliberately no `setAttendance()` on the provider and no
+`meetings.rsvp` route, and a test asserts both stay absent.
+
+**Four owner decisions taken 2026-08-28:**
+
+1. **One company account**, service-account access with domain-wide delegation
+   — not each person connecting their own Google. Links survive somebody
+   leaving, nobody re-consents, and the CRM stores no per-user refresh tokens it
+   would then have to protect.
+2. **Clients may request a meeting but not create one.** Only a project manager
+   or the system admin creates, which is what produces the Google event and the
+   link. That is why `requested` is a real state rather than a synonym for
+   pending: nothing has been sent, so there is no invite and no link, and the
+   page says exactly that. A client sitting in a room that does not exist is the
+   failure this state prevents.
+3. **The join link is for attendees only.** A Meet link is effectively a
+   password. It is withheld in PHP — the controller nulls it before the view
+   sees it — so a colleague browsing the list cannot walk into a call about
+   somebody's salary or a client dispute. Tests assert the raw link appears
+   nowhere in the HTML of a meeting the viewer is absent from, on both the list
+   and the detail page.
+4. **Times are stored UTC and shown in Asia/Kolkata.** Storing local time is
+   what makes a meeting with an overseas client drift by an hour twice a year
+   when their clocks change and ours do not. Nothing renders a raw stored value;
+   everything goes through `MeetingPresenter`, so showing another zone later is
+   a display change rather than a migration. The zone abbreviation is printed
+   beside the time, because a client abroad needs to know which four o'clock is
+   meant.
+
+**There is no "Completed" status.** The handover had one. Nothing here can see
+whether a meeting took place — Google knows a room existed, not whether anybody
+joined it. A scheduled meeting whose end time has passed reads **Ended**, which
+is a fact about the clock rather than a claim about the meeting.
+
+**`GoogleMeetProvider` throws rather than being stubbed.** Returning a plausible
+event id and a fabricated `meet.google.com/abc-defg-hij` would make the pages
+look finished and put somebody in a room that does not exist, waiting for a
+client. The interface exists because the seam is where the failures live, and
+naming them makes them impossible to skip — its header records what the
+implementation must get right: the conference is *requested*
+(`conferenceDataVersion=1` plus a `createRequest`, or the event exists with no
+way to join), external guests must be allowed, a failed create leaves the
+meeting requested rather than silently retried, cancelling must propagate, and
+creating must be idempotent.
+
+Other decisions:
+
+- **Attendees are shown, with their replies in words.** The handover showed
+  none anywhere and hardcoded "With: Santanu Kumar" in its rail. A client is
+  drawn as a square chip and a colleague as a round avatar, so the column says
+  whether this is a client call without being read. An unrecognised or missing
+  RSVP reads as "No reply yet", never as attendance — assuming somebody is
+  coming is the error that costs a meeting.
+- **One status column, not two.** The handover's Status and Action columns said
+  the same thing in different words: Upcoming/Approved, Cancelled/Declined,
+  Completed/Completed.
+- **Cancelled is not "declined".** Calling a meeting off and turning down an
+  invite are different acts by different people; the handover's tile conflated
+  them.
+- **"Your next meeting" is the viewer's own.** A card with that heading showing
+  a meeting somebody is not invited to is worse than showing nothing — they will
+  act on it.
+- **Joining opens shortly before the start.** Not a lock (a Meet link works
+  whenever) but a live "Join" beside a meeting three weeks out has no reason to
+  be pressed except by accident. The link itself is still available to attendees
+  on the detail page, so it can be copied ahead of time.
+- **Every `target="_blank"` carries `rel="noopener noreferrer"`**, and a test
+  walks the pages to keep it that way. Without `noopener` the opened page can
+  reach back through `window.opener`.
+- **No route deletes a meeting.** Cancelling withdraws the Google invite and
+  keeps the record; deleting would leave the event live on everyone's calendar
+  with nothing here to show it existed.
+- **The "Need Immediate Help?" card is gone** — a hardcoded phone number and two
+  obfuscated email addresses, a client-support panel that had wandered onto an
+  internal staff page. It is replaced by four plain statements about how
+  meetings actually run, which is the thing somebody on this page might be
+  unsure about.
+- **Attendee pickers are `<select multiple>`**, not a JavaScript token field:
+  they work without a script, submit an array the backend can validate, and are
+  keyboard-operable by default.
+
+**One CSS bug worth recording:** `.mt-attendee-body span` as a descendant
+selector also matched the "Organiser" badge nested inside the name, turning an
+inline chip into a full-width green bar. Direct-child selectors where a block
+rule is meant only for the immediate children.
+
 ### Error pages (decided 2026-08-27)
 
 Branded pages for 403, 404, 419, 429, 500 and 503. The last four were not asked

@@ -8,6 +8,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\ModulePlaceholderController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SalaryController;
@@ -274,9 +275,37 @@ Route::post('/leave/{leaveRequest}/cancel', fn () => abort(501))
     ->where('leaveRequest', '[A-Za-z0-9-]{1,32}')
     ->name('leave.cancel');
 
+Route::get('/meetings', [MeetingController::class, 'index'])->name('meetings.index');
+// Before /meetings/{meeting}, or "schedule" is read as a meeting reference.
+Route::get('/meetings/schedule', [MeetingController::class, 'create'])->name('meetings.create');
+Route::get('/meetings/{meeting}', [MeetingController::class, 'show'])
+    ->where('meeting', '[A-Za-z0-9-]{1,32}')
+    ->name('meetings.show');
+
+/*
+ * The writes the backend phase implements, all of which are Google Calendar API
+ * calls — see App\Support\Meetings\GoogleMeetProvider for what each has to get
+ * right.
+ *
+ * `store` creates the event and the conference: only a project manager or the
+ * system admin may (decided 2026-08-28). `request` is the client's act, which
+ * produces a record with no Google event until somebody creates it.
+ *
+ * There is no route that records an RSVP. Responses belong to Google Calendar —
+ * people accept or decline in their own calendar and this application reads
+ * that back.
+ */
+Route::post('/meetings', fn () => abort(501))->name('meetings.store');
+Route::post('/meetings/request', fn () => abort(501))->name('meetings.request');
+Route::post('/meetings/{meeting}/create', fn () => abort(501))
+    ->where('meeting', '[A-Za-z0-9-]{1,32}')
+    ->name('meetings.create.event');
+Route::post('/meetings/{meeting}/cancel', fn () => abort(501))
+    ->where('meeting', '[A-Za-z0-9-]{1,32}')
+    ->name('meetings.cancel');
+
 foreach ([
     'attendance' => 'attendance.index',
-    'meetings' => 'meetings.index',
     'reports' => 'reports.index',
     'announcements' => 'announcements.index',
 ] as $segment => $name) {

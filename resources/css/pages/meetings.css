@@ -1,0 +1,339 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   MEETINGS
+
+   The handover's meetings.css re-derived the KPI tile (.mt-stat), the table
+   (.mt-table), the toolbar (.mt-toolbar, .mt-tool-btn) and the status pill
+   (.mt-status) — components that already exist. Only what is specific to
+   meetings is here.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.mt-grid,
+.mt-detail-grid,
+.mt-form-grid {
+  display: grid;
+  /* minmax(0, …), never 1fr — a bare 1fr track is forced open by a wide child
+     and the whole page scrolls sideways. */
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--density-gap);
+  align-items: start;
+}
+.mt-detail-main,
+.mt-form-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-gap);
+  min-width: 0;
+}
+
+/* ─────────────────────────  the list  ───────────────────────── */
+
+.mt-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+}
+.mt-ref {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+}
+
+.mt-when { display: block; min-width: 0; }
+.mt-when strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+  white-space: nowrap;
+}
+.mt-when span {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.35;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.mt-when span.is-soon { color: var(--warning); font-weight: 600; }
+.mt-when span.is-overdue { color: var(--danger); font-weight: 700; }
+
+/* ── who is on it ──
+   A client is a square chip and a colleague a round avatar, so the column says
+   whether this is a client call without being read. */
+.mt-faces {
+  display: inline-flex;
+  align-items: center;
+}
+.mt-face {
+  width: 28px;
+  height: 28px;
+  font-size: 10px;
+  margin-left: -7px;
+  border: 2px solid var(--surface);
+  flex-shrink: 0;
+}
+.mt-faces > :first-child { margin-left: 0; }
+.mt-face-client {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 7px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: var(--accent-indigo-soft);
+  color: var(--accent-indigo);
+}
+.mt-face-more {
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--surface-2, var(--page));
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 10px;
+}
+
+/* ─────────────────────────  the meeting  ───────────────────────── */
+
+.mt-req-hd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 20px 22px 0;
+}
+.mt-timing { font-size: 11.5px; font-weight: 600; margin-left: auto; }
+.mt-timing.is-soon { color: var(--warning); }
+.mt-timing.is-overdue { color: var(--danger); }
+
+.mt-req-grid { padding: 18px 22px; }
+.mt-field { min-width: 0; }
+.mt-field dt,
+.mt-field-lbl {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 5px;
+}
+.mt-field dd {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+.mt-agenda { padding: 0 22px 18px; }
+.mt-agenda p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+
+/* ─────────────────────────  attendees  ───────────────────────── */
+
+.mt-attendees {
+  list-style: none;
+  margin: 0;
+  padding: 6px 22px 8px;
+}
+.mt-attendee {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.mt-attendee:last-child { border-bottom: 0; }
+.mt-attendee .avatar,
+.mt-attendee .mt-face-client {
+  width: 34px;
+  height: 34px;
+  font-size: 12px;
+  margin-left: 0;
+  border: 0;
+  flex-shrink: 0;
+}
+.mt-attendee-body { flex: 1 1 auto; min-width: 0; }
+.mt-attendee-body strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+}
+/* Direct child only. A descendant selector here also caught the "Organiser"
+   badge nested inside the name, turning an inline chip into a full-width
+   green bar under it. */
+.mt-attendee-body > span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.mt-organiser {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* The RSVP, in words. Whether somebody is coming is not a distinction to leave
+   to a colour. */
+.mt-rsvp {
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.rsvp-yes { color: var(--green); }
+.rsvp-no { color: var(--danger); }
+.rsvp-maybe { color: var(--warning); }
+.rsvp-none { color: var(--muted); font-weight: 500; font-style: italic; }
+
+.mt-attendee-note {
+  margin: 0;
+  padding: 12px 22px 20px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+
+/* ─────────────────────────  next meeting  ───────────────────────── */
+
+.mt-next-body { padding: 14px 20px 18px; }
+.mt-next-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.35;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+.mt-next-title:hover { color: var(--green); }
+.mt-next-when {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--ink-2);
+  line-height: 1.55;
+}
+.mt-next-when span.is-soon { color: var(--warning); font-weight: 700; }
+.mt-next-when span.is-overdue { color: var(--danger); font-weight: 700; }
+.mt-next-meta {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.mt-next-note {
+  margin: 12px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.mt-join { width: 100%; justify-content: center; margin-top: 14px; }
+
+/* ─────────────────────────  how meetings run  ───────────────────────── */
+
+.mt-facts {
+  list-style: none;
+  margin: 0;
+  padding: 12px 20px 18px;
+}
+.mt-fact {
+  display: flex;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.mt-fact:last-child { border-bottom: 0; }
+.mt-fact-ic {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--surface-2, var(--page));
+  color: var(--muted);
+}
+.mt-fact-ic svg { width: 15px; height: 15px; }
+.mt-fact-ic.tone-accent { background: var(--accent-blue-soft); color: var(--accent-blue); }
+.mt-fact-ic.tone-soft { background: var(--green-softer); color: var(--green); }
+.mt-fact-ic.tone-warn { background: var(--warning-soft); color: var(--warning); }
+.mt-fact-body { min-width: 0; }
+.mt-fact-body strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.mt-fact-body span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin-top: 2px;
+}
+
+/* ─────────────────────────  google panel  ───────────────────────── */
+
+.mt-warn { color: var(--warning); font-weight: 600; }
+.mt-create {
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--line);
+}
+.mt-create .btn { width: 100%; justify-content: center; }
+
+/* ─────────────────────────  the form  ───────────────────────── */
+
+.mt-form-wide { grid-column: 1 / -1; }
+.mt-optional { font-weight: 500; text-transform: none; letter-spacing: 0; }
+.mt-form select[multiple] {
+  height: auto;
+  padding: 8px;
+  line-height: 1.9;
+}
+.mt-steps {
+  margin: 0;
+  padding: 14px 20px 8px 38px;
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+.mt-steps li { margin-bottom: 6px; }
+.mt-submit { padding: 8px 20px 4px; }
+.mt-submit .btn { width: 100%; justify-content: center; }
+
+/* ─────────────────────────  responsive  ───────────────────────── */
+
+@media (max-width: 1280px) {
+  .mt-grid,
+  .mt-detail-grid,
+  .mt-form-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+  .mt-req-hd,
+  .mt-req-grid,
+  .mt-agenda { padding-left: 18px; padding-right: 18px; }
+  .mt-timing { margin-left: 0; flex-basis: 100%; }
+  .mt-attendees { padding-left: 18px; padding-right: 18px; }
+  .mt-attendee { flex-wrap: wrap; }
+  .mt-rsvp { margin-left: 46px; }
+}
