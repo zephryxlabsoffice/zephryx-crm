@@ -72,14 +72,21 @@ class ProjectsPageTest extends TestCase
     {
         $this->withDemoData();
 
-        $this->get('/projects?q=redesign')->assertSee('/projects/WD-2024-001', false);
-        $this->get('/projects?q=redesign')->assertDontSee('/projects/CRM-2024-003', false);
+        // Asserted against the page body, not the whole document: the topbar
+        // notification bell links to whatever the viewer has been notified
+        // about, so "Website Redesign is due in 5 days" puts
+        // /projects/WD-2024-001 into the HTML of every page in the application.
+        $search = $this->pageBody('/projects?q=redesign');
+        $this->assertStringContainsString('/projects/WD-2024-001', $search);
+        $this->assertStringNotContainsString('/projects/CRM-2024-003', $search);
 
-        $this->get('/projects?status=completed')->assertSee('/projects/CW-2024-007', false);
-        $this->get('/projects?status=completed')->assertDontSee('/projects/WD-2024-001', false);
+        $completed = $this->pageBody('/projects?status=completed');
+        $this->assertStringContainsString('/projects/CW-2024-007', $completed);
+        $this->assertStringNotContainsString('/projects/WD-2024-001', $completed);
 
-        $this->get('/projects?priority=low')->assertSee('/projects/APP-2024-006', false);
-        $this->get('/projects?priority=low')->assertDontSee('/projects/WD-2024-001', false);
+        $low = $this->pageBody('/projects?priority=low');
+        $this->assertStringContainsString('/projects/APP-2024-006', $low);
+        $this->assertStringNotContainsString('/projects/WD-2024-001', $low);
     }
 
     public function test_invalid_filters_are_rejected(): void

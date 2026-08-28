@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-density="comfortable">
+<head>
+  <meta charset="UTF-8" />
+  <title>Announcements · ZephryxLabs CRM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shell.css" />
+  <link rel="stylesheet" href="announcements.css" />
+</head>
+<body data-active="announcements">
+
+  <div class="app">
+    <!-- sidebar injected by shell.js -->
+    <div class="main">
+      <!-- topbar injected by shell.js -->
+
+      <main class="page" data-screen-label="07 SuperAdmin · Announcements">
+
+        <!-- ──────────────  Page header  ────────────── -->
+        <div class="page-hd-row">
+          <div class="page-hd">
+            <h1>Announcements</h1>
+            <p>Share important updates and information with your team.</p>
+          </div>
+          <div class="hd-actions">
+            <button class="btn btn-primary" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New Announcement
+            </button>
+            <button class="btn btn-outline" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              Manage Categories
+            </button>
+            <button class="btn btn-outline" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.04 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.04H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.65 8.6a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.56 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.56 1z"/></svg>
+              Settings
+            </button>
+          </div>
+        </div>
+
+        <!-- ──────────────  KPI strip (4 cards)  ────────────── -->
+        <section class="an-kpis">
+          <div class="an-kpi total">
+            <div class="an-kpi-ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18l-18-8z"/><path d="M11 14v4a2 2 0 0 0 4 0v-2"/></svg>
+            </div>
+            <div class="an-kpi-body">
+              <span class="an-kpi-lbl">Total Announcements</span>
+              <span class="an-kpi-val">36</span>
+              <span class="an-kpi-sub">All time</span>
+            </div>
+          </div>
+
+          <div class="an-kpi active">
+            <div class="an-kpi-ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </div>
+            <div class="an-kpi-body">
+              <span class="an-kpi-lbl">Active Announcements</span>
+              <span class="an-kpi-val">12</span>
+              <span class="an-kpi-sub">Currently visible</span>
+            </div>
+          </div>
+
+          <div class="an-kpi sched">
+            <div class="an-kpi-ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="1.6"/></svg>
+            </div>
+            <div class="an-kpi-body">
+              <span class="an-kpi-lbl">Scheduled</span>
+              <span class="an-kpi-val">4</span>
+              <span class="an-kpi-sub">Scheduled to publish</span>
+            </div>
+          </div>
+
+          <div class="an-kpi draft">
+            <div class="an-kpi-ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="14" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+            </div>
+            <div class="an-kpi-body">
+              <span class="an-kpi-lbl">Drafts</span>
+              <span class="an-kpi-val">3</span>
+              <span class="an-kpi-sub">Not published yet</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────  Main grid: table + right rail  ────────────── -->
+        <section class="an-grid">
+
+          <!-- ═════  LEFT: announcement table card  ═════ -->
+          <div class="an-card">
+
+            <div class="an-toolbar">
+              <div class="an-tabs">
+                <button class="an-tab active" type="button">All</button>
+                <button class="an-tab" type="button">Active</button>
+                <button class="an-tab" type="button">Scheduled</button>
+                <button class="an-tab" type="button">Expired</button>
+                <button class="an-tab" type="button">Drafts</button>
+              </div>
+              <div class="an-tools">
+                <div class="search-input">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="search" placeholder="Search announcements..." />
+                </div>
+                <button class="filter-btn" type="button">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                  Filter
+                </button>
+              </div>
+            </div>
+
+            <div class="an-table-wrap">
+              <table class="an-table">
+                <thead>
+                  <tr>
+                    <th>Announcement</th>
+                    <th>Category</th>
+                    <th>Published By</th>
+                    <th>Audience</th>
+                    <th>Published On</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <span class="an-title-cell">
+                        <span class="an-title-ic green">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18l-18-8z"/><path d="M11 14v4a2 2 0 0 0 4 0v-2"/></svg>
+                        </span>
+                        <span class="an-title-body">
+                          <strong>Office Closed on 25 May 2024</strong>
+                          <span>The office will remain closed on 25th May 2024 on account of National Holiday.</span>
+                        </span>
+                      </span>
+                    </td>
+                    <td><span class="pill pill-orange">Holiday</span></td>
+                    <td>
+                      <span class="an-author">
+                        <span class="cl-avatar av-1">SK</span>
+                        <span class="an-author-body"><strong>Santanu</strong><span>Super Admin</span></span>
+                      </span>
+                    </td>
+                    <td><span class="an-audience"><strong>All Employees</strong></span></td>
+                    <td><span class="an-pub"><strong>20 May 2024</strong><span>10:30 AM</span></span></td>
+                    <td><span class="pill pill-green">Active</span></td>
+                    <td><button class="row-menu" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <span class="an-title-cell">
+                        <span class="an-title-ic blue">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+                        </span>
+                        <span class="an-title-body">
+                          <strong>Team Outing This Weekend!</strong>
+                          <span>We are excited to announce our team outing this Saturday. Get ready for a fun day!</span>
+                        </span>
+                      </span>
+                    </td>
+                    <td><span class="pill pill-blue">Event</span></td>
+                    <td>
+                      <span class="an-author">
+                        <span class="cl-avatar av-1">NP</span>
+                        <span class="an-author-body"><strong>Neha Patel</strong><span>HR Manager</span></span>
+                      </span>
+                    </td>
+                    <td><span class="an-audience"><strong>All Employees</strong></span></td>
+                    <td><span class="an-pub"><strong>18 May 2024</strong><span>04:15 PM</span></span></td>
+                    <td><span class="pill pill-green">Active</span></td>
+                    <td><button class="row-menu" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <span class="an-title-cell">
+                        <span class="an-title-ic amber">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg>
+                        </span>
+                        <span class="an-title-body">
+                          <strong>Performance Review - Q2</strong>
+                          <span>Performance reviews for Q2 will begin from 1st June 2024.</span>
+                        </span>
+                      </span>
+                    </td>
+                    <td><span class="pill pill-amber">HR</span></td>
+                    <td>
+                      <span class="an-author">
+                        <span class="cl-avatar av-3">AV</span>
+                        <span class="an-author-body"><strong>Amit Verma</strong><span>HR Manager</span></span>
+                      </span>
+                    </td>
+                    <td><span class="an-audience"><strong>All Employees</strong></span></td>
+                    <td><span class="an-pub"><strong>17 May 2024</strong><span>11:20 AM</span></span></td>
+                    <td><span class="pill pill-green">Active</span></td>
+                    <td><button class="row-menu" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <span class="an-title-cell">
+                        <span class="an-title-ic purple">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+                        </span>
+                        <span class="an-title-body">
+                          <strong>New Laptop Policy</strong>
+                          <span>Please review the updated laptop usage and replacement policy.</span>
+                        </span>
+                      </span>
+                    </td>
+                    <td><span class="pill pill-purple">Policy</span></td>
+                    <td>
+                      <span class="an-author">
+                        <span class="cl-avatar av-1">SK</span>
+                        <span class="an-author-body"><strong>Santanu</strong><span>Super Admin</span></span>
+                      </span>
+                    </td>
+                    <td><span class="an-audience"><strong>All Employees</strong></span></td>
+                    <td><span class="an-pub"><strong>15 May 2024</strong><span>02:45 PM</span></span></td>
+                    <td><span class="pill pill-mute">Scheduled</span></td>
+                    <td><button class="row-menu" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <span class="an-title-cell">
+                        <span class="an-title-ic red">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/><polyline points="7 12 10 9 13 12 17 8"/></svg>
+                        </span>
+                        <span class="an-title-body">
+                          <strong>Excel Advanced Training</strong>
+                          <span>Enroll now for the advanced Excel training session next week.</span>
+                        </span>
+                      </span>
+                    </td>
+                    <td><span class="pill pill-red">Training</span></td>
+                    <td>
+                      <span class="an-author">
+                        <span class="cl-avatar av-2">PS</span>
+                        <span class="an-author-body"><strong>Pooja Singh</strong><span>Training Lead</span></span>
+                      </span>
+                    </td>
+                    <td><span class="an-audience"><strong>Department</strong><span>Finance</span></span></td>
+                    <td><span class="an-pub"><strong>14 May 2024</strong><span>09:00 AM</span></span></td>
+                    <td><span class="pill pill-green">Active</span></td>
+                    <td><button class="row-menu" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      <span class="an-title-cell">
+                        <span class="an-title-ic gray">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        </span>
+                        <span class="an-title-body">
+                          <strong>System Maintenance Notice</strong>
+                          <span>System will be under maintenance on 22nd May from 11 PM to 2 AM.</span>
+                        </span>
+                      </span>
+                    </td>
+                    <td><span class="pill pill-gray">IT</span></td>
+                    <td>
+                      <span class="an-author">
+                        <span class="cl-avatar av-5">VJ</span>
+                        <span class="an-author-body"><strong>Vikram Joshi</strong><span>IT Manager</span></span>
+                      </span>
+                    </td>
+                    <td><span class="an-audience"><strong>All Employees</strong></span></td>
+                    <td><span class="an-pub"><strong>12 May 2024</strong><span>05:30 PM</span></span></td>
+                    <td><span class="pill pill-mute">Expired</span></td>
+                    <td><button class="row-menu" aria-label="Row actions"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="an-foot">
+              <span class="an-foot-meta">Showing 1 to 6 of 36 announcements</span>
+              <div class="an-foot-pages">
+                <button class="pg-btn" aria-label="Previous page">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <button class="pg-btn active">1</button>
+                <button class="pg-btn">2</button>
+                <button class="pg-btn">3</button>
+                <span class="pg-ellipsis">…</span>
+                <button class="pg-btn">6</button>
+                <button class="pg-btn" aria-label="Next page">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═════  RIGHT RAIL  ═════ -->
+          <aside class="an-right">
+
+            <!-- Categories -->
+            <section class="rr-card">
+              <div class="rr-hd">
+                <strong>Categories</strong>
+                <a class="rr-link" href="#">View All</a>
+              </div>
+              <div class="cat-list">
+                <div class="cat-row">
+                  <div class="cat-ic gray">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18l-18-8z"/><path d="M11 14v4a2 2 0 0 0 4 0v-2"/></svg>
+                  </div>
+                  <span class="cat-name">All Announcements</span>
+                  <span class="cat-count">36</span>
+                </div>
+                <div class="cat-row">
+                  <div class="cat-ic orange">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 13.255V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5.745"/><path d="M12 2v13"/><path d="M8 6l4-4 4 4"/></svg>
+                  </div>
+                  <span class="cat-name">Holiday</span>
+                  <span class="cat-count">7</span>
+                </div>
+                <div class="cat-row">
+                  <div class="cat-ic blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  </div>
+                  <span class="cat-name">Event</span>
+                  <span class="cat-count">6</span>
+                </div>
+                <div class="cat-row">
+                  <div class="cat-ic amber">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg>
+                  </div>
+                  <span class="cat-name">HR</span>
+                  <span class="cat-count">8</span>
+                </div>
+                <div class="cat-row">
+                  <div class="cat-ic purple">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+                  </div>
+                  <span class="cat-name">Policy</span>
+                  <span class="cat-count">5</span>
+                </div>
+                <div class="cat-row">
+                  <div class="cat-ic red">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
+                  </div>
+                  <span class="cat-name">Training</span>
+                  <span class="cat-count">4</span>
+                </div>
+                <div class="cat-row">
+                  <div class="cat-ic gray">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                  </div>
+                  <span class="cat-name">IT</span>
+                  <span class="cat-count">6</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Recent Announcements -->
+            <section class="rr-card">
+              <div class="rr-hd">
+                <strong>Recent Announcements</strong>
+                <a class="rr-link" href="#">View All</a>
+              </div>
+              <div class="ra-list">
+                <div class="ra-row">
+                  <div class="ra-ic green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18l-18-8z"/></svg>
+                  </div>
+                  <span class="ra-name">Office Closed on 25 May 2024</span>
+                  <span class="ra-date">20 May 2024</span>
+                </div>
+                <div class="ra-row">
+                  <div class="ra-ic blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  </div>
+                  <span class="ra-name">Team Outing This Weekend!</span>
+                  <span class="ra-date">18 May 2024</span>
+                </div>
+                <div class="ra-row">
+                  <div class="ra-ic amber">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg>
+                  </div>
+                  <span class="ra-name">Performance Review - Q2</span>
+                  <span class="ra-date">17 May 2024</span>
+                </div>
+                <div class="ra-row">
+                  <div class="ra-ic purple">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+                  </div>
+                  <span class="ra-name">New Laptop Policy</span>
+                  <span class="ra-date">15 May 2024</span>
+                </div>
+                <div class="ra-row">
+                  <div class="ra-ic red">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
+                  </div>
+                  <span class="ra-name">Excel Advanced Training</span>
+                  <span class="ra-date">14 May 2024</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="rr-card">
+              <div class="rr-hd">
+                <strong>Quick Actions</strong>
+              </div>
+              <div class="qa-grid">
+                <button class="qa-tile t-green" type="button">
+                  <div class="qa-ic">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </div>
+                  <span>New Announcement</span>
+                </button>
+                <button class="qa-tile t-amber" type="button">
+                  <div class="qa-ic">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="1.6"/></svg>
+                  </div>
+                  <span>Schedule Announcement</span>
+                </button>
+                <button class="qa-tile t-blue" type="button">
+                  <div class="qa-ic">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                  </div>
+                  <span>Manage Categories</span>
+                </button>
+                <button class="qa-tile t-purple" type="button">
+                  <div class="qa-ic">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg>
+                  </div>
+                  <span>Announcement Report</span>
+                </button>
+              </div>
+            </section>
+
+          </aside>
+        </section>
+
+        <!-- ──────────────────────────────────────────────────────────
+             Hidden data source for the topbar notification dropdown.
+             shell.js wireNotifications() clones rows from .act-list
+             into the notification panel. Keep .act-list present on
+             every page so the bell hover/click works consistently.
+             ────────────────────────────────────────────────────────── -->
+        <div class="act-list" style="display:none" aria-hidden="true">
+          <div class="act-row">
+            <div class="act-ic green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18l-18-8z"/></svg>
+            </div>
+            <div class="act-body">
+              <strong>New announcement: "Office Closed on 25 May 2024"</strong>
+              <span>By Santanu</span>
+            </div>
+            <div class="act-time">10:30 AM</div>
+          </div>
+          <div class="act-row">
+            <div class="act-ic blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div class="act-body">
+              <strong>"Team Outing This Weekend!" was published</strong>
+              <span>By Neha Patel</span>
+            </div>
+            <div class="act-time">04:15 PM</div>
+          </div>
+          <div class="act-row">
+            <div class="act-ic amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg>
+            </div>
+            <div class="act-body">
+              <strong>"Performance Review - Q2" was scheduled</strong>
+              <span>By Amit Verma</span>
+            </div>
+            <div class="act-time">Yesterday, 11:20 AM</div>
+          </div>
+          <div class="act-row">
+            <div class="act-ic purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+            </div>
+            <div class="act-body">
+              <strong>Draft saved: "New Laptop Policy"</strong>
+              <span>By Santanu</span>
+            </div>
+            <div class="act-time">2 days ago</div>
+          </div>
+          <div class="act-row">
+            <div class="act-ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
+            </div>
+            <div class="act-body">
+              <strong>"Excel Advanced Training" reached 24 enrollments</strong>
+              <span>By System</span>
+            </div>
+            <div class="act-time">3 days ago</div>
+          </div>
+          <div class="act-row">
+            <div class="act-ic">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div class="act-body">
+              <strong>"System Maintenance Notice" expired</strong>
+              <span>By System</span>
+            </div>
+            <div class="act-time">4 days ago</div>
+          </div>
+          <div class="act-row">
+            <div class="act-ic indigo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="act-body">
+              <strong>3 new category rules updated</strong>
+              <span>By Santanu</span>
+            </div>
+            <div class="act-time">5 days ago</div>
+          </div>
+        </div>
+
+        <!-- minimal act-ic styles so cloned items render correctly inside notif panel -->
+        <style>
+          .act-list .act-ic {
+            width: 34px; height: 34px; border-radius: 9px;
+            display: grid; place-items: center;
+            background: var(--green-softer); color: var(--green); flex-shrink: 0;
+          }
+          .act-list .act-ic svg { width: 16px; height: 16px; }
+          .act-list .act-ic.blue   { background: var(--blue-soft);   color: var(--blue); }
+          .act-list .act-ic.green  { background: var(--green-soft);  color: var(--green); }
+          .act-list .act-ic.amber  { background: var(--amber-soft);  color: var(--amber); }
+          .act-list .act-ic.purple { background: var(--purple-soft); color: var(--purple); }
+          .act-list .act-ic.indigo { background: var(--indigo-soft); color: var(--indigo); }
+        </style>
+
+      </main>
+    </div>
+  </div>
+
+  <div id="tweaks-root"></div>
+
+  <script src="shell.js"></script>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+
+  <!-- Wire interactive tabs (visual only) -->
+  <script>
+    document.addEventListener('click', (e) => {
+      const tab = e.target.closest('.an-tab');
+      if (!tab) return;
+      tab.parentElement.querySelectorAll('.an-tab').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  </script>
+
+  <script type="text/babel">
+    const AN_TWEAKS = /*EDITMODE-BEGIN*/{
+      "dark": true,
+      "sidebarCollapsed": false,
+      "density": "comfortable"
+    }/*EDITMODE-END*/;
+
+    function applyAnTweaks(t) {
+      const html = document.documentElement;
+      html.setAttribute('data-theme', t.dark ? 'dark' : 'light');
+      html.setAttribute('data-density', t.density);
+      document.body.dataset.sidebar = t.sidebarCollapsed ? 'collapsed' : 'expanded';
+    }
+
+    function AnTweaks() {
+      const [t, setTweak] = useTweaks(AN_TWEAKS);
+      React.useEffect(() => { applyAnTweaks(t); }, [t]);
+      return (
+        <TweaksPanel title="Tweaks">
+          <TweakSection label="Theme" />
+          <TweakToggle label="Dark mode" value={t.dark}
+                       onChange={(v) => setTweak('dark', v)} />
+
+          <TweakSection label="Layout" />
+          <TweakToggle label="Sidebar collapsed" value={t.sidebarCollapsed}
+                       onChange={(v) => setTweak('sidebarCollapsed', v)} />
+          <TweakRadio label="Density"
+                      value={t.density}
+                      options={[
+                        { value: 'compact',     label: 'Compact' },
+                        { value: 'comfortable', label: 'Comfy' },
+                      ]}
+                      onChange={(v) => setTweak('density', v)} />
+        </TweaksPanel>
+      );
+    }
+
+    applyAnTweaks(AN_TWEAKS);
+    const root = ReactDOM.createRoot(document.getElementById('tweaks-root'));
+    root.render(<AnTweaks />);
+  </script>
+</body>
+</html>

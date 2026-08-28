@@ -1,0 +1,387 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANNOUNCEMENTS AND NOTIFICATIONS
+
+   Two surfaces sharing one set of components — the board is what everybody
+   reads, the notification page is what is addressed to you. The handover's
+   announcements.css re-derived the KPI tile (.an-kpi), the tabs (.an-tab), the
+   table and the rail rows; only what is specific here.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.an-grid,
+.an-detail-grid,
+.an-form-grid {
+  display: grid;
+  /* minmax(0, …), never 1fr — a bare 1fr track is forced open by a wide child
+     and the whole page scrolls sideways. */
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--density-gap);
+  align-items: start;
+}
+.an-feed-col,
+.an-detail-main,
+.an-form-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-gap);
+  min-width: 0;
+}
+
+/* ─────────────────────────  category colours  ───────────────────────── */
+
+/* Categorical accents, never feedback colours (§7): a category must not borrow
+   the green that means "active" or the red that means "expired". */
+.an-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.an-policy    { background: var(--accent-indigo-soft); color: var(--accent-indigo); }
+.an-hr        { background: var(--accent-purple-soft); color: var(--accent-purple); }
+.an-holiday   { background: var(--accent-blue-soft);   color: var(--accent-blue); }
+.an-event     { background: var(--green-soft);         color: var(--green); }
+.an-training  { background: var(--warning-soft);       color: var(--warning); }
+.an-it        { background: var(--surface-2, var(--page)); color: var(--muted); }
+.an-milestone { background: var(--accent-purple-soft); color: var(--accent-purple); }
+
+.an-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.an-dot.an-policy    { background: var(--accent-indigo); }
+.an-dot.an-hr        { background: var(--accent-purple); }
+.an-dot.an-holiday   { background: var(--accent-blue); }
+.an-dot.an-event     { background: var(--green); }
+.an-dot.an-training  { background: var(--warning); }
+.an-dot.an-it        { background: var(--muted); }
+.an-dot.an-milestone { background: var(--accent-purple); }
+
+/* ─────────────────────────  a post on the board  ───────────────────────── */
+
+.an-card { padding: 20px 22px; }
+.an-card.is-pinned { border-color: var(--green-line, var(--green)); }
+/* A milestone is not a written post and should not read as one. */
+.an-card.is-milestone { background: var(--surface-2, var(--page)); }
+
+.an-card-hd {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+.an-card-ic {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.an-card-ic svg { width: 18px; height: 18px; }
+.an-card-hd .avatar { width: 38px; height: 38px; font-size: 13px; flex-shrink: 0; }
+.an-card-head { flex: 1 1 auto; min-width: 0; }
+
+.an-card-title {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.an-card-title a { color: var(--ink); text-decoration: none; }
+.an-card-title a:hover { color: var(--green); }
+
+.an-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 7px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.an-audience {
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.an-pinned { color: var(--green); flex-shrink: 0; }
+.an-pinned svg { width: 16px; height: 16px; }
+
+.an-card-body {
+  margin: 13px 0 0;
+  padding-left: 51px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+.an-card-foot {
+  margin: 11px 0 0;
+  padding-left: 51px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.an-card-foot .is-soon { color: var(--warning); font-weight: 600; }
+
+.an-filter-note {
+  padding: 12px 18px;
+  border-radius: var(--r-card);
+  background: var(--surface-2, var(--page));
+  border: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+/* ─────────────────────────  one announcement  ───────────────────────── */
+
+.an-full { padding: 22px; }
+.an-full-body { padding: 18px 0 0; }
+
+/* ─────────────────────────  categories rail  ───────────────────────── */
+
+.an-cats {
+  list-style: none;
+  margin: 0;
+  padding: 10px 14px 14px;
+}
+.an-cat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--r-btn);
+  text-decoration: none;
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+.an-cat:hover { background: var(--surface-2, var(--page)); }
+.an-cat.is-current {
+  background: var(--green-softer);
+  color: var(--green);
+  font-weight: 600;
+}
+.an-cat-name { flex: 1 1 auto; min-width: 0; }
+.an-cat-count {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.an-cat.is-current .an-cat-count { color: var(--green); }
+
+/* ─────────────────────────  facts list  ───────────────────────── */
+
+.an-facts {
+  list-style: none;
+  margin: 0;
+  padding: 12px 20px 18px;
+}
+.an-fact {
+  display: flex;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.an-fact:last-child { border-bottom: 0; }
+.an-fact-ic {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--surface-2, var(--page));
+  color: var(--muted);
+}
+.an-fact-ic svg { width: 15px; height: 15px; }
+.an-fact-ic.tone-accent { background: var(--accent-blue-soft); color: var(--accent-blue); }
+.an-fact-ic.tone-soft { background: var(--green-softer); color: var(--green); }
+.an-fact-ic.tone-warn { background: var(--warning-soft); color: var(--warning); }
+.an-fact-body { min-width: 0; }
+.an-fact-body strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.an-fact-body > span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin-top: 2px;
+}
+
+/* The milestone rail's "Today" marker. */
+.rail-meta .is-today { color: var(--green); }
+
+/* ─────────────────────────  managing table  ───────────────────────── */
+
+.an-row-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+}
+.an-row-ref {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.an-runs { display: block; min-width: 0; }
+.an-runs strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.an-runs span {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.an-runs span.is-soon { color: var(--warning); font-weight: 600; }
+
+.an-manage-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+/* ─────────────────────────  compose  ───────────────────────── */
+
+.an-form-wide { grid-column: 1 / -1; }
+.an-optional { font-weight: 500; text-transform: none; letter-spacing: 0; }
+.an-form textarea {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: 500 13px/1.6 var(--font-sans);
+  resize: vertical;
+}
+.an-form textarea[disabled] { opacity: 0.75; cursor: not-allowed; }
+.an-form-wide input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  margin-right: 7px;
+  accent-color: var(--green);
+  vertical-align: -2px;
+}
+.an-submit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 20px 18px;
+}
+.an-submit .btn { width: 100%; justify-content: center; }
+
+/* ─────────────────────────  notifications  ───────────────────────── */
+
+.nt-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nt-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 15px 22px;
+  border-bottom: 1px solid var(--line);
+}
+.nt-item:last-child { border-bottom: 0; }
+/* Unread carries a rail as well as a tint: a background alone is invisible to
+   anyone who cannot separate two close shades. */
+.nt-item.is-unread {
+  background: var(--green-softer);
+  box-shadow: inset 3px 0 0 var(--green);
+}
+.nt-ic {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--surface-2, var(--page));
+  color: var(--muted);
+}
+.nt-ic svg { width: 16px; height: 16px; }
+.nt-body { flex: 1 1 auto; min-width: 0; }
+.nt-body strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.4;
+}
+.nt-body strong a { color: inherit; text-decoration: none; }
+.nt-body strong a:hover { color: var(--green); }
+.nt-body > span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin-top: 2px;
+}
+.nt-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.nt-when {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.nt-new {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ─────────────────────────  responsive  ───────────────────────── */
+
+@media (max-width: 1280px) {
+  .an-grid,
+  .an-detail-grid,
+  .an-form-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+  .an-card { padding: 18px; }
+  /* The body sits under the icon rather than beside it once there is no room
+     for the indent. */
+  .an-card-body,
+  .an-card-foot { padding-left: 0; }
+  .nt-item { padding-left: 18px; padding-right: 18px; flex-wrap: wrap; }
+  .nt-meta {
+    flex-direction: row;
+    align-items: center;
+    margin-left: 47px;
+  }
+}

@@ -132,13 +132,43 @@ class EmployeesPageTest extends TestCase
         $this->assertStringContainsString('Development', $html);
     }
 
-    public function test_birthdays_are_not_invented(): void
+    public function test_birthdays_show_a_day_and_a_month_and_never_a_year(): void
     {
-        // Date of birth is a field the Employees module does not have yet. A
-        // wrong birthday is worse than an absent one.
+        // This card was empty until Announcements landed (2026-08-28) and date
+        // of birth arrived with it. It is stored in full; the year never
+        // reaches a page — a colleague needs to know when to say happy
+        // birthday, not how old somebody is.
         $this->withDemoData();
 
-        $this->get('/employees')->assertSee('No birthdays recorded yet.', false);
+        $birthdays = \App\Support\Demo\DemoEmployees::birthdays();
+
+        $this->assertNotEmpty($birthdays, 'no birthday in the window to review');
+
+        $html = $this->get('/employees')->getContent();
+
+        foreach ($birthdays as $birthday) {
+            $this->assertMatchesRegularExpression('/^\d{2} [A-Z][a-z]{2}$/', $birthday['date']);
+            $this->assertStringContainsString($birthday['name'], $html);
+        }
+
+        foreach (\App\Support\Demo\DemoEmployees::all()->pluck('dob')->filter() as $dob) {
+            $this->assertStringNotContainsString($dob, $html);
+            $this->assertStringNotContainsString(\Illuminate\Support\Carbon::parse($dob)->format('d M Y'), $html);
+        }
+    }
+
+    public function test_somebody_who_opted_out_has_no_birthday_shown(): void
+    {
+        $this->withDemoData();
+
+        $optedOut = \App\Support\Demo\DemoEmployees::all()
+            ->first(fn (array $e) => ($e['announce_milestones'] ?? true) === false);
+
+        $this->assertNotNull($optedOut);
+
+        foreach (\App\Support\Demo\DemoEmployees::birthdays(50) as $birthday) {
+            $this->assertNotSame($optedOut['name'], $birthday['name']);
+        }
     }
 
     public function test_the_page_renders_nothing_the_content_security_policy_would_block(): void

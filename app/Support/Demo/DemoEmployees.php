@@ -29,18 +29,18 @@ class DemoEmployees
         }
 
         return collect([
-            ['user_id' => 'EMP001', 'name' => 'Riya Sharma',    'department' => 'Design',      'designation' => 'UI/UX Designer',      'email' => 'riya.sharma@zephryxlabs.com',    'status' => 'active',   'joined' => '2024-01-12'],
-            ['user_id' => 'EMP002', 'name' => 'Amit Verma',     'department' => 'Development', 'designation' => 'Frontend Developer',  'email' => 'amit.verma@zephryxlabs.com',     'status' => 'active',   'joined' => '2024-02-15'],
-            ['user_id' => 'EMP003', 'name' => 'Neha Patel',     'department' => 'Marketing',   'designation' => 'Digital Marketer',    'email' => 'neha.patel@zephryxlabs.com',     'status' => 'active',   'joined' => '2024-01-10'],
-            ['user_id' => 'EMP004', 'name' => 'Rahul Mehta',    'department' => 'Development', 'designation' => 'Backend Developer',   'email' => 'rahul.mehta@zephryxlabs.com',    'status' => 'active',   'joined' => '2024-03-01'],
-            ['user_id' => 'EMP005', 'name' => 'Pooja Singh',    'department' => 'HR',          'designation' => 'HR Executive',        'email' => 'pooja.singh@zephryxlabs.com',    'status' => 'on_leave', 'joined' => '2024-02-18'],
-            ['user_id' => 'EMP006', 'name' => 'Vikram Joshi',   'department' => 'Finance',     'designation' => 'Accountant',          'email' => 'vikram.joshi@zephryxlabs.com',   'status' => 'active',   'joined' => '2024-01-05'],
-            ['user_id' => 'EMP007', 'name' => 'Anjali Desai',   'department' => 'Support',     'designation' => 'Support Specialist',  'email' => 'anjali.desai@zephryxlabs.com',   'status' => 'active',   'joined' => '2024-03-22'],
-            ['user_id' => 'EMP008', 'name' => 'Karan Malhotra', 'department' => 'Sales',       'designation' => 'Sales Executive',     'email' => 'karan.malhotra@zephryxlabs.com', 'status' => 'active',   'joined' => '2024-04-28'],
-            ['user_id' => 'EMP009', 'name' => 'Sneha Kapoor',   'department' => 'Marketing',   'designation' => 'Marketing Executive', 'email' => 'sneha.kapoor@zephryxlabs.com',   'status' => 'active',   'joined' => '2026-08-24'],
-            ['user_id' => 'EMP010', 'name' => 'Arjun Nair',     'department' => 'Development', 'designation' => 'Frontend Developer',  'email' => 'arjun.nair@zephryxlabs.com',     'status' => 'active',   'joined' => '2026-08-21'],
-            ['user_id' => 'EMP011', 'name' => 'Meera Iyer',     'department' => 'HR',          'designation' => 'HR Executive',        'email' => 'meera.iyer@zephryxlabs.com',     'status' => 'active',   'joined' => '2026-08-19'],
-            ['user_id' => 'EMP012', 'name' => 'Dev Chatterjee', 'department' => 'Design',      'designation' => 'Motion Designer',     'email' => 'dev.chatterjee@zephryxlabs.com', 'status' => 'inactive', 'joined' => '2023-11-02'],
+            ['user_id' => 'EMP001', 'name' => 'Riya Sharma',    'department' => 'Design',      'designation' => 'UI/UX Designer',      'email' => 'riya.sharma@zephryxlabs.com',    'status' => 'active',   'joined' => '2024-01-12', 'dob' => '1996-03-14', 'announce_milestones' => true],
+            ['user_id' => 'EMP002', 'name' => 'Amit Verma',     'department' => 'Development', 'designation' => 'Frontend Developer',  'email' => 'amit.verma@zephryxlabs.com',     'status' => 'active',   'joined' => '2024-02-15', 'dob' => '1994-08-29', 'announce_milestones' => true],
+            ['user_id' => 'EMP003', 'name' => 'Neha Patel',     'department' => 'Marketing',   'designation' => 'Digital Marketer',    'email' => 'neha.patel@zephryxlabs.com',     'status' => 'active',   'joined' => '2024-01-10', 'dob' => '1998-11-02', 'announce_milestones' => true],
+            ['user_id' => 'EMP004', 'name' => 'Rahul Mehta',    'department' => 'Development', 'designation' => 'Backend Developer',   'email' => 'rahul.mehta@zephryxlabs.com',    'status' => 'active',   'joined' => '2024-03-01', 'dob' => '1992-06-21', 'announce_milestones' => true],
+            ['user_id' => 'EMP005', 'name' => 'Pooja Singh',    'department' => 'HR',          'designation' => 'HR Executive',        'email' => 'pooja.singh@zephryxlabs.com',    'status' => 'on_leave', 'joined' => '2024-02-18', 'dob' => '1995-09-08', 'announce_milestones' => true],
+            ['user_id' => 'EMP006', 'name' => 'Vikram Joshi',   'department' => 'Finance',     'designation' => 'Accountant',          'email' => 'vikram.joshi@zephryxlabs.com',   'status' => 'active',   'joined' => '2024-01-05', 'dob' => '1990-01-17', 'announce_milestones' => false],
+            ['user_id' => 'EMP007', 'name' => 'Anjali Desai',   'department' => 'Support',     'designation' => 'Support Specialist',  'email' => 'anjali.desai@zephryxlabs.com',   'status' => 'active',   'joined' => '2024-09-04', 'dob' => '1999-08-30', 'announce_milestones' => true],
+            ['user_id' => 'EMP008', 'name' => 'Karan Malhotra', 'department' => 'Sales',       'designation' => 'Sales Executive',     'email' => 'karan.malhotra@zephryxlabs.com', 'status' => 'active',   'joined' => '2024-04-28', 'dob' => '1997-04-05', 'announce_milestones' => true],
+            ['user_id' => 'EMP009', 'name' => 'Sneha Kapoor',   'department' => 'Marketing',   'designation' => 'Marketing Executive', 'email' => 'sneha.kapoor@zephryxlabs.com',   'status' => 'active',   'joined' => '2026-08-24', 'dob' => '2000-12-11', 'announce_milestones' => true],
+            ['user_id' => 'EMP010', 'name' => 'Arjun Nair',     'department' => 'Development', 'designation' => 'Frontend Developer',  'email' => 'arjun.nair@zephryxlabs.com',     'status' => 'active',   'joined' => '2026-08-21', 'dob' => '1998-02-26', 'announce_milestones' => true],
+            ['user_id' => 'EMP011', 'name' => 'Meera Iyer',     'department' => 'HR',          'designation' => 'HR Executive',        'email' => 'meera.iyer@zephryxlabs.com',     'status' => 'active',   'joined' => '2026-08-19', 'dob' => '1996-07-19', 'announce_milestones' => true],
+            ['user_id' => 'EMP012', 'name' => 'Dev Chatterjee', 'department' => 'Design',      'designation' => 'Motion Designer',     'email' => 'dev.chatterjee@zephryxlabs.com', 'status' => 'inactive', 'joined' => '2023-11-02', 'dob' => '1993-05-23', 'announce_milestones' => true],
         ]);
     }
 
@@ -110,14 +110,31 @@ class DemoEmployees
     /**
      * Upcoming birthdays.
      *
-     * Empty on purpose: date of birth is a field on the Employees module that
-     * does not exist yet, and it is not something to invent — the card renders
-     * its own empty state until the module supplies real dates.
+     * `dob` landed with Announcements (2026-08-28). It is stored in full and
+     * **only ever displayed as a day and a month** — see App\Support\Milestones:
+     * a colleague needs to know when to say happy birthday, not how old
+     * somebody is, and putting everyone's age on an internal page permanently
+     * is harder to take back than to not do.
+     *
+     * `announce_milestones` is the per-person opt-out. Not everyone wants their
+     * birthday on a company board.
      *
      * @return list<array<string, string>>
      */
-    public static function birthdays(): array
+    public static function birthdays(int $limit = 4): array
     {
-        return [];
+        return array_slice(
+            array_map(
+                fn (array $m) => [
+                    'name' => $m['employee']['name'],
+                    // Day and month. Never the year.
+                    'date' => $m['day_month'],
+                    'countdown' => $m['label'],
+                ],
+                \App\Support\Milestones::upcoming(\App\Support\Milestones::BIRTHDAY)
+            ),
+            0,
+            $limit
+        );
     }
 }

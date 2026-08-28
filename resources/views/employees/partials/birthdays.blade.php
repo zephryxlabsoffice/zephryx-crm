@@ -16,10 +16,11 @@
                 <span class="person-meta">{{ $person['countdown'] }}</span>
             </div>
         @empty
-            {{-- Date of birth is a field on the Employees module, which does not
-                 exist yet. Deliberately not invented — a wrong birthday is
-                 worse than an absent one. --}}
-            <p class="rail-empty">No birthdays recorded yet.</p>
+            {{-- Date of birth landed with Announcements (2026-08-28); this list
+                 is now real. It shows a day and a month and never a year — see
+                 App\Support\Milestones. Empty means nobody has one in the next
+                 fortnight, or they have opted out of being announced. --}}
+            <p class="rail-empty">No birthdays in the next fortnight.</p>
         @endforelse
     </div>
 </section>

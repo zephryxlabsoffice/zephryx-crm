@@ -1431,6 +1431,93 @@ selector also matched the "Organiser" badge nested inside the name, turning an
 inline chip into a full-width green bar. Direct-child selectors where a block
 rule is meant only for the immediate children.
 
+### Announcements and Notifications (decided 2026-08-28)
+
+The owner asked for announcements to cover "birthdays, work anniversaries,
+tasks and every notification". That is two things, and merging them makes both
+worse — so this is **two surfaces sharing one feed component**:
+
+| | The board (`/announcements`) | The bell (`/notifications`) |
+|---|---|---|
+| Written by | a person | an event |
+| Goes to | everyone | one reader |
+| Lifecycle | scheduled, expires | cleared when read |
+| Actionable | rarely | usually |
+
+**Task and ticket events do not go on the board.** They are high-volume and
+nobody else's business, and a board they flood is a board nobody reads — which
+is exactly the day "office closed Friday" gets missed. A test walks the board's
+markup asserting no personal notification title appears on it.
+
+**Birthdays and work anniversaries sit between the two**: generated like a
+notification, broadcast like an announcement. They go on the board.
+
+**Four owner decisions taken 2026-08-28:**
+
+1. **Bell for personal, board for broadcast.**
+2. **Date of birth added, day and month shown only.**
+3. **HR, project managers and the owner may post** — `announcements.post`.
+4. **Milestones post themselves, and anyone may opt out of their own.**
+
+**A birthday is a day and a month.** Date of birth is stored in full — it
+belongs on an employee record — but `App\Support\Milestones` never lets the year
+out. A colleague needs to know when to say happy birthday, not how old somebody
+is, and once everyone's age is on an internal page it is much harder to take
+back than to have not put it there. A work anniversary is different: the year
+count *is* the point, so it is stated. Tests assert no birth date, raw or
+formatted, appears on any page.
+
+**Milestones are computed, never stored.** A stored birthday post would be wrong
+the following year and would survive somebody opting out. They are therefore
+absent from the managing list — a computed post has nothing to edit, schedule or
+delete — and `milestone` is excluded from the compose form's categories, because
+a hand-written one would look identical in the feed and be wrong next year.
+
+**Opting out removes somebody entirely**, rather than posting a quieter version.
+`announce_milestones` on the employee record; somebody who has left is excluded
+too.
+
+Other decisions:
+
+- **Nobody gets a nought-year anniversary on their first day.**
+- **29 February is pinned to 28 February in common years.** Carbon would roll it
+  to 1 March, which quietly moves somebody's birthday into the wrong month.
+- **Category counts are computed from the board**, so a count cannot disagree
+  with the list beneath it — the handover's were written in (7/6/8/5/4/6). A
+  category with nothing live is omitted rather than shown as a zero: an empty
+  filter is a control that does nothing.
+- **Expired announcements are kept, not deleted.** What the company said and
+  when is worth being able to look up. "Take off the board" rather than delete.
+- **Post and save-as-draft are two buttons.** An announcement sent by accident
+  cannot be unsent.
+- **A notification only links somewhere that exists.** `DemoNotifications`
+  checks the route is registered and returns `null` otherwise — one aimed at an
+  unbuilt page is a promise the application cannot keep, and it fails at the
+  moment somebody acts on it.
+- **`DemoNotifications` has no `all()`.** `for($reader)` takes the reader as a
+  required argument, the same shape `DemoTickets` uses for comment visibility
+  and for the same reason: forgetting to scope should be a syntax error rather
+  than one person reading another's queue.
+- **The handover's "Need Immediate Help?" and "Announcement Report" cards are
+  gone** — a hardcoded phone number with two Cloudflare-obfuscated email
+  addresses, and a report that reported nothing. Replaced by a short "where
+  things appear" card, which is the thing somebody on this page might actually
+  be unsure about.
+
+**Two bugs the tests caught, worth recording:**
+
+1. **`/employees` 500'd.** Its birthdays partial expected `date` and
+   `countdown`; the new source returned `designation` and `when`. The mismatch
+   had been invisible for weeks because the list was always empty — the first
+   time it had data was the first time it ran.
+2. **The bell changed what every page contains.** Wiring it means a
+   notification reading "Website Redesign is due in 5 days" puts
+   `/projects/WD-2024-001` into the HTML of *every* page, which silently
+   weakened existing `assertDontSee` assertions from "this row is filtered out"
+   to "this id appears nowhere in the document". `Tests\TestCase::pageBody()`
+   now strips the shell, and assertions about what a page shows are made
+   against the page.
+
 ### Error pages (decided 2026-08-27)
 
 Branded pages for 403, 404, 419, 429, 500 and 503. The last four were not asked
