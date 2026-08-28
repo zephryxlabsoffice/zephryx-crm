@@ -1,0 +1,343 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   LEAVE
+
+   The handover's leave-requests.css and my-leave.css came to ~21KB re-deriving
+   the KPI tile (.lv-kpi, .ml-kpi), the tabs (.lv-tab, .ml-tab), the filter row
+   (.lv-filter, .ml-filter), the table (.lv-table) and the detail row (.rd-row,
+   .pol-row) — components that already exist twice over. Only what is specific
+   to leave is here.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.lv-grid,
+.lv-detail-grid,
+.lv-form-grid {
+  display: grid;
+  /* minmax(0, …), never 1fr — a bare 1fr track is forced open by a wide child
+     and the whole page scrolls sideways. */
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--density-gap);
+  align-items: start;
+}
+.lv-detail-main,
+.lv-form-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-gap);
+  min-width: 0;
+}
+
+/* ─────────────────────────  leave type  ───────────────────────── */
+
+/* Categorical accents, never feedback colours (§7). A leave type must not
+   borrow the green that means "approved" or the red that means "rejected", or
+   a green chip beside a green pill teaches people that colour means nothing. */
+.lv-type {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.lv-casual    { background: var(--accent-blue-soft);   color: var(--accent-blue);   border-color: var(--accent-blue-soft); }
+.lv-sick      { background: var(--accent-purple-soft); color: var(--accent-purple); border-color: var(--accent-purple-soft); }
+.lv-privilege { background: var(--accent-indigo-soft); color: var(--accent-indigo); border-color: var(--accent-indigo-soft); }
+.lv-unpaid    { background: var(--surface-2, var(--page)); color: var(--muted); border-color: var(--line); }
+
+/* The same palette as a dot, for legends and policy rows. */
+.lv-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.lv-dot.lv-casual    { background: var(--accent-blue); }
+.lv-dot.lv-sick      { background: var(--accent-purple); }
+.lv-dot.lv-privilege { background: var(--accent-indigo); }
+.lv-dot.lv-unpaid    { background: var(--muted); }
+
+/* ─────────────────────────  the queue  ───────────────────────── */
+
+.lv-dates { display: block; min-width: 0; }
+.lv-dates strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+}
+.lv-dates span {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.lv-dates span.is-soon { color: var(--warning); font-weight: 600; }
+.lv-dates span.is-overdue { color: var(--danger); font-weight: 700; }
+
+/* ─────────────────────────  the request  ───────────────────────── */
+
+.lv-req-hd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 20px 22px 0;
+}
+.lv-timing {
+  font-size: 11.5px;
+  font-weight: 600;
+  margin-left: auto;
+}
+.lv-timing.is-soon { color: var(--warning); }
+.lv-timing.is-overdue { color: var(--danger); }
+
+.lv-req-grid { padding: 18px 22px; }
+.lv-field { min-width: 0; }
+.lv-field dt,
+.lv-field-lbl {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 5px;
+}
+.lv-field dd {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+.lv-reason {
+  padding: 0 22px 18px;
+}
+.lv-reason p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+.lv-contact { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+
+/* ─────────────────────────  the decision  ───────────────────────── */
+
+.lv-decide { border-color: var(--green-line, var(--line)); }
+.lv-decide-actions {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  padding: 0 22px 22px;
+}
+/* Approve and reject are pulled apart deliberately. The handover had them as
+   two icon buttons thirty pixels apart, one of which refuses somebody's
+   holiday. */
+.lv-reject {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding-left: 20px;
+  border-left: 1px solid var(--line);
+}
+.lv-reject textarea {
+  width: 100%;
+  min-height: 62px;
+  padding: 10px 12px;
+  border-radius: var(--r-btn);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: 500 13px/1.55 var(--font-sans);
+  resize: vertical;
+}
+.lv-reject textarea[disabled] { opacity: 0.75; cursor: not-allowed; }
+.lv-reject .btn { align-self: flex-start; }
+
+.btn-danger {
+  color: var(--danger);
+  border-color: var(--danger-line, var(--line));
+}
+.btn-danger:hover:not([disabled]) { background: var(--danger-soft); }
+
+/* ─────────────────────────  clashes  ───────────────────────── */
+
+.lv-clashes {
+  list-style: none;
+  margin: 0;
+  padding: 6px 22px 8px;
+}
+.lv-clash {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.lv-clash:last-child { border-bottom: 0; }
+.lv-clash .avatar { width: 32px; height: 32px; font-size: 11px; }
+.lv-clash-body { flex: 1 1 auto; min-width: 0; }
+.lv-clash-body strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+}
+.lv-clash-body span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.lv-clash-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.lv-clash-warn {
+  margin: 0;
+  padding: 12px 22px 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--warning);
+}
+
+/* ─────────────────────────  balance  ───────────────────────── */
+
+.lv-bal-total {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.lv-bal {
+  list-style: none;
+  margin: 0;
+  padding: 14px 20px 6px;
+}
+.lv-bal-row { margin-bottom: 15px; }
+.lv-bal-row:last-child { margin-bottom: 8px; }
+.lv-bal-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+.lv-bal-hd strong {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 0;
+}
+.lv-bal-fig {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.lv-bal .progress { width: 100%; }
+.lv-bal-note {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.lv-bal-note strong { color: var(--warning); font-weight: 600; }
+.lv-bal-unpaid {
+  margin: 0;
+  padding: 0 20px 14px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* ─────────────────────────  policy  ───────────────────────── */
+
+.lv-policy {
+  list-style: none;
+  margin: 0;
+  padding: 12px 20px 6px;
+}
+.lv-policy-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+.lv-policy-row:last-child { border-bottom: 0; }
+.lv-policy-body { flex: 1 1 auto; min-width: 0; }
+.lv-policy-body strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+}
+.lv-policy-body span {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.lv-policy-days {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.lv-policy-note {
+  margin: 0;
+  padding: 12px 20px 18px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+
+/* ─────────────────────────  the form  ───────────────────────── */
+
+.lv-form-wide { grid-column: 1 / -1; }
+.lv-optional { font-weight: 500; text-transform: none; letter-spacing: 0; }
+.lv-submit { padding: 16px 20px 4px; }
+.lv-submit .btn { width: 100%; justify-content: center; }
+
+/* ─────────────────────────  responsive  ───────────────────────── */
+
+@media (max-width: 1280px) {
+  .lv-grid,
+  .lv-detail-grid,
+  .lv-form-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+  /* Side by side the two halves of the decision become two narrow columns;
+     stacked, the rule between them becomes a rule above. */
+  .lv-decide-actions { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .lv-reject {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding-left: 0;
+    padding-top: 18px;
+  }
+  .lv-req-hd,
+  .lv-req-grid,
+  .lv-reason { padding-left: 18px; padding-right: 18px; }
+  .lv-timing { margin-left: 0; flex-basis: 100%; }
+  .lv-clashes { padding-left: 18px; padding-right: 18px; }
+  .lv-clash { flex-wrap: wrap; }
+  .lv-clash-meta { margin-left: 44px; }
+}

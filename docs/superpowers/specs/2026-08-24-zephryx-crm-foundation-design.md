@@ -1235,6 +1235,105 @@ already shipped — and the Salary "On hold" tile both fell back to the default
 green. The most alarming figure on each page was rendering as though it were
 fine. Feedback tones are now defined for every element that takes one.
 
+### Leave (decided 2026-08-28)
+
+Built out of order: Attendance was skipped because its design is changing.
+
+Four pages: the approval queue (`/leave`), a person's own leave
+(`/leave/mine`), the request form (`/leave/request`) and one request
+(`/leave/{request}`).
+
+**Two owner decisions shaped the whole module:**
+
+1. **The policy lives in the Admin Panel.** Leave types and their annual
+   entitlements are company policy, not application logic. `config/leave.php`
+   is an explicit placeholder for that surface; `App\Support\LeavePolicy` reads
+   it and every page goes through the class rather than the config, so the swap
+   to a `leave_types` table is one method.
+2. **This module counts. It does not decide.** "Just a portal to count and
+   request leaves — we will not automate for now." So there is deliberately no
+   working-day calculator, no holiday calendar and no automatic deduction. The
+   requester states how many days a request costs and the approver agrees it;
+   whether a Saturday counts or a public holiday is skipped is their judgement.
+   Encoding a guess at those rules would produce balances that quietly disagree
+   with what people were actually granted. Tests assert `workingDays()`,
+   `holidays()` and `deduct()` stay absent.
+
+What *is* computed is the sum of what was recorded: entitlement, less the days
+on approved requests. That is counting, and it cannot be wrong unless the
+records are.
+
+**Pending days are reported, never netted off.** A pending request has not been
+granted, and a balance that already assumes approval is how somebody plans
+around days they may not get. The tiles say "not deducted until approved" in as
+many words.
+
+**Rejected and withdrawn are not the same colour.** The handover drew both red.
+They are opposite events — one was done to the person, the other they did
+themselves — and a withdrawal should not look like a refusal. Withdrawn is
+grey, and the word shown is "Withdrawn" everywhere including the pill, because
+the tab and the pill saying different things is its own bug.
+
+**Deciding happens on the request, not in a table row.** The handover put a tick
+and a cross as unlabelled icon buttons thirty pixels apart, each of which is
+somebody's holiday. Here the queue offers "Review", and the decision sits under
+the dates, the reason, the requester's balance and the clash list. Approve and
+reject are **separate routes and separate forms** — one endpoint taking a
+decision parameter is one place for a default to be wrong — and **rejecting
+requires a reason**, because "rejected" with no explanation is the version
+people have to chase in person.
+
+**The page shows who else is off across those dates.** Not in the handover at
+all, and the information the decision actually turns on: approving leave blind
+is how a team ends up with nobody in on a Friday. Pending requests are included
+as well as approved ones, since two people asking for the same week is exactly
+the clash worth catching before either is granted, and same-department overlap
+is called out separately because two designers off together is a problem in a
+way that a designer and an accountant is not.
+
+**Three rules the backend must honour** (recorded at the top of the controller):
+`leave.approve` is its own permission; **nobody decides their own request, owner
+included** — an approver who can grant themselves leave makes the record
+meaningless; and a decision is only valid on a still-pending request, checked
+inside the transaction so two approvers cannot both decide it.
+
+**The reason and contact number are personal data.** "Fever, seeing a doctor
+tomorrow" is health information. Neither is a column on any list — a test walks
+every list page asserting no request's reason or phone number appears there.
+They are on the request, for the person deciding it.
+
+Other decisions:
+
+- **Balances are bars, not a donut.** Beyond the handover's donut being drawn
+  with `style="transform: rotate(...)"` and `style="--dot:#3B82F6"` — both
+  CSP-blocked, so it would have rendered as a grey ring beside a colourless
+  legend — a donut is the wrong chart. These are four independent allowances
+  each with its own maximum; a donut implies they add up to something.
+- **Unpaid leave has no balance.** The handover gave it two days on the same
+  screen where its own policy card said "As Per Policy". Unpaid days are
+  counted and reported, never deducted from an allowance they do not belong to.
+- **No "Expired" tile.** Whether unused days carry forward is undecided
+  (2026-08-28), so the pages say the balance is for this year only rather than
+  showing a figure whose rule does not exist. The handover showed one, reading
+  zero.
+- **The queue defaults to Pending**, not All: the page exists to clear a queue.
+  Rows sort soonest-first and pending ones carry how far away the leave is, so
+  "starts tomorrow" is visibly more urgent than "starts in 20 days".
+- **Leave can be withdrawn until it starts**, including after approval — plans
+  change, and the alternative is a balance spent on days nobody took. Leave
+  already under way is a conversation, not a button.
+- **No "All Locations" filter.** One office; a dropdown with a single entry
+  teaches people the controls are decorative.
+- **Tabs are links with URLs.** The handover wired them with an inline
+  `<script>`, which our CSP blocks — they would not have switched at all.
+
+**Errors found in the handover, none copied:** its policy granted 34 days a year
+against 12 taken, and every balance tile read 18 rather than 22; unpaid leave
+had a balance; rejected and cancelled shared a colour; a Saturday was billed as
+a day of casual leave; "Reporting To: Santanu (HR)" was hardcoded; and
+`style="clear:both"`, the inline tab script and the donut's inline styles are
+all CSP-blocked.
+
 ### Error pages (decided 2026-08-27)
 
 Branded pages for 403, 404, 419, 429, 500 and 503. The last four were not asked

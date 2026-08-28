@@ -7,6 +7,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\ModulePlaceholderController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SalaryController;
@@ -241,9 +242,40 @@ Route::get('/salary/{employee}/{period}/payslip/download', fn () => abort(501))
     ->where('period', '[0-9]{4}-[0-9]{2}')
     ->name('salary.payslip.download');
 
+Route::get('/leave', [LeaveController::class, 'index'])->name('leave.index');
+// Before /leave/{leaveRequest}, or these are read as request references.
+Route::get('/leave/mine', [LeaveController::class, 'mine'])->name('leave.mine');
+Route::get('/leave/request', [LeaveController::class, 'create'])->name('leave.create');
+Route::get('/leave/{leaveRequest}', [LeaveController::class, 'show'])
+    ->where('leaveRequest', '[A-Za-z0-9-]{1,32}')
+    ->name('leave.show');
+
+/*
+ * The writes the backend phase implements.
+ *
+ * Approving and rejecting are separate routes rather than one endpoint taking a
+ * decision parameter: they are opposite acts, and a single handler is a single
+ * place for a default to be wrong. Rejecting requires a reason — the handover's
+ * reject button captured nothing, which leaves the person guessing why.
+ *
+ * Three rules the writes must honour (§2.6, §6): `leave.approve` is its own
+ * permission; NOBODY decides their own request, owner included; and a decision
+ * is only valid on a still-pending request, checked inside the transaction so
+ * two approvers cannot both decide it.
+ */
+Route::post('/leave', fn () => abort(501))->name('leave.store');
+Route::post('/leave/{leaveRequest}/approve', fn () => abort(501))
+    ->where('leaveRequest', '[A-Za-z0-9-]{1,32}')
+    ->name('leave.approve');
+Route::post('/leave/{leaveRequest}/reject', fn () => abort(501))
+    ->where('leaveRequest', '[A-Za-z0-9-]{1,32}')
+    ->name('leave.reject');
+Route::post('/leave/{leaveRequest}/cancel', fn () => abort(501))
+    ->where('leaveRequest', '[A-Za-z0-9-]{1,32}')
+    ->name('leave.cancel');
+
 foreach ([
     'attendance' => 'attendance.index',
-    'leave' => 'leave.index',
     'meetings' => 'meetings.index',
     'reports' => 'reports.index',
     'announcements' => 'announcements.index',
