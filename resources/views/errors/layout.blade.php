@@ -1,6 +1,24 @@
 @php
+    use App\Support\Realm;
     use App\Support\SupportContact;
     use App\Support\Theme;
+
+    /*
+     * "Go to dashboard" has to mean the reader's OWN dashboard.
+     *
+     * It was hardcoded to /dashboard, which is the staff one — so a client who
+     * mistyped a URL was offered a button into a realm their session will be
+     * refused from, and the way out of an error page was a second error page.
+     *
+     * Realm::forRequest reads the path, which is exactly right here: this is a
+     * link, not an authorisation decision, and the realm middleware still
+     * decides what they may open when they get there.
+     */
+    $home = match (Realm::forRequest(request())) {
+        Realm::CLIENT => '/client/dashboard',
+        Realm::ADMIN => '/admin/dashboard',
+        default => '/dashboard',
+    };
 @endphp
 <!DOCTYPE html>
 {{--
@@ -67,7 +85,7 @@
                             $supportSubject = config('zephryx.brand.name').' '.config('zephryx.brand.suffix')
                                 .' — error '.trim($__env->yieldContent('code'));
                         @endphp
-                        <a class="btn btn-primary" href="{{ url('/dashboard') }}">Go to dashboard</a>
+                        <a class="btn btn-primary" href="{{ url($home) }}">Go to dashboard</a>
                         <a class="btn btn-outline" href="{{ SupportContact::mailto($supportSubject) }}">Contact Support</a>
                     @endif
                 </div>

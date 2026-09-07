@@ -1,0 +1,231 @@
+/* ============================================================================
+   The client portal.
+
+   Almost nothing new. The portal reuses the staff shell (the designer's
+   client-shell.js injects the same .sidebar / .topbar markup) and the same
+   primitives every module uses — .kpi, .card, .rail-card, .data-table,
+   .stat-row, .form-field — plus the dashboard's two-column .dash-grid.
+
+   That is deliberate beyond saving work: a client and an account manager
+   looking at the same invoice should be looking at the same thing. Divergence
+   between our view and theirs is what gets argued about on a call.
+
+   What is here is the handful of pieces only the client side has.
+   ========================================================================= */
+
+/* ----------------------------------------------------------------------------
+   The client switcher.
+
+   Development only — DemoClientPortal::switchable() is empty outside local +
+   debug. Styled as scaffolding rather than product, like the dashboard's role
+   preview, so nobody mistakes it for a feature or screenshots it into a demo.
+   -------------------------------------------------------------------------- */
+
+.cl-switch {
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-lg, 14px);
+  background: var(--surface-2);
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cl-switch-hd {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cl-switch-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.cl-switch-hd p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted);
+  min-width: 240px;
+  flex: 1;
+}
+.cl-switch-hd strong { color: var(--ink); font-weight: 700; }
+
+.cl-switch-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ----------------------------------------------------------------------------
+   Quick actions.
+
+   Two tiles, not the handover's four navigation cards — those repeated the
+   sidebar entry for entry. These are the two things a client arrives to do and
+   cannot do from the sidebar in one click.
+   -------------------------------------------------------------------------- */
+
+.cl-actions {
+  margin-bottom: 20px;
+  /* Sized to the tiles rather than stretched across the page. Two actions
+     spread over a full-width grid read as empty panels, not as buttons. */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
+  justify-content: start;
+}
+
+/* ----------------------------------------------------------------------------
+   Daily updates.
+
+   The centre of this portal: what a client opens it to read. Set as a log
+   rather than a table — these are sentences somebody wrote, and a table cell
+   is the wrong shape for a paragraph.
+
+   Every update on screen was published deliberately; the internal ones never
+   reach the template. See App\Support\Demo\DemoProjectUpdates.
+   -------------------------------------------------------------------------- */
+
+.cl-updates {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cl-update {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cl-update:first-child { padding-top: 4px; }
+.cl-update:last-child { border-bottom: 0; padding-bottom: 4px; }
+
+.cl-update-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--muted);
+}
+.cl-update-hd a {
+  color: var(--green);
+  font-weight: 600;
+  text-decoration: none;
+}
+.cl-update-hd a:hover { text-decoration: underline; }
+
+.cl-update-who {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.cl-update-who .avatar { width: 26px; height: 26px; font-size: 10.5px; }
+
+.cl-update strong {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.cl-update p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 68ch;
+  text-wrap: pretty;
+}
+
+.cl-update .attachment-grid { margin-top: 6px; }
+
+/* ----------------------------------------------------------------------------
+   Project header.
+   -------------------------------------------------------------------------- */
+
+.cl-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cl-hero-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  font-weight: 600;
+}
+.cl-hero-top .is-overdue { color: var(--danger); }
+.cl-hero-top .is-soon { color: var(--warning); }
+
+/* .progress-cell is sized for a table cell. Given a card to itself, the bar
+   should read as the headline of the page rather than a detail on it. */
+.cl-hero .progress-cell { gap: 14px; }
+.cl-hero .progress { width: 100%; height: 10px; }
+.cl-hero .progress-pct { font-size: 15px; font-weight: 700; }
+
+/* ----------------------------------------------------------------------------
+   Tickets and forms.
+   -------------------------------------------------------------------------- */
+
+.cl-ticket-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--ink-3);
+  max-width: 72ch;
+  text-wrap: pretty;
+}
+
+/* A field that should run the full width of the form grid rather than sharing
+   a row — subjects, descriptions, addresses. */
+.cl-form-wide { grid-column: 1 / -1; }
+
+/* ----------------------------------------------------------------------------
+   Profile header.
+   -------------------------------------------------------------------------- */
+
+.cl-profile-hd {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.cl-profile-avatar {
+  width: 64px;
+  height: 64px;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.cl-profile-id {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cl-profile-id h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}

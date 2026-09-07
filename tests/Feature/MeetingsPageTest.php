@@ -334,9 +334,20 @@ class MeetingsPageTest extends TestCase
     public function test_the_write_routes_exist_so_the_forms_are_real(): void
     {
         $this->assertTrue(app('router')->has('meetings.store'));
-        $this->assertTrue(app('router')->has('meetings.request'));
         $this->assertTrue(app('router')->has('meetings.create.event'));
         $this->assertTrue(app('router')->has('meetings.cancel'));
+
+        /*
+         * Requesting a meeting is the CLIENT's act, so it lives in the client
+         * realm (moved 2026-09-07). It was here while /client did not exist,
+         * which left a client's POST at a /meetings URL that realm middleware
+         * would refuse to the only people meant to use it.
+         *
+         * Still asserted from this side because the staff queue renders what it
+         * produces: a requested meeting with no Google event behind it.
+         */
+        $this->assertFalse(app('router')->has('meetings.request'));
+        $this->assertTrue(app('router')->has('client.meetings.request'));
     }
 
     public function test_no_route_deletes_a_meeting(): void

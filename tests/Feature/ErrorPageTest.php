@@ -45,6 +45,24 @@ class ErrorPageTest extends TestCase
         }
     }
 
+    public function test_the_way_out_of_an_error_leads_to_the_readers_own_realm(): void
+    {
+        /*
+         * "Go to dashboard" was hardcoded to /dashboard, the staff one. A
+         * client who mistyped a URL was therefore offered a button into a realm
+         * their session will be refused from — making the way out of an error
+         * page a second error page.
+         */
+        $this->get('/client/nothing-here')
+            ->assertNotFound()
+            ->assertSee(url('/client/dashboard'), false)
+            ->assertDontSee('href="'.url('/dashboard').'"', false);
+
+        $this->get('/nothing-here')
+            ->assertNotFound()
+            ->assertSee(url('/dashboard'), false);
+    }
+
     public function test_a_deferred_module_never_also_serves_a_placeholder(): void
     {
         // The two answers are different and only one can be right for a given

@@ -2,6 +2,7 @@
 
 namespace App\Support\Navigation;
 
+use App\Support\Realm;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Route;
 
@@ -52,13 +53,29 @@ class Navigation
     }
 
     /**
+     * The configuration file a realm's sidebar is built from.
+     *
+     * Two files, not one list with a `realm` column: a shared list would put
+     * `/employees` and `/salary` one mistyped key away from a client's sidebar,
+     * and two files cannot make that mistake because the staff entries are not
+     * in the client file at all. See the head of config/navigation-client.php.
+     *
+     * An unknown realm gets the client list, which is the smaller of the two.
+     * Failing towards less is the only sensible direction for a default here.
+     */
+    protected function configFor(string $realm): string
+    {
+        return $realm === Realm::STAFF ? 'navigation' : 'navigation-client';
+    }
+
+    /**
      * @return list<array{key: string, label: string, icon: string, url: string, active: bool}>
      */
-    public function for(?Authenticatable $user, ?string $activeKey = null): array
+    public function for(?Authenticatable $user, ?string $activeKey = null, string $realm = Realm::STAFF): array
     {
         $items = [];
 
-        foreach ((array) config('navigation', []) as $item) {
+        foreach ((array) config($this->configFor($realm), []) as $item) {
             if (! $this->gate->allows($user, $item['permission'])) {
                 continue;
             }
