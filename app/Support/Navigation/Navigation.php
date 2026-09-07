@@ -25,9 +25,9 @@ class Navigation
     /**
      * The navigation entry for a path that is deliberately not built yet.
      *
-     * Leads and Calendar keep their entries and return 404 until v2 (§12).
-     * Without this the 404 page would tell someone who clicked a link we chose
-     * to show them that the page does not exist — which reads as a broken
+     * Leads, Calendar and Reports keep their entries and return 404 until v2
+     * (§12). Without this the 404 page would tell someone who clicked a link we
+     * chose to show them that the page does not exist — which reads as a broken
      * application rather than a decision.
      *
      * @return array<string, mixed>|null

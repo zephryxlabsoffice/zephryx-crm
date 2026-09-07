@@ -3,9 +3,9 @@
 @php
     use App\Support\Navigation\Navigation;
 
-    // Leads and Calendar keep their navigation entries and 404 until v2 (§12).
-    // Someone who clicked a link we chose to show them deserves to be told it
-    // is not built yet, not that it does not exist.
+    // Leads, Calendar and Reports keep their navigation entries and 404 until
+    // v2 (§12). Someone who clicked a link we chose to show them deserves to be
+    // told it is not built yet, not that it does not exist.
     $deferred = Navigation::deferredEntryFor(request()->path());
 @endphp
 

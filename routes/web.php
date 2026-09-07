@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\EmployeeController;
@@ -76,6 +77,7 @@ Route::post('/reset-password', [PasswordResetController::class, 'reset'])
     ->name('password.reset');
 
 Route::post('/logout', LogoutController::class)->name('logout');
+
 
 /*
 |--------------------------------------------------------------------------
@@ -341,20 +343,66 @@ Route::get('/notifications', [NotificationController::class, 'index'])->name('no
 // Marking read is the reader's own act; nobody clears anybody else's.
 Route::post('/notifications/read', fn () => abort(501))->name('notifications.read');
 
-foreach ([
-    'attendance' => 'attendance.index',
-    'reports' => 'reports.index',
-] as $segment => $name) {
-    Route::get('/'.$segment, fn () => app(ModulePlaceholderController::class)($segment))->name($name);
-}
+/*
+ * Attendance. Read the shape of this group carefully, because it is the
+ * decision the module is built on (2026-09-03).
+ *
+ * There is NO approve route, and no queue for one to feed. A check-in is a
+ * fact, not a request: the record counts from the moment it is made. Rejecting
+ * is a correction applied afterwards by HR, with a reason.
+ *
+ * Note also what check-in and check-out do NOT take: no employee, no date, no
+ * time. The person comes from the session and the clock comes from the server,
+ * so there is no parameter for anyone to tamper with — the same reason the
+ * payslip route takes a period and no employee.
+ */
+Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+// Before /attendance/{record}, or "mine" is read as a record reference.
+Route::get('/attendance/mine', [AttendanceController::class, 'mine'])->name('attendance.mine');
+Route::get('/attendance/{record}', [AttendanceController::class, 'show'])
+    ->where('record', 'ATT-[0-9]{4}-[0-9]{2}-[0-9]{2}-EMP[0-9]{3}')
+    ->name('attendance.show');
 
-Route::get('/profile', fn () => app(ModulePlaceholderController::class)('profile'))->name('profile.show');
+/*
+ * The writes the backend phase implements.
+ *
+ * Both clock routes must be idempotent per person per day, enforced by a unique
+ * key on (employee, date) rather than by the button being hidden — a double
+ * submit must produce one record, and a second check-out must not move the
+ * first one's time.
+ *
+ * Rejecting requires a reason. "Rejected" with no explanation is the version
+ * somebody has to come and ask about, and this is their attendance record.
+ * `attendance.reject` is its own permission (§2.6), every rejection is audited
+ * (§6), and nobody rejects their own record.
+ *
+ * Restoring exists because a rejection made in error must be reversible —
+ * otherwise the correction mechanism needs a correction mechanism.
+ *
+ * Note what is NOT here: nothing approves, nothing edits a recorded time, and
+ * nothing deletes a record. A wrong record is rejected and stays legible.
+ */
+Route::post('/attendance/check-in', fn () => abort(501))->name('attendance.check-in');
+Route::post('/attendance/check-out', fn () => abort(501))->name('attendance.check-out');
+Route::post('/attendance/{record}/reject', fn () => abort(501))
+    ->where('record', 'ATT-[0-9]{4}-[0-9]{2}-[0-9]{2}-EMP[0-9]{3}')
+    ->name('attendance.reject');
+Route::post('/attendance/{record}/restore', fn () => abort(501))
+    ->where('record', 'ATT-[0-9]{4}-[0-9]{2}-[0-9]{2}-EMP[0-9]{3}')
+    ->name('attendance.restore');
 
 // Deferred to v2. §12 keeps the navigation entries so adding the modules later
 // reshuffles nothing users have learned, but the pages 404 until then — the
 // 404 view recognises them and says "not built yet" rather than "not found".
+//
+// Reports joined them on 2026-09-03. It had been showing the generic "coming
+// soon" placeholder, which is the weaker of the two answers: a placeholder page
+// invites somebody to check back, while a deferred 404 says plainly that the
+// module is planned and its place is already reserved. Reports also has nothing
+// to report on until the modules it would summarise have real data behind them.
 Route::get('/leads', [ModulePlaceholderController::class, 'missing'])->name('leads.index');
 Route::get('/calendar', [ModulePlaceholderController::class, 'missing'])->name('calendar.index');
+Route::get('/reports', [ModulePlaceholderController::class, 'missing'])->name('reports.index');
 
 /*
 |--------------------------------------------------------------------------
@@ -372,4 +420,5 @@ if (app()->environment('local') && config('app.debug')) {
     Route::get('/dev/errors/{code}', fn (string $code) => response()->view("errors.{$code}", [], (int) $code))
         ->where('code', '403|404|419|429|500|503')
         ->name('dev.errors');
+
 }

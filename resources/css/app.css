@@ -1,9 +1,9 @@
-/* ZephryxLabs CRM — global stylesheet entry point.
+/* ZephryxLabs CRM â€” global stylesheet entry point.
    Import order matters: fonts and tokens first, then the reset/primitives,
    then pages. */
 
 /* Plus Jakarta Sans, bundled from npm and emitted into public/build by Vite.
-   Foundation spec §6: no third-party CDN assets in production — and inlining
+   Foundation spec Â§6: no third-party CDN assets in production â€” and inlining
    the faces via a <style> block would force 'unsafe-inline' into the CSP. */
 @import '@fontsource/plus-jakarta-sans/400.css';
 @import '@fontsource/plus-jakarta-sans/500.css';
@@ -29,6 +29,7 @@
 @import './pages/invoices.css';
 @import './pages/salary.css';
 @import './pages/leave.css';
+@import './pages/attendance.css';
 @import './pages/meetings.css';
 @import './pages/announcements.css';
 @import './pages/error.css';

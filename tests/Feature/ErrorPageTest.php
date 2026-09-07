@@ -23,15 +23,36 @@ class ErrorPageTest extends TestCase
 
     public function test_a_deferred_module_says_it_is_not_built_rather_than_missing(): void
     {
-        // §12 keeps Leads and Calendar in the navigation until v2. Someone who
-        // clicked a link we chose to show them should not be told the page does
-        // not exist — that reads as a broken application, not a decision.
-        foreach (['/leads' => 'Leads', '/calendar' => 'Calendar'] as $url => $label) {
-            $response = $this->get($url);
+        // §12 keeps Leads, Calendar and Reports in the navigation until v2.
+        // Someone who clicked a link we chose to show them should not be told
+        // the page does not exist — that reads as a broken application, not a
+        // decision.
+        //
+        // Every deferred entry, from the configuration: adding one and
+        // forgetting it here is how a module ends up saying "we cannot find
+        // that page" about a link the application itself put in front of
+        // somebody.
+        $deferred = collect(config('navigation'))->where('deferred', true);
+
+        $this->assertNotEmpty($deferred);
+
+        foreach ($deferred as $entry) {
+            $response = $this->get(route($entry['route']));
 
             $response->assertNotFound();
-            $response->assertSee($label.' is not built yet', false);
+            $response->assertSee($entry['label'].' is not built yet', false);
             $response->assertDontSee('We cannot find that page', false);
+        }
+    }
+
+    public function test_a_deferred_module_never_also_serves_a_placeholder(): void
+    {
+        // The two answers are different and only one can be right for a given
+        // module: the placeholder says "being built" and invites somebody to
+        // check back, the deferred 404 says "planned, not next". Serving both
+        // would mean the navigation and the page disagree about the roadmap.
+        foreach (collect(config('navigation'))->where('deferred', true) as $entry) {
+            $this->get(route($entry['route']))->assertDontSee('coming soon', false);
         }
     }
 

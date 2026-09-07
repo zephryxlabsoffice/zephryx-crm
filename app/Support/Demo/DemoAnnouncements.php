@@ -41,11 +41,33 @@ class DemoAnnouncements
     protected static function rows(): array
     {
         return [
+            /*
+             * Holiday announcements carry `observed` — the days the OFFICE IS
+             * SHUT — as well as `from`/`to`, which is only how long the notice
+             * stays on the board (added 2026-09-03).
+             *
+             * They are not the same range and confusing them is expensive: this
+             * notice is up for a week and closes the office for one day, and
+             * Attendance reads `observed` to decide who is not absent. See
+             * App\Support\Holidays.
+             */
             [
-                'id' => 'ANN-2026-036', 'title' => 'Office closed for Independence Day',
+                'id' => 'ANN-2026-036', 'title' => 'Office closed for the festival holiday',
                 'category' => 'holiday', 'author' => 'EMP005', 'audience' => 'everyone', 'audience_value' => null,
-                'from' => -2, 'to' => 5, 'draft' => false, 'pinned' => true,
-                'body' => 'The office is closed on Friday. Client calls that week have been moved — check Meetings for the new times.',
+                'from' => -2, 'to' => 12, 'draft' => false, 'pinned' => true,
+                'observed' => [10, 10],
+                'body' => 'The office is closed for the day. Client calls have been moved — check Meetings for the new times.',
+            ],
+            // A holiday that has already been and gone. Its notice is long
+            // expired; the day it closed is still a day nobody was absent for,
+            // which is why Holidays reads published announcements rather than
+            // live ones.
+            [
+                'id' => 'ANN-2026-037', 'title' => 'Office closed for Independence Day',
+                'category' => 'holiday', 'author' => 'EMP005', 'audience' => 'everyone', 'audience_value' => null,
+                'from' => -26, 'to' => -22, 'draft' => false, 'pinned' => false,
+                'observed' => [-24, -24],
+                'body' => 'The office was closed for the public holiday.',
             ],
             [
                 'id' => 'ANN-2026-035', 'title' => 'New laptop policy',
@@ -124,6 +146,10 @@ class DemoAnnouncements
                 'author_record' => $employees->get($row['author']),
                 'published_at' => Carbon::today()->addDays($row['from'])->setTime(9, 0)->toDateTimeString(),
                 'expires_at' => $row['to'] === null ? null : Carbon::today()->addDays($row['to'])->toDateString(),
+                // The days the office is shut, which is NOT the window the
+                // notice is up for. Null on everything that is not a holiday.
+                'observed_from' => isset($row['observed']) ? Carbon::today()->addDays($row['observed'][0])->toDateString() : null,
+                'observed_to' => isset($row['observed']) ? Carbon::today()->addDays($row['observed'][1])->toDateString() : null,
             ];
 
             $announcement['status'] = AnnouncementPresenter::statusOf($announcement);
@@ -165,6 +191,25 @@ class DemoAnnouncements
             'pinned' => false,
             'status' => AnnouncementPresenter::ACTIVE,
         ])->values();
+    }
+
+    /**
+     * Published holiday announcements that name the days the office is shut.
+     *
+     * Note what is NOT filtered here: status. A holiday whose notice expired
+     * three weeks ago is still a day the office was closed, and dropping it
+     * would mark everybody absent for it retrospectively. Only drafts are
+     * excluded — an unpublished notice closes nothing.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    public static function holidays(): Collection
+    {
+        return self::authored()
+            ->where('category', 'holiday')
+            ->where('draft', false)
+            ->filter(fn (array $row) => $row['observed_from'] !== null)
+            ->values();
     }
 
     /**

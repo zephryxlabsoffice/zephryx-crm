@@ -117,6 +117,81 @@
                         </div>
                     </div>
                 </div>
+
+                @if ($canDeclareHoliday)
+                    {{--
+                        ─────────────────────────────────────────────────────────
+                        THIS CARD IS AN ATTENDANCE WRITE
+
+                        These dates are read by the Attendance module
+                        (App\Support\Holidays): on them, nobody is marked absent.
+                        Posting a holiday notice and closing the office are the
+                        same act, which is the point — one list cannot disagree
+                        with itself — but it means a typo here changes the
+                        attendance record for everybody.
+
+                        Two things about this card follow from that, and neither
+                        is decoration:
+
+                        1. It is separate from "How long it runs", and says so.
+                           The notice window and the closure are different dates
+                           and get confused constantly: a week's warning about
+                           one Friday must not shut the office for the week.
+
+                        2. It states the consequence in words rather than
+                           labelling the fields and trusting people to infer it.
+
+                        It is shown only to whoever holds `announcements.holiday`
+                        — HR and the owner. A project manager may post a notice
+                        about a closure; declaring one is not theirs.
+                        ─────────────────────────────────────────────────────────
+                    --}}
+                    <div class="card an-closure">
+                        <div class="section-hd">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 3v18M5 8h14M7 21h10"/>
+                            </svg>
+                            Closing the office
+                        </div>
+
+                        <div class="prose prose-quiet an-closure-note">
+                            <p>
+                                Only for a <strong>holiday</strong> announcement, and only if the
+                                office is actually shut. Leave both blank for a notice
+                                <em>about</em> a holiday — a policy change, a reminder.
+                            </p>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label class="form-field-lbl" for="an-closed-from">Closed from</label>
+                                <input id="an-closed-from" name="observed_from" type="date" disabled>
+                            </div>
+
+                            <div class="form-field">
+                                <label class="form-field-lbl" for="an-closed-to">Closed until <span class="an-optional">(same day if blank)</span></label>
+                                <input id="an-closed-to" name="observed_to" type="date" disabled>
+                            </div>
+                        </div>
+
+                        {{-- The consequence, spelled out. A date field labelled
+                             "Closed from" is a form; this sentence is what makes
+                             somebody check it twice. --}}
+                        <p class="an-closure-warn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+                                <path d="M12 9v4M12 17h.01"/>
+                            </svg>
+                            <span>
+                                <strong>Nobody is marked absent on these days.</strong>
+                                They stop counting as working days for everyone in the company,
+                                on their attendance and in their monthly totals. Check the
+                                weekday, not just the number — “the 4th” and “the 14th” look
+                                alike in a date box and read very differently on a calendar.
+                            </span>
+                        </p>
+                    </div>
+                @endif
             </div>
 
             <aside class="rail">

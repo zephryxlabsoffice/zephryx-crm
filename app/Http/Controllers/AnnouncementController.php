@@ -47,6 +47,34 @@ use Illuminate\Validation\Rule;
  * 4. AUDIENCE IS ENFORCED IN THE QUERY. A "managers only" announcement must not
  *    be fetched for somebody who is not one; filtering it out in the view means
  *    it was in the response.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * A HOLIDAY ANNOUNCEMENT WRITES TO THE ATTENDANCE RECORD
+ *
+ * Added 2026-09-03. A holiday post carries `observed_from`/`observed_to` — the
+ * days the office is SHUT, which is not the window the notice is up for — and
+ * App\Support\Holidays reads them so nobody is marked absent on those days.
+ *
+ * That is the right design: one list cannot disagree with itself, and the
+ * alternative is a holiday calendar in the Admin Panel that goes stale against
+ * the notices people actually read. But it means this form is an attendance
+ * write, and three things follow from that:
+ *
+ * 5. `announcements.holiday` IS ITS OWN PERMISSION, separate from
+ *    `announcements.post`. Posting is broad — HR, project managers, the owner —
+ *    because a board nobody can post to is a board nobody reads. Closing the
+ *    office is HR and the owner. See config/announcements.php.
+ *
+ * 6. CHANGING OR REMOVING OBSERVED DATES ON A PAST HOLIDAY IS AUDITED (§6). It
+ *    retroactively changes whether people were absent, which is exactly the
+ *    class of edit that has to leave a trace naming who and when.
+ *
+ * 7. THE FORM SHOWS THE CONSEQUENCE, AND THE WEEKDAY. "4 Sep" reads fine when
+ *    you meant the 14th; "Friday 4 September, the office will be closed" is
+ *    where somebody notices. The damage from a wrong date is contained — it can
+ *    only hide absences, never alter a recorded time — and the attendance roll
+ *    catches it the same day (AttendancePresenter::holidayLooksWrong), but the
+ *    cheapest place to stop it is before it is posted.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 class AnnouncementController extends Controller
@@ -124,6 +152,11 @@ class AnnouncementController extends Controller
             'categories' => AnnouncementPresenter::authorableCategories(),
             'audiences' => AnnouncementPresenter::audiences(),
             'departments' => DemoEmployees::all()->pluck('department')->unique()->sort()->values()->all(),
+            // Closure dates are a write to the attendance record made through
+            // this form, so they are their own permission — HR and the owner,
+            // not everyone who may post.
+            // TODO (backend phase): gate on `announcements.holiday` (§2.6).
+            'canDeclareHoliday' => true,
         ]);
     }
 

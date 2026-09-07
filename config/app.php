@@ -59,13 +59,31 @@ return [
     | Application Timezone
     |--------------------------------------------------------------------------
     |
-    | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions. The timezone
-    | is set to "UTC" by default as it is suitable for most use cases.
+    | The office's timezone, not UTC.
+    |
+    | ─────────────────────────────────────────────────────────────────────────
+    | ATTENDANCE IS THE MODULE THAT MADE THIS MATTER (2026-09-03)
+    |
+    | Laravel ships this as UTC and nothing before Attendance noticed: an
+    | invoice date is the same day either way. A check-in is not. Under UTC,
+    | "09:30" in the attendance policy means 09:30 UTC — 15:00 in the office —
+    | so everybody is on time forever, and `Carbon::today()` rolls over to the
+    | next day at 05:30 in the morning, which puts the first two hours of every
+    | working day on the wrong date.
+    |
+    | Whatever runs the clock has to agree with the wall the clock is on. This
+    | is the company's one office; when there is a second one, a per-employee
+    | timezone becomes a real question and this becomes its default rather than
+    | its answer.
+    |
+    | Note it is a config value and not env: the office does not move between
+    | environments, and a staging server on UTC would report attendance nobody
+    | could reconcile with production.
+    | ─────────────────────────────────────────────────────────────────────────
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Asia/Kolkata',
 
     /*
     |--------------------------------------------------------------------------

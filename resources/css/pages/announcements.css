@@ -266,6 +266,39 @@
 
 .an-form-wide { grid-column: 1 / -1; }
 .an-optional { font-weight: 500; text-transform: none; letter-spacing: 0; }
+
+/* ─────────────────────────  closing the office  ─────────────────────────
+
+   The one card on this form that writes outside Announcements: these dates are
+   read by Attendance and decide who is not marked absent. Bordered rather than
+   filled — it is a normal thing to do, not an alarm — with the consequence
+   called out underneath in the warning tone.                                */
+
+.an-closure { border-color: var(--line-strong); }
+.an-closure .section-hd,
+.an-closure .form-grid { padding-left: 22px; padding-right: 22px; }
+.an-closure-note { padding: 0 22px; margin-bottom: 4px; }
+
+.an-closure-warn {
+  display: flex;
+  gap: 10px;
+  margin: 4px 22px 22px;
+  padding: 12px 14px;
+  border: 1px solid var(--warning-line);
+  border-radius: 10px;
+  background: var(--warning-soft);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.an-closure-warn svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--warning);
+}
+.an-closure-warn strong { color: var(--ink); font-weight: 700; }
 .an-form textarea {
   width: 100%;
   padding: 11px 12px;

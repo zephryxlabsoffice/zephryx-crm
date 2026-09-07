@@ -72,7 +72,13 @@ class MeetingPresenter
             return self::REQUESTED;
         }
 
-        return Carbon::parse($meeting['ends_at'])->isPast() ? self::ENDED : self::SCHEDULED;
+        // `'UTC'` is not optional here. Every date on a meeting record is UTC
+        // (see the head of this class), and parsing one without saying so reads
+        // it in the application's timezone — which was harmless only for as
+        // long as that timezone WAS UTC. It stopped being UTC when Attendance
+        // landed (2026-09-03, config/app.php), and this line then declared
+        // every meeting of the next five and a half hours already ended.
+        return Carbon::parse($meeting['ends_at'], 'UTC')->isPast() ? self::ENDED : self::SCHEDULED;
     }
 
     /**

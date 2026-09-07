@@ -56,14 +56,21 @@ class AppShellTest extends TestCase
 
     public function test_deferred_modules_keep_their_entry_but_have_no_page(): void
     {
-        // §12 — Leads and Calendar ship as navigation entries returning 404 so
-        // the navigation's shape stays stable when they arrive in v2.
-        $response = $this->get('/dashboard');
-        $response->assertSee('>Leads</span>', false);
-        $response->assertSee('>Calendar</span>', false);
+        // §12 — Leads, Calendar and Reports ship as navigation entries returning
+        // 404 so the navigation's shape stays stable when they arrive in v2.
+        //
+        // Driven off the configuration rather than a list written here, so a
+        // module marked deferred cannot quietly keep serving a page.
+        $shell = $this->get('/dashboard');
 
-        $this->get('/leads')->assertNotFound();
-        $this->get('/calendar')->assertNotFound();
+        $deferred = collect(config('navigation'))->where('deferred', true);
+
+        $this->assertNotEmpty($deferred);
+
+        foreach ($deferred as $entry) {
+            $shell->assertSee('>'.$entry['label'].'</span>', false);
+            $this->get(route($entry['route']))->assertNotFound();
+        }
     }
 
     public function test_sign_out_is_a_post_with_a_csrf_token(): void

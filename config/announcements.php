@@ -59,6 +59,30 @@ return [
     'post_permission' => 'announcements.post',
 
     /*
+    | ─────────────────────────────────────────────────────────────────────────
+    | DECLARING A CLOSURE IS NOT THE SAME ACT AS POSTING
+    |
+    | Decided 2026-09-03, when Attendance started reading holidays from this
+    | board (App\Support\Holidays).
+    |
+    | A holiday announcement carries `observed` dates, and those dates close the
+    | office: nobody is marked absent on them. That makes setting them a WRITE
+    | TO THE ATTENDANCE RECORD, performed through the announcements form.
+    |
+    | `announcements.post` is deliberately broad — HR, project managers and the
+    | owner — because a board nobody can post to is a board nobody reads. That
+    | breadth is right for notices and wrong for closures: a project manager
+    | announcing a team event should not hold the key that rewrites everyone's
+    | attendance for a day.
+    |
+    | So the closure dates are their own permission: HR and the owner. The
+    | announcement is still theirs to write; the closure is not theirs to
+    | declare.
+    | ─────────────────────────────────────────────────────────────────────────
+    */
+    'holiday_permission' => 'announcements.holiday',
+
+    /*
     | Milestones post themselves on the day, and anyone may opt out of their own
     | (decided 2026-08-28). Not everyone wants their birthday on a company
     | board, and finding out you cannot turn it off is a bad way to learn it.

@@ -120,6 +120,22 @@ class AnnouncementPresenter
         return $category !== 'milestone';
     }
 
+    /** The category whose announcements close the office. */
+    public const HOLIDAY = 'holiday';
+
+    /**
+     * The permission needed to set a holiday's closure dates.
+     *
+     * Separate from `post_permission` on purpose (2026-09-03): those dates are
+     * read by Attendance and decide who is not marked absent, so setting them
+     * is a write to the attendance record made through this form. Posting is
+     * broad; closing the office is HR and the owner. See config/announcements.
+     */
+    public static function holidayPermission(): string
+    {
+        return (string) config('announcements.holiday_permission', 'announcements.holiday');
+    }
+
     /* ─────────────────────────  audience  ───────────────────────── */
 
     /**

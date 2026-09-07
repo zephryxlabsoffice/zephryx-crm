@@ -1,0 +1,381 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ATTENDANCE
+
+   The handover's attendance.css, my-attendance.css and mark-attendance.css came
+   to ~38KB, and most of it re-derived things that already exist: the KPI tile
+   (.kpi-c, .ma-kpi), the table (.cl-table again), the filter row (.att-tools,
+   .ma-filters), the rail card (.rr-card, .tri-card), the donut (.donut, twice)
+   and the pagination (.cl-pagination-trio). Only what is specific to attendance
+   is here — which is the calendar, the state dots, and the two-time cell.
+
+   mark-attendance.css is gone entirely along with the screen it styled: there
+   is no approval queue. See App\Http\Controllers\AttendanceController.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.att-grid,
+.att-detail-grid {
+  display: grid;
+  /* minmax(0, …), never 1fr — a bare 1fr track is forced open by a wide child
+     and the whole page scrolls sideways. */
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--density-gap);
+  align-items: start;
+}
+.att-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-gap);
+  min-width: 0;
+}
+
+/* ─────────────────────────  state dots  ─────────────────────────
+
+   One definition of every attendance colour, used by the calendar, the donut
+   arcs and the chart legend alike. `--dot` is what components/chart.css reads,
+   so a segment and its legend entry cannot end up different colours.
+
+   These are feedback colours where the state IS feedback (§7): green for a day
+   worked, amber for one worth a look, red for a real absence. Weekly off and
+   holiday get neutral and categorical tones instead, because neither is good
+   news or bad news — the handover drew both red, which made every calendar
+   scarlet on Sundays and taught people that red meant nothing.            */
+
+.att-dot {
+  --dot: var(--muted-2);
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dot);
+  flex-shrink: 0;
+}
+
+.att-dot-present  { --dot: var(--green); }
+.att-dot-half     { --dot: var(--warning); }
+.att-dot-absent   { --dot: var(--danger); }
+.att-dot-rejected { --dot: var(--danger); }
+.att-dot-leave    { --dot: var(--accent-purple); }
+.att-dot-holiday  { --dot: var(--accent-indigo); }
+.att-dot-off      { --dot: var(--muted-2); }
+.att-dot-pending  { --dot: var(--line-strong); }
+
+/* The shape modifiers are scoped to `.att-dot` DELIBERATELY.
+
+   These same `att-dot-*` classes go on the chart legend's <li> and on the
+   donut's <circle> as well as on a calendar dot, because all three read `--dot`
+   from the one definition above — which is what keeps an arc and its legend
+   entry from ever being different colours.
+
+   Left unscoped, `.att-dot-half { transform: rotate(45deg) }` rotates the whole
+   legend row, and the rejected ring collapses it to an 8px box with the label
+   gone. Only the dot itself gets a shape. */
+
+/* A diamond, so a half day is distinguishable from a full one without relying
+   on the reader separating two shades. Colour is never the only carrier of
+   meaning (§7) — and every cell also names its state in screen-reader-only
+   text. */
+.att-dot.att-dot-half {
+  border-radius: 0;
+  width: 7px;
+  height: 7px;
+  transform: rotate(45deg);
+}
+.att-dot.att-dot-rejected {
+  /* A ring, not a disc: rejected and absent are both red because neither counts,
+     but they are not the same event and a calendar should not say they are. */
+  background: transparent;
+  border: 2px solid var(--dot);
+  width: 8px;
+  height: 8px;
+}
+/* A square. Holiday and on-leave are both "away, and not absent", so they sit
+   next to each other in the palette — indigo against purple is a distinction
+   nobody can make at six pixels, and the two mean quite different things to the
+   person reading their own month. */
+.att-dot.att-dot-holiday {
+  border-radius: 2px;
+  width: 7px;
+  height: 7px;
+}
+
+/* ─────────────────────────  the calendar  ───────────────────────── */
+
+.att-cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.att-cal-month {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  min-width: 116px;
+  text-align: center;
+}
+.att-cal-nav .pg-btn.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.att-cal-body {
+  padding: 6px 22px 18px;
+  overflow-x: auto;
+}
+
+.att-cal-grid {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 4px;
+  table-layout: fixed;
+  min-width: 340px;
+}
+.att-cal-grid th {
+  padding: 6px 0;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.att-cell {
+  position: relative;
+  height: 46px;
+  padding: 6px 0 0;
+  text-align: center;
+  vertical-align: top;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.att-cell.is-outside { background: transparent; }
+.att-cell.is-outside .att-cell-day { color: var(--muted-2); opacity: 0.55; }
+.att-cell.is-future { background: transparent; }
+.att-cell.is-future .att-cell-day { color: var(--muted-2); }
+
+/* Today is outlined, not filled. A filled cell competes with the state dots,
+   which are the thing the calendar is actually for. */
+.att-cell.is-today {
+  border-color: var(--green);
+  background: var(--green-tint);
+}
+
+.att-cell-day {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.att-cell .att-dot {
+  margin-top: 5px;
+}
+
+.att-cell-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 8px;
+}
+.att-cell-link:hover .att-cell-day { color: var(--green); }
+.att-cell-link:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.att-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0;
+  padding: 0 22px 20px;
+  list-style: none;
+}
+.att-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* ─────────────────────────  time cells  ─────────────────────────
+
+   A bare clock time for check-in: there is nothing to say underneath it, because
+   there is no "late". The stacked variant is for check-out, where a missing one
+   is the reason the day did not count.                                        */
+
+.att-clock {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.att-time {
+  display: block;
+  min-width: 0;
+}
+.att-time strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.att-time span {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.att-time span.is-warn { color: var(--warning); font-weight: 600; }
+
+.att-date-cell {
+  display: block;
+  min-width: 0;
+}
+.att-date-cell strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.att-date-cell span {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.att-nothing { color: var(--muted-2); }
+
+/* The date picker sits in the filter row beside the chip selects and has to
+   match their height, which a bare date input does not. */
+.att-date {
+  font-variant-numeric: tabular-nums;
+  min-width: 148px;
+}
+
+/* ─────────────────────────  today, and the clock  ───────────────────────── */
+
+.att-today-date {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.att-today-state {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 0 14px;
+}
+.att-today-meaning {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.att-today-action {
+  padding-top: 16px;
+}
+.att-today-action .btn {
+  width: 100%;
+  justify-content: center;
+}
+.att-today-note {
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+/* Sits directly under a notice, so it reads as part of it. */
+.att-notice-link {
+  margin: -6px 0 0;
+  padding-left: 46px;
+  font-size: 12.5px;
+}
+
+.att-rail-note {
+  margin: 14px 0 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.att-rail-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+/* ─────────────────────────  one record  ───────────────────────── */
+
+.att-record-hd {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--line);
+}
+.att-record-meaning {
+  display: block;
+  margin-top: 7px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.att-record-id {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted-2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.att-record-grid { padding: 18px 22px; }
+.att-record-grid dd { font-variant-numeric: tabular-nums; }
+.att-record-grid .is-warn { color: var(--warning); font-weight: 600; }
+
+.att-record-note {
+  margin: 0;
+  padding: 0 22px 18px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* Rejection is bordered, not filled red. It is a correction, not an alarm —
+   and the card is on screen before anything has been rejected. */
+.att-reject { border-color: var(--line-strong); }
+.att-reject .prose,
+.att-reject .section-hd { padding-left: 22px; padding-right: 22px; }
+.att-reject > form { padding: 0 22px 20px; }
+
+.att-reject-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-start;
+}
+.att-reject-form .form-field { width: 100%; }
+
+/* ─────────────────────────  narrow  ───────────────────────── */
+
+@media (max-width: 1080px) {
+  .att-grid,
+  .att-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .att-cal-body { padding: 6px 12px 16px; }
+  .att-legend { padding: 0 12px 18px; }
+  .att-cell { height: 40px; }
+}

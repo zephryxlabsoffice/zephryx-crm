@@ -20,8 +20,10 @@
 | `route`      a named route, resolved at render. Entries whose route does not
 |              exist yet are skipped, so this file can list the whole roadmap
 |              without breaking the shell as modules land one at a time.
-| `deferred`   true for Leads and Calendar, which §12 keeps in the navigation
-|              deliberately so the shape stays stable when they ship in v2.
+| `deferred`   true for Leads, Calendar and Reports, which §12 keeps in the
+|              navigation deliberately so the shape stays stable when they ship
+|              in v2. Their routes exist and return 404; the 404 view recognises
+|              them and says "not built yet" rather than "not found".
 |
 */
 
@@ -41,7 +43,7 @@ return [
     ['key' => 'leave',         'label' => 'Leave Requests', 'icon' => 'leave',         'route' => 'leave.index',   'permission' => 'leave.view'],
     ['key' => 'meetings',      'label' => 'Meetings',       'icon' => 'meetings',      'route' => 'meetings.index', 'permission' => 'meetings.view'],
     ['key' => 'calendar',      'label' => 'Calendar',       'icon' => 'calendar',      'route' => 'calendar.index', 'permission' => 'calendar.view', 'deferred' => true],
-    ['key' => 'reports',       'label' => 'Reports',        'icon' => 'reports',       'route' => 'reports.index', 'permission' => 'reports.view'],
+    ['key' => 'reports',       'label' => 'Reports',        'icon' => 'reports',       'route' => 'reports.index', 'permission' => 'reports.view', 'deferred' => true],
     ['key' => 'announcements', 'label' => 'Announcements',  'icon' => 'announcements', 'route' => 'announcements.index', 'permission' => 'announcements.view'],
     ['key' => 'profile',       'label' => 'My Profile',     'icon' => 'profile',       'route' => 'profile.show',  'permission' => 'profile.view'],
 
