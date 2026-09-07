@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Middleware\EnforceSessionLifetime;
 use App\Http\Middleware\EnsureRealm;
+use App\Http\Middleware\RestoreRememberedSession;
 use App\Http\Middleware\SecurityHeaders;
 use App\Support\Shell;
 use App\Support\Theme;
@@ -26,6 +28,23 @@ return Application::configure(basePath: dirname(__DIR__))
          * guard instead of needing somebody to remember it.
          */
         $middleware->alias(['realm' => EnsureRealm::class]);
+
+        /*
+         * §4.4 (absolute and idle session limits) and §4.5 (remember-me), on
+         * every web request.
+         *
+         * Appended to the group rather than aliased, because both have to run
+         * whether or not a route opted in: a session that has outlived its
+         * ceiling must expire on the sign-in page too, and a remember-me cookie
+         * has to be resolved before anything asks who the user is.
+         *
+         * Order matters. RestoreRememberedSession runs first — it may create
+         * the session that EnforceSessionLifetime then measures.
+         */
+        $middleware->web(append: [
+            RestoreRememberedSession::class,
+            EnforceSessionLifetime::class,
+        ]);
 
         // The theme cookie carries a display preference, not a secret, and is
         // never an input to an authorisation decision — App\Support\Theme

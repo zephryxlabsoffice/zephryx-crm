@@ -209,12 +209,13 @@ class RealmGuardTest extends TestCase
         }
     }
 
-    public function test_the_development_sign_in_does_not_exist_outside_local_debug(): void
+    public function test_the_development_sign_in_bypass_is_gone(): void
     {
         /*
-         * It is an authentication bypass, and the only thing standing between
-         * it and a deployed application is the local + debug block it is
-         * registered inside. Worth asserting rather than assuming.
+         * It existed for one commit, while realm enforcement was in place and
+         * §4's credential check was not. Now that signing in works, a route
+         * that skips it must not survive anywhere — "it's only local" is one
+         * APP_DEBUG on the wrong server away from being the security model.
          */
         $this->assertFalse(app('router')->has('dev.sign-in'));
         $this->get('/dev/sign-in/EMP002')->assertNotFound();

@@ -103,20 +103,29 @@ Salary, Tickets, Invoices, Meetings, Announcements, My Profile, Dashboard. Leads
 Calendar and Reports are deferred to v2 and return a "not built yet" 404 (§12).
 The client portal (`/client`) and Admin Panel (`/admin`) are built.
 
-**Built and real, not stubbed:** realm enforcement (§3.1), the RBAC engine
-(§5) — union across stacked roles, implicit Employee base, per-domain rank —
-the password policy, and the no-enumeration guarantee on `POST /forgot-password`.
+**Built and real, not stubbed:**
 
-**Not built: authentication itself.** `Auth\LoginController::attempt()`,
-`verify()` and `resend()` are stubs. The credential check, rate limiting, OTP
-issue/verify, trusted devices and remember-me (§4.2–4.6) are still owed, as is
-the stricter admin session (§4.4).
+- **Authentication (§4)** — credential check in constant time, one generic
+  refusal, rate limiting per identifier *and* per IP, email OTP (6 digits, 10
+  minutes, 5 attempts, single live code), device trust for 7 days, rotating
+  remember-me with theft detection, absolute and per-realm idle session limits,
+  and password reset that invalidates sessions, tokens and device trust.
+- **Realm enforcement (§3.1)** — on the route group, by the file a route is in.
+- **The RBAC engine (§5)** — union across stacked roles, implicit Employee base,
+  per-domain rank, and the self-action check.
+- **The audit log (§6)** for every authentication event.
 
-Because of that there is a **development sign-in** at `/dev/sign-in/{user_id}`
-— an authentication bypass, registered only in local + debug, that exists so the
-guarded pages can be opened at all. `/dev/sign-in/EMP002` is a developer,
-`EMP005` is HR, `CLI001` is a client, `OWNER` is the Admin Panel. **Delete that
-route when the credential check lands.**
+Sign in with a seeded account: `EMP005` is HR, `EMP004` a manager, `EMP002` a
+developer, `CLI001` a client, `OWNER` the Admin Panel. In local + debug the
+password is in `AccountSeeder::DEV_PASSWORD` and the OTP is written to the mail
+log rather than sent — set `MAIL_MAILER=log` and read `storage/logs`.
 
-**Every write is `abort(501)`.** The forms carry real CSRF tokens and real
-validation shapes; nothing is stored yet.
+**Set `SESSION_DRIVER=database`.** §4.6 requires a password reset to invalidate
+every other session for that user, and no other driver can reach one — on `file`
+the reset appears to succeed while an attacker stays signed in with the password
+it just changed. The application logs an error when it cannot do this.
+
+**Not built: the writes.** Every state-changing route is still `abort(501)` — the
+forms carry real CSRF tokens and real validation shapes, and nothing is stored.
+The modules read from `App\Support\Demo\*`, which returns nothing outside local
++ debug, so a deployed application shows its empty states.

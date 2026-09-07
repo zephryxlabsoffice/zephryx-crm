@@ -183,6 +183,33 @@ class AttendancePageTest extends TestCase
         $this->get('/attendance/'.$record['id'])->assertSee($record['rejection_reason'], false);
     }
 
+    public function test_a_persons_reason_is_shown_even_when_the_window_also_closed(): void
+    {
+        /*
+         * A record can be rejected by HR AND left open past the ten-hour
+         * window. Both are true; the human reason is the one that explains
+         * anything, and it used to be the one that was hidden — the page
+         * checked `auto_rejected` first and showed only "no check-out was
+         * recorded".
+         *
+         * Requiring a reason and then never displaying it is worse than not
+         * requiring one.
+         */
+        $this->withDemoData();
+
+        $record = DemoAttendance::rejected()
+            ->first(fn (array $r) => $r['check_out'] === null && $r['rejection_reason'] !== null);
+
+        if ($record === null) {
+            $this->markTestSkipped('no sample record that is both rejected and left open');
+        }
+
+        $this->get('/attendance/'.$record['id'])
+            ->assertSee($record['rejection_reason'], false)
+            // And the window is still mentioned, because it is also true.
+            ->assertSee('would not have counted either way', false);
+    }
+
     public function test_a_rejected_record_keeps_its_recorded_times(): void
     {
         // Rejecting is not editing. The times stay on screen, next to the reason
@@ -505,7 +532,18 @@ class AttendancePageTest extends TestCase
     {
         $this->withDemoData();
 
-        $record = DemoAttendance::missingCheckOuts()->first();
+        /*
+         * An open day that NOBODY rejected — the point is that the clock alone
+         * is enough.
+         *
+         * Selected rather than taking the first, because a record can be both:
+         * HR may have rejected a day that was also left open, and which one the
+         * list happens to return first depends on the time of day the suite
+         * runs. This test failed for the first time at half past five one
+         * afternoon, when today's records stopped being the newest open ones.
+         */
+        $record = DemoAttendance::missingCheckOuts()
+            ->first(fn (array $r) => $r['rejected_at'] === null);
 
         $this->assertNotNull($record, 'no sample open record to prove the point');
 
@@ -523,7 +561,13 @@ class AttendancePageTest extends TestCase
         // says what happened and states the window.
         $this->withDemoData();
 
-        $record = DemoAttendance::missingCheckOuts()->first();
+        // Auto-rejected ONLY. On a record a person also rejected, their written
+        // reason is shown instead — see the test above.
+        $record = DemoAttendance::missingCheckOuts()
+            ->first(fn (array $r) => $r['rejected_at'] === null);
+
+        $this->assertNotNull($record, 'no sample open record to prove the point');
+
         $response = $this->get('/attendance/'.$record['id']);
 
         $response->assertSee('no check-out was recorded', false);

@@ -73,10 +73,13 @@
                 {{-- Said in words, because this is the only question anybody
                      has about a rejected day and it should not require reading
                      a policy page to answer. --}}
-                @if ($record['auto_rejected'])
-                    No — never checked out
-                @elseif ($record['rejected_at'] !== null)
+                {{-- A person's rejection is named first, for the same reason as
+                     in show.blade.php: when a record is both, the human reason
+                     is the one that explains anything. --}}
+                @if ($record['rejected_at'] !== null)
                     No — rejected
+                @elseif ($record['auto_rejected'])
+                    No — never checked out
                 @else
                     Yes
                 @endif

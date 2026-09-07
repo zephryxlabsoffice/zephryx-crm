@@ -26,7 +26,33 @@
          be undone, the other is a missing timestamp and cannot. A rejection
          somebody has to hunt for is one they will come and ask about in
          person. --}}
-    @if ($record['auto_rejected'])
+    {{--
+        ─────────────────────────────────────────────────────────────────────────
+        A PERSON'S REASON OUTRANKS THE CLOCK'S (fixed 2026-09-07)
+
+        These two conditions were the other way round, so a record that HR had
+        rejected with a written reason AND that was also past the ten-hour
+        window showed only "no check-out was recorded". The reason somebody
+        typed — the whole point of requiring one — was never displayed.
+
+        Both facts are true of such a record, and the human one is the useful
+        one: it says what actually went wrong, which is what the person whose
+        attendance it is came here to find out. The window is mentioned
+        underneath rather than instead.
+        ─────────────────────────────────────────────────────────────────────────
+    --}}
+    @if ($record['rejected_at'] !== null)
+        @include('partials.notice', [
+            'tone' => 'danger',
+            'title' => 'This record was rejected'
+                .($record['rejecter_record'] ? ' by '.$record['rejecter_record']['name'] : '')
+                .' on '.P::date($record['rejected_at']),
+            'message' => $record['rejection_reason']
+                .($record['auto_rejected']
+                    ? ' This day was also left open past '.(int) $policy['window'].' hours, so it would not have counted either way.'
+                    : ''),
+        ])
+    @elseif ($record['auto_rejected'])
         @include('partials.notice', [
             'tone' => 'danger',
             'title' => 'Not counted — no check-out was recorded',
@@ -34,14 +60,6 @@
                 .' and never closed. After '.(int) $policy['window'].' hours there is no honest way to say how long it ran, so it does not count'
                 .($own ? '.' : ' towards '.$record['employee_record']['name'].'’s month.')
                 .' Nobody can type the missing time in — a recorded time is never edited, and this one cannot be restored.',
-        ])
-    @elseif ($record['rejected_at'] !== null)
-        @include('partials.notice', [
-            'tone' => 'danger',
-            'title' => 'This record was rejected'
-                .($record['rejecter_record'] ? ' by '.$record['rejecter_record']['name'] : '')
-                .' on '.P::date($record['rejected_at']),
-            'message' => $record['rejection_reason'],
         ])
     @elseif ($record['open'])
         @include('partials.notice', [

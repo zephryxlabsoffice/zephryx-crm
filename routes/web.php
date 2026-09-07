@@ -157,34 +157,15 @@ if (app()->environment('local') && config('app.debug')) {
         ->name('dev.account');
 
     /*
-     * ─────────────────────────────────────────────────────────────────────────
-     * SIGN IN AS A SEEDED ACCOUNT, WITHOUT A PASSWORD. LOCAL + DEBUG ONLY.
+     * There was a `/dev/sign-in/{account}` authentication bypass here.
      *
-     * Read this before reaching for it anywhere else.
+     * It existed for one commit, because realm middleware and the RBAC engine
+     * landed before §4's credential check did — which left every page correctly
+     * guarded and completely unreachable. Its own comment said to delete it
+     * when LoginController::attempt became real. It has, so it is gone.
      *
-     * Realm middleware and the RBAC engine landed before §4's credential check
-     * did, which left every page in the application correctly guarded and
-     * completely unreachable. This is the stopgap: it authenticates as a seeded
-     * account so all three realms can be opened and reviewed.
-     *
-     * It is an authentication bypass. It is registered inside the same local +
-     * debug block as the error previews, so it does not exist in a deployed
-     * application at all — and unlike a flag somebody could flip, there is no
-     * configuration that turns it on elsewhere.
-     *
-     * DELETE THIS ROUTE when LoginController::attempt is real. Not "leave it,
-     * it's only local": a bypass that outlives its reason is one `APP_DEBUG=true`
-     * on the wrong server away from being the whole security model.
-     * ─────────────────────────────────────────────────────────────────────────
+     * Sign in with a seeded account instead: `php artisan db:seed` creates them
+     * with the development password in AccountSeeder, and the code is written
+     * to the mail log (MAIL_MAILER=log) rather than sent.
      */
-    Route::get('/dev/sign-in/{account}', function (string $account) {
-        $user = \App\Models\User::where('user_id', $account)->first();
-
-        abort_if($user === null, 404, 'No seeded account with that id. Run: php artisan db:seed');
-
-        auth()->login($user);
-        request()->session()->regenerate();
-
-        return redirect(\App\Support\Realm::dashboardFor($user));
-    })->where('account', '[A-Za-z0-9-]{1,32}')->name('dev.sign-in');
 }

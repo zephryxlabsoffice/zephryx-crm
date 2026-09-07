@@ -2,17 +2,40 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use App\Support\Theme;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
  * GET /login and GET /login/verify — foundation spec §9.2.
  *
- * These cover the rendered page only. The credential check, OTP issue/verify
- * and session handling in §4 are not implemented yet.
+ * These cover the rendered pages. The flow behind them is exercised by
+ * AuthenticationTest.
  */
 class LoginPageTest extends TestCase
 {
+    /**
+     * Get as far as the code step, the way a person does.
+     *
+     * `/login/verify` refuses to render without a half-finished sign-in behind
+     * it (§4.2 step 6) — reaching that URL directly must not suggest a code was
+     * sent to somebody. So these page tests have to actually sign in first.
+     */
+    protected function pendingSignIn(): User
+    {
+        Mail::fake();
+
+        $user = User::factory()->create(['email' => 'verify-page@zephryxlabs.com']);
+
+        $this->post('/login', [
+            'identifier' => $user->email,
+            'password' => 'password',
+        ]);
+
+        return $user;
+    }
+
     public function test_it_renders_the_sign_in_form(): void
     {
         $response = $this->get('/login');
@@ -113,8 +136,14 @@ class LoginPageTest extends TestCase
 
     public function test_the_resend_cooldown_preview_is_unavailable_outside_local_debug(): void
     {
+        $this->pendingSignIn();
+
+        /*
+         * The cooldown shown is the REAL one now — a code was just issued, so
+         * there genuinely is one. What this still checks is that `?preview=`
+         * cannot fabricate a number outside local + debug.
+         */
         $this->get('/login/verify?preview=cooldown')
-            ->assertSee('Send a new code', false)
             ->assertDontSee('Resend in 45s', false);
     }
 
@@ -130,12 +159,15 @@ class LoginPageTest extends TestCase
             'password' => 'whatever-it-is',
         ]);
 
-        $response->assertSee('not connected yet', false);
+        // The one refusal (§4.2 step 3) — never a reason, never a hint.
+        $response->assertSee('Invalid credentials.', false);
         $response->assertDontSee('period of inactivity', false);
     }
 
     public function test_the_verify_step_renders_six_code_boxes(): void
     {
+        $this->pendingSignIn();
+
         $response = $this->get('/login/verify');
 
         $response->assertOk();
@@ -147,6 +179,8 @@ class LoginPageTest extends TestCase
     public function test_the_resend_form_does_not_carry_the_code(): void
     {
         // Resend posts to its own route; the entered digits must not ride along.
+        $this->pendingSignIn();
+
         $html = $this->get('/login/verify')->getContent();
 
         $resendForm = substr($html, strpos($html, 'id="resend-form"'));

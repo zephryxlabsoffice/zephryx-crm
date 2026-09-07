@@ -26,13 +26,29 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may specify the number of minutes that you wish the session
-    | to be allowed to remain idle before it expires. If you want them
-    | to expire immediately when the browser is closed then you may
-    | indicate that via the expire_on_close configuration option.
+    | to be allowed to remain idle before it expires.
+    |
+    | ─────────────────────────────────────────────────────────────────────────
+    | THIS IS THE OUTER BOUND, NOT THE POLICY (foundation spec §4.4)
+    |
+    | Laravel has one idle timeout for the whole application. §4.4 needs three
+    | things at once: an absolute seven-day ceiling, a twelve-hour idle timeout
+    | for staff and clients, and a thirty-minute one for the admin account.
+    | App\Http\Middleware\EnforceSessionLifetime does all three.
+    |
+    | So this value is set to the LONGEST of them — twelve hours — and exists
+    | only so the framework does not expire a session before the real policy
+    | gets to decide. It was 120 minutes, which would have quietly overruled
+    | §4.4 for every staff account and made the policy above it decorative.
+    |
+    | Raising it is not a weakening: the middleware still ends an idle staff
+    | session at twelve hours, an idle admin session at thirty minutes, and any
+    | session at all at seven days.
+    | ─────────────────────────────────────────────────────────────────────────
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    'lifetime' => (int) env('SESSION_LIFETIME', 720),
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
@@ -164,12 +180,21 @@ return [
     |--------------------------------------------------------------------------
     |
     | By setting this option to true, session cookies will only be sent back
-    | to the server if the browser has a HTTPS connection. This will keep
-    | the cookie from being sent to you when it can't be done securely.
+    | to the server if the browser has a HTTPS connection.
+    |
+    | §4.4 requires Secure on the session cookie. Left at Laravel's default of
+    | null it is off unless somebody remembers the env var, which makes the
+    | most important cookie in the application readable by anybody on the
+    | network the first time a request arrives over plain HTTP.
+    |
+    | So the default is "on everywhere except local", and an environment that
+    | genuinely needs it off has to say so. Getting this wrong is silent — the
+    | application works perfectly either way, which is exactly why it should
+    | not depend on being remembered.
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') !== 'local'),
 
     /*
     |--------------------------------------------------------------------------

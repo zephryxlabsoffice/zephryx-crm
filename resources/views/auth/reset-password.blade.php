@@ -25,6 +25,16 @@
                 'tone' => 'danger',
                 'message' => $errors->first('token'),
             ])
+        @elseif ($expired ?? false)
+            {{-- Checked when the link is OPENED, not when the form is
+                 submitted. An expired link that only says so after somebody has
+                 typed a new password twice is a worse version of the same
+                 answer. --}}
+            @include('partials.notice', [
+                'tone' => 'warning',
+                'title' => 'This link has expired',
+                'message' => 'Reset links last 60 minutes and work once. Ask for a new one and it will arrive in a moment.',
+            ])
         @endif
 
         <label class="field {{ $errors->has('identifier') ? 'has-error' : '' }}">
