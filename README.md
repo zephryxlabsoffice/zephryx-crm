@@ -58,14 +58,23 @@ refference/                 the designer's original handover, for reference only
   `public/build`.
 - **`data-theme` is rendered server-side** on `<html>`, so there is no flash of
   the wrong palette and no need for a blocking inline script.
-- **New route groups inherit their guards.** Realm enforcement (spec §3.1)
-  belongs on the group, never on individual routes.
-- **Sidebar entries live in `config/navigation.php`**, each with a permission
-  key. Adding a module means adding a line there and replacing its placeholder
-  route — not editing a Blade file.
-- **`App\Support\Navigation\PermissiveGate` allows everything and throws in
-  production.** Replace the binding in `AppServiceProvider` with the real RBAC
-  gate before anything ships.
+- **The realm a route belongs to is the file it is written in.** `routes/staff.php`,
+  `routes/client.php` and `routes/admin.php` are each mounted behind their own
+  middleware in `routes/web.php`, so a page inherits the guard rather than
+  needing one added. Anything left in `web.php` is public.
+- **Sidebar entries live in `config/navigation*.php`** — one file per realm,
+  each entry with a permission key. Adding a module means adding a line there
+  and replacing its placeholder route, not editing a Blade file.
+- **Authorisation goes through `App\Support\Rbac\Rbac`.** One service answers
+  `can()` and `outranks()` for the whole application; a guarded action asks both
+  plus the self-action check (§2.6), which `mayActOn()` bundles. Never add a
+  `can()` to a model — a second implementation of the union rules is the bug.
+- **The Employee base is not a role.** It is granted from `staff_kind` so that
+  no role edit can revoke it (§5). The client and admin realms have equivalent
+  implicit bases, for the same reason.
+- **Permissions are seeded from where they are used.** `RbacSeeder` reads the
+  navigation files and the dashboard registry, so a key cannot exist in the
+  application and be missing from the table that grants it.
 
 ## Tests
 
@@ -73,20 +82,41 @@ refference/                 the designer's original handover, for reference only
 php artisan test
 ```
 
+## Database
+
+```bash
+php artisan migrate --seed
+```
+
+Seeds roles, permissions, domains and per-domain ranks, plus the owner account.
+In local + debug it also seeds staff and client accounts matching the demo
+directory. The owner's password comes from `ZEPHRYX_OWNER_PASSWORD`; the seeder
+**refuses to run in production without it** rather than leaving a default on the
+most powerful account in the application.
+
 ## Status
 
-Phase 0 in progress.
+Phase 0. All three realms are built as front ends, on demo data.
 
-**Built (front end):** landing page, login page, OTP verify step, forgot
-password, reset password, app shell (sidebar + topbar + navigation), theme
-system, notice component, security headers.
+**Modules:** Clients, Employees, Teams, Projects, Tasks, Attendance, Leave,
+Salary, Tickets, Invoices, Meetings, Announcements, My Profile, Dashboard. Leads,
+Calendar and Reports are deferred to v2 and return a "not built yet" 404 (§12).
+The client portal (`/client`) and Admin Panel (`/admin`) are built.
 
-**Built (real, not a stub):** the password policy — `App\Rules\NotACommonPassword`
-plus a 12-character minimum — and the no-enumeration guarantee on
-`POST /forgot-password`.
+**Built and real, not stubbed:** realm enforcement (§3.1), the RBAC engine
+(§5) — union across stacked roles, implicit Employee base, per-domain rank —
+the password policy, and the no-enumeration guarantee on `POST /forgot-password`.
 
-**Not built:** authentication itself. `Auth\LoginController::attempt()`,
-`verify()` and `resend()` are stubs — field validation is real, everything past
-it is not. The credential check, rate limiting, OTP issue/verify, trusted
-devices and sessions described in spec §4 land in the backend phase, and
-**this page must not be deployed anywhere reachable before then.**
+**Not built: authentication itself.** `Auth\LoginController::attempt()`,
+`verify()` and `resend()` are stubs. The credential check, rate limiting, OTP
+issue/verify, trusted devices and remember-me (§4.2–4.6) are still owed, as is
+the stricter admin session (§4.4).
+
+Because of that there is a **development sign-in** at `/dev/sign-in/{user_id}`
+— an authentication bypass, registered only in local + debug, that exists so the
+guarded pages can be opened at all. `/dev/sign-in/EMP002` is a developer,
+`EMP005` is HR, `CLI001` is a client, `OWNER` is the Admin Panel. **Delete that
+route when the credential check lands.**
+
+**Every write is `abort(501)`.** The forms carry real CSRF tokens and real
+validation shapes; nothing is stored yet.

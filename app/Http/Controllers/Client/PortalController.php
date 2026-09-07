@@ -21,16 +21,22 @@ abstract class PortalController extends Controller
      * The signed-in client.
      *
      * ─────────────────────────────────────────────────────────────────────────
-     * TODO (backend phase): the client id on the SESSION, and nothing else.
+     * THE SESSION, AND ONE METHOD.
      *
-     * When that lands, delete the switch below and return the session's client.
-     * One method changes and every page in the portal is correctly scoped,
-     * because none of them resolves the client for itself.
+     * `client_ref` on the account is the whole answer, and every page in the
+     * portal is correctly scoped by this one method returning it — because none
+     * of them resolves the client for itself, and DemoClientPortal will not
+     * answer without being told whose data to read.
+     *
+     * The development switch below still overrides it in local + debug, for the
+     * reason in preview(). It is the last thing here that will go.
      * ─────────────────────────────────────────────────────────────────────────
      */
     protected function client(Request $request): string
     {
-        return $this->preview($request) ?? DemoClientPortal::viewer();
+        return $this->preview($request)
+            ?? $request->user()?->client_ref
+            ?? DemoClientPortal::viewer();
     }
 
     /**

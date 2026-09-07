@@ -59,7 +59,7 @@ class DashboardController extends Controller
 
     public function __invoke(Request $request): Response
     {
-        $viewer = $this->viewer();
+        $viewer = $this->viewer($request);
         $preview = $this->preview($request);
         $allows = $this->gate($request, $preview);
 
@@ -161,14 +161,25 @@ class DashboardController extends Controller
     }
 
     /**
-     * TODO (backend phase): `auth()->id()`.
+     * The signed-in person.
      *
-     * Every widget takes the viewer as an argument, so this method is the only
-     * thing that changes when sessions land.
+     * This method used to return a fixed demo employee with a TODO promising
+     * that "every widget takes the viewer as an argument, so this method is the
+     * only thing that changes when sessions land". Sessions landed, and it was
+     * the only thing that changed.
+     *
+     * It falls back to the demo viewer when the account has no matching
+     * employee record — a Mentor, or a staff account seeded outside the demo
+     * directory — because the widgets read from demo sources that are keyed by
+     * employee id. That fallback disappears with the demo data.
      */
-    protected function viewer(): string
+    protected function viewer(Request $request): string
     {
-        return DemoProfile::VIEWER;
+        $id = $request->user()?->user_id;
+
+        return $id !== null && DemoEmployees::all()->contains('user_id', $id)
+            ? $id
+            : DemoProfile::VIEWER;
     }
 
     /**

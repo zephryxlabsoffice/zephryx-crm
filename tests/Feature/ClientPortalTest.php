@@ -33,6 +33,19 @@ class ClientPortalTest extends TestCase
     /** Somebody else entirely, with their own projects, invoices and tickets. */
     protected const THEIRS = 'GreenLeaf Foods';
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        /*
+         * The portal is behind `realm:client` (§3.1). A staff session is
+         * refused here before any data is read — see test_a_staff_session_is
+         * _refused_the_client_portal, which is the assertion that guard exists
+         * for.
+         */
+        $this->signInAsClient(self::OURS);
+    }
+
     protected function withDemoData(): void
     {
         $this->app->detectEnvironment(fn () => 'local');
@@ -357,12 +370,18 @@ class ClientPortalTest extends TestCase
          * and worded for one. Handing a client the staff bell would leak the
          * lot, so the client realm gets none until a client-addressed stream
          * exists.
+         *
+         * The two halves need two sessions now — the staff dashboard is behind
+         * `realm:staff` and this file signs in as a client. Which is itself the
+         * point: the bell is not the only thing keeping the realms apart.
          */
-        $staff = $this->get('/dashboard')->getContent();
         $client = $this->get('/client/dashboard')->getContent();
+        $this->assertStringNotContainsString('notif-item', $client);
+
+        $this->signInAsStaff();
+        $staff = $this->get('/dashboard')->getContent();
 
         $this->assertStringContainsString('notif-item', $staff, 'the staff bell is empty, so this proves nothing');
-        $this->assertStringNotContainsString('notif-item', $client);
     }
 
     /* ══════════════════════════════════════════════════════════════════════

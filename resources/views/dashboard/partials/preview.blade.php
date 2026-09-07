@@ -28,12 +28,17 @@
             <span class="dash-preview-tag">Development preview</span>
             <p>
                 @if ($preview)
-                    Showing the dashboard as a <strong>{{ $preview['label'] }}</strong> sees it.
+                    Showing the dashboard as a <strong>{{ $preview['label'] }}</strong> sees it —
+                    narrowed from what your own account holds, never widened.
                     {{ $preview['note'] }}
                 @else
-                    Showing every widget at once, which no real account sees — the
-                    permission gate is a development placeholder that allows
-                    everything. Pick a role to see the page it actually composes.
+                    {{-- Was "the gate is a placeholder that allows everything",
+                         which stopped being true when the RBAC engine landed
+                         (2026-09-07). This now shows what the signed-in account
+                         actually holds; the roles below only ever subtract. --}}
+                    Showing what <strong>your own account</strong> holds. Picking a role
+                    narrows the page to that role's composition — the preview is
+                    intersected with your permissions and can only ever hide widgets.
                 @endif
             </p>
         </div>

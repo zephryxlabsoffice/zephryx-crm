@@ -2,24 +2,32 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
+/**
+ * The order matters and it is the only thing this class decides.
+ *
+ * Roles cannot be granted permissions that do not exist, and accounts cannot be
+ * given roles that do not exist. Both seeders are idempotent, so running this
+ * again after adding a module adds the new keys and leaves every existing grant
+ * alone — a seeder that silently revoked access on deploy would be invisible
+ * until somebody needed the thing it took away.
+ *
+ * Laravel's stock "Test User" is gone. It had no user_id, no realm and no
+ * status, which now means an account that cannot be placed in any realm and
+ * cannot sign in — and one more thing in the users table that nobody put there
+ * on purpose.
+ */
 class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            RbacSeeder::class,
+            AccountSeeder::class,
         ]);
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureRealm;
 use App\Http\Middleware\SecurityHeaders;
 use App\Support\Shell;
 use App\Support\Theme;
@@ -18,6 +19,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Applied to every response so new surfaces inherit the hardening
         // headers rather than opting into them (foundation spec §6).
         $middleware->append(SecurityHeaders::class);
+
+        /*
+         * Realm enforcement (§3.1), applied to route GROUPS in routes/web.php
+         * rather than to individual routes — a page added tomorrow inherits the
+         * guard instead of needing somebody to remember it.
+         */
+        $middleware->alias(['realm' => EnsureRealm::class]);
 
         // The theme cookie carries a display preference, not a secret, and is
         // never an input to an authorisation decision — App\Support\Theme

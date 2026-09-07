@@ -25,6 +25,19 @@ use Tests\TestCase;
  */
 class AdminPanelTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        /*
+         * The panel is behind `realm:admin` (§3.1), and the owner account holds
+         * no roles at all — its capabilities are implicit in the account type,
+         * because §2.1 makes the Admin Panel "not a role and not assignable"
+         * (Rbac::ADMIN_BASE).
+         */
+        $this->signInAsAdmin();
+    }
+
     protected function withDemoData(): void
     {
         $this->app->detectEnvironment(fn () => 'local');

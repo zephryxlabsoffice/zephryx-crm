@@ -23,6 +23,11 @@ class ErrorPageTest extends TestCase
 
     public function test_a_deferred_module_says_it_is_not_built_rather_than_missing(): void
     {
+        // Leads, Calendar and Reports are staff routes, so reaching them at all
+        // now needs a staff session with the permission — the deferred 404 is
+        // what a person who CAN see the entry gets when they click it.
+        $this->signInAsStaff(['ceo', 'manager']);
+
         // §12 keeps Leads, Calendar and Reports in the navigation until v2.
         // Someone who clicked a link we chose to show them should not be told
         // the page does not exist — that reads as a broken application, not a

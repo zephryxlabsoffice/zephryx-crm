@@ -14,6 +14,19 @@ use Tests\TestCase;
  */
 class AppShellTest extends TestCase
 {
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        /*
+         * Every route in the staff realm is behind `realm:staff` now (§3.1), so
+         * a page test has to be somebody. A CEO, because this file is about
+         * what the page renders rather than about who may see it — the guard
+         * and the permission filtering have their own tests.
+         */
+        $this->signInAsStaff();
+    }
     public function test_it_renders_the_shell(): void
     {
         $response = $this->get('/dashboard');

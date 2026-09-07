@@ -9,6 +9,19 @@ use Tests\TestCase;
 
 class InvoicesPageTest extends TestCase
 {
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        /*
+         * Every route in the staff realm is behind `realm:staff` now (§3.1), so
+         * a page test has to be somebody. A CEO, because this file is about
+         * what the page renders rather than about who may see it — the guard
+         * and the permission filtering have their own tests.
+         */
+        $this->signInAsStaff();
+    }
     protected function withDemoData(): void
     {
         $this->app->detectEnvironment(fn () => 'local');

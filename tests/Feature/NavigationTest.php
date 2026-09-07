@@ -4,9 +4,8 @@ namespace Tests\Feature;
 
 use App\Support\Navigation\Navigation;
 use App\Support\Navigation\NavigationGate;
-use App\Support\Navigation\PermissiveGate;
+use App\Support\Navigation\RbacGate;
 use Illuminate\Contracts\Auth\Authenticatable;
-use RuntimeException;
 use Tests\TestCase;
 
 /**
@@ -14,6 +13,19 @@ use Tests\TestCase;
  */
 class NavigationTest extends TestCase
 {
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        /*
+         * Every route in the staff realm is behind `realm:staff` now (§3.1), so
+         * a page test has to be somebody. A CEO, because this file is about
+         * what the page renders rather than about who may see it — the guard
+         * and the permission filtering have their own tests.
+         */
+        $this->signInAsStaff();
+    }
     public function test_it_drops_entries_the_viewer_may_not_see(): void
     {
         $this->app->bind(NavigationGate::class, fn () => new class implements NavigationGate
@@ -44,6 +56,16 @@ class NavigationTest extends TestCase
 
     public function test_the_active_key_marks_exactly_one_entry(): void
     {
+        // A gate that allows everything, so this test is about the active flag
+        // and not about who holds `projects.view`.
+        $this->app->bind(NavigationGate::class, fn () => new class implements NavigationGate
+        {
+            public function allows(?Authenticatable $user, string $permission): bool
+            {
+                return true;
+            }
+        });
+
         $items = $this->app->make(Navigation::class)->for(null, 'projects');
 
         $active = array_values(array_filter($items, fn (array $item) => $item['active']));
@@ -52,19 +74,23 @@ class NavigationTest extends TestCase
         $this->assertSame('projects', $active[0]['key']);
     }
 
-    public function test_the_placeholder_gate_refuses_to_run_in_production(): void
+    public function test_the_navigation_gate_is_the_rbac_engine(): void
     {
         /*
-         * The whole point of PermissiveGate. Forgetting to swap it means every
-         * user sees every module — exactly the leak §5 exists to prevent — so
-         * it fails loudly rather than silently allowing everything.
+         * This replaced a test asserting that PermissiveGate threw in
+         * production (2026-09-07). That test existed to make forgetting the
+         * swap loud; the swap has happened, PermissiveGate is deleted, and what
+         * is worth guarding now is the opposite — that nothing quietly rebinds
+         * this contract back to something permissive.
          */
-        $this->app->detectEnvironment(fn () => 'production');
+        $this->assertInstanceOf(RbacGate::class, $this->app->make(NavigationGate::class));
+    }
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('must not run in production');
-
-        (new PermissiveGate())->allows(null, 'employees.view');
+    public function test_nobody_is_not_somebody(): void
+    {
+        // An unauthenticated viewer holds nothing at all, so the shell renders
+        // an empty sidebar rather than the whole application.
+        $this->assertSame([], $this->app->make(Navigation::class)->for(null));
     }
 
     public function test_every_navigation_entry_declares_a_permission_key(): void
