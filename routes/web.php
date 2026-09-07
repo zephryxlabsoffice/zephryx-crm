@@ -13,6 +13,7 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\ModulePlaceholderController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\ShellPreferenceController;
@@ -390,6 +391,55 @@ Route::post('/attendance/{record}/reject', fn () => abort(501))
 Route::post('/attendance/{record}/restore', fn () => abort(501))
     ->where('record', 'ATT-[0-9]{4}-[0-9]{2}-[0-9]{2}-EMP[0-9]{3}')
     ->name('attendance.restore');
+
+/*
+ * My Profile. Four pages, because the four "tabs" are four different things —
+ * a form, a set of preferences, a security action and a log — and each is a
+ * URL so it is bookmarkable and separately guarded.
+ *
+ * Note what the routes do NOT take: no employee parameter, anywhere. This is
+ * the signed-in person's own profile, resolved from the session, so there is no
+ * identifier for anyone to change to somebody else's. Viewing a colleague's
+ * record is `employees.show`, which is a different page with different rules.
+ * The same reason the payslip route takes a period and no employee.
+ */
+Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+Route::get('/profile/preferences', [ProfileController::class, 'preferences'])->name('profile.preferences');
+Route::get('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
+Route::get('/profile/activity', [ProfileController::class, 'activity'])->name('profile.activity');
+
+/*
+ * The writes the backend phase implements — see App\Http\Controllers\
+ * ProfileController for what each owes.
+ *
+ * `profile.update` validates against ProfilePolicy::selfEditable() and DROPS
+ * every other key. A field rendered disabled is not protected; the browser is
+ * not where that rule lives.
+ *
+ * Email and password are separate routes from the details form on purpose.
+ * They are the login credentials (§4.1, §4.7): changing an email is confirmed
+ * from both addresses and changing a password needs the current one, neither of
+ * which is something to bury in a Save button under eleven other fields.
+ *
+ * Note what is absent: nothing here writes name, department, designation,
+ * reporting line, date of birth or role. Those are HR's, and a route that let
+ * somebody set their own designation would make the record meaningless.
+ */
+Route::post('/profile', fn () => abort(501))->name('profile.update');
+Route::post('/profile/preferences', fn () => abort(501))->name('profile.preferences.update');
+Route::post('/profile/password', fn () => abort(501))->name('profile.password.update');
+Route::post('/profile/email', fn () => abort(501))->name('profile.email.change');
+Route::post('/profile/photo', fn () => abort(501))->name('profile.photo');
+
+/*
+ * Documents are downloaded through a route that checks who is asking and writes
+ * an audit entry, never served as a static file. A PAN or Aadhaar scan under a
+ * guessable path in the webroot is a link somebody can forward.
+ */
+Route::get('/profile/documents/{document}', fn () => abort(501))
+    ->where('document', 'DOC-[0-9]{4}')
+    ->name('profile.documents.download');
+Route::post('/profile/documents', fn () => abort(501))->name('profile.documents.store');
 
 // Deferred to v2. §12 keeps the navigation entries so adding the modules later
 // reshuffles nothing users have learned, but the pages 404 until then — the

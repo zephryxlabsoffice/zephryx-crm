@@ -1,0 +1,365 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   MY PROFILE
+
+   The handover's profile.css was ~15KB and re-derived the card, the tabs
+   (.pf-tab), the form field (.pf-field/.pf-label/.pf-input/.pf-select), the
+   rail card (.rr-card) and the pill — all of which already exist in
+   components/ui.css and components/shell.css. Only what is specific to a
+   profile is here: the identity header, the ownership markers, the toggle rows
+   and the activity list.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.pf-grid {
+  display: grid;
+  /* minmax(0, …), never 1fr — a bare 1fr track is forced open by a wide child
+     and the whole page scrolls sideways. */
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--density-gap);
+  align-items: start;
+}
+.pf-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-gap);
+  min-width: 0;
+}
+
+/* The tabs sit between the header card and the panel, so they need to breathe
+   on both sides rather than hugging the card above them. */
+.pf-tabs {
+  margin: var(--density-gap) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+/* ─────────────────────────  identity header  ───────────────────────── */
+
+.pf-header {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(0, 1.4fr);
+  gap: 24px;
+  padding: 22px;
+}
+
+.pf-identity {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.avatar-xl {
+  width: 64px;
+  height: 64px;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.pf-identity-body { min-width: 0; }
+
+.pf-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.pf-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.pf-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pf-contact li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12.5px;
+  color: var(--muted);
+  min-width: 0;
+  word-break: break-word;
+}
+.pf-contact svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: var(--muted-2);
+}
+
+/* ─────────────────────────  the two fact columns  ─────────────────────────
+
+   These are the fields the person does not control. The column header says so
+   once, rather than a padlock repeated on every row — six padlocks read as six
+   errors.                                                                   */
+
+.pf-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  min-width: 0;
+}
+.pf-fact-col { min-width: 0; }
+
+.pf-fact-hd {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  padding-bottom: 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.pf-fact-hd svg { width: 16px; height: 16px; color: var(--muted); }
+.pf-fact-hd strong {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Quiet, not a warning. Being HR's is the normal state of these fields, not a
+   problem with them. */
+.pf-owned {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.pf-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--green);
+  font-weight: 600;
+}
+.pf-verified svg { width: 13px; height: 13px; }
+
+.pf-facts .is-warn,
+.pf-header .is-warn { color: var(--warning); font-weight: 600; }
+
+/* ─────────────────────────  forms  ───────────────────────── */
+
+.pf-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-gap);
+}
+
+.pf-form-grid { padding: 18px 22px; }
+.pf-form-wide { grid-column: 1 / -1; }
+
+.pf-section-note {
+  padding: 0 22px;
+  margin-top: -4px;
+}
+
+.pf-password {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 4px 22px 22px;
+  max-width: 420px;
+}
+.pf-password .form-field { width: 100%; }
+
+.pf-email-change { padding: 0 22px 22px; }
+
+.pf-policy { padding: 0 22px 20px; }
+.pf-policy code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  font-size: 12px;
+}
+
+/* ─────────────────────────  skills chips  ───────────────────────── */
+
+/* Read-only chips echoing the comma field above them, so somebody can see how
+   what they typed was parsed. The handover's had a remove button on each, which
+   needs JavaScript to be worth having and duplicates the text field. */
+.pf-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0;
+  padding: 0 22px 20px;
+  list-style: none;
+}
+.pf-chip {
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--green-softer);
+  color: var(--green);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+/* ─────────────────────────  toggles  ───────────────────────── */
+
+.pf-toggle-row {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 22px 20px;
+}
+
+.pf-toggle {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.pf-toggle:last-child { border-bottom: 0; }
+.pf-toggle input {
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--green);
+}
+.pf-toggle-body { min-width: 0; }
+.pf-toggle-body strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+.pf-toggle-body span {
+  display: block;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+/* ─────────────────────────  activity  ───────────────────────── */
+
+.pf-activity {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 4px 22px 18px;
+  list-style: none;
+}
+
+.pf-activity-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.pf-activity-row:last-child { border-bottom: 0; }
+
+/* Security events get a rule down the left. These are the lines somebody scans
+   for when they are worried, and "you changed your password" between two
+   "preferences updated" is the one that gets missed. */
+.pf-activity-row.is-security {
+  padding-left: 12px;
+  margin-left: -12px;
+  border-left: 2px solid var(--warning-line);
+}
+
+.pf-activity-body { flex: 1 1 auto; min-width: 0; }
+.pf-activity-body strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+.pf-activity-body span {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.pf-activity-time {
+  font-size: 11.5px;
+  color: var(--muted-2);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─────────────────────────  rail  ───────────────────────── */
+
+.pf-locked {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pf-locked-row {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.pf-locked-row:last-child { border-bottom: 0; }
+.pf-locked-ic {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--surface-2);
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.pf-locked-ic svg { width: 13px; height: 13px; }
+.pf-locked-body { min-width: 0; }
+.pf-locked-body strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.pf-locked-body span {
+  display: block;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.pf-rail-note {
+  margin: 14px 0 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.pf-rail-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+/* ─────────────────────────  narrow  ───────────────────────── */
+
+@media (max-width: 1080px) {
+  .pf-grid { grid-template-columns: minmax(0, 1fr); }
+  .pf-header { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 560px) {
+  .pf-form-grid,
+  .pf-activity,
+  .pf-toggle-row { padding-left: 14px; padding-right: 14px; }
+  .pf-activity-time { display: none; }
+}
