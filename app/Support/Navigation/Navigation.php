@@ -55,17 +55,22 @@ class Navigation
     /**
      * The configuration file a realm's sidebar is built from.
      *
-     * Two files, not one list with a `realm` column: a shared list would put
+     * Three files, not one list with a `realm` column: a shared list would put
      * `/employees` and `/salary` one mistyped key away from a client's sidebar,
-     * and two files cannot make that mistake because the staff entries are not
-     * in the client file at all. See the head of config/navigation-client.php.
+     * and separate files cannot make that mistake because the staff entries are
+     * not in the client file at all. See the head of config/navigation-client.php.
      *
-     * An unknown realm gets the client list, which is the smaller of the two.
-     * Failing towards less is the only sensible direction for a default here.
+     * An unknown realm gets the client list, which is the smallest of the
+     * three. Failing towards less is the only sensible direction for a default
+     * here — certainly not towards the admin one.
      */
     protected function configFor(string $realm): string
     {
-        return $realm === Realm::STAFF ? 'navigation' : 'navigation-client';
+        return match ($realm) {
+            Realm::STAFF => 'navigation',
+            Realm::ADMIN => 'navigation-admin',
+            default => 'navigation-client',
+        };
     }
 
     /**

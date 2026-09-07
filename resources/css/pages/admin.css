@@ -1,0 +1,356 @@
+/* ============================================================================
+   The Admin Panel.
+
+   Same shell, same primitives as everything else — .card, .kpi, .data-table,
+   .stat-row, .rail-card, .form-field. What is here is the handful of pieces
+   only this realm has, and they are mostly about making consequences visible:
+   the blast radius under a permission, the before/after of a change, the count
+   of records that use a master-data row.
+
+   Deliberately plainer than the operational modules. This is the screen where
+   somebody changes what other people can do, and a page that reads as
+   administrative rather than as product is the right feeling for that.
+   ========================================================================= */
+
+.ad-group + .ad-group,
+.ad-list-card + .ad-list-card { margin-top: 20px; }
+
+.ad-group-note {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 72ch;
+  text-wrap: pretty;
+}
+
+/* ----------------------------------------------------------------------------
+   Settings.
+
+   One row per setting, each its own form — see the head of
+   resources/views/admin/settings/index.blade.php for why there is no "save
+   all" button.
+   -------------------------------------------------------------------------- */
+
+.ad-settings {
+  display: flex;
+  flex-direction: column;
+}
+
+.ad-setting {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: start;
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+}
+.ad-setting:first-child { border-top: 0; padding-top: 0; }
+
+.ad-setting-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* The config key, shown quietly. It is what the audit log records and what
+   somebody quotes when asking about a value, so hiding it helps nobody. */
+.ad-setting-key {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: var(--muted-2);
+  word-break: break-all;
+}
+
+.ad-setting-field { min-width: 0; }
+
+.ad-setting-field input,
+.ad-setting-field select {
+  width: 100%;
+  max-width: 320px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: 500 13.5px/1 inherit;
+}
+.ad-setting-field input:focus,
+.ad-setting-field select:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.ad-setting-note {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 60ch;
+}
+/* The retroactive warning, inline with the field it belongs to. */
+.ad-setting-note strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.ad-setting-action { padding-top: 2px; }
+
+@media (max-width: 860px) {
+  .ad-setting { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .ad-setting-action .btn { width: 100%; justify-content: center; }
+}
+
+/* The weekly off: a set, not a value. */
+.ad-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ad-day {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ad-day input { accent-color: var(--green); }
+
+/* ----------------------------------------------------------------------------
+   Before and after.
+
+   Used by the settings confirmation and by an audit entry, because they are
+   showing the same thing: what a value was and what it became. Sharing the
+   component keeps the two readings identical.
+   -------------------------------------------------------------------------- */
+
+.ad-change {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ad-change-side {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ad-change-side.is-proposed {
+  border-color: var(--green);
+  background: var(--green-tint);
+}
+
+.ad-change-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ad-change-side strong {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+.ad-change-arrow {
+  width: 22px;
+  height: 22px;
+  align-self: center;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* ----------------------------------------------------------------------------
+   What a change does to existing records.
+
+   The screen this module exists for. Sized to be read, not skimmed past.
+   -------------------------------------------------------------------------- */
+
+.ad-effect-summary {
+  margin: 0 0 16px;
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.ad-effect-table { margin: 0 -22px; }
+
+.ad-effect-more,
+.ad-effect-warning {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 68ch;
+}
+.ad-effect-warning {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+/* ----------------------------------------------------------------------------
+   Permissions and roles.
+   -------------------------------------------------------------------------- */
+
+.ad-perms {
+  display: flex;
+  flex-direction: column;
+}
+
+.ad-perm {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  cursor: pointer;
+}
+.ad-perm:first-child { border-top: 0; padding-top: 0; }
+.ad-perm input { margin-top: 3px; accent-color: var(--green); flex-shrink: 0; }
+
+.ad-perm-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.ad-perm-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ad-perm-head strong { font-size: 14px; font-weight: 700; color: var(--ink); }
+.ad-perm-head code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-radius: 5px;
+  padding: 2px 6px;
+}
+
+.ad-perm-note {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 68ch;
+}
+
+/* The sentence that stops the mistake: who this toggle actually lands on.
+   Given its own weight because it is the reason the screen is not a matrix. */
+.ad-perm-impact {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-3);
+  padding-left: 10px;
+  border-left: 2px solid var(--line-strong);
+}
+.ad-perm-impact strong { color: var(--ink); font-weight: 700; }
+
+.ad-perm.is-sensitive .ad-perm-impact {
+  border-left-color: var(--danger);
+  color: var(--ink);
+}
+
+.ad-role-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ----------------------------------------------------------------------------
+   Who can do the sensitive things.
+   -------------------------------------------------------------------------- */
+
+.ad-sensitive-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.ad-sensitive-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 13px 0;
+  border-top: 1px solid var(--line);
+}
+.ad-sensitive-row:first-child { border-top: 0; padding-top: 0; }
+
+.ad-sensitive-key {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.ad-sensitive-key strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+  word-break: break-all;
+}
+.ad-sensitive-key span { font-size: 12px; color: var(--muted); }
+
+.ad-people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* The full permission union for one account. A wall of keys on purpose —
+   the point is the size of it. */
+.ad-effective {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ad-effective-key {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  color: var(--ink-3);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+/* ----------------------------------------------------------------------------
+   Master data.
+   -------------------------------------------------------------------------- */
+
+.ad-lists {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-bottom: 20px;
+}
+
+.ad-list-count {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  text-align: center;
+}

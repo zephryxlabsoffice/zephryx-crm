@@ -95,6 +95,16 @@ class ShellComposer
             ];
         }
 
+        if ($realm === Realm::ADMIN) {
+            /*
+             * One account, and it is not a person's — §2.1 makes the Admin
+             * Panel a configuration surface operated by the owner, with no
+             * personal records of its own. Naming an individual here would
+             * imply it has some, and imply that a second one could be created.
+             */
+            return ['name' => config('zephryx.brand.name').' Admin', 'role' => 'Owner'];
+        }
+
         return ['name' => 'Signed out', 'role' => 'Development preview'];
     }
 

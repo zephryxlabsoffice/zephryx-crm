@@ -21,6 +21,7 @@
 @import './pages/landing.css';
 @import './pages/dashboard.css';
 @import './pages/client.css';
+@import './pages/admin.css';
 @import './pages/auth.css';
 @import './pages/clients.css';
 @import './pages/employees.css';

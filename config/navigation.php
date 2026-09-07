@@ -48,11 +48,24 @@ return [
     ['key' => 'profile',       'label' => 'My Profile',     'icon' => 'profile',       'route' => 'profile.show',  'permission' => 'profile.view'],
 
     /*
-     * Settings is the company configuration surface and lives in the Admin
-     * Panel (§12), so this entry points into the /admin realm. Only the owner
-     * account holds `settings.view`, and realm middleware refuses the route to
-     * anyone else regardless of what the sidebar renders.
+     * ─────────────────────────────────────────────────────────────────────────
+     * SETTINGS IS NOT IN THIS FILE (removed 2026-09-07, when /admin was built)
+     *
+     * It used to be, pointing at `admin.settings`, on the reasoning that only
+     * the owner would hold the permission and realm middleware would refuse
+     * everyone else.
+     *
+     * That was wrong, and building the Admin Panel is what made it obvious. The
+     * realms have SEPARATE SESSIONS (§3): `zx_staff` and `zx_admin`. A staff
+     * session cannot open /admin at all — not for HR, not for the CEO, and not
+     * for the owner, who has to sign in to the admin realm as a different
+     * account. So the entry was a link that no staff session could ever follow,
+     * for anybody.
+     *
+     * The header of this file already argued against exactly that: a nav
+     * showing links a person cannot open teaches them to expect 403s. Settings
+     * now lives in config/navigation-admin.php, in the realm that can reach it.
+     * ─────────────────────────────────────────────────────────────────────────
      */
-    ['key' => 'settings',      'label' => 'Settings',       'icon' => 'settings',      'route' => 'admin.settings', 'permission' => 'settings.view'],
 
 ];

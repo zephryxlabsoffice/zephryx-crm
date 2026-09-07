@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\AccessController as AdminAccessController;
+use App\Http\Controllers\Admin\AccountController as AdminAccountController;
+use App\Http\Controllers\Admin\AuditController as AdminAuditController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\MasterDataController as AdminMasterDataController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Auth\AccountStatusController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\LoginController;
@@ -580,6 +586,126 @@ Route::prefix('client')->name('client.')->group(function () {
      */
     Route::post('/profile', fn () => abort(501))->name('profile.update');
     Route::post('/profile/photo', fn () => abort(501))->name('profile.photo');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Admin Panel
+|--------------------------------------------------------------------------
+|
+| The owner's realm (§3), and the one with the shortest list of things it may
+| do — see the head of config/navigation-admin.php.
+|
+| ─────────────────────────────────────────────────────────────────────────────
+| READ WHAT IS ABSENT HERE
+|
+| §2.1: the Admin Panel sets the rules and does not participate in them. No
+| personal records, and NO OPERATIONAL AUTHORITY — it cannot approve leave, run
+| payroll, mark attendance, raise an invoice or assign a task.
+|
+| That is enforced by absence. There is no /admin route that approves anything,
+| and adding one would be the mistake this comment exists to stop. The panel
+| configures who may approve leave; it can never approve any.
+|
+| The audit log has no write route at all, in either direction — nothing posts
+| to it and nothing deletes from it. An audit log with a delete button is not an
+| audit log, and this is the account whose actions most need the record.
+| ─────────────────────────────────────────────────────────────────────────────
+|
+| NOT YET GUARDED. §3.1 needs realm middleware on this group, and §4.4 gives
+| this realm a stricter session than the others: 30-minute idle timeout with
+| re-authentication, and never remember-me (§4.5).
+|
+*/
+
+Route::prefix('admin')->name('admin.')->group(function () {
+
+    Route::get('/dashboard', AdminDashboardController::class)->name('dashboard');
+
+    Route::get('/accounts', [AdminAccountController::class, 'index'])->name('accounts.index');
+    Route::get('/accounts/{account}', [AdminAccountController::class, 'show'])
+        ->where('account', '[A-Za-z0-9-]{1,32}')
+        ->name('accounts.show');
+
+    /*
+     * The writes the backend phase implements.
+     *
+     * Suspending an account is not deleting one: the person's attendance,
+     * leave and payslips stay exactly where they are, and their records keep
+     * naming them. Nothing here deletes a user.
+     *
+     * THE OWNER ACCOUNT CANNOT BE SUSPENDED OR STRIPPED OF ITS ROLES BY THIS
+     * PANEL. It is the only account that can reach these routes, so allowing it
+     * would mean one click locks the company out of its own configuration with
+     * no way back in that does not involve the database.
+     */
+    Route::post('/accounts/{account}/status', fn () => abort(501))
+        ->where('account', '[A-Za-z0-9-]{1,32}')
+        ->name('accounts.status');
+    Route::post('/accounts/{account}/roles', fn () => abort(501))
+        ->where('account', '[A-Za-z0-9-]{1,32}')
+        ->name('accounts.roles');
+
+    Route::get('/access', [AdminAccessController::class, 'index'])->name('access.index');
+    Route::get('/access/{role}', [AdminAccessController::class, 'show'])
+        ->where('role', '[a-z_]{1,32}')
+        ->name('access.show');
+
+    /*
+     * Changing what a role may do. Audited with the people it lands on, not
+     * just the key that moved (§6) — see App\Support\Demo\DemoRbac::whoWouldHold.
+     *
+     * The Employee base is not a role and must not be editable here (§5): it is
+     * granted implicitly to every staff account of kind `employee` precisely so
+     * that it cannot be revoked by a role edit.
+     */
+    Route::post('/access/{role}', fn () => abort(501))
+        ->where('role', '[a-z_]{1,32}')
+        ->name('access.update');
+
+    Route::get('/master-data', [AdminMasterDataController::class, 'index'])->name('master.index');
+    Route::get('/master-data/{list}', [AdminMasterDataController::class, 'show'])
+        ->where('list', '[a-z-]{1,32}')
+        ->name('master.show');
+
+    /*
+     * Note what is missing: DELETE. These lists are referenced by records that
+     * already exist, so the destructive act available is deactivation — the row
+     * stops being offered and keeps answering for history. See the head of
+     * App\Support\Demo\DemoMasterData.
+     */
+    Route::post('/master-data/{list}', fn () => abort(501))
+        ->where('list', '[a-z-]{1,32}')
+        ->name('master.store');
+    Route::post('/master-data/{list}/deactivate', fn () => abort(501))
+        ->where('list', '[a-z-]{1,32}')
+        ->name('master.deactivate');
+
+    Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings');
+
+    /*
+     * Changing a setting is TWO steps, and the first one is a read.
+     *
+     * Several of these values are used to derive attendance and leave on every
+     * read rather than being stored, so changing one silently re-judges months
+     * of records that already exist. `settings.preview` computes exactly what
+     * would move and names it; only the second step writes.
+     *
+     * It is a POST that renders, like `salary.pay.confirm`, for the same
+     * reason: the proposed values should not end up in a URL that gets
+     * bookmarked or written to an access log.
+     */
+    Route::post('/settings/preview', [AdminSettingsController::class, 'preview'])->name('settings.preview');
+    Route::post('/settings', fn () => abort(501))->name('settings.update');
+
+    /*
+     * The audit log. GET only, in both senses — nothing writes to it through
+     * the panel and nothing removes from it. See DemoAudit.
+     */
+    Route::get('/audit', [AdminAuditController::class, 'index'])->name('audit.index');
+    Route::get('/audit/{entry}', [AdminAuditController::class, 'show'])
+        ->where('entry', 'AUD-[0-9]{1,8}')
+        ->name('audit.show');
 });
 
 // Deferred to v2. §12 keeps the navigation entries so adding the modules later

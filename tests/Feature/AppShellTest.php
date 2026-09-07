@@ -49,8 +49,38 @@ class AppShellTest extends TestCase
 
     public function test_an_entry_whose_module_does_not_exist_is_not_rendered(): void
     {
-        // Settings routes into the Admin Panel (§12), which is not built, so
-        // App\Support\Navigation drops it rather than rendering a dead link.
+        // An entry whose route is not registered is skipped rather than
+        // rendering a dead link — which is what lets config/navigation.php list
+        // the whole roadmap while modules land one at a time.
+        config(['navigation' => array_merge((array) config('navigation'), [
+            ['key' => 'ghost', 'label' => 'Ghost Module', 'icon' => 'reports',
+                'route' => 'ghost.index', 'permission' => 'ghost.view'],
+        ])]);
+
+        $this->get('/dashboard')->assertDontSee('>Ghost Module</span>', false);
+    }
+
+    public function test_the_staff_sidebar_never_links_into_another_realm(): void
+    {
+        /*
+         * Settings used to be in this sidebar, pointing at `admin.settings`, on
+         * the reasoning that only the owner would hold the permission and realm
+         * middleware would refuse everybody else.
+         *
+         * That was wrong. The realms have separate sessions (§3): a staff
+         * session cannot open /admin at all — not for HR, not for the CEO, and
+         * not for the owner, who signs in to the admin realm as a different
+         * account. It was a link no staff session could ever follow, which is
+         * precisely the "teaches them to expect 403s" problem this file's own
+         * header warns about.
+         *
+         * Driven off the configuration so a future entry cannot reintroduce it.
+         */
+        foreach ((array) config('navigation') as $entry) {
+            $this->assertStringStartsNotWith('admin.', $entry['route'], $entry['label'].' points into /admin');
+            $this->assertStringStartsNotWith('client.', $entry['route'], $entry['label'].' points into /client');
+        }
+
         $this->get('/dashboard')->assertDontSee('>Settings</span>', false);
     }
 
