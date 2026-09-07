@@ -1,0 +1,269 @@
+/* ============================================================================
+   Dashboard.
+
+   Almost nothing here is a new component. The page is built from the shared
+   primitives every other module already uses — .kpi, .card, .rail-card,
+   .data-table, .stat-row — which is what makes a dashboard assembled from
+   fourteen widgets look like one page rather than fourteen.
+
+   What IS here is the layout that holds them, and the handful of small pieces
+   that only the dashboard needs.
+   ========================================================================= */
+
+.dash-hd {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ----------------------------------------------------------------------------
+   The two columns.
+
+   `main` is the work — queues, overviews, the things somebody else is waiting
+   on. `rail` is the person — my day, my leave, my payslip. The split is the
+   same one config/dashboard.php makes, so a widget's column in configuration
+   is its column on screen with nothing in between to disagree.
+
+   A Mentor renders with no rail at all (no Employee base, §2.1), so the grid
+   has to look deliberate at one column as well as two — hence `minmax(0, 1fr)`
+   on the main column rather than a fixed width, and the rail simply absent.
+   -------------------------------------------------------------------------- */
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+  align-items: start;
+}
+
+.dash-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+@media (max-width: 1180px) {
+  .dash-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ----------------------------------------------------------------------------
+   KPI tiles that link.
+
+   The tile is a link when there is a page behind the number, because a figure
+   somebody wants to act on is a figure they will try to click. The hover is the
+   only thing that says so — a tile that looked like a button would compete with
+   the actual actions on the page.
+   -------------------------------------------------------------------------- */
+
+.kpi-link {
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.14s, transform 0.14s;
+}
+.kpi-link:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-1px);
+}
+
+/* ----------------------------------------------------------------------------
+   The role preview.
+
+   Development only — App\Support\Demo\DemoRoles returns nothing outside local +
+   debug, so this block does not render in a deployed application at all.
+
+   Styled to look like scaffolding rather than product: a dashed border and a
+   muted ground, so nobody mistakes it for a feature or screenshots it into a
+   demo. It is here because a permission-composed page cannot be reviewed
+   against a gate that allows everything.
+   -------------------------------------------------------------------------- */
+
+.dash-preview {
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-lg, 14px);
+  background: var(--surface-2);
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dash-preview-hd {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dash-preview-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.dash-preview-hd p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted);
+  min-width: 240px;
+  flex: 1;
+}
+.dash-preview-hd strong { color: var(--ink); font-weight: 700; }
+
+.dash-preview-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ----------------------------------------------------------------------------
+   Small pieces.
+   -------------------------------------------------------------------------- */
+
+/* A quiet link in a card header, where a full .card-link would be too much
+   furniture for a rail card. */
+.dash-link {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--green);
+  text-decoration: none;
+}
+.dash-link:hover { text-decoration: underline; }
+
+.dash-quiet-meta {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* The line under a card that says what the list above it did not fit, or what
+   the numbers add up to. Separated by a rule so it does not read as another
+   row of the list. */
+.dash-more {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* A sentence inside a card — a consequence, a warning, a state. Never a
+   paragraph: if it needs two, it belongs on the module's own page. */
+.dash-note {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.dash-note-warn { color: var(--warning); font-weight: 600; }
+
+.dash-sub {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* The bare state words used in table cells that are not a .due-cell. Scoped to
+   the dashboard so they cannot leak into a module that means something else by
+   them. */
+.dash-grid .is-soon { color: var(--warning); font-weight: 600; }
+.dash-grid .is-overdue { color: var(--danger); font-weight: 600; }
+.dash-grid .is-done { color: var(--green); font-weight: 600; }
+
+/* The check-in card's state pill and its button. */
+.dash-punch-state {
+  padding: 4px 0 12px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+
+.dash-punch-action {
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+.dash-punch-action .btn { width: 100%; justify-content: center; }
+
+/* The one thing a rail card leads with: the next meeting, the next day off,
+   the last payslip. Set apart from the stat rows beneath it. */
+.dash-next,
+.dash-next-meeting {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.dash-next strong,
+.dash-next-meeting strong {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.35;
+}
+.dash-next-meeting .btn { margin-top: 8px; width: 100%; justify-content: center; }
+
+.dash-when {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--green);
+}
+
+.dash-amount {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Team rows are links, so they need the row hover a .stat-row does not have. */
+.dash-team-row {
+  text-decoration: none;
+  color: inherit;
+  border-radius: 8px;
+  margin: 0 -8px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+.dash-team-row:hover { background: var(--green-tint); }
+
+.dash-people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 14px;
+}
+
+/* Reachable: an account with `dashboard.view` and nothing else. An honest empty
+   page beats a grid of cards holding zeros. */
+.dash-empty .card-body,
+.dash-quiet .card-body {
+  padding: 40px 24px;
+  text-align: center;
+}
+.dash-empty h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+.dash-empty p,
+.dash-quiet p {
+  margin: 0 auto;
+  max-width: 46ch;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}

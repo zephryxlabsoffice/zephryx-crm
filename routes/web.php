@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\Auth\AccountStatusController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\InvoiceController;
@@ -79,6 +81,21 @@ Route::post('/reset-password', [PasswordResetController::class, 'reset'])
 
 Route::post('/logout', LogoutController::class)->name('logout');
 
+/*
+ * Where an ex-employee or a former client lands.
+ *
+ * Read App\Http\Controllers\Auth\AccountStatusController before touching this:
+ * the page is NOT reachable by URL, and that is the point. It renders on a
+ * one-shot session value the login flow sets AFTER the password has been
+ * checked and found correct, and redirects to the login form otherwise.
+ *
+ * §4.2 still stands at the form itself — an inactive account gets the generic
+ * "Invalid credentials" there, because saying more before a password is checked
+ * tells anybody who types an address whether it belongs to a real account. This
+ * route is what happens one step later, to somebody who has already proved they
+ * are the account holder.
+ */
+Route::get('/account/inactive', AccountStatusController::class)->name('account.inactive');
 
 /*
 |--------------------------------------------------------------------------
@@ -99,7 +116,20 @@ Route::post('/shell', [ShellPreferenceController::class, 'store'])
     ->middleware('throttle:60,1')
     ->name('shell.store');
 
-Route::get('/dashboard', fn () => app(ModulePlaceholderController::class)('dashboard'))->name('dashboard');
+/*
+ * The dashboard. One route, one page — and no `/dashboard/hr` beside it.
+ *
+ * The page is composed from config/dashboard.php against the viewer's
+ * permissions, because §2.4 makes roles additive and Manager + HR is a person
+ * who exists. A route per role would need a route for every combination, which
+ * is the argument the whole module is built on; see the head of
+ * config/dashboard.php.
+ *
+ * `?as=` previews one role's composition and exists only in local + debug. It
+ * is intersected with the real gate, never substituted for it, so it can only
+ * hide widgets — see DashboardController::gate.
+ */
+Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
 Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
 Route::get('/clients/create', fn () => app(ModulePlaceholderController::class)('clients'))->name('clients.create');
@@ -471,4 +501,17 @@ if (app()->environment('local') && config('app.debug')) {
         ->where('code', '403|404|419|429|500|503')
         ->name('dev.errors');
 
+    /*
+     * The closed-account page, which is otherwise reachable only by having a
+     * correct password on a closed account — so in practice never, during
+     * development. A page nobody can look at is a page that ships with a broken
+     * layout and a sentence nobody read.
+     *
+     * Local + debug for the same reason as the error previews above: anywhere
+     * else, this would let somebody show a convincing "your account is closed"
+     * at a URL of their choosing.
+     */
+    Route::get('/dev/account/{kind}', [AccountStatusController::class, 'preview'])
+        ->where('kind', 'staff|client')
+        ->name('dev.account');
 }

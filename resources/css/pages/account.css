@@ -1,0 +1,82 @@
+/* ============================================================================
+   The standalone layout, and the closed-account page that uses it.
+
+   Close relatives of the error pages, and deliberately so: same centred card,
+   same restraint, same lack of dependencies. The difference is that an error
+   page is a mishap and this is a decision — so there is no status code, no
+   "try again", and one action rather than two.
+   ========================================================================= */
+
+.standalone {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: var(--page);
+}
+
+.standalone-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px var(--page-pad);
+}
+
+.standalone-body {
+  display: grid;
+  place-items: center;
+  padding: 24px var(--page-pad) 64px;
+}
+
+.standalone-card {
+  width: 100%;
+  max-width: 560px;
+  text-align: center;
+}
+
+/* Inline SVG on tokens rather than the handover's raster illustration: a
+   green-tinted PNG cannot follow the theme, and a 66KB image is a lot to ship
+   for a page most people see once. */
+.standalone-mark {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 24px;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.standalone-mark svg { width: 32px; height: 32px; }
+
+.standalone-title {
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin: 0 0 16px;
+  text-wrap: balance;
+}
+
+.standalone-message {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0 auto 16px;
+  max-width: 46ch;
+  text-wrap: pretty;
+}
+.standalone-message:last-of-type { margin-bottom: 28px; }
+
+.standalone-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 520px) {
+  .standalone-actions { flex-direction: column; }
+  .standalone-actions .btn { width: 100%; }
+}
