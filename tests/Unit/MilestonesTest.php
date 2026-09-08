@@ -93,8 +93,10 @@ class MilestonesTest extends TestCase
     public function test_somebody_who_opted_out_is_never_celebrated(): void
     {
         // Opting out removes them entirely — it does not post a quieter version.
-        $optedOut = \App\Support\Demo\DemoEmployees::all()
-            ->first(fn (array $e) => ($e['announce_milestones'] ?? true) === false);
+        // Read from the directory, not the fixture: the fixture is inert once
+        // seedDemoWorkforce() has put the environment back.
+        $optedOut = \App\Support\EmployeeDirectory::all()
+            ->first(fn (array $e) => $e['announce_milestones'] === false);
 
         $this->assertNotNull($optedOut, 'no opted-out employee in the sample data');
 

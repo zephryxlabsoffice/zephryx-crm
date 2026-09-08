@@ -93,6 +93,34 @@ class RbacSeeder extends Seeder
         'attendance.view.all',
         'announcements.holiday',
         'invoices.view',
+        // Creating an account and taking one away are both people operations,
+        // not clerical ones — see MODULE_WRITES.
+        'employees.create',
+        'employees.deactivate',
+    ];
+
+    /**
+     * Write permissions, declared per module as its writes land.
+     *
+     * `employees.create` makes an ACCOUNT, which is why it is sensitive: §1 says
+     * every account is created by an administrator and there is no public
+     * sign-up, so this permission is the whole of that gate.
+     *
+     * `employees.edit` is separate from creating because correcting a
+     * designation and hiring somebody are different sizes of act, and a role
+     * that should do the first is not automatically one that should do the
+     * second.
+     *
+     * `employees.deactivate` is separate again, and there is deliberately no
+     * `employees.delete`: an employee who leaves is deactivated, because
+     * attendance, payroll and the audit log all point back at them.
+     *
+     * @var list<string>
+     */
+    public const MODULE_WRITES = [
+        'employees.create',
+        'employees.edit',
+        'employees.deactivate',
     ];
 
     /**
@@ -114,6 +142,19 @@ class RbacSeeder extends Seeder
             if (isset($entry['permission'])) {
                 $keys[$entry['permission']] = true;
             }
+        }
+
+        /*
+         * The write permissions. Nothing derives these — a sidebar entry says
+         * who may SEE a module, and every one of these is about changing
+         * something inside it, so they are declared rather than discovered.
+         *
+         * Added per module as its writes land. A key here without a route that
+         * uses it is harmless; a route using a key that is not here fails
+         * closed, because Rbac::can cannot grant a permission with no row.
+         */
+        foreach (self::MODULE_WRITES as $key) {
+            $keys[$key] = true;
         }
 
         // Modules that declare a key without putting it in a sidebar.
@@ -255,6 +296,10 @@ class RbacSeeder extends Seeder
                     ...$staffReading, 'employees.view', 'attendance.view', 'attendance.view.all',
                     'attendance.reject', 'leave.approve', 'salary.view', 'announcements.post',
                     'announcements.holiday',
+                    // People operations means the people themselves: HR is who
+                    // adds somebody, corrects their record and closes it when
+                    // they leave.
+                    'employees.create', 'employees.edit', 'employees.deactivate',
                 ],
                 'ranks' => ['people' => 80, 'finance' => 70, 'work' => 30, 'support' => 20, 'system' => 10],
             ],
@@ -284,6 +329,7 @@ class RbacSeeder extends Seeder
                     'attendance.view.all', 'attendance.reject', 'leave.approve', 'salary.view',
                     'invoices.view', 'tickets.triage', 'meetings.schedule', 'announcements.post',
                     'announcements.holiday', 'reports.view', 'leads.view',
+                    'employees.create', 'employees.edit', 'employees.deactivate',
                 ],
                 'ranks' => ['people' => 90, 'finance' => 90, 'work' => 90, 'support' => 80, 'system' => 40],
             ],

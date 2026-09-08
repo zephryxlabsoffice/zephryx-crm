@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnforceSessionLifetime;
+use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsureRealm;
 use App\Http\Middleware\RestoreRememberedSession;
 use App\Http\Middleware\SecurityHeaders;
@@ -27,7 +28,20 @@ return Application::configure(basePath: dirname(__DIR__))
          * rather than to individual routes — a page added tomorrow inherits the
          * guard instead of needing somebody to remember it.
          */
-        $middleware->alias(['realm' => EnsureRealm::class]);
+        $middleware->alias([
+            'realm' => EnsureRealm::class,
+
+            /*
+             * The second barrier (§5), declared per route:
+             * `->middleware('permission:employees.create')`.
+             *
+             * Aliased rather than grouped, because unlike the realm this is not
+             * a property of where a route is written — two routes in the same
+             * file legitimately need different permissions, and one of them is
+             * usually the read that everybody with the module has.
+             */
+            'permission' => EnsurePermission::class,
+        ]);
 
         /*
          * §4.4 (absolute and idle session limits) and §4.5 (remember-me), on

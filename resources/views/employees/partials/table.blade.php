@@ -82,12 +82,24 @@
                         </td>
                         <td role="cell" class="cell-tight" data-label="Joined">{{ P::joined($employee['joined']) }}</td>
                         <td role="cell" class="cell-actions">
-                            <button class="row-menu" type="button" disabled title="Row actions are not built yet">
-                                <span class="sr-only">Actions for {{ $employee['name'] }}</span>
-                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                    <circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>
-                                </svg>
-                            </button>
+                            {{--
+                                A link to the one action there is, rather than a
+                                menu holding it. The dots implied several things
+                                behind them; there is exactly one, and hiding a
+                                single action inside a menu is a click spent on
+                                nothing.
+
+                                Absent for somebody who cannot edit — the row is
+                                still a link to the record, which they can read.
+                            --}}
+                            @if ($mayEdit)
+                                <a class="row-menu" href="{{ route('employees.edit', ['employee' => $employee['user_id']]) }}">
+                                    <span class="sr-only">Edit {{ $employee['name'] }}</span>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>
+                                    </svg>
+                                </a>
+                            @endif
                         </td>
                     </tr>
                 @empty

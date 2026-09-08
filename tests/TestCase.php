@@ -131,11 +131,30 @@ abstract class TestCase extends BaseTestCase
      */
     protected function seedDemoWorkforce(): void
     {
+        $debug = config('app.debug');
+
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * FLIPPED FOR THE SEEDERS, THEN PUT BACK. THE PUTTING BACK MATTERS.
+         *
+         * Both seeders refuse to run outside local + debug, so the environment
+         * has to move for a moment. Leaving it there breaks POST tests in a way
+         * that takes an hour to find: Laravel skips CSRF verification only when
+         * the environment is `testing`, so a test that seeds and then posts
+         * gets a 419 and no validation errors — which reads like the form
+         * silently doing nothing.
+         * ─────────────────────────────────────────────────────────────────────
+         */
         $this->app->detectEnvironment(fn () => 'local');
         config(['app.debug' => true]);
 
-        (new AccountSeeder)->run();
-        (new EmployeeSeeder)->run();
+        try {
+            (new AccountSeeder)->run();
+            (new EmployeeSeeder)->run();
+        } finally {
+            $this->app->detectEnvironment(fn () => 'testing');
+            config(['app.debug' => $debug]);
+        }
     }
 
     /**

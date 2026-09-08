@@ -66,9 +66,59 @@ Route::get('/clients', [ClientController::class, 'index'])->name('clients.index'
 Route::get('/clients/create', fn () => app(ModulePlaceholderController::class)('clients'))->name('clients.create');
 Route::get('/clients/{client}', fn () => app(ModulePlaceholderController::class)('clients'))->name('clients.show');
 
-Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
-Route::get('/employees/create', fn () => app(ModulePlaceholderController::class)('employees'))->name('employees.create');
-Route::get('/employees/{employee}', fn () => app(ModulePlaceholderController::class)('employees'))->name('employees.show');
+/*
+ * Employees — the first module with real writes (2026-09-08).
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * THE GUARD IS ON THE ROUTE
+ *
+ * `permission:` is the second barrier (§5); the realm has already been checked
+ * by the file this is written in. Declared here rather than inside the
+ * controller because a check in a method is one somebody can forget to write,
+ * and nothing fails when they do — the route just works for everybody. On the
+ * route it is visible next to the thing it guards, and a route added without
+ * one is conspicuous.
+ *
+ * Three write permissions and not one: correcting a designation, hiring
+ * somebody and closing their record are different sizes of act, and a role that
+ * should do the first is not automatically one that should do the third.
+ *
+ * There is no delete, at any permission. Attendance, payroll and the audit log
+ * all point back at an employee.
+ *
+ * `create` is declared BEFORE `{employee}`, or the word "create" would be read
+ * as a staff ID and 404.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+Route::get('/employees', [EmployeeController::class, 'index'])
+    ->middleware('permission:employees.view')
+    ->name('employees.index');
+
+Route::get('/employees/create', [EmployeeController::class, 'create'])
+    ->middleware('permission:employees.create')
+    ->name('employees.create');
+Route::post('/employees', [EmployeeController::class, 'store'])
+    ->middleware('permission:employees.create')
+    ->name('employees.store');
+
+Route::get('/employees/{employee}', [EmployeeController::class, 'show'])
+    ->where('employee', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:employees.view')
+    ->name('employees.show');
+
+Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])
+    ->where('employee', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:employees.edit')
+    ->name('employees.edit');
+Route::post('/employees/{employee}', [EmployeeController::class, 'update'])
+    ->where('employee', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:employees.edit')
+    ->name('employees.update');
+
+Route::post('/employees/{employee}/status', [EmployeeController::class, 'status'])
+    ->where('employee', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:employees.deactivate')
+    ->name('employees.status');
 
 Route::get('/teams', [TeamController::class, 'index'])->name('teams.index');
 // Before the {team} route, or "mine" is read as a team ID.

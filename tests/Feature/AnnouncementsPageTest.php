@@ -33,7 +33,15 @@ class AnnouncementsPageTest extends TestCase
      */
     protected function withDemoData(): void
     {
+        // The people, as rows — the birthday and anniversary rails go through
+        // Milestones, which reads the `employees` table now.
         $this->seedDemoWorkforce();
+
+        // And then the environment stays flipped, because the announcements
+        // themselves are still DemoAnnouncements and gate on it. This module
+        // has no table yet; when it gets one, this line goes.
+        $this->app->detectEnvironment(fn () => 'local');
+        config(['app.debug' => true]);
     }
 
     public function test_the_pages_render(): void

@@ -4,6 +4,8 @@ namespace App\Support\Audit;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -50,6 +52,17 @@ class AuditLog
     public const REMEMBER_THEFT = 'auth.remember_theft_detected';
     public const PASSWORD_RESET_REQUESTED = 'auth.password_reset_requested';
     public const PASSWORD_RESET = 'auth.password_reset';
+
+    /*
+     * Modules, added as their writes land.
+     *
+     * Constants rather than strings at the call site, because the audit screen
+     * filters on `action` and a typo would create a second category that looks
+     * like a real one and matches nothing.
+     */
+    public const EMPLOYEE_CREATED = 'employee.created';
+    public const EMPLOYEE_UPDATED = 'employee.updated';
+    public const EMPLOYEE_STATUS_CHANGED = 'employee.status_changed';
 
     /* Admin Panel (§6 requires all of its actions) */
     public const PERMISSION_CHANGED = 'admin.permission_changed';
@@ -103,6 +116,46 @@ class AuditLog
             'user_agent' => mb_substr((string) $request?->userAgent(), 0, 512) ?: null,
             'created_at' => now(),
         ]);
+    }
+
+    /**
+     * Everything that has happened to one thing, newest first.
+     *
+     * The `before_json` / `after_json` columns come back decoded to their
+     * `summary` sentence, because that is what every screen showing history
+     * renders. A caller wanting the whole payload can read the columns; nobody
+     * currently does, and returning raw JSON to every view would put decoding
+     * into templates.
+     *
+     * @return Collection<int, object>
+     */
+    public function entriesFor(string $entityType, string $entityId, int $limit = 20): Collection
+    {
+        return DB::table('audit_log')
+            ->where('entity_type', $entityType)
+            ->where('entity_id', $entityId)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get()
+            ->map(function (object $row) {
+                $row->before_summary = $this->summaryOf($row->before_json);
+                $row->after_summary = $this->summaryOf($row->after_json);
+                $row->at = Carbon::parse($row->created_at);
+
+                return $row;
+            });
+    }
+
+    protected function summaryOf(?string $json): ?string
+    {
+        if ($json === null) {
+            return null;
+        }
+
+        $decoded = json_decode($json, true);
+
+        return is_array($decoded) ? ($decoded['summary'] ?? null) : null;
     }
 
     protected function encode(array|string|null $value): ?string
