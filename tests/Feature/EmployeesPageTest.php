@@ -2,14 +2,15 @@
 
 namespace Tests\Feature;
 
-use App\Support\Demo\DemoEmployees;
+use App\Support\EmployeeDirectory;
 use Tests\TestCase;
 
 /**
  * Employees — GET /employees.
  *
- * There is no `users` table yet. Rows come from DemoEmployees, which is inert
- * outside local + debug, so most of these run against the empty state.
+ * Rows come from the `employees` table. Tests that need people call
+ * seedDemoWorkforce(); the ones that do not are asserting the empty state on
+ * purpose, which is what a freshly deployed site shows.
  */
 class EmployeesPageTest extends TestCase
 {
@@ -25,11 +26,6 @@ class EmployeesPageTest extends TestCase
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
-    }
-    protected function withDemoData(): void
-    {
-        $this->app->detectEnvironment(fn () => 'local');
-        config(['app.debug' => true]);
     }
 
     public function test_it_renders_inside_the_app_shell(): void
@@ -66,20 +62,27 @@ class EmployeesPageTest extends TestCase
         $response->assertDontSee('>58<', false);
     }
 
-    public function test_the_demo_source_is_inert_outside_local_debug(): void
+    public function test_a_deployed_site_with_no_employees_shows_no_invented_ones(): void
     {
+        /*
+         * This replaced a test that the demo SOURCE was inert outside local +
+         * debug. That guard mattered while the page read from a fixture; now it
+         * reads from a table, and the guarantee worth having is the stronger
+         * one — an empty database renders empty, with no fallback content from
+         * anywhere.
+         */
         $this->app->detectEnvironment(fn () => 'production');
         config(['app.debug' => false]);
 
-        $this->assertFalse(DemoEmployees::enabled());
-        $this->assertTrue(DemoEmployees::all()->isEmpty());
-        $this->assertSame([], DemoEmployees::byDepartment());
-        $this->assertSame([], DemoEmployees::recentStarters());
+        $this->assertSame(0, EmployeeDirectory::all()->count());
+        $this->assertSame([], EmployeeDirectory::byDepartment());
+        $this->assertSame([], EmployeeDirectory::recentStarters());
+        $this->assertSame(0, EmployeeDirectory::stats()['total']);
     }
 
     public function test_it_lists_employees_and_paginates_them(): void
     {
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
         $first = $this->get('/employees');
         $first->assertSee('Riya Sharma', false);
@@ -91,7 +94,7 @@ class EmployeesPageTest extends TestCase
 
     public function test_search_covers_name_staff_id_and_role(): void
     {
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
         $this->get('/employees?q=riya')->assertSee('/employees/EMP001', false);
         $this->get('/employees?q=EMP004')->assertSee('/employees/EMP004', false);
@@ -101,30 +104,36 @@ class EmployeesPageTest extends TestCase
 
     public function test_department_and_status_filters_work(): void
     {
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
         $dev = $this->get('/employees?department=Development');
         $dev->assertSee('/employees/EMP002', false);
         $dev->assertDontSee('/employees/EMP001', false);
 
-        $leave = $this->get('/employees?status=on_leave');
-        $leave->assertSee('/employees/EMP005', false);
-        $leave->assertDontSee('/employees/EMP001', false);
+        /*
+         * Status filters on the ACCOUNT's status now. `on_leave` was in the demo
+         * rows as a stored value and is not one: it is a question about today
+         * that an approved leave request answers, and it comes back as a filter
+         * when the Leave module has a table to ask.
+         */
+        $inactive = $this->get('/employees?status=inactive');
+        $inactive->assertSee('/employees/EMP012', false);
+        $inactive->assertDontSee('/employees/EMP001', false);
     }
 
     public function test_an_invalid_status_is_rejected(): void
     {
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
         $this->get('/employees?status=;DROP TABLE')->assertSessionHasErrors('status');
     }
 
     public function test_the_department_breakdown_sums_to_the_headcount(): void
     {
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
-        $breakdown = DemoEmployees::byDepartment();
-        $total = DemoEmployees::all()->count();
+        $breakdown = EmployeeDirectory::byDepartment();
+        $total = EmployeeDirectory::all()->count();
 
         $this->assertSame($total, array_sum(array_column($breakdown, 'count')));
         // Largest department first, so the donut reads clockwise by size.
@@ -136,7 +145,7 @@ class EmployeesPageTest extends TestCase
     {
         // The donut is aria-hidden; the legend beside it is a real list, so the
         // figures are reachable without seeing or distinguishing the colours.
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
         $html = $this->get('/employees')->getContent();
 
@@ -151,9 +160,9 @@ class EmployeesPageTest extends TestCase
         // of birth arrived with it. It is stored in full; the year never
         // reaches a page — a colleague needs to know when to say happy
         // birthday, not how old somebody is.
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
-        $birthdays = \App\Support\Demo\DemoEmployees::birthdays();
+        $birthdays = EmployeeDirectory::birthdays();
 
         $this->assertNotEmpty($birthdays, 'no birthday in the window to review');
 
@@ -164,7 +173,7 @@ class EmployeesPageTest extends TestCase
             $this->assertStringContainsString($birthday['name'], $html);
         }
 
-        foreach (\App\Support\Demo\DemoEmployees::all()->pluck('dob')->filter() as $dob) {
+        foreach (EmployeeDirectory::all()->pluck('dob')->filter() as $dob) {
             $this->assertStringNotContainsString($dob, $html);
             $this->assertStringNotContainsString(\Illuminate\Support\Carbon::parse($dob)->format('d M Y'), $html);
         }
@@ -172,14 +181,14 @@ class EmployeesPageTest extends TestCase
 
     public function test_somebody_who_opted_out_has_no_birthday_shown(): void
     {
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
-        $optedOut = \App\Support\Demo\DemoEmployees::all()
+        $optedOut = EmployeeDirectory::all()
             ->first(fn (array $e) => ($e['announce_milestones'] ?? true) === false);
 
         $this->assertNotNull($optedOut);
 
-        foreach (\App\Support\Demo\DemoEmployees::birthdays(50) as $birthday) {
+        foreach (EmployeeDirectory::birthdays(50) as $birthday) {
             $this->assertNotSame($optedOut['name'], $birthday['name']);
         }
     }
@@ -188,7 +197,7 @@ class EmployeesPageTest extends TestCase
     {
         // The handover set the legend colours with style="--dot:#15A848",
         // which our CSP blocks outright.
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
         $html = $this->get('/employees')->getContent();
 

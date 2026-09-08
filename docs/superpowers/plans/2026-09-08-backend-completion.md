@@ -68,4 +68,18 @@ Tests stay green at every commit, and each module lands as its own commit.
 Recorded here as they surface rather than guessed at silently, for the
 end-to-end review before deployment.
 
-_(none yet)_
+1. **Directory ordering.** The employee list is ordered by staff ID, which is
+   what it has always been. Ordering by name would arguably read better — the
+   name is the column people scan. Left alone deliberately: changing it during a
+   data-source swap would have been a UI decision smuggled into a refactor.
+
+2. **`on_leave` as a status.** The demo rows carried it as a stored value and
+   the directory offered it as a filter. It is not a stored state — it is a
+   question about today that an approved leave request answers — so it is gone
+   until the Leave module lands, at which point it returns as a derived filter.
+   Until then `stats()['on_leave']` reports 0 rather than a guess, and the
+   status filter offers only what the database can answer.
+
+3. **Row actions are still disabled** in the directory markup ("Row actions are
+   not built yet"). They light up with the CRUD work; noted so the disabled
+   button is not mistaken for a decision.

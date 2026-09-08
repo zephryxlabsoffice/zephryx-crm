@@ -5,6 +5,8 @@ namespace Tests;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Realm;
+use Database\Seeders\AccountSeeder;
+use Database\Seeders\EmployeeSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
@@ -107,6 +109,33 @@ abstract class TestCase extends BaseTestCase
         ]);
 
         return tap($user, fn (User $u) => $this->actingAs($u));
+    }
+
+    /**
+     * The twelve demo people, as real rows in the database.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * WHY THIS REPLACED `withDemoData()` IN THE MODULES THAT HAVE TABLES
+     *
+     * Page tests used to make content appear by flipping the environment to
+     * local + debug, because the Demo* sources gate on exactly that. Once a
+     * module reads from the database, that flip does nothing: there is no row
+     * to find, and a test that "passes" against an empty page is asserting the
+     * empty state while claiming to assert the list.
+     *
+     * So the demo people are seeded properly here — accounts by AccountSeeder,
+     * employment by EmployeeSeeder, the same two that populate a developer's
+     * machine. The environment flip is still needed because both seeders
+     * deliberately do nothing outside local + debug.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    protected function seedDemoWorkforce(): void
+    {
+        $this->app->detectEnvironment(fn () => 'local');
+        config(['app.debug' => true]);
+
+        (new AccountSeeder)->run();
+        (new EmployeeSeeder)->run();
     }
 
     /**

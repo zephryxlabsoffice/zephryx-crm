@@ -25,10 +25,15 @@ class AnnouncementsPageTest extends TestCase
          */
         $this->signInAsStaff();
     }
+    /**
+     * Announcements still come from DemoAnnouncements, which needs the
+     * environment flip. The birthday and anniversary rails do not: they go
+     * through Milestones, which reads the `employees` table now — so the people
+     * have to be seeded as well as the environment flipped.
+     */
     protected function withDemoData(): void
     {
-        $this->app->detectEnvironment(fn () => 'local');
-        config(['app.debug' => true]);
+        $this->seedDemoWorkforce();
     }
 
     public function test_the_pages_render(): void

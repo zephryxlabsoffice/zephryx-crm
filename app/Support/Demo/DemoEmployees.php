@@ -5,12 +5,25 @@ namespace App\Support\Demo;
 use Illuminate\Support\Collection;
 
 /**
- * Sample employee rows for reviewing the Employees page before the database
- * exists. Local + debug only, like DemoClients — everywhere else this returns
- * nothing, so a deployed site shows its empty states rather than invented
- * people.
+ * The twelve sample people.
  *
- * Deleted when the Employees module gets its migration and model.
+ * ─────────────────────────────────────────────────────────────────────────────
+ * NO LONGER WHAT THE EMPLOYEES PAGE READS (changed 2026-09-08)
+ *
+ * The module has a table now, and the page goes through
+ * App\Support\EmployeeDirectory. What is left here is the FIXTURE: AccountSeeder
+ * builds the demo accounts from these rows and EmployeeSeeder builds the
+ * employment behind them, so a developer's database contains these twelve
+ * people rather than this class pretending to be a database.
+ *
+ * The demo modules that still have no tables — teams, tasks, salaries, RBAC
+ * previews — also draw their people from here, which is why they agree with the
+ * directory. Each of them stops as its own module lands, and this class goes
+ * when the last one has.
+ *
+ * Still local + debug only, so a deployed site can never be seeded with
+ * invented people by accident.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 class DemoEmployees
 {

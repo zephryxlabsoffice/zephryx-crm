@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\Employee;
 use App\Support\Milestones;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -12,8 +13,10 @@ class MilestonesTest extends TestCase
     {
         parent::setUp();
 
-        $this->app->detectEnvironment(fn () => 'local');
-        config(['app.debug' => true]);
+        // Milestones reads employees from the database now, so the people it
+        // computes birthdays and anniversaries for have to actually be there.
+        // The environment flip alone stopped conjuring them.
+        $this->seedDemoWorkforce();
     }
 
     /* ══════════════════════════════════════════════════════════════════════
@@ -207,10 +210,22 @@ class MilestonesTest extends TestCase
         $this->assertSame('In 5 days', Milestones::label(5));
     }
 
-    public function test_nothing_is_returned_outside_local_debug(): void
+    public function test_nothing_is_returned_when_there_are_no_employees(): void
     {
+        /*
+         * This replaced "nothing is returned outside local + debug", which was
+         * true only because milestones came from a fixture that switched itself
+         * off. They come from the `employees` table now, and in production a
+         * real birthday SHOULD be announced — asserting otherwise would have
+         * been asserting the feature does not work where it matters.
+         *
+         * What survives is the guarantee underneath it: nobody is invented. No
+         * employees, no milestones, in any environment.
+         */
         $this->app->detectEnvironment(fn () => 'production');
         config(['app.debug' => false]);
+
+        Employee::query()->delete();
 
         $this->assertSame([], Milestones::upcoming());
         $this->assertSame([], Milestones::today());

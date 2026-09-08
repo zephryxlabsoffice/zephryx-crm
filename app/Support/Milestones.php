@@ -2,7 +2,6 @@
 
 namespace App\Support;
 
-use App\Support\Demo\DemoEmployees;
 use Illuminate\Support\Carbon;
 
 /**
@@ -49,7 +48,7 @@ class Milestones
         $today = Carbon::today();
         $found = [];
 
-        foreach (DemoEmployees::all() as $employee) {
+        foreach (EmployeeDirectory::all() as $employee) {
             // Somebody who has left is not celebrated, and somebody who opted
             // out is not celebrated either.
             if (($employee['status'] ?? null) === 'inactive') {
