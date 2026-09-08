@@ -123,7 +123,17 @@ class DemoAttendance
             'EMP004@0' => ['in' => '10:24', 'out' => null, 'reject' => null, 'by' => null],
             'EMP006@0' => ['in' => null, 'out' => null, 'reject' => null, 'by' => null],
             'EMP008@0' => ['in' => '09:08', 'out' => null, 'reject' => null, 'by' => null],
-            'EMP010@0' => [
+            // Rejected by a person AND left open past the window — both facts
+            // true of one record, which is what the detail page's "the window
+            // also closed" line exists to say.
+            //
+            // NOT ON TODAY, and that is load-bearing. `autoRejected` measures
+            // check-in against `now`, so a day that started at 08:02 does not
+            // trip the ten-hour window until 18:02 — see EMP002@0 above, which
+            // relies on the same fact to stay merely open. Parked on today, this
+            // record showed the rejection alone for most of the working day and
+            // grew the second half of its meaning at six in the evening.
+            'EMP010@4' => [
                 'in' => '08:02', 'out' => null,
                 'reject' => 'Recorded an hour before the office opened and Arjun was on a flight. Raised with IT — the door reader is double-firing.',
                 'by' => 'EMP005',

@@ -197,12 +197,20 @@ class AttendancePageTest extends TestCase
          */
         $this->withDemoData();
 
+        /*
+         * The window has to have actually closed, or the page is right to say
+         * nothing about it. `autoRejected` counts from check-in to `now`, so a
+         * record dated today has not closed yet for most of the working day —
+         * which is why the sample record lives on an earlier one, and why this
+         * asserts that rather than skipping when it cannot find one. A skip is
+         * how a fixture that stopped demonstrating its point goes unnoticed.
+         */
         $record = DemoAttendance::rejected()
-            ->first(fn (array $r) => $r['check_out'] === null && $r['rejection_reason'] !== null);
+            ->first(fn (array $r) => $r['check_out'] === null
+                && $r['rejection_reason'] !== null
+                && $r['date'] !== Carbon::today()->toDateString());
 
-        if ($record === null) {
-            $this->markTestSkipped('no sample record that is both rejected and left open');
-        }
+        $this->assertNotNull($record, 'no sample record that is both rejected by a person and past the window');
 
         $this->get('/attendance/'.$record['id'])
             ->assertSee($record['rejection_reason'], false)
