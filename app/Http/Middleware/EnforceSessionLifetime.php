@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
  * | Property           | Staff / Client | Admin              |
  * |--------------------|----------------|--------------------|
  * | Absolute lifetime  | 7 days         | 7 days             |
- * | Idle timeout       | 12 hours       | 30 minutes         |
+ * | Idle timeout       | 30 days        | 2 hours            |
  *
  * ═════════════════════════════════════════════════════════════════════════════
  * WHY THIS IS NOT `config('session.lifetime')`
@@ -26,14 +26,29 @@ use Symfony\Component\HttpFoundation\Response;
  *   used daily lives forever. Seven days from issue means a stolen session
  *   cookie has a horizon whatever the thief does with it.
  *
- *   TWO idle timeouts. Twelve hours is right for somebody who leaves a CRM tab
- *   open across a working day. Thirty minutes is right for the account that can
- *   rewrite everybody's permissions, and applying twelve hours to it because
- *   that is what the config says would be the wrong trade in the one place it
- *   matters most.
+ *   TWO idle timeouts. Thirty days is right for somebody who lives in this CRM
+ *   and should not be asked to type a password because they took a holiday. Two
+ *   hours is right for the account that can rewrite everybody's permissions,
+ *   and applying the staff window to it because that is what the config says
+ *   would be the wrong trade in the one place it matters most.
  *
  * Both stamps live in the session itself, so they travel with it and cannot
  * drift from it.
+ * ─────────────────────────────────────────────────────────────────────────────
+ * THE CEILING OUTLIVES NOTHING — READ THIS BEFORE "FIXING" THE 30 DAYS
+ *
+ * The staff idle window is longer than the absolute ceiling, so on its own it
+ * never fires: a session hits seven days first. That is deliberate, not an
+ * oversight to tidy up (decided 2026-09-08).
+ *
+ * Staying signed in for thirty days is remember-me's job (§4.5), and it is
+ * better at it — the token rotates on every use, and a spent one coming back
+ * revokes the whole chain as a theft signal. A session cookie has no such
+ * tell, so a copied one must age out on its own; seven days is that horizon.
+ *
+ * The thirty days is what governs when the ceiling is not the binding
+ * constraint — a session restored from remember-me is stamped fresh, and this
+ * is the window it then idles against.
  * ═════════════════════════════════════════════════════════════════════════════
  *
  * Expiry signs the person out and sends them to the form with the "session
@@ -45,8 +60,8 @@ class EnforceSessionLifetime
     public const LAST_SEEN = 'auth.last_seen';
 
     public const ABSOLUTE_DAYS = 7;
-    public const IDLE_MINUTES = 12 * 60;
-    public const ADMIN_IDLE_MINUTES = 30;
+    public const IDLE_MINUTES = 30 * 24 * 60;
+    public const ADMIN_IDLE_MINUTES = 2 * 60;
 
     public function handle(Request $request, Closure $next): Response
     {

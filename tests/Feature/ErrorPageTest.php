@@ -112,7 +112,7 @@ class ErrorPageTest extends TestCase
     public function test_the_419_explains_the_session_rather_than_saying_page_expired(): void
     {
         // The most likely error page in the application: every form carries a
-        // CSRF token and sessions time out after 12 hours.
+        // CSRF token and no session outlives seven days from issue.
         $html = $this->render(419);
 
         $this->assertStringContainsString('Your session expired', $html);

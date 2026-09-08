@@ -483,21 +483,30 @@ class AuthenticationTest extends TestCase
        §4.4 — SESSION LIFETIME
        ══════════════════════════════════════════════════════════════════════ */
 
-    public function test_an_idle_staff_session_expires_after_twelve_hours(): void
+    public function test_an_idle_staff_session_expires_after_thirty_days(): void
     {
+        /*
+         * Thirty days is the staff idle window as of 2026-09-08. Reaching it
+         * needs the seven-day ceiling held back, because otherwise that fires
+         * first and this would pass for the wrong reason — so the session is
+         * stamped as issued a moment ago and idle for a month, which is a state
+         * only remember-me produces in practice (§4.5 restores a session and
+         * stamps it fresh).
+         */
         $this->signInAsStaff();
 
         $this->get('/dashboard')->assertOk();
 
         $this->session([
-            EnforceSessionLifetime::LAST_SEEN => now()->subHours(13)->timestamp,
+            EnforceSessionLifetime::ISSUED_AT => now()->timestamp,
+            EnforceSessionLifetime::LAST_SEEN => now()->subDays(31)->timestamp,
         ]);
 
         $this->get('/dashboard')->assertRedirect(route('login'));
         $this->assertGuest();
     }
 
-    public function test_an_idle_admin_session_expires_after_thirty_minutes(): void
+    public function test_an_idle_admin_session_expires_after_two_hours(): void
     {
         // §4.4 gives the account that can rewrite everybody's permissions a much
         // shorter leash than the one that reads a task list.
@@ -506,25 +515,26 @@ class AuthenticationTest extends TestCase
         $this->get('/admin/dashboard')->assertOk();
 
         $this->session([
-            EnforceSessionLifetime::LAST_SEEN => now()->subMinutes(31)->timestamp,
+            EnforceSessionLifetime::LAST_SEEN => now()->subMinutes(121)->timestamp,
         ]);
 
         $this->get('/admin/dashboard')->assertRedirect(route('login'));
         $this->assertGuest();
     }
 
-    public function test_a_staff_session_survives_thirty_minutes_idle(): void
+    public function test_a_staff_session_survives_two_hours_idle(): void
     {
         // The counterpart: the admin rule must not have been applied to
-        // everybody, which would sign people out over a lunch break.
+        // everybody, which would sign people out over a long lunch.
         $this->signInAsStaff();
 
         $this->session([
-            EnforceSessionLifetime::LAST_SEEN => now()->subMinutes(31)->timestamp,
+            EnforceSessionLifetime::LAST_SEEN => now()->subMinutes(121)->timestamp,
         ]);
 
         $this->get('/dashboard')->assertOk();
     }
+
 
     public function test_a_session_expires_seven_days_after_it_was_issued_however_busy(): void
     {
@@ -532,6 +542,10 @@ class AuthenticationTest extends TestCase
          * The absolute ceiling. Laravel's own lifetime is idle-based, so a
          * session used daily would otherwise live forever — and a stolen cookie
          * with it.
+         *
+         * This is also what stops the thirty-day idle window from being
+         * "reconciled" upward: the two numbers disagree on purpose, and a
+         * session active this second, issued eight days ago, must still be over.
          */
         $this->signInAsStaff();
 

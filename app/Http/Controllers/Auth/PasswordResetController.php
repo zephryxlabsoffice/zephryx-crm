@@ -196,7 +196,7 @@ class PasswordResetController extends Controller
          *
          * Only possible on the database driver. On `file` or `cookie` there is
          * no way to reach another session, so a reset would leave an attacker
-         * signed in for up to twelve hours AFTER the password they stole
+         * signed in for up to seven more days AFTER the password they stole
          * stopped working — and the person who reset it would have no way to
          * know, because the reset appears to succeed.
          *

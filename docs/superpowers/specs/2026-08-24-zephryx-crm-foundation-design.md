@@ -204,12 +204,22 @@ one above it**, so a manual database/CLI recovery procedure is documented in
 | Property | Staff / Client | Admin |
 |---|---|---|
 | Absolute lifetime | 7 days, then forced sign-out | 7 days |
-| Idle timeout | 12 hours | 30 minutes, then re-auth |
+| Idle timeout | 30 days | 2 hours, then re-auth |
 | Cookie flags | `HttpOnly`, `Secure`, `SameSite=Lax` | same |
 | Regenerated | on login and on privilege change | same |
 
 Explicit logout destroys the session, the remember-me token and the device
 trust record.
+
+**The staff idle window is longer than the absolute ceiling on purpose**
+(decided 2026-09-08). Thirty days of idle allowance never fires on its own —
+seven days from issue arrives first — and reconciling the two upward would be a
+mistake. Staying signed in across a month is remember-me's job (§4.5), which
+rotates its token on every use and revokes the chain when a spent one comes
+back; a session cookie has no such tell, so a copied one must age out on its
+own. The thirty days governs the case where the ceiling is not the binding
+constraint: a session restored from remember-me is stamped fresh and idles
+against that window.
 
 ### 4.5 Remember me
 
@@ -527,10 +537,14 @@ the designer's existing base design rather than being decided globally here.
    ever wants a single consolidated figure, the exchange rate must be recorded
    on each invoice at its issue date; there is no rate feed and inventing one at
    display time would be worse than not having the figure.
-6. **Idle timeouts** — 12 hours staff/client, 30 minutes admin, stated as an
-   assumption in §4.4 and awaiting confirmation. `SESSION_LIFETIME=720`
-   encodes the staff/client value; the admin window needs its own middleware
-   when that realm is built.
+6. ~~**Idle timeouts**~~ — **resolved 2026-09-08**: the owner set them at
+   **30 days** for staff and clients and **2 hours** for admin, replacing the
+   assumed 12 hours and 30 minutes. `EnforceSessionLifetime` applies both
+   windows plus the 7-day absolute ceiling, choosing the window from the
+   account's `account_type` rather than the URL prefix — so an admin session
+   gets 2 hours everywhere, not only under `/admin`. Changing either number is
+   a constant in that class, not a config edit; `SESSION_LIFETIME` (10080) is
+   the outer bound beneath the policy, sized to the ceiling.
 
 ### Deviations from the handover, recorded
 

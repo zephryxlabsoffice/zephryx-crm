@@ -4,8 +4,8 @@
     Laravel's stock wording here is "Page Expired", which tells someone who has
     just lost a half-written form nothing about what to do. This is the most
     likely error page in the application: every form carries a CSRF token (§6)
-    and sessions time out after 12 hours (§4.4), so leaving a tab open
-    overnight lands here.
+    and no session outlives seven days from issue (§4.4), so a tab left open
+    across a holiday lands here.
 --}}
 @section('title', 'Session expired')
 @section('code', '419')

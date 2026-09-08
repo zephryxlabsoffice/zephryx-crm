@@ -32,23 +32,32 @@ return [
     | THIS IS THE OUTER BOUND, NOT THE POLICY (foundation spec §4.4)
     |
     | Laravel has one idle timeout for the whole application. §4.4 needs three
-    | things at once: an absolute seven-day ceiling, a twelve-hour idle timeout
-    | for staff and clients, and a thirty-minute one for the admin account.
+    | things at once: an absolute seven-day ceiling, a thirty-day idle timeout
+    | for staff and clients, and a two-hour one for the admin account.
     | App\Http\Middleware\EnforceSessionLifetime does all three.
     |
-    | So this value is set to the LONGEST of them — twelve hours — and exists
-    | only so the framework does not expire a session before the real policy
-    | gets to decide. It was 120 minutes, which would have quietly overruled
-    | §4.4 for every staff account and made the policy above it decorative.
+    | So this value is set to the longest a session can live under that policy
+    | and exists only so the framework does not expire one before the real
+    | policy gets to decide. It was 120 minutes, which would have quietly
+    | overruled §4.4 for every staff account and made the policy above it
+    | decorative.
+    |
+    | That bound is the SEVEN-DAY CEILING (10080 minutes), not the thirty-day
+    | idle window — no session outlives the ceiling however active it is, so
+    | sizing this to thirty days would only leave dead rows in the session table
+    | for three extra weeks. Thirty-day persistence comes from remember-me
+    | (§4.5), which rotates its token on every use and revokes the chain when a
+    | spent one reappears. A session cookie cannot do that, which is why it gets
+    | the shorter horizon.
     |
     | Raising it is not a weakening: the middleware still ends an idle staff
-    | session at twelve hours, an idle admin session at thirty minutes, and any
+    | session at thirty days, an idle admin session at two hours, and any
     | session at all at seven days.
     | ─────────────────────────────────────────────────────────────────────────
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 720),
+    'lifetime' => (int) env('SESSION_LIFETIME', 10080),
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
