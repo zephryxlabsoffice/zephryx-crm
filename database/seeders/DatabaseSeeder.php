@@ -25,9 +25,19 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        /*
+         * MasterDataSeeder sits between them because it runs in production like
+         * the other two and, unlike them, the modules above it cannot function
+         * without its rows — an employee form with no departments to choose
+         * from creates nobody. EmployeeSeeder is last because it needs both the
+         * accounts and the departments to attach them to, and it is the only
+         * one of the four that does nothing outside local + debug.
+         */
         $this->call([
             RbacSeeder::class,
+            MasterDataSeeder::class,
             AccountSeeder::class,
+            EmployeeSeeder::class,
         ]);
     }
 }

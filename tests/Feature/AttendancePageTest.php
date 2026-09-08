@@ -23,6 +23,25 @@ class AttendancePageTest extends TestCase
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
+
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * THE CLOCK IS AN INPUT TO THIS MODULE, SO IT IS PINNED
+         *
+         * Attendance measures open records against `now`: hours worked so far,
+         * and whether the ten-hour window has closed. Left to the wall clock,
+         * tests in this file pass or fail depending on what time of day they
+         * are run, and they did — one asserting the window HAD closed failed
+         * every morning, and one forbidding the handover's hardcoded "8h 15m"
+         * failed at 18:07, when the demo viewer's 09:52 check-in had genuinely
+         * been running for eight hours and fifteen minutes.
+         *
+         * Pinned to 11:00 on today's date. The date is deliberately still today
+         * — the demo data is generated relative to it, and moving it would be
+         * testing a different dataset — but the time of day is now ours.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        Carbon::setTestNow(Carbon::today()->setTime(11, 0));
     }
     protected function withDemoData(): void
     {
