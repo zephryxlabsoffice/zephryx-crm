@@ -441,9 +441,52 @@ rejected** given the security requirements in §6.
 This choice affects project layout and the implementation plan. It does not
 affect anything specified above.
 
-**Mail:** PHPMailer over the MilesWeb SMTP account. SPF and DKIM must be
-configured or OTP messages will be filtered as spam — since OTP gates all
-sign-in, this is a launch blocker, not a nicety.
+**Host: `crm.zephryxlabs.in`** (confirmed 2026-09-08). A subdomain of the
+domain the company already owns, rather than a second domain: staff who learn
+that anything Zephryx arrives from `zephryxlabs.in` have a rule they can apply
+to the OTP and password-reset mail phishers imitate, there is one DNS zone to
+keep correct instead of two, and there is no second registration to forget to
+renew — a lapsed domain that sends your password resets is a hijackable
+identity.
+
+`SESSION_DOMAIN=crm.zephryxlabs.in`, host-only. **Not** `.zephryxlabs.in`: the
+leading dot shares the session cookie with every subdomain, so anything ever
+hosted at `www` or `blog` could read it.
+
+**Mail: two providers on one domain** (decided 2026-09-08). Staff mailboxes are
+Google Workspace on the apex and stay there. OTP and other application mail goes
+out through **MilesWeb SMTP** as `no-reply@crm.zephryxlabs.in`.
+
+That split is possible because MX governs INBOUND mail only — one set per
+domain, which is why a single mailbox cannot be pointed at a different provider
+from its neighbours. Sending is authorised by SPF, DKIM and DMARC instead, and
+those can say whatever the subdomain needs.
+
+Sending from the SUBDOMAIN rather than the apex is the point of the arrangement:
+
+- `crm.zephryxlabs.in` carries its own SPF naming only MilesWeb, and MilesWeb's
+  DKIM selector under `_domainkey.crm.zephryxlabs.in`. The apex records that
+  every staff mailbox depends on are never edited.
+- **A domain may have exactly one SPF record.** Adding a second TXT does not
+  merge with the first, it invalidates both — the usual way this setup fails.
+  Sending from the subdomain means Google's `include:_spf.google.com` never has
+  to be merged with MilesWeb's at all.
+- DMARC at the apex covers subdomains, and relaxed alignment treats
+  `crm.zephryxlabs.in` as aligned with `zephryxlabs.in`.
+- MilesWeb's shared-IP reputation stays isolated from Google-sent staff mail.
+
+DNS is Cloudflare. **Every MX and TXT record must be DNS-only (grey cloud)** —
+Cloudflare does not proxy SMTP and an orange cloud on a mail record breaks it
+silently. The `A` record for the site may stay proxied; that is independent. MX
+points at MilesWeb's mail hostname, never at the proxied `crm` record.
+
+SPF and DKIM must be configured or OTP messages will be filtered as spam —
+since OTP gates all sign-in, this is a launch blocker, not a nicety. **Known
+risk, accepted by the owner:** MilesWeb's free mailboxes send from shared IPs
+whose reputation the company does not control, and OTP mail landing in spam is
+a total sign-out of everybody rather than a degraded feature. Moving to a
+transactional sender is three `MAIL_*` variables and two DNS records, and
+nothing above depends on which one delivers.
 
 **Cron:** cPanel cron jobs, needed later for attendance auto-close, payroll
 runs and invoice reminders.
@@ -526,12 +569,15 @@ the designer's existing base design rather than being decided globally here.
 ### Still open
 
 4. ~~**Support mailbox address**~~ — **resolved 2026-08-27**: the mailbox is
-   `admin@zephryxlabs.in`. `MAIL_FROM_ADDRESS` was moved to the same domain
-   (`no-reply@zephryxlabs.in`) on the assumption that `.in` is the company's
-   mail domain — **worth confirming**, because SPF and DKIM must be configured
-   for whichever domain sends, and OTP delivery gates every sign-in (§10).
-   All four surfaces that link to support now go through
-   `App\Support\SupportContact`, so the address is one edit.
+   `admin@zephryxlabs.in`, a Google Workspace mailbox on the apex. All four
+   surfaces that link to support go through `App\Support\SupportContact`, so
+   the address is one edit.
+
+   The open half of this — whether `.in` was really the company's mail domain —
+   **closed 2026-09-08**: it is, the application is hosted at
+   `crm.zephryxlabs.in`, and `MAIL_FROM_ADDRESS` moved from the apex to
+   `no-reply@crm.zephryxlabs.in` so that MilesWeb can send application mail
+   without the apex SPF that Google Workspace owns being touched. See §10.
 5. **Currency conversion** — deliberately absent. Money totals across
    currencies are shown as separate subtotals (see Invoices below). If the owner
    ever wants a single consolidated figure, the exchange rate must be recorded
