@@ -57,6 +57,7 @@ class DatabaseSeeder extends Seeder
             TicketSeeder::class,
             InvoiceSeeder::class,
             MeetingSeeder::class,
+            AnnouncementSeeder::class,
         ]);
     }
 }

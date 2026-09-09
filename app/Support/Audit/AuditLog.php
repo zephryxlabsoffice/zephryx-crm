@@ -173,6 +173,16 @@ class AuditLog
     public const MEETING_CANCELLED = 'meeting.cancelled';
     public const MEETING_CANCEL_FAILED = 'meeting.cancel_failed';
 
+    /*
+     * Announcements. Posting is separate from drafting because publishing a
+     * holiday notice is what closes the office — the entry that matters is the
+     * one naming who put it on the board and when, since that is the moment
+     * everybody's attendance changed.
+     */
+    public const ANNOUNCEMENT_DRAFTED = 'announcement.drafted';
+    public const ANNOUNCEMENT_POSTED = 'announcement.posted';
+    public const ANNOUNCEMENT_EXPIRED = 'announcement.expired';
+
     /* Admin Panel (§6 requires all of its actions) */
     public const PERMISSION_CHANGED = 'admin.permission_changed';
     public const SETTING_CHANGED = 'admin.setting_changed';

@@ -906,8 +906,14 @@ class AttendancePageTest extends TestCase
 
         $this->assertStringContainsString('Closing the office', $html);
         $this->assertStringContainsString('How long it runs', $html);
-        // Still two distinct pairs of date inputs, not one reused for both.
-        foreach (['published_at', 'expires_at', 'observed_from', 'observed_to'] as $field) {
+        /*
+         * Still two distinct pairs of date inputs, not one reused for both.
+         *
+         * The notice window is `starts_on`/`ends_on` now — it was named
+         * `published_at`/`expires_at` while the form posted nowhere, and the
+         * columns it writes are what the fields are called since it does.
+         */
+        foreach (['starts_on', 'ends_on', 'observed_from', 'observed_to'] as $field) {
             $this->assertSame(1, substr_count($html, 'name="'.$field.'"'), "{$field} is not a single field");
         }
     }

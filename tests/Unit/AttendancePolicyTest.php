@@ -278,10 +278,26 @@ class AttendancePolicyTest extends TestCase
 
     public function test_a_holiday_comes_from_the_announcement_board(): void
     {
-        // Not from this module's configuration. HR announces a holiday once and
-        // it closes the office; a second list here is the one that goes stale.
-        $this->app->detectEnvironment(fn () => 'local');
-        config(['app.debug' => true]);
+        /*
+         * Not from this module's configuration. HR announces a holiday once and
+         * it closes the office; a second list here is the one that goes stale.
+         *
+         * The board is a table now, so this posts a notice rather than flipping
+         * the environment to wake a fixture up — which is also a better test of
+         * the claim: what closes the office is an announcement somebody made.
+         */
+        \App\Models\Announcement::create([
+            'reference' => 'ANN-TEST-001',
+            'title' => 'Office closed for the festival holiday',
+            'body' => 'The office is closed for the day.',
+            'category' => 'holiday',
+            'author_id' => $this->anAuthor()->id,
+            'audience' => 'everyone',
+            'starts_on' => now()->toDateString(),
+            'observed_from' => now()->addDays(4)->toDateString(),
+            'observed_to' => now()->addDays(4)->toDateString(),
+            'published_at' => now(),
+        ]);
 
         $next = \App\Support\Holidays::next();
 
@@ -292,6 +308,25 @@ class AttendancePolicyTest extends TestCase
         // And there is no holiday list in the attendance config to disagree
         // with it.
         $this->assertNull(config('attendance.holidays'));
+    }
+
+    /**
+     * Somebody to sign a notice. A board post has an author, restricted on
+     * delete, because a notice people acted on must not lose who wrote it.
+     */
+    protected function anAuthor(): \App\Models\Employee
+    {
+        $user = \App\Models\User::factory()->create([
+            'user_id' => 'EMP-HOL1',
+            'account_type' => 'staff',
+            'staff_kind' => 'employee',
+            'status' => 'active',
+        ]);
+
+        return \App\Models\Employee::create([
+            'user_id' => $user->id,
+            'joined_on' => Carbon::now()->subYear(),
+        ]);
     }
 
     public function test_approved_leave_outranks_absence(): void

@@ -600,8 +600,12 @@ Route::post('/meetings/{meeting}/cancel', [MeetingController::class, 'cancel'])
  */
 Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
 // Before /announcements/{announcement}, or these are read as references.
-Route::get('/announcements/manage', [AnnouncementController::class, 'manage'])->name('announcements.manage');
-Route::get('/announcements/compose', [AnnouncementController::class, 'create'])->name('announcements.create');
+Route::get('/announcements/manage', [AnnouncementController::class, 'manage'])
+    ->middleware('permission:announcements.post')
+    ->name('announcements.manage');
+Route::get('/announcements/compose', [AnnouncementController::class, 'create'])
+    ->middleware('permission:announcements.post')
+    ->name('announcements.create');
 Route::get('/announcements/{announcement}', [AnnouncementController::class, 'show'])
     ->where('announcement', '[A-Za-z0-9-]{1,40}')
     ->name('announcements.show');
@@ -615,12 +619,16 @@ Route::get('/announcements/{announcement}', [AnnouncementController::class, 'sho
  * stored one would be wrong the following year and would survive somebody
  * opting out of their own being announced.
  */
-Route::post('/announcements', fn () => abort(501))->name('announcements.store');
-Route::post('/announcements/{announcement}/publish', fn () => abort(501))
+Route::post('/announcements', [AnnouncementController::class, 'store'])
+    ->middleware('permission:announcements.post')
+    ->name('announcements.store');
+Route::post('/announcements/{announcement}/publish', [AnnouncementController::class, 'publish'])
     ->where('announcement', '[A-Za-z0-9-]{1,40}')
+    ->middleware('permission:announcements.post')
     ->name('announcements.publish');
-Route::post('/announcements/{announcement}/expire', fn () => abort(501))
+Route::post('/announcements/{announcement}/expire', [AnnouncementController::class, 'expire'])
     ->where('announcement', '[A-Za-z0-9-]{1,40}')
+    ->middleware('permission:announcements.post')
     ->name('announcements.expire');
 
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

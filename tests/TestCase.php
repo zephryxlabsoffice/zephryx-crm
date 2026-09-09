@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use App\Models\Announcement;
 use App\Models\AttendanceRecord;
 use App\Models\Client;
 use App\Models\Employee;
@@ -15,6 +16,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Support\Realm;
 use Database\Seeders\AccountSeeder;
+use Database\Seeders\AnnouncementSeeder;
 use Database\Seeders\AttendanceSeeder;
 use Database\Seeders\ClientSeeder;
 use Database\Seeders\EmployeeSeeder;
@@ -192,6 +194,7 @@ abstract class TestCase extends BaseTestCase
             (new TicketSeeder)->run();
             (new InvoiceSeeder)->run();
             (new MeetingSeeder)->run();
+            (new AnnouncementSeeder)->run();
         } finally {
             $this->app->detectEnvironment(fn () => 'testing');
             config(['app.debug' => $debug]);
@@ -216,6 +219,7 @@ abstract class TestCase extends BaseTestCase
      */
     protected function emptyTheWorkforce(): void
     {
+        Announcement::query()->delete();
         SalaryRecord::query()->delete();
         EmployeeBanking::query()->delete();
         AttendanceRecord::query()->delete();

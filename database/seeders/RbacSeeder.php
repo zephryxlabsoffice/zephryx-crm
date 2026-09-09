@@ -384,6 +384,17 @@ class RbacSeeder extends Seeder
                     // Teams are the work domain, where a Manager outranks a
                     // Team Lead — so the whole module, not just membership.
                     'teams.create', 'teams.edit', 'teams.members',
+                    /*
+                     * Posting to the board, which §12 has always described as
+                     * HR, project managers and the owner. It was missing from
+                     * this role while the board had no writes to hold it back
+                     * from; the module landing is what made the gap visible.
+                     *
+                     * NOT `announcements.holiday`: closing the office is a
+                     * write to everybody's attendance record, and that stays
+                     * with HR and the owner.
+                     */
+                    'announcements.post',
                     // The project manager, in the literal sense.
                     'projects.create', 'projects.edit', 'projects.publish',
                     'tasks.create', 'tasks.edit', 'tasks.assign',

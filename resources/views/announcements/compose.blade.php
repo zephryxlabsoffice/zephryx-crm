@@ -16,12 +16,6 @@
         </div>
     </div>
 
-    @include('partials.notice', [
-        'tone' => 'info',
-        'title' => 'This form does not save yet',
-        'message' => 'The fields and the validation shape are real; the write lands with the backend. Nothing typed here is stored and nobody is notified.',
-    ])
-
     <form class="an-form" method="POST" action="{{ route('announcements.store') }}">
         @csrf
 
@@ -38,13 +32,15 @@
                     <div class="form-grid">
                         <div class="form-field an-form-wide">
                             <label class="form-field-lbl" for="an-title">Title</label>
-                            <input id="an-title" name="title" type="text" placeholder="Office closed on Friday" disabled>
+                            <input id="an-title" name="title" type="text" required maxlength="200" placeholder="Office closed on Friday" value="{{ old('title') }}">
+                            @error('title') <span class="field-error">{{ $message }}</span> @enderror
                             <span class="pay-hint">This is what people see on the board and in the list.</span>
                         </div>
 
                         <div class="form-field an-form-wide">
                             <label class="form-field-lbl" for="an-body">The announcement</label>
-                            <textarea id="an-body" name="body" rows="6" placeholder="What is happening, when, and what anyone needs to do about it." disabled></textarea>
+                            <textarea id="an-body" name="body" rows="6" required maxlength="5000" placeholder="What is happening, when, and what anyone needs to do about it.">{{ old('body') }}</textarea>
+                            @error('body') <span class="field-error">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="form-field">
@@ -54,7 +50,7 @@
                                  hand-written one would look identical in the
                                  feed and be wrong next year. See
                                  AnnouncementPresenter::authorableCategories(). --}}
-                            <select id="an-cat" name="category" disabled>
+                            <select id="an-cat" name="category" required>
                                 @foreach ($categories as $key => $meta)
                                     <option value="{{ $key }}">{{ $meta['label'] }}</option>
                                 @endforeach
@@ -63,7 +59,7 @@
 
                         <div class="form-field">
                             <label class="form-field-lbl" for="an-audience">Who sees it</label>
-                            <select id="an-audience" name="audience" disabled>
+                            <select id="an-audience" name="audience" required>
                                 @foreach ($audiences as $key => $label)
                                     <option value="{{ $key }}">{{ $label }}</option>
                                 @endforeach
@@ -73,12 +69,18 @@
 
                         <div class="form-field">
                             <label class="form-field-lbl" for="an-department">Which department <span class="an-optional">(if not everyone)</span></label>
-                            <select id="an-department" name="audience_value" disabled>
+                            <select id="an-department" name="audience_department_id">
                                 <option value="">—</option>
                                 @foreach ($departments as $department)
-                                    <option value="{{ $department }}">{{ $department }}</option>
+                                    <option value="{{ $department->id }}"
+                                        @selected((int) old('audience_department_id') === $department->id)>
+                                        {{ $department->name }}
+                                    </option>
                                 @endforeach
                             </select>
+                            @error('audience_department_id')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
                         </div>
                     </div>
                 </div>
@@ -95,13 +97,13 @@
                     <div class="form-grid">
                         <div class="form-field">
                             <label class="form-field-lbl" for="an-from">Goes up</label>
-                            <input id="an-from" name="published_at" type="date" value="{{ now()->toDateString() }}" disabled>
+                            <input id="an-from" name="starts_on" type="date" required value="{{ old('starts_on', now()->toDateString()) }}">
                             <span class="pay-hint">A future date schedules it.</span>
                         </div>
 
                         <div class="form-field">
                             <label class="form-field-lbl" for="an-to">Comes down <span class="an-optional">(optional)</span></label>
-                            <input id="an-to" name="expires_at" type="date" disabled>
+                            <input id="an-to" name="ends_on" type="date" value="{{ old('ends_on') }}">
                             {{-- An end date is a kindness to everyone who reads
                                  the board later: an announcement about a closure
                                  last March is noise once it has happened. --}}
@@ -110,7 +112,7 @@
 
                         <div class="form-field an-form-wide">
                             <label class="form-field-lbl" for="an-pinned">
-                                <input id="an-pinned" name="pinned" type="checkbox" value="1" disabled>
+                                <input id="an-pinned" name="pinned" type="checkbox" value="1" @checked(old('pinned'))>
                                 Pin to the top of the board
                             </label>
                             <span class="pay-hint">Use it sparingly — everything pinned is nothing pinned.</span>
@@ -165,12 +167,13 @@
                         <div class="form-grid">
                             <div class="form-field">
                                 <label class="form-field-lbl" for="an-closed-from">Closed from</label>
-                                <input id="an-closed-from" name="observed_from" type="date" disabled>
+                                <input id="an-closed-from" name="observed_from" type="date" value="{{ old('observed_from') }}">
                             </div>
 
                             <div class="form-field">
                                 <label class="form-field-lbl" for="an-closed-to">Closed until <span class="an-optional">(same day if blank)</span></label>
-                                <input id="an-closed-to" name="observed_to" type="date" disabled>
+                                <input id="an-closed-to" name="observed_to" type="date" value="{{ old('observed_to') }}">
+                                @error('observed_to') <span class="field-error">{{ $message }}</span> @enderror
                             </div>
                         </div>
 
@@ -226,12 +229,12 @@
                     </ul>
 
                     <div class="an-submit">
-                        <button class="btn btn-primary" type="submit" name="action" value="publish" disabled title="Posting is not built yet">
+                        <button class="btn btn-primary" type="submit" name="publish" value="1">
                             Post it
                         </button>
                         {{-- Save and post are two acts. An announcement sent by
                              accident cannot be unsent. --}}
-                        <button class="btn btn-outline" type="submit" name="action" value="draft" disabled title="Saving is not built yet">
+                        <button class="btn btn-outline" type="submit" name="publish" value="0">
                             Save as draft
                         </button>
                     </div>

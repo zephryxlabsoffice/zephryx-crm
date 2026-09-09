@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-use App\Support\Demo\DemoAnnouncements;
+use App\Models\Announcement;
 use Illuminate\Support\Carbon;
 
 /**
@@ -91,7 +91,21 @@ class Holidays
      */
     public static function all(): array
     {
-        $key = DemoAnnouncements::enabled() ? 'live' : 'inert';
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * KEYED ON A FINGERPRINT OF THE ROWS, NOT ON A FLAG
+         *
+         * This used to key on whether the demo source was switched on, which
+         * was enough while the list came from a fixture that never changed
+         * mid-request. It comes from the `announcements` table now, and a
+         * holiday published during a request must not be read from a list built
+         * before it — so the key is how many holiday notices there are and when
+         * one last moved. Two cheap aggregates against an indexed column, and
+         * the memoisation still saves the few thousand rebuilds an attendance
+         * calendar would otherwise cause.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        $key = self::fingerprint();
 
         if (isset(self::$cache[$key])) {
             return self::$cache[$key];
@@ -199,6 +213,40 @@ class Holidays
      */
     protected static function announcements(): iterable
     {
-        return DemoAnnouncements::holidays();
+        return AnnouncementDirectory::holidays();
+    }
+
+    /**
+     * What the current set of holiday notices looks like, cheaply.
+     *
+     * Count plus the latest change, which is enough to notice a notice being
+     * published, edited or expired without rebuilding the list to find out.
+     */
+    protected static function fingerprint(): string
+    {
+        /*
+         * A hash of the closure rows themselves, not a count and a timestamp.
+         *
+         * The timestamp version looked cheaper and was wrong: `updated_at` has
+         * one-second resolution, so two different sets of holidays written in
+         * the same second produced the same key and the second one read the
+         * first one's list. It showed up as a published notice that closed
+         * nothing.
+         *
+         * This is one indexed query over a handful of rows, and what it saves
+         * is the date expansion — which the attendance calendar would otherwise
+         * run for every cell of every month.
+         */
+        $rows = Announcement::query()
+            ->published()
+            ->where('category', 'holiday')
+            ->whereNotNull('observed_from')
+            ->orderBy('id')
+            ->get(['id', 'observed_from', 'observed_to', 'title']);
+
+        return md5($rows->map(
+            fn (Announcement $a) => $a->id.'|'.$a->observed_from?->toDateString()
+                .'|'.$a->observed_to?->toDateString().'|'.$a->title
+        )->implode(';'));
     }
 }

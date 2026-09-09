@@ -2,16 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Announcement;
+use App\Models\Employee;
+use App\Models\MasterDataItem;
+use App\Support\AnnouncementDirectory;
 use App\Support\AnnouncementPresenter;
-use App\Support\Demo\DemoAnnouncements;
-use App\Support\Demo\DemoEmployees;
+use App\Support\Audit\AuditLog;
 use App\Support\Milestones;
+use App\Support\Rbac\Rbac;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Announcements — the board everybody reads.
@@ -81,6 +87,10 @@ class AnnouncementController extends Controller
 {
     protected const PER_PAGE = 10;
 
+    public function __construct(protected Rbac $rbac, protected AuditLog $audit)
+    {
+    }
+
     /**
      * GET /announcements — the board.
      */
@@ -90,19 +100,18 @@ class AnnouncementController extends Controller
             'category' => ['nullable', Rule::in(array_keys(AnnouncementPresenter::categories()))],
         ])['category'] ?? null;
 
-        $board = DemoAnnouncements::board();
+        $board = AnnouncementDirectory::board();
 
         return response()->view('announcements.index', [
             'activeNav' => 'announcements',
             'announcements' => $category ? $board->where('category', $category)->values() : $board,
             'category' => $category,
-            'categories' => DemoAnnouncements::categoryCounts(),
+            'categories' => AnnouncementDirectory::categoryCounts(),
             'boardTotal' => $board->count(),
             // Coming up, so the board is useful before the day rather than only
             // on it.
             'upcoming' => Milestones::upcoming(),
-            // TODO (backend phase): `announcements.post`.
-            'canPost' => true,
+            'canPost' => $this->rbac->can($request->user(), config('announcements.post_permission')),
         ]);
     }
 
@@ -115,11 +124,11 @@ class AnnouncementController extends Controller
             'tab' => ['nullable', Rule::in(array_merge(['all'], AnnouncementPresenter::statusOptions()))],
         ])['tab'] ?? 'all';
 
-        $all = DemoAnnouncements::authored();
+        $all = AnnouncementDirectory::authored();
         $shown = $tab === 'all' ? $all : $all->where('status', $tab)->values();
 
         $filters = $this->filters($request);
-        $counts = DemoAnnouncements::stats($all);
+        $counts = AnnouncementDirectory::stats($all);
 
         return response()->view('announcements.manage', [
             'activeNav' => 'announcements',
@@ -136,44 +145,286 @@ class AnnouncementController extends Controller
                 'draft' => $counts['draft'],
                 'expired' => $counts['expired'],
             ],
-            'canPost' => true,
+            'canPost' => $this->rbac->can($request->user(), config('announcements.post_permission')),
         ] + $filters);
     }
 
     /**
      * GET /announcements/compose
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
         return response()->view('announcements.compose', [
             'activeNav' => 'announcements',
+            'announcement' => null,
+            'reference' => AnnouncementDirectory::nextReference(),
             // Milestones are excluded: a hand-written one would sit in the feed
             // looking identical to a computed one and be wrong next year.
             'categories' => AnnouncementPresenter::authorableCategories(),
             'audiences' => AnnouncementPresenter::audiences(),
-            'departments' => DemoEmployees::all()->pluck('department')->unique()->sort()->values()->all(),
-            // Closure dates are a write to the attendance record made through
-            // this form, so they are their own permission — HR and the owner,
-            // not everyone who may post.
-            // TODO (backend phase): gate on `announcements.holiday` (§2.6).
-            'canDeclareHoliday' => true,
+            'departments' => MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->active()->get(),
+            /*
+             * Closure dates are a write to the attendance record made through
+             * this form, so they are their own permission — HR and the owner,
+             * not everyone who may post (§2.6).
+             */
+            'canDeclareHoliday' => $this->rbac->can(
+                $request->user(),
+                AnnouncementPresenter::holidayPermission(),
+            ),
         ]);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       THE WRITES
+       ══════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * Post to the board — as a draft, or published straight away.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * THE CLOSURE DATES ARE DROPPED FROM ANYBODY WITHOUT THE PERMISSION
+     *
+     * Not refused — dropped, and the post still saves. Somebody who may post
+     * but may not close the office writes their notice and it goes up; what
+     * does not happen is the attendance record changing underneath it. Refusing
+     * the whole post would lose what they wrote over a field they did not know
+     * they could not use.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $author = $this->employeeFor($request);
+
+        abort_if($author === null, 403);
+
+        $data = $this->validated($request);
+
+        $mayCloseTheOffice = $this->rbac->can($request->user(), AnnouncementPresenter::holidayPermission());
+
+        $announcement = Announcement::create([
+            'reference' => AnnouncementDirectory::nextReference(),
+            'title' => $data['title'],
+            'body' => $data['body'],
+            'category' => $data['category'],
+            'author_id' => $author->id,
+            'audience' => $data['audience'],
+            'audience_department_id' => $data['audience'] === 'everyone'
+                ? null
+                : ($data['audience_department_id'] ?? null),
+            'starts_on' => $data['starts_on'],
+            'ends_on' => $data['ends_on'] ?? null,
+            'observed_from' => $mayCloseTheOffice ? ($data['observed_from'] ?? null) : null,
+            'observed_to' => $mayCloseTheOffice
+                ? ($data['observed_to'] ?? $data['observed_from'] ?? null)
+                : null,
+            // Published now, or left as a draft for somebody to publish.
+            'published_at' => ($data['publish'] ?? false) ? now() : null,
+            'pinned' => $data['pinned'] ?? false,
+        ]);
+
+        $this->audit->record(
+            action: $announcement->isDraft() ? AuditLog::ANNOUNCEMENT_DRAFTED : AuditLog::ANNOUNCEMENT_POSTED,
+            actor: $request->user(),
+            entityType: 'announcement',
+            entityId: $announcement->reference,
+            after: $this->describe($announcement),
+            request: $request,
+        );
+
+        return redirect()
+            ->route('announcements.show', ['announcement' => $announcement->reference])
+            ->with('status', $announcement->isDraft()
+                ? 'Saved as a draft. Nothing is on the board yet.'
+                : 'Posted to the board.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * Publish a draft.
+     *
+     * Its own act, because publishing a holiday notice is what closes the
+     * office — a draft closes nothing, and the moment it goes up is the moment
+     * attendance changes.
+     */
+    public function publish(Request $request, string $announcement): RedirectResponse
+    {
+        $record = $this->find($announcement);
+        $model = $record['model'];
+
+        if ($model->published_at !== null) {
+            return redirect()
+                ->route('announcements.show', ['announcement' => $model->reference])
+                ->with('status', 'This was already published.')
+                ->with('status_tone', 'info');
+        }
+
+        if ($model->observed_from !== null
+            && ! $this->rbac->can($request->user(), AnnouncementPresenter::holidayPermission())) {
+            /*
+             * A draft that closes the office may only be published by somebody
+             * who could have written those dates in the first place. Otherwise
+             * the permission is a formality anybody can route around by asking
+             * a colleague to press the button.
+             */
+            abort(403);
+        }
+
+        $model->update(['published_at' => now()]);
+
+        $this->audit->record(
+            action: AuditLog::ANNOUNCEMENT_POSTED,
+            actor: $request->user(),
+            entityType: 'announcement',
+            entityId: $model->reference,
+            before: 'draft',
+            after: $this->describe($model),
+            request: $request,
+        );
+
+        return redirect()
+            ->route('announcements.show', ['announcement' => $model->reference])
+            ->with('status', 'Posted to the board.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * Take it down early.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * EXPIRING A HOLIDAY NOTICE DOES NOT REOPEN THE OFFICE
+     *
+     * The observed dates stay. The office was shut on those days whatever the
+     * board says about it now, and clearing them would retroactively mark
+     * everybody absent for a day the company closed — see App\Support\Holidays,
+     * which reads published notices rather than live ones for exactly this
+     * reason.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function expire(Request $request, string $announcement): RedirectResponse
+    {
+        $record = $this->find($announcement);
+        $model = $record['model'];
+
+        $model->update(['ends_on' => now()->subDay()->toDateString()]);
+
+        $this->audit->record(
+            action: AuditLog::ANNOUNCEMENT_EXPIRED,
+            actor: $request->user(),
+            entityType: 'announcement',
+            entityId: $model->reference,
+            after: 'Taken off the board'
+                .($model->observed_from !== null ? ' — the closure dates are unchanged' : ''),
+            request: $request,
+        );
+
+        return redirect()
+            ->route('announcements.show', ['announcement' => $model->reference])
+            ->with('status', $model->observed_from !== null
+                ? 'Taken off the board. The days the office was closed are unchanged.'
+                : 'Taken off the board.')
+            ->with('status_tone', 'info');
     }
 
     /**
      * GET /announcements/{announcement}
      */
-    public function show(string $announcement): Response
+    public function show(Request $request, string $announcement): Response
     {
-        $record = DemoAnnouncements::find($announcement);
-
-        abort_if($record === null, 404);
+        $record = $this->find($announcement);
 
         return response()->view('announcements.show', [
             'activeNav' => 'announcements',
             'announcement' => $record,
-            'canPost' => true,
+            'canPost' => $this->rbac->can($request->user(), config('announcements.post_permission')),
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function find(string $reference): array
+    {
+        $found = AnnouncementDirectory::find($reference);
+
+        abort_if($found === null, 404);
+
+        return $found;
+    }
+
+    protected function employeeFor(Request $request): ?Employee
+    {
+        return Employee::where('user_id', $request->user()?->id)->first();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function validated(Request $request): array
+    {
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'body' => ['required', 'string', 'max:5000'],
+            'category' => ['required', Rule::in(array_keys(AnnouncementPresenter::authorableCategories()))],
+            'audience' => ['required', Rule::in(array_keys(AnnouncementPresenter::audiences()))],
+            'audience_department_id' => [
+                'nullable',
+                'required_unless:audience,everyone',
+                Rule::exists('master_data_items', 'id')
+                    ->where('list', MasterDataItem::DEPARTMENTS)
+                    ->where('is_active', true),
+            ],
+            'starts_on' => ['required', 'date'],
+            // The notice window. Nullable means it never comes down on its own.
+            'ends_on' => ['nullable', 'date', 'after_or_equal:starts_on'],
+            /*
+             * The days the office is SHUT — a different range from the two
+             * above, and the reason this form is an attendance write. Bounded
+             * to a fortnight because a closure longer than that is not a
+             * holiday notice, it is a typo somebody would otherwise discover in
+             * next month's attendance report.
+             */
+            'observed_from' => ['nullable', 'date', 'required_with:observed_to'],
+            'observed_to' => ['nullable', 'date', 'after_or_equal:observed_from'],
+            'publish' => ['nullable', 'boolean'],
+            'pinned' => ['nullable', 'boolean'],
+        ]);
+
+        if (($data['observed_from'] ?? null) !== null) {
+            $from = \Illuminate\Support\Carbon::parse($data['observed_from']);
+            $to = \Illuminate\Support\Carbon::parse($data['observed_to'] ?? $data['observed_from']);
+
+            if ($from->diffInDays($to) > 14) {
+                /*
+                 * Checked here rather than as a rule, because `before_or_equal`
+                 * compares against a field or a fixed date and not against
+                 * "another field plus a fortnight" — written as a rule it
+                 * silently never matched, which is worse than not having it.
+                 */
+                throw ValidationException::withMessages([
+                    'observed_to' => 'A closure longer than a fortnight is almost always a mistyped date. Post two notices if it really is that long.',
+                ]);
+            }
+        }
+
+        return $data;
+    }
+
+    protected function describe(Announcement $announcement): string
+    {
+        return implode(' · ', array_filter([
+            $announcement->title,
+            $announcement->category,
+            $announcement->audience === 'everyone'
+                ? 'everyone'
+                : (string) $announcement->audienceDepartment?->name,
+            $announcement->observed_from !== null
+                ? 'office closed '.$announcement->observed_from->format('D d M Y')
+                    .($announcement->observed_to && ! $announcement->observed_to->isSameDay($announcement->observed_from)
+                        ? ' to '.$announcement->observed_to->format('D d M Y')
+                        : '')
+                : null,
+        ]));
     }
 
     /**
