@@ -42,21 +42,15 @@
         </div>
 
         <div class="hd-actions">
-            <a class="btn btn-outline" href="{{ route('teams.edit', ['team' => $team['id']]) }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>
-                </svg>
-                Edit Team
-            </a>
-
-            <a class="btn btn-primary" href="{{ route('teams.edit', ['team' => $team['id']]) }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/>
-                    <line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
-                </svg>
-                Add Member
-            </a>
+            @if ($mayEdit)
+                <a class="btn btn-outline" href="{{ route('teams.edit', ['team' => $team['id']]) }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>
+                    </svg>
+                    Edit Team
+                </a>
+            @endif
         </div>
     </div>
 
@@ -66,6 +60,10 @@
         @include('teams.partials.members')
 
         <aside class="rail">
+            @if ($mayManageMembers)
+                @include('teams.partials.add-member')
+            @endif
+
             @include('teams.partials.composition')
             @include('teams.partials.summary')
         </aside>

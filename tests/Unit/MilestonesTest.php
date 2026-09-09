@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\Employee;
+use App\Models\Team;
 use App\Support\Milestones;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -227,6 +228,13 @@ class MilestonesTest extends TestCase
         $this->app->detectEnvironment(fn () => 'production');
         config(['app.debug' => false]);
 
+        /*
+         * Teams first. `team_members.employee_id` is restricted on delete —
+         * somebody's team history is part of their record — so emptying the
+         * employees table means emptying what points at it. Dropping the teams
+         * cascades their memberships away.
+         */
+        Team::query()->delete();
         Employee::query()->delete();
 
         $this->assertSame([], Milestones::upcoming());

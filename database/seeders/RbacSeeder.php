@@ -135,6 +135,21 @@ class RbacSeeder extends Seeder
         'clients.edit',
         'clients.status',
         'clients.invite',
+        /*
+         * Teams. `teams.members` is separate from `teams.edit` because it is
+         * the routine act and the one a Team Lead does — within their own team
+         * only, which is a rule no permission key can express and the
+         * controller enforces (§2.6). Renaming a team, naming its lead and
+         * moving it between states are `teams.edit`.
+         *
+         * Anybody granted `teams.edit` is granted `teams.members` with it: the
+         * member routes are guarded by the narrower key, and a manager who
+         * could rename a team but not add anybody to it would be an accident,
+         * not a policy.
+         */
+        'teams.create',
+        'teams.edit',
+        'teams.members',
     ];
 
     /**
@@ -292,7 +307,12 @@ class RbacSeeder extends Seeder
             'team_lead' => [
                 'name' => 'Team Lead',
                 'description' => 'Authority over teams.',
-                'permissions' => [...$staffReading, 'employees.view'],
+                'permissions' => [
+                    ...$staffReading, 'employees.view',
+                    // Their own team's membership, and nothing wider. The key
+                    // opens the route; Team::isLedBy decides which team (§2.6).
+                    'teams.members',
+                ],
                 'ranks' => ['people' => 30, 'work' => 50, 'support' => 30, 'system' => 10],
             ],
 
@@ -305,6 +325,9 @@ class RbacSeeder extends Seeder
                     // The client relationship is the manager's, so the client
                     // record is too — including who at the client gets a login.
                     'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
+                    // Teams are the work domain, where a Manager outranks a
+                    // Team Lead — so the whole module, not just membership.
+                    'teams.create', 'teams.edit', 'teams.members',
                 ],
                 'ranks' => ['people' => 50, 'finance' => 30, 'work' => 70, 'support' => 40, 'system' => 10],
             ],
@@ -351,6 +374,7 @@ class RbacSeeder extends Seeder
                     'announcements.holiday', 'reports.view', 'leads.view',
                     'employees.create', 'employees.edit', 'employees.deactivate',
                     'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
+                    'teams.create', 'teams.edit', 'teams.members',
                 ],
                 'ranks' => ['people' => 90, 'finance' => 90, 'work' => 90, 'support' => 80, 'system' => 40],
             ],

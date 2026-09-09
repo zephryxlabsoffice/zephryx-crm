@@ -74,6 +74,16 @@ class AuditLog
      */
     public const CLIENT_INVITED = 'client.invited';
 
+    public const TEAM_CREATED = 'team.created';
+    public const TEAM_UPDATED = 'team.updated';
+    public const TEAM_STATUS_CHANGED = 'team.status_changed';
+    /*
+     * Joining and leaving share one action. Both answer the same question —
+     * "who was on this team when" — and the entry carries which of the two it
+     * was; two constants would split one timeline across two filters.
+     */
+    public const TEAM_MEMBERS_CHANGED = 'team.members_changed';
+
     /* Admin Panel (§6 requires all of its actions) */
     public const PERMISSION_CHANGED = 'admin.permission_changed';
     public const SETTING_CHANGED = 'admin.setting_changed';

@@ -102,12 +102,26 @@
                         </td>
                         <td role="cell" class="cell-tight" data-label="Joined">{{ E::joined($member['joined']) }}</td>
                         <td role="cell" class="cell-actions">
-                            <button class="row-menu" type="button" disabled title="Row actions are not built yet">
-                                <span class="sr-only">Actions for {{ $member['name'] }}</span>
-                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                    <circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>
-                                </svg>
-                            </button>
+                            {{-- A POST form, not a link: taking somebody off a
+                                 team changes something, and a GET that changes
+                                 something is one a link prefetcher can fire on
+                                 its own. Only rendered for whoever may do it
+                                 here — see TeamController::canManageMembers. --}}
+                            @if ($mayManageMembers && $member['user_id'] !== $team['lead'])
+                                <form method="POST" action="{{ route('teams.members.remove', ['team' => $team['id']]) }}">
+                                    @csrf
+                                    <input type="hidden" name="employee_id" value="{{ $member['employee_id'] }}">
+                                    <button class="chip-btn" type="submit">
+                                        <span class="sr-only">Remove {{ $member['name'] }} from {{ $team['name'] }}</span>
+                                        Remove
+                                    </button>
+                                </form>
+                            @elseif ($member['user_id'] === $team['lead'])
+                                {{-- The lead cannot be removed while they lead
+                                     it: a team showing a lead who is not in it
+                                     is a state nobody arrives at on purpose. --}}
+                                <span class="lead-empty">Team lead</span>
+                            @endif
                         </td>
                     </tr>
                 @empty

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use App\Support\Demo\DemoTeams;
 use Tests\TestCase;
 
@@ -24,10 +25,16 @@ class TeamsPageTest extends TestCase
          */
         $this->signInAsStaff();
     }
+    /**
+     * The demo teams, as real rows.
+     *
+     * The environment flip this replaced did nothing once the module read the
+     * `teams` table: there was no row to find, and a test "passing" against an
+     * empty page asserts the empty state while claiming to assert the list.
+     */
     protected function withDemoData(): void
     {
-        $this->app->detectEnvironment(fn () => 'local');
-        config(['app.debug' => true]);
+        $this->seedDemoWorkforce();
     }
 
     public function test_the_managing_face_renders(): void
@@ -115,7 +122,46 @@ class TeamsPageTest extends TestCase
         // A real state worth seeing, rather than an empty cell.
         $this->withDemoData();
 
+        /*
+         * Signed in as somebody who is actually in the lead-less team. The
+         * demo source used to answer "my teams" with a hardcoded EMP002 for
+         * everybody; the page filters on the viewer's own employment record
+         * now, so the test has to be a person who is in one.
+         */
+        $this->actingAs(User::where('user_id', 'EMP002')->firstOrFail());
+
         $this->get('/teams/mine')->assertSee('No lead assigned', false);
+    }
+
+    public function test_my_teams_is_the_viewers_own_membership(): void
+    {
+        /*
+         * The whole point of the personal face. It takes no parameter — the
+         * person comes from the session — so there is nothing here to change to
+         * somebody else's teams, the same reason the payslip route takes a
+         * period and no employee.
+         */
+        $this->withDemoData();
+
+        $this->actingAs(User::where('user_id', 'EMP003')->firstOrFail());
+
+        $body = $this->pageBody('/teams/mine');
+
+        // Neha Patel is in Design and Digital Marketing, and not in Backend.
+        $this->assertStringContainsString('Digital Marketing Team', $body);
+        $this->assertStringNotContainsString('Backend Development Team', $body);
+    }
+
+    public function test_somebody_with_no_employment_record_has_no_teams(): void
+    {
+        // A Mentor holds no Employee base at all (§2.1), so "my teams" is an
+        // empty list rather than an error.
+        $this->withDemoData();
+        $this->signInAsMentor();
+
+        $this->get('/teams/mine')
+            ->assertOk()
+            ->assertSee('You are not in any teams yet.', false);
     }
 
     public function test_the_overview_renders_one_team(): void

@@ -85,6 +85,13 @@ class EmployeeDirectory
     public static function row(Employee $employee): array
     {
         return [
+            /*
+             * The employment record's own key, for the places that write
+             * against it — team membership is one. `user_id` is the staff ID
+             * people read and quote; this is what a form posts back, and the
+             * two are deliberately not the same value.
+             */
+            'employee_id' => $employee->id,
             'user_id' => $employee->user?->user_id,
             'name' => $employee->user?->name,
             'email' => $employee->user?->email,

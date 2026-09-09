@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -53,6 +54,20 @@ class Employee extends Model
     public function designation(): BelongsTo
     {
         return $this->belongsTo(MasterDataItem::class, 'designation_id');
+    }
+
+    /**
+     * The teams this person belongs to.
+     *
+     * Membership, not leadership. Somebody can lead a team they are not a
+     * member of — unusual, and a real state the data allows — so `/teams/mine`
+     * asks this and the ownership check on a write asks Team::isLedBy.
+     *
+     * @return BelongsToMany<Team, $this>
+     */
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class, 'team_members')->withTimestamps();
     }
 
     /**

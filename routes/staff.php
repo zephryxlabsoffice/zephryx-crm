@@ -175,16 +175,69 @@ Route::post('/employees/{employee}/status', [EmployeeController::class, 'status'
     ->middleware('permission:employees.deactivate')
     ->name('employees.status');
 
-Route::get('/teams', [TeamController::class, 'index'])->name('teams.index');
-// Before the {team} route, or "mine" is read as a team ID.
+/*
+ * Teams (2026-09-09).
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * `/teams/mine` DELIBERATELY CARRIES NO PERMISSION
+ *
+ * §12.1 keeps the personal and managing faces as separate pages, and the
+ * personal one is the viewer's own membership — reachable by anybody signed in,
+ * for the same reason their own payslip is. It takes no parameter either: the
+ * person comes from the session, so there is nothing to change to somebody
+ * else's.
+ *
+ * The managing face keeps `teams.view`, which every staff role holds.
+ *
+ * Membership is its own permission because it is the routine act — a Team Lead
+ * does it within their own team, which the route cannot express and the
+ * controller checks (§2.6). `teams.edit` is the wider one: renaming a team,
+ * moving it between states, naming its lead.
+ *
+ * There is no delete. Tasks and projects will point at teams.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+Route::get('/teams', [TeamController::class, 'index'])
+    ->middleware('permission:teams.view')
+    ->name('teams.index');
+
+// Before the {team} route, or these are read as team references.
 Route::get('/teams/mine', [TeamController::class, 'mine'])->name('teams.mine');
-Route::get('/teams/create', fn () => app(ModulePlaceholderController::class)('teams'))->name('teams.create');
+
+Route::get('/teams/create', [TeamController::class, 'create'])
+    ->middleware('permission:teams.create')
+    ->name('teams.create');
+Route::post('/teams', [TeamController::class, 'store'])
+    ->middleware('permission:teams.create')
+    ->name('teams.store');
+
 Route::get('/teams/{team}', [TeamController::class, 'show'])
     ->where('team', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:teams.view')
     ->name('teams.show');
-Route::get('/teams/{team}/edit', fn () => app(ModulePlaceholderController::class)('teams'))
+
+Route::get('/teams/{team}/edit', [TeamController::class, 'edit'])
     ->where('team', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:teams.edit')
     ->name('teams.edit');
+Route::post('/teams/{team}', [TeamController::class, 'update'])
+    ->where('team', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:teams.edit')
+    ->name('teams.update');
+
+/*
+ * The route guard is the floor here, not the whole rule: a Team Lead reaching
+ * these holds `teams.members`, and the controller then refuses a team they do
+ * not lead.
+ */
+Route::post('/teams/{team}/members', [TeamController::class, 'addMember'])
+    ->where('team', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:teams.members')
+    ->name('teams.members.store');
+Route::post('/teams/{team}/members/remove', [TeamController::class, 'removeMember'])
+    ->where('team', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:teams.members')
+    ->name('teams.members.remove');
 
 Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
 // These sit before /projects/{project} or they are read as project references.
