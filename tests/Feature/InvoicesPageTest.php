@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Support\Demo\DemoInvoices;
+use App\Support\InvoiceDirectory;
 use App\Support\InvoicePresenter;
 use App\Support\Money;
 use Tests\TestCase;
@@ -22,10 +22,26 @@ class InvoicesPageTest extends TestCase
          */
         $this->signInAsStaff();
     }
+    /**
+     * The demo invoices, their lines and their payments, as real rows.
+     *
+     * The environment flip this replaced did nothing once the module read the
+     * `invoices` table: there was no row to find, and a test "passing" against
+     * an empty page asserts the empty state while claiming to assert the list.
+     */
     protected function withDemoData(): void
     {
-        $this->app->detectEnvironment(fn () => 'local');
-        config(['app.debug' => true]);
+        $this->seedDemoWorkforce();
+    }
+
+    /**
+     * Every invoice, as rows.
+     *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    protected function allInvoices(): \Illuminate\Support\Collection
+    {
+        return InvoiceDirectory::rows(InvoiceDirectory::query());
     }
 
     public function test_the_three_pages_render(): void
@@ -49,7 +65,7 @@ class InvoicesPageTest extends TestCase
         // Not a stored column that could drift away from the rows above it.
         $this->withDemoData();
 
-        foreach (DemoInvoices::all() as $invoice) {
+        foreach ($this->allInvoices() as $invoice) {
             $sum = Money::zero($invoice['currency']);
 
             foreach ($invoice['lines'] as $line) {
@@ -67,7 +83,7 @@ class InvoicesPageTest extends TestCase
     {
         $this->withDemoData();
 
-        foreach (DemoInvoices::all() as $invoice) {
+        foreach ($this->allInvoices() as $invoice) {
             $sum = Money::zero($invoice['currency']);
 
             foreach ($invoice['payments'] as $payment) {
@@ -86,7 +102,7 @@ class InvoicesPageTest extends TestCase
         // it. An overpayment is a credit note, not a bigger number.
         $this->withDemoData();
 
-        foreach (DemoInvoices::all() as $invoice) {
+        foreach ($this->allInvoices() as $invoice) {
             $this->assertFalse(
                 $invoice['balance']->isNegative(),
                 "{$invoice['id']}: more has been recorded against it than it is for"
@@ -100,7 +116,7 @@ class InvoicesPageTest extends TestCase
         // computed.
         $this->withDemoData();
 
-        foreach (DemoInvoices::all() as $invoice) {
+        foreach ($this->allInvoices() as $invoice) {
             foreach ($invoice['lines'] as $line) {
                 $this->assertSame($invoice['currency'], $line['amount']->currency);
             }
@@ -114,7 +130,7 @@ class InvoicesPageTest extends TestCase
     {
         $this->withDemoData();
 
-        foreach (DemoInvoices::all() as $invoice) {
+        foreach ($this->allInvoices() as $invoice) {
             foreach (['total', 'paid', 'balance'] as $field) {
                 $this->assertInstanceOf(Money::class, $invoice[$field]);
                 $this->assertIsInt($invoice[$field]->minor);
@@ -128,11 +144,11 @@ class InvoicesPageTest extends TestCase
     {
         $this->withDemoData();
 
-        $stats = DemoInvoices::stats();
+        $stats = InvoiceDirectory::stats($this->allInvoices());
 
         // The sample set has to actually contain two currencies, or this test
         // proves nothing.
-        $this->assertGreaterThan(1, DemoInvoices::all()->pluck('currency')->unique()->count());
+        $this->assertGreaterThan(1, $this->allInvoices()->pluck('currency')->unique()->count());
         $this->assertGreaterThan(1, $stats['collected']->currencyCount());
 
         $headline = $stats['collected']->headline();
@@ -219,7 +235,7 @@ class InvoicesPageTest extends TestCase
     {
         $this->withDemoData();
 
-        $numbers = DemoInvoices::all()
+        $numbers = $this->allInvoices()
             ->pluck('id')
             ->map(fn (string $id) => (int) substr($id, -3))
             ->sort()
@@ -229,7 +245,7 @@ class InvoicesPageTest extends TestCase
         $this->assertSame(range(min($numbers), max($numbers)), $numbers, 'the invoice sequence has a gap');
 
         // And the cancelled one is still in it.
-        $cancelled = DemoInvoices::all()->where('status', InvoicePresenter::CANCELLED);
+        $cancelled = $this->allInvoices()->where('status', InvoicePresenter::CANCELLED);
         $this->assertNotEmpty($cancelled, 'no cancelled invoice in the sample set to prove the point');
     }
 
@@ -237,7 +253,7 @@ class InvoicesPageTest extends TestCase
     {
         $this->withDemoData();
 
-        $this->assertSame('INV-'.now()->year.'-015', DemoInvoices::nextNumber());
+        $this->assertSame('INV-'.now()->year.'-015', InvoiceDirectory::nextNumber());
     }
 
     public function test_the_number_on_the_create_form_cannot_be_typed(): void
@@ -303,19 +319,36 @@ class InvoicesPageTest extends TestCase
     {
         $this->withDemoData();
 
-        $this->get('/invoices/INV-2026-012')->assertSee('value="95,000.00"', false);
+        /*
+         * Ungrouped in the field, grouped in the hint beside it. A prefilled
+         * "95,000.00" is a value the validator that rendered it would refuse —
+         * see Money::plain, which exists because of exactly this.
+         */
+        $response = $this->get('/invoices/INV-2026-012');
+
+        $response->assertSee('value="95000.00"', false);
+        $response->assertSee('₹95,000.00 outstanding', false);
     }
 
     /* ────────────────  the usual guards  ──────────────── */
 
-    public function test_the_demo_source_is_inert_outside_local_debug(): void
+    public function test_an_empty_database_produces_an_empty_module(): void
     {
         $this->app->detectEnvironment(fn () => 'production');
         config(['app.debug' => false]);
 
-        $this->assertFalse(DemoInvoices::enabled());
-        $this->assertTrue(DemoInvoices::all()->isEmpty());
-        $this->assertSame([], DemoInvoices::recentPayments());
+        /*
+         * This replaced "the demo source is inert outside local + debug", which
+         * was true only because the fixture switched itself off. Invoices come
+         * from a table now, and in production real ones SHOULD be shown.
+         *
+         * What survives is the guarantee underneath it: no figure is invented.
+         */
+        $this->assertTrue($this->allInvoices()->isEmpty());
+        $this->assertSame([], InvoiceDirectory::recentPayments());
+        $this->assertNull(InvoiceDirectory::find('INV-2026-014'));
+        // And the first number of a fresh year is 001, not a guess.
+        $this->assertSame('INV-'.now()->year.'-001', InvoiceDirectory::nextNumber());
     }
 
     public function test_no_figure_is_written_into_the_markup(): void

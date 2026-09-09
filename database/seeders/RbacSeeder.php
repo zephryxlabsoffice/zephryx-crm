@@ -104,6 +104,8 @@ class RbacSeeder extends Seeder
         'projects.publish',
         // Adds a payslip and moves money.
         'salary.manage',
+        // Raises what a client owes, and records what has arrived.
+        'invoices.manage',
     ];
 
     /**
@@ -193,6 +195,16 @@ class RbacSeeder extends Seeder
          * the figure on it.
          */
         'salary.manage',
+        /*
+         * Invoices. `invoices.view` is already sensitive — what we charge a
+         * client is not everybody's business — and `invoices.manage` is the
+         * write: raising one, sending it, recording money against it and
+         * cancelling it.
+         *
+         * There is deliberately no `invoices.delete`. A number never leaves the
+         * sequence.
+         */
+        'invoices.manage',
     ];
 
     /**
@@ -427,7 +439,7 @@ class RbacSeeder extends Seeder
                     'teams.create', 'teams.edit', 'teams.members',
                     'projects.create', 'projects.edit', 'projects.publish',
                     'tasks.create', 'tasks.edit', 'tasks.assign',
-                    'salary.manage',
+                    'salary.manage', 'invoices.manage',
                 ],
                 'ranks' => ['people' => 90, 'finance' => 90, 'work' => 90, 'support' => 80, 'system' => 40],
             ],

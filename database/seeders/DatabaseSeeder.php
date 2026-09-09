@@ -55,6 +55,7 @@ class DatabaseSeeder extends Seeder
             AttendanceSeeder::class,
             SalarySeeder::class,
             TicketSeeder::class,
+            InvoiceSeeder::class,
         ]);
     }
 }

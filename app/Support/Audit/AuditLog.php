@@ -149,6 +149,16 @@ class AuditLog
     public const TICKET_COMMENTED = 'ticket.commented';
     public const TICKET_TRIAGED = 'ticket.triaged';
 
+    /*
+     * Invoices. Every one of these is a financial act, and the cancellation is
+     * the one somebody will eventually be asked to account for — which is why
+     * it carries its reason into the entry rather than only onto the record.
+     */
+    public const INVOICE_CREATED = 'invoice.created';
+    public const INVOICE_SENT = 'invoice.sent';
+    public const INVOICE_PAYMENT_RECORDED = 'invoice.payment_recorded';
+    public const INVOICE_CANCELLED = 'invoice.cancelled';
+
     /* Admin Panel (§6 requires all of its actions) */
     public const PERMISSION_CHANGED = 'admin.permission_changed';
     public const SETTING_CHANGED = 'admin.setting_changed';

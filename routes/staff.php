@@ -398,11 +398,18 @@ Route::post('/tickets/{ticket}/triage', [TicketController::class, 'triage'])
     ->middleware('permission:tickets.triage')
     ->name('tickets.triage');
 
-Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+Route::get('/invoices', [InvoiceController::class, 'index'])
+    ->middleware('permission:invoices.view')
+    ->name('invoices.index');
+
 // Before /invoices/{invoice}, or "create" is read as an invoice number.
-Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
+Route::get('/invoices/create', [InvoiceController::class, 'create'])
+    ->middleware('permission:invoices.manage')
+    ->name('invoices.create');
+
 Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])
     ->where('invoice', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:invoices.view')
     ->name('invoices.show');
 
 /*
@@ -413,15 +420,20 @@ Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])
  * leave the sequence — withdrawal is a cancellation that keeps the record and
  * its number. Adding a destroy route later would be a mistake, not a feature.
  */
-Route::post('/invoices', fn () => abort(501))->name('invoices.store');
-Route::post('/invoices/{invoice}/payments', fn () => abort(501))
+Route::post('/invoices', [InvoiceController::class, 'store'])
+    ->middleware('permission:invoices.manage')
+    ->name('invoices.store');
+Route::post('/invoices/{invoice}/payments', [InvoiceController::class, 'storePayment'])
     ->where('invoice', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:invoices.manage')
     ->name('invoices.payments.store');
-Route::post('/invoices/{invoice}/send', fn () => abort(501))
+Route::post('/invoices/{invoice}/send', [InvoiceController::class, 'send'])
     ->where('invoice', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:invoices.manage')
     ->name('invoices.send');
-Route::post('/invoices/{invoice}/cancel', fn () => abort(501))
+Route::post('/invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])
     ->where('invoice', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:invoices.manage')
     ->name('invoices.cancel');
 
 /*

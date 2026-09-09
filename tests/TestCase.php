@@ -18,6 +18,7 @@ use Database\Seeders\AccountSeeder;
 use Database\Seeders\AttendanceSeeder;
 use Database\Seeders\ClientSeeder;
 use Database\Seeders\EmployeeSeeder;
+use Database\Seeders\InvoiceSeeder;
 use Database\Seeders\LeaveSeeder;
 use Database\Seeders\ProjectSeeder;
 use Database\Seeders\SalarySeeder;
@@ -188,6 +189,7 @@ abstract class TestCase extends BaseTestCase
             (new AttendanceSeeder)->run();
             (new SalarySeeder)->run();
             (new TicketSeeder)->run();
+            (new InvoiceSeeder)->run();
         } finally {
             $this->app->detectEnvironment(fn () => 'testing');
             config(['app.debug' => $debug]);

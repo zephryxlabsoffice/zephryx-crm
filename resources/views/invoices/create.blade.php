@@ -16,12 +16,6 @@
         </div>
     </div>
 
-    @include('partials.notice', [
-        'tone' => 'info',
-        'title' => 'This form does not save yet',
-        'message' => 'The fields, validation shape and totals are real; the write lands with the backend. Nothing typed here is stored.',
-    ])
-
     <form class="inv-form" method="POST" action="{{ route('invoices.store') }}">
         @csrf
 
@@ -39,10 +33,10 @@
                     <div class="form-grid">
                         <div class="form-field">
                             <label class="form-field-lbl" for="inv-client">Client</label>
-                            <select id="inv-client" name="client" disabled>
+                            <select id="inv-client" name="client_id" required>
                                 <option value="">Select a client</option>
                                 @foreach ($clientOptions as $name)
-                                    <option value="{{ $name }}">{{ $name }}</option>
+                                    <option value="{{ $name->id }}" @selected((int) old('client_id') === $name->id)>{{ $name->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -52,10 +46,10 @@
                             {{-- Optional on purpose: not everything billed is
                                  against a project. A retainer or an ad-hoc
                                  piece of work still needs an invoice. --}}
-                            <select id="inv-project" name="project" disabled>
+                            <select id="inv-project" name="project_id">
                                 <option value="">No project — bill directly</option>
                                 @foreach ($projectOptions as $project)
-                                    <option value="{{ $project['id'] }}">{{ $project['name'] }} · {{ $project['client'] }}</option>
+                                    <option value="{{ $project['id'] }}" @selected((int) old('project_id') === $project['id'])>{{ $project['name'] }} · {{ $project['client'] }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -68,9 +62,9 @@
                                 it is a bug waiting to be discovered by a total
                                 that cannot be computed.
                             --}}
-                            <select id="inv-currency" name="currency" disabled>
+                            <select id="inv-currency" name="currency" required>
                                 @foreach ($currencies as $code => $label)
-                                    <option value="{{ $code }}" @selected($code === \App\Support\Money::DEFAULT_CURRENCY)>{{ $label }}</option>
+                                    <option value="{{ $code }}" @selected(old('currency', \App\Support\Money::DEFAULT_CURRENCY) === $code)>{{ $label }}</option>
                                 @endforeach
                             </select>
                             <span class="pay-hint">Every line on this invoice is in the currency you pick here.</span>
@@ -91,12 +85,12 @@
 
                         <div class="form-field">
                             <label class="form-field-lbl" for="inv-date">Invoice date</label>
-                            <input id="inv-date" name="invoice_date" type="date" value="{{ now()->toDateString() }}" disabled>
+                            <input id="inv-date" name="invoice_date" type="date" required value="{{ old('invoice_date', now()->toDateString()) }}">
                         </div>
 
                         <div class="form-field">
                             <label class="form-field-lbl" for="inv-due">Due date</label>
-                            <input id="inv-due" name="due_date" type="date" value="{{ now()->addDays(30)->toDateString() }}" disabled>
+                            <input id="inv-due" name="due_date" type="date" required value="{{ old('due_date', $defaultDue) }}">
                             <span class="pay-hint">Terms are read from these two dates, so they can never disagree.</span>
                         </div>
                     </div>
@@ -141,15 +135,15 @@
                                     <tr role="row">
                                         <td role="cell">
                                             <label class="sr-only" for="line-{{ $i }}-desc">Line {{ $i + 1 }} description</label>
-                                            <input id="line-{{ $i }}-desc" name="lines[{{ $i }}][description]" type="text" placeholder="What was delivered" disabled>
+                                            <input id="line-{{ $i }}-desc" name="lines[{{ $i }}][description]" type="text" placeholder="What was delivered" value="{{ old('lines.'.$i.'.description') }}">
                                         </td>
                                         <td role="cell" class="col-num">
                                             <label class="sr-only" for="line-{{ $i }}-qty">Line {{ $i + 1 }} quantity</label>
-                                            <input id="line-{{ $i }}-qty" name="lines[{{ $i }}][qty]" type="text" inputmode="numeric" value="1" disabled>
+                                            <input id="line-{{ $i }}-qty" name="lines[{{ $i }}][qty]" type="text" inputmode="numeric" value="{{ old('lines.'.$i.'.qty', 1) }}">
                                         </td>
                                         <td role="cell" class="col-money">
                                             <label class="sr-only" for="line-{{ $i }}-unit">Line {{ $i + 1 }} unit price</label>
-                                            <input id="line-{{ $i }}-unit" name="lines[{{ $i }}][unit_price]" type="text" inputmode="decimal" placeholder="0.00" disabled>
+                                            <input id="line-{{ $i }}-unit" name="lines[{{ $i }}][unit]" type="text" inputmode="decimal" placeholder="0.00" value="{{ old('lines.'.$i.'.unit') }}">
                                         </td>
                                         <td role="cell" class="col-money money money-quiet">—</td>
                                     </tr>
@@ -159,12 +153,15 @@
                     </div>
 
                     <div class="card-body">
-                        <button class="btn btn-outline" type="button" disabled title="Adding rows lands with the backend">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                            </svg>
-                            Add another line
-                        </button>
+                        {{-- Blank rows are dropped on save rather than saved as
+                             empty lines, so three fields are up to three lines
+                             and one of them is enough. The "add row" button was
+                             a script that had to load before the form worked;
+                             a longer invoice is a line that says "and four
+                             others, itemised in the attached". --}}
+                        <p class="pay-hint pay-hint-block">
+                            Rows left blank are ignored. At least one line is needed.
+                        </p>
                     </div>
                 </div>
 
@@ -177,7 +174,7 @@
                     </div>
                     <div class="card-body">
                         <label class="sr-only" for="inv-notes">Notes for the client</label>
-                        <textarea id="inv-notes" name="notes" rows="3" placeholder="Anything the client should read alongside the amounts…" disabled></textarea>
+                        <textarea id="inv-notes" name="notes" rows="3" maxlength="2000" placeholder="Anything the client should read alongside the amounts…">{{ old('notes') }}</textarea>
                     </div>
                 </div>
             </div>
@@ -216,7 +213,7 @@
                              An invoice sent by accident has to be chased,
                              apologised for, and cancelled — and the cancellation
                              stays in the sequence forever. --}}
-                        <button class="btn btn-primary" type="submit" name="action" value="draft" disabled title="Saving is not built yet">
+                        <button class="btn btn-primary" type="submit">
                             Save as draft
                         </button>
                         <p class="pay-hint pay-hint-block">

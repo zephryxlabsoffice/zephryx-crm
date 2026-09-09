@@ -7,20 +7,59 @@
     leave the sequence — a gap is the first thing an auditor asks about, and
     "we deleted it" is the wrong answer everywhere. Withdrawal is Cancel, which
     keeps the record and its number.
+
+    Everything here is behind `invoices.manage`. Reading what a client owes and
+    changing it are different acts, and the second is money.
 --}}
 <div class="hd-actions">
-    @if ($invoice['status'] === P::DRAFT)
-        <form method="POST" action="{{ route('invoices.send', ['invoice' => $invoice['id']]) }}">
-            @csrf
-            <button class="btn btn-primary" type="submit" disabled title="Sending is not built yet">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                </svg>
-                Send to client
-            </button>
-        </form>
+    @if ($mayManage ?? false)
+        @if ($invoice['status'] === P::DRAFT)
+            <form method="POST" action="{{ route('invoices.send', ['invoice' => $invoice['id']]) }}">
+                @csrf
+                <button class="btn btn-primary" type="submit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                    Send to client
+                </button>
+            </form>
+        @endif
+
+        @if ($invoice['status'] !== P::CANCELLED && ! $invoice['paid']->isPositive())
+            {{-- Only offered while nothing has been received. Cancelling an
+                 invoice somebody has already part-paid would leave that payment
+                 attached to a withdrawn document; that case needs a credit
+                 note, which is its own record and its own decision — and the
+                 controller refuses it whatever this markup does. --}}
+            <form class="inv-cancel" method="POST" action="{{ route('invoices.cancel', ['invoice' => $invoice['id']]) }}">
+                @csrf
+
+                <div class="form-field">
+                    <label class="sr-only" for="inv-cancel-reason">Why is it being cancelled?</label>
+                    <input id="inv-cancel-reason" name="reason" type="text" required minlength="5" maxlength="500"
+                           placeholder="Why it is being cancelled" value="{{ old('reason') }}">
+                    {{-- Required. A cancelled invoice with no explanation is one
+                         somebody has to reconstruct from memory a year later. --}}
+                    @error('reason')
+                        <span class="field-error">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <button class="btn btn-ghost" type="submit">
+                    Cancel invoice
+                </button>
+            </form>
+        @endif
     @endif
 
+    {{--
+        Still not built, and still saying so rather than pretending.
+
+        A PDF is a rendering problem with its own dependency and its own
+        decisions about layout and letterhead; a reminder is an email with a
+        schedule behind it. Neither is a data problem, and neither belongs in
+        the commit that gave this module its tables.
+    --}}
     <button class="btn btn-outline" type="button" disabled title="PDF generation is not built yet">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
@@ -35,18 +74,5 @@
             </svg>
             Send reminder
         </button>
-    @endif
-
-    @if ($invoice['status'] !== P::CANCELLED && ! $invoice['paid']->isPositive())
-        {{-- Only offered while nothing has been received. Cancelling an invoice
-             somebody has already part-paid would leave that payment attached to
-             a withdrawn document; that case needs a credit note, which is its
-             own record and its own decision. --}}
-        <form method="POST" action="{{ route('invoices.cancel', ['invoice' => $invoice['id']]) }}">
-            @csrf
-            <button class="btn btn-ghost" type="submit" disabled title="Cancelling is not built yet">
-                Cancel invoice
-            </button>
-        </form>
     @endif
 </div>
