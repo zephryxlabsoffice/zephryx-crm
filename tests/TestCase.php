@@ -2,8 +2,16 @@
 
 namespace Tests;
 
+use App\Models\AttendanceRecord;
 use App\Models\Client;
+use App\Models\Employee;
+use App\Models\EmployeeBanking;
+use App\Models\LeaveRequest;
+use App\Models\Project;
 use App\Models\Role;
+use App\Models\SalaryRecord;
+use App\Models\Task;
+use App\Models\Team;
 use App\Models\User;
 use App\Support\Realm;
 use Database\Seeders\AccountSeeder;
@@ -12,6 +20,7 @@ use Database\Seeders\ClientSeeder;
 use Database\Seeders\EmployeeSeeder;
 use Database\Seeders\LeaveSeeder;
 use Database\Seeders\ProjectSeeder;
+use Database\Seeders\SalarySeeder;
 use Database\Seeders\TaskSeeder;
 use Database\Seeders\TeamSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -176,10 +185,39 @@ abstract class TestCase extends BaseTestCase
             (new TaskSeeder)->run();
             (new LeaveSeeder)->run();
             (new AttendanceSeeder)->run();
+            (new SalarySeeder)->run();
         } finally {
             $this->app->detectEnvironment(fn () => 'testing');
             config(['app.debug' => $debug]);
         }
+    }
+
+    /**
+     * Empty the employees table, and everything that points at it.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * ONE PLACE, BECAUSE EVERY NEW MODULE ADDS A ROW TO IT
+     *
+     * Almost everything an employee touches is restricted on delete — team
+     * history, written updates, attendance, leave, pay — because all of it is
+     * part of their record and none of it should vanish with them. That makes
+     * "there are no employees" a state a test has to build deliberately, and
+     * doing it inline meant the same test breaking every time a module landed.
+     *
+     * Innermost first. Dropping projects cascades their team assignments and
+     * updates; dropping teams cascades their memberships.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    protected function emptyTheWorkforce(): void
+    {
+        SalaryRecord::query()->delete();
+        EmployeeBanking::query()->delete();
+        AttendanceRecord::query()->delete();
+        LeaveRequest::query()->delete();
+        Task::query()->delete();
+        Project::query()->delete();
+        Team::query()->delete();
+        Employee::query()->delete();
     }
 
     /**

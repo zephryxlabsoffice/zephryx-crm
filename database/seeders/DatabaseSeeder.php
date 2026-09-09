@@ -53,6 +53,7 @@ class DatabaseSeeder extends Seeder
             // drawn as an absence, and the attendance fixture skips those days.
             LeaveSeeder::class,
             AttendanceSeeder::class,
+            SalarySeeder::class,
         ]);
     }
 }

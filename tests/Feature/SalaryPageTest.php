@@ -2,7 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Support\Demo\DemoSalaries;
+use App\Models\Employee;
+use App\Models\EmployeeBanking;
+use App\Models\Role;
+use App\Models\User;
+use App\Support\Rbac\Rbac;
+use App\Support\SalaryDirectory;
 use App\Support\Money;
 use App\Support\SalaryPresenter as P;
 use Tests\TestCase;
@@ -22,15 +27,55 @@ class SalaryPageTest extends TestCase
          */
         $this->signInAsStaff();
     }
+    /** The demo person these pages are read as. */
+    protected const VIEWER = 'EMP002';
+
+    /**
+     * The demo pay as real rows, read as somebody who has some.
+     *
+     * `/salary/mine` and `/salary/payslip/{period}` resolve the person from the
+     * session — that is the whole design of the route — so a test about
+     * somebody's own pay has to be somebody with pay. EMP002 with HR alongside
+     * Employee: their own payslips, and the permission to run payroll for
+     * everybody else.
+     */
     protected function withDemoData(): void
     {
-        $this->app->detectEnvironment(fn () => 'local');
-        config(['app.debug' => true]);
+        $this->seedDemoWorkforce();
+
+        $user = User::where('user_id', self::VIEWER)->firstOrFail();
+        $user->roles()->syncWithoutDetaching(Role::whereIn('role_key', ['employee', 'hr'])->pluck('id'));
+
+        app(Rbac::class)->forget($user);
+        $this->actingAs($user);
+    }
+
+    protected function viewer(): Employee
+    {
+        return Employee::whereHas('user', fn ($q) => $q->where('user_id', self::VIEWER))->firstOrFail();
     }
 
     protected function period(): string
     {
         return now()->format('Y-m');
+    }
+
+    /**
+     * Every record across the months the demo covers.
+     *
+     * Walked period by period rather than read straight off the table, because
+     * a payroll month is a list of PEOPLE with records looked up against them —
+     * the rows for somebody with no record are the ones worth seeing.
+     *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    protected function allRecords(): \Illuminate\Support\Collection
+    {
+        return collect(range(0, 5))
+            ->flatMap(fn (int $back) => SalaryDirectory::forPeriod(
+                now()->startOfMonth()->subMonths($back)->format('Y-m')
+            ))
+            ->values();
     }
 
     /**
@@ -80,7 +125,7 @@ class SalaryPageTest extends TestCase
     {
         $this->withDemoData();
 
-        foreach (DemoSalaries::all() as $record) {
+        foreach ($this->allRecords() as $record) {
             $this->assertArrayNotHasKey('earnings', $record);
             $this->assertArrayNotHasKey('deductions', $record);
             $this->assertArrayNotHasKey('structure', $record);
@@ -128,7 +173,7 @@ class SalaryPageTest extends TestCase
         // A zero is a claim that somebody was paid nothing.
         $this->withDemoData();
 
-        $record = DemoSalaries::all()->first(fn (array $r) => $r['payslip'] === null);
+        $record = $this->allRecords()->first(fn (array $r) => $r['payslip'] === null);
 
         $this->assertNotNull($record, 'no sample record without a payslip');
         $this->assertNull($record['net']);
@@ -145,7 +190,7 @@ class SalaryPageTest extends TestCase
     {
         $this->withDemoData();
 
-        foreach (DemoSalaries::all() as $record) {
+        foreach ($this->allRecords() as $record) {
             $expected = match (true) {
                 $record['payslip'] === null => P::NO_PAYSLIP,
                 $record['paid_on'] === null => P::AWAITING_PAYMENT,
@@ -162,7 +207,7 @@ class SalaryPageTest extends TestCase
         // ask what they were paid for.
         $this->withDemoData();
 
-        foreach (DemoSalaries::all() as $record) {
+        foreach ($this->allRecords() as $record) {
             if ($record['paid_on'] !== null) {
                 $this->assertNotNull($record['payslip'], "{$record['id']}: paid with no payslip");
                 $this->assertNotNull($record['net'], "{$record['id']}: paid with no net recorded");
@@ -174,7 +219,7 @@ class SalaryPageTest extends TestCase
     {
         $this->withDemoData();
 
-        foreach (DemoSalaries::all() as $record) {
+        foreach ($this->allRecords() as $record) {
             $this->assertSame(
                 P::statusOf($record) === P::AWAITING_PAYMENT,
                 P::isPayable($record),
@@ -189,8 +234,8 @@ class SalaryPageTest extends TestCase
         $this->withDemoData();
 
         $html = $this->get('/salary')->getContent();
-        $payable = DemoSalaries::forPeriod($this->period())->filter(fn (array $r) => P::isPayable($r));
-        $notPayable = DemoSalaries::forPeriod($this->period())->reject(fn (array $r) => P::isPayable($r));
+        $payable = SalaryDirectory::forPeriod($this->period())->filter(fn (array $r) => P::isPayable($r));
+        $notPayable = SalaryDirectory::forPeriod($this->period())->reject(fn (array $r) => P::isPayable($r));
 
         $this->assertNotEmpty($payable);
         $this->assertNotEmpty($notPayable);
@@ -212,7 +257,7 @@ class SalaryPageTest extends TestCase
     {
         $this->withDemoData();
 
-        $payable = DemoSalaries::forPeriod($this->period())
+        $payable = SalaryDirectory::forPeriod($this->period())
             ->filter(fn (array $r) => P::isPayable($r))
             ->pluck('employee')
             ->all();
@@ -233,7 +278,7 @@ class SalaryPageTest extends TestCase
     {
         $this->withDemoData();
 
-        $payable = DemoSalaries::forPeriod($this->period())->filter(fn (array $r) => P::isPayable($r));
+        $payable = SalaryDirectory::forPeriod($this->period())->filter(fn (array $r) => P::isPayable($r));
 
         $response = $this->postForm('/salary/pay/confirm', [
             'period' => $this->period(),
@@ -259,11 +304,11 @@ class SalaryPageTest extends TestCase
         // silently shrink either.
         $this->withDemoData();
 
-        $notPayable = DemoSalaries::forPeriod($this->period())
+        $notPayable = SalaryDirectory::forPeriod($this->period())
             ->reject(fn (array $r) => P::isPayable($r))
             ->first();
 
-        $payable = DemoSalaries::forPeriod($this->period())
+        $payable = SalaryDirectory::forPeriod($this->period())
             ->filter(fn (array $r) => P::isPayable($r))
             ->first();
 
@@ -281,7 +326,7 @@ class SalaryPageTest extends TestCase
     {
         $this->withDemoData();
 
-        $notPayable = DemoSalaries::forPeriod($this->period())
+        $notPayable = SalaryDirectory::forPeriod($this->period())
             ->reject(fn (array $r) => P::isPayable($r))
             ->first();
 
@@ -330,19 +375,24 @@ class SalaryPageTest extends TestCase
      */
     protected function everySecret(): array
     {
+        /*
+         * Read from the banking table itself, not from a salary row.
+         *
+         * The row shape no longer carries identifiers at all — it used to, and
+         * that was the demo source handing every page a full account number and
+         * trusting the template not to print it. The values still have to come
+         * from somewhere in order to be searched for, and the only honest
+         * "somewhere" is the source of truth.
+         */
         $secrets = [];
 
-        foreach (DemoSalaries::all() as $record) {
-            if ($record['banking'] === null) {
-                continue;
-            }
-
-            $secrets[] = $record['banking']['account'];
-            $secrets[] = $record['banking']['pan'];
-            $secrets[] = $record['banking']['aadhaar'];
+        foreach (EmployeeBanking::all() as $banking) {
+            $secrets[] = $banking->account_number;
+            $secrets[] = $banking->pan;
+            $secrets[] = $banking->aadhaar;
         }
 
-        return array_values(array_unique($secrets));
+        return array_values(array_filter(array_unique($secrets)));
     }
 
     public function test_the_payroll_list_contains_no_bank_pan_or_aadhaar_at_all(): void
@@ -382,7 +432,7 @@ class SalaryPageTest extends TestCase
         // somebody might think account numbers belong.
         $this->withDemoData();
 
-        $payable = DemoSalaries::forPeriod($this->period())
+        $payable = SalaryDirectory::forPeriod($this->period())
             ->filter(fn (array $r) => P::isPayable($r))
             ->pluck('employee')
             ->all();
@@ -403,8 +453,8 @@ class SalaryPageTest extends TestCase
     {
         $this->withDemoData();
 
-        $viewer = DemoSalaries::VIEWER;
-        $banking = DemoSalaries::banked($viewer);
+        $viewer = self::VIEWER;
+        $banking = SalaryDirectory::banked($this->viewer());
 
         foreach (['/salary/mine', '/salary/payslip/'.$this->period()] as $url) {
             $html = $this->get($url)->getContent();
@@ -449,7 +499,7 @@ class SalaryPageTest extends TestCase
     {
         $this->withDemoData();
 
-        foreach (DemoSalaries::all() as $record) {
+        foreach ($this->allRecords() as $record) {
             $joined = \Illuminate\Support\Carbon::parse($record['employee_record']['joined'])->startOfMonth();
             $period = \Illuminate\Support\Carbon::createFromFormat('Y-m', $record['period'])->startOfMonth();
 
@@ -461,7 +511,7 @@ class SalaryPageTest extends TestCase
     {
         $this->withDemoData();
 
-        $ids = DemoSalaries::all()->pluck('id');
+        $ids = $this->allRecords()->pluck('id');
 
         $this->assertSame($ids->count(), $ids->unique()->count(), 'a person has two records in one month');
     }
@@ -472,7 +522,7 @@ class SalaryPageTest extends TestCase
         // not on it, and that person is the one who quietly does not get paid.
         $this->withDemoData();
 
-        $withoutBanking = DemoSalaries::withoutBanking();
+        $withoutBanking = SalaryDirectory::withoutBanking();
 
         $this->assertNotEmpty($withoutBanking, 'no sample case for the "no bank details" state');
 
@@ -494,7 +544,7 @@ class SalaryPageTest extends TestCase
     {
         $this->withDemoData();
 
-        foreach (DemoSalaries::all() as $record) {
+        foreach ($this->allRecords() as $record) {
             if ($record['net'] !== null) {
                 $this->assertInstanceOf(Money::class, $record['net']);
                 $this->assertIsInt($record['net']->minor);
@@ -506,15 +556,20 @@ class SalaryPageTest extends TestCase
        THE USUAL GUARDS
        ══════════════════════════════════════════════════════════════════════ */
 
-    public function test_the_demo_source_is_inert_outside_local_debug(): void
+    public function test_an_empty_database_produces_an_empty_module(): void
     {
-        $this->app->detectEnvironment(fn () => 'production');
-        config(['app.debug' => false]);
-
-        $this->assertFalse(DemoSalaries::enabled());
-        $this->assertTrue(DemoSalaries::all()->isEmpty());
-        $this->assertTrue(DemoSalaries::missingFrom(now()->format('Y-m'))->isEmpty());
-        $this->assertTrue(DemoSalaries::withoutBanking()->isEmpty());
+        /*
+         * This replaced "the demo source is inert outside local + debug", which
+         * was true only because the fixture switched itself off. Pay comes from
+         * a table now, and in production real records SHOULD be shown.
+         *
+         * What survives is the guarantee underneath it: no figure is invented.
+         * With no employees there is no payroll — not a payroll of zeroes.
+         */
+        $this->assertTrue($this->allRecords()->isEmpty());
+        $this->assertTrue(SalaryDirectory::missingFrom(now()->format('Y-m'))->isEmpty());
+        $this->assertTrue(SalaryDirectory::withoutBanking()->isEmpty());
+        $this->assertNull(SalaryDirectory::find(now()->format('Y-m'), 'EMP002'));
     }
 
     public function test_no_figure_is_written_into_the_markup(): void

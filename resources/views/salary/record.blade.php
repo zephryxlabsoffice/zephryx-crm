@@ -22,7 +22,11 @@
             <p>{{ $record['employee_record']['name'] }} · {{ $record['employee'] }}</p>
         </div>
 
-        @if ($record['payslip'])
+        {{-- Only when there is actually a file behind the record. A month can
+             say a payslip was added and have none stored — an imported month,
+             or one recorded before this application held the documents — and a
+             download button that 404s is worse than no button. --}}
+        @if ($record['payslip'] && ($record['payslip']['file'] ?? false))
             <div class="hd-actions">
                 {{-- A real route. §6: the file is stored outside the web root
                      and streamed by a controller that checks the viewer may
@@ -76,7 +80,11 @@
                 </div>
             </div>
 
-            @if (! $own)
+            {{-- Payroll's own controls, and only for somebody who holds
+                 `salary.manage`. Not shown on your own record at all: adding
+                 your own payslip and marking yourself paid is the one shape
+                 this module must not have. --}}
+            @if (! $own && ($mayManage ?? false))
                 @include('salary.partials.manage')
             @endif
         </div>

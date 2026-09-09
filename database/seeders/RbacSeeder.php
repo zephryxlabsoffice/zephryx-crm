@@ -102,6 +102,8 @@ class RbacSeeder extends Seeder
         'clients.invite',
         // Puts an internal note in front of the client it is about.
         'projects.publish',
+        // Adds a payslip and moves money.
+        'salary.manage',
     ];
 
     /**
@@ -179,6 +181,18 @@ class RbacSeeder extends Seeder
         'tasks.create',
         'tasks.edit',
         'tasks.assign',
+        /*
+         * Salary. `salary.view` is the sensitive read — seeing what a colleague
+         * earns is itself the harm — and `salary.manage` is the write: adding a
+         * payslip and moving money. Separate, because somebody who may see the
+         * payroll to answer a question is not thereby somebody who may mark
+         * twelve people paid.
+         *
+         * Downloading a payslip has no key: your own is yours, and anybody
+         * else's needs `salary.view`, which already means being trusted with
+         * the figure on it.
+         */
+        'salary.manage',
     ];
 
     /**
@@ -376,6 +390,9 @@ class RbacSeeder extends Seeder
                     // adds somebody, corrects their record and closes it when
                     // they leave.
                     'employees.create', 'employees.edit', 'employees.deactivate',
+                    // And who runs payroll: adds the payslip Excel produced and
+                    // marks the transfer done.
+                    'salary.manage',
                 ],
                 'ranks' => ['people' => 80, 'finance' => 70, 'work' => 30, 'support' => 20, 'system' => 10],
             ],
@@ -410,6 +427,7 @@ class RbacSeeder extends Seeder
                     'teams.create', 'teams.edit', 'teams.members',
                     'projects.create', 'projects.edit', 'projects.publish',
                     'tasks.create', 'tasks.edit', 'tasks.assign',
+                    'salary.manage',
                 ],
                 'ranks' => ['people' => 90, 'finance' => 90, 'work' => 90, 'support' => 80, 'system' => 40],
             ],

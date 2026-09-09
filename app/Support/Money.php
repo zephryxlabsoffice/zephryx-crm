@@ -202,6 +202,35 @@ final class Money
     }
 
     /**
+     * The number with NO grouping — `75000.50`, not `75,000.50`.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * FOR FORM FIELDS, AND ONLY FOR FORM FIELDS
+     *
+     * `decimal()` is for reading and groups the Indian way. Put that in an
+     * `<input>` and the round trip breaks: the field prefills as "75,000.50",
+     * somebody saves without touching it, and the server refuses a value it
+     * wrote itself.
+     *
+     * Computed with integer arithmetic, like everything else here — dividing by
+     * 100 to build a display string is how a float gets back into money.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function plain(): string
+    {
+        $places = self::CURRENCIES[$this->currency]['minor'];
+        $scale = 10 ** $places;
+
+        $sign = $this->minor < 0 ? '-' : '';
+        $abs = abs($this->minor);
+
+        $units = intdiv($abs, $scale);
+        $fraction = str_pad((string) ($abs % $scale), $places, '0', STR_PAD_LEFT);
+
+        return $sign.$units.($places > 0 ? '.'.$fraction : '');
+    }
+
+    /**
      * A short form for tight spaces — no decimals when they are zero.
      * Only for aggregates that are already approximate in the reader's mind
      * (a KPI tile), never for an amount somebody has to pay.

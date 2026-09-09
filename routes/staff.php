@@ -417,7 +417,9 @@ Route::post('/invoices/{invoice}/cancel', fn () => abort(501))
  * guarded. A safe common path beats an ownership check somebody has to remember
  * to write.
  */
-Route::get('/salary', [SalaryController::class, 'index'])->name('salary.index');
+Route::get('/salary', [SalaryController::class, 'index'])
+    ->middleware('permission:salary.view')
+    ->name('salary.index');
 // Before /salary/{employee}/{period}, or these are read as employee references.
 Route::get('/salary/mine', [SalaryController::class, 'mine'])->name('salary.mine');
 Route::get('/salary/payslip/{period}', [SalaryController::class, 'payslip'])
@@ -426,6 +428,7 @@ Route::get('/salary/payslip/{period}', [SalaryController::class, 'payslip'])
 Route::get('/salary/{employee}/{period}', [SalaryController::class, 'show'])
     ->where('employee', '[A-Za-z0-9-]{1,32}')
     ->where('period', '[0-9]{4}-[0-9]{2}')
+    ->middleware('permission:salary.view')
     ->name('salary.show');
 
 /*
@@ -437,7 +440,9 @@ Route::get('/salary/{employee}/{period}', [SalaryController::class, 'show'])
  * `salary.pay.confirm` is a POST that renders — a dozen employee ids should not
  * end up in a URL that gets bookmarked, shared or written to an access log.
  */
-Route::post('/salary/pay/confirm', [SalaryController::class, 'confirmPayment'])->name('salary.pay.confirm');
+Route::post('/salary/pay/confirm', [SalaryController::class, 'confirmPayment'])
+    ->middleware('permission:salary.manage')
+    ->name('salary.pay.confirm');
 
 /*
  * The writes the backend phase implements. Both need an audit entry (§6), both
@@ -448,12 +453,25 @@ Route::post('/salary/pay/confirm', [SalaryController::class, 'confirmPayment'])-
  * Note what is not here: no route deletes a salary record, and none marks
  * somebody paid who has no payslip on file.
  */
-Route::post('/salary/pay', fn () => abort(501))->name('salary.pay');
-Route::post('/salary/{employee}/{period}/payslip', fn () => abort(501))
+Route::post('/salary/pay', [SalaryController::class, 'pay'])
+    ->middleware('permission:salary.manage')
+    ->name('salary.pay');
+Route::post('/salary/{employee}/{period}/payslip', [SalaryController::class, 'storePayslip'])
     ->where('employee', '[A-Za-z0-9-]{1,32}')
     ->where('period', '[0-9]{4}-[0-9]{2}')
+    ->middleware('permission:salary.manage')
     ->name('salary.payslip.store');
-Route::get('/salary/{employee}/{period}/payslip/download', fn () => abort(501))
+
+/*
+ * The download carries NO permission on the route, and that is deliberate: your
+ * own payslip is yours, and the controller is where the two answers — your own,
+ * or `salary.view` — are decided together. A route-level key would have locked
+ * people out of their own payslip.
+ *
+ * It is also the only way a stored file leaves this application: never a static
+ * path, always after a check and an audit entry (§6).
+ */
+Route::get('/salary/{employee}/{period}/payslip/download', [SalaryController::class, 'downloadPayslip'])
     ->where('employee', '[A-Za-z0-9-]{1,32}')
     ->where('period', '[0-9]{4}-[0-9]{2}')
     ->name('salary.payslip.download');

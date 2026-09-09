@@ -2,11 +2,6 @@
 
 namespace Tests\Unit;
 
-use App\Models\AttendanceRecord;
-use App\Models\Employee;
-use App\Models\LeaveRequest;
-use App\Models\Project;
-use App\Models\Team;
 use App\Support\Milestones;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -231,21 +226,7 @@ class MilestonesTest extends TestCase
         $this->app->detectEnvironment(fn () => 'production');
         config(['app.debug' => false]);
 
-        /*
-         * Everything that points at an employee, innermost first.
-         *
-         * Team membership, update authorship and attendance are all restricted
-         * on delete — somebody's team history, their own written updates and
-         * years of their attendance are part of their record — so emptying the
-         * employees table means emptying what points at it. Dropping the
-         * projects cascades their team assignments and updates; dropping the
-         * teams cascades their memberships.
-         */
-        AttendanceRecord::query()->delete();
-        LeaveRequest::query()->delete();
-        Project::query()->delete();
-        Team::query()->delete();
-        Employee::query()->delete();
+        $this->emptyTheWorkforce();
 
         $this->assertSame([], Milestones::upcoming());
         $this->assertSame([], Milestones::today());

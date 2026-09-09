@@ -22,8 +22,9 @@
             <p>
                 <strong>{{ $record['payslip']['name'] }}</strong> was added on
                 {{ P::date($record['payslip']['added_on']) }} by {{ $record['payslip']['added_by'] }}.
-                Uploading another replaces it; the one it replaces is kept, because
-                a payslip somebody has already been shown should not vanish.
+                Uploading another replaces it, and the replacement is recorded
+                against whoever makes it — the audit log keeps what the figure
+                was before, which is the part somebody would need to check.
             </p>
         </div>
     @else
@@ -41,12 +42,14 @@
 
         <div class="form-field">
             <label class="form-field-lbl" for="payslip-file">Payslip file</label>
-            {{-- TODO (backend phase): §6 — validated by MIME type and size,
-                 stored outside the web root, served through a controller that
-                 checks the viewer may have it. A payslip is one of the most
-                 sensitive documents the company holds. --}}
-            <input id="payslip-file" name="payslip" type="file" accept="application/pdf" disabled>
-            <span class="pay-hint">PDF only.</span>
+            {{-- Validated by type and size, stored outside the web root, and served
+                 only through a controller that checks the viewer may have it
+                 and records that they took it (§6). --}}
+            <input id="payslip-file" name="payslip" type="file" accept="application/pdf,image/png,image/jpeg" required>
+            <span class="pay-hint">PDF or an image of one, up to 8 MB.</span>
+            @error('payslip')
+                <span class="field-error">{{ $message }}</span>
+            @enderror
         </div>
 
         <div class="form-field">
@@ -56,12 +59,15 @@
                  The server parses this into integer minor units — see
                  App\Support\Money. --}}
             <input id="payslip-net" name="net" type="text" inputmode="decimal"
-                   value="{{ $record['net']?->decimal() }}" placeholder="0.00" disabled>
+                   value="{{ old('net', $record['net']?->plain()) }}" placeholder="0.00" required>
             <span class="pay-hint">Exactly as the payslip states it.</span>
+            @error('net')
+                <span class="field-error">{{ $message }}</span>
+            @enderror
         </div>
 
         <div class="form-actions">
-            <button class="btn btn-primary" type="submit" disabled title="Adding a payslip is not built yet">
+            <button class="btn btn-primary" type="submit">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
@@ -109,7 +115,7 @@
             {{-- One person, so no confirmation page: the button already names
                  who and for how much, which is the thing the bulk flow has to
                  stop and spell out. --}}
-            <button class="btn btn-primary" type="submit" disabled title="Recording payment is not built yet">
+            <button class="btn btn-primary" type="submit">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polyline points="20 6 9 17 4 12"/>
                 </svg>

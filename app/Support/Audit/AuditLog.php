@@ -135,6 +135,16 @@ class AuditLog
     public const LEAVE_REJECTED = 'leave.rejected';
     public const LEAVE_CANCELLED = 'leave.cancelled';
 
+    /*
+     * Salary. The download is logged as well as the writes, and that is not
+     * over-caution: a payslip is the one document in this application whose
+     * having-been-read is itself the fact somebody may need to establish.
+     */
+    public const SALARY_PAYSLIP_ADDED = 'salary.payslip_added';
+    public const SALARY_PAID = 'salary.paid';
+    public const SALARY_PAYSLIP_DOWNLOADED = 'salary.payslip_downloaded';
+    public const SALARY_BANKING_CHANGED = 'salary.banking_changed';
+
     /* Admin Panel (§6 requires all of its actions) */
     public const PERMISSION_CHANGED = 'admin.permission_changed';
     public const SETTING_CHANGED = 'admin.setting_changed';
