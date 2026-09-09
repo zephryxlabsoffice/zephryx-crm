@@ -30,12 +30,18 @@ class DatabaseSeeder extends Seeder
          * the other two and, unlike them, the modules above it cannot function
          * without its rows — an employee form with no departments to choose
          * from creates nobody. EmployeeSeeder is last because it needs both the
-         * accounts and the departments to attach them to, and it is the only
-         * one of the four that does nothing outside local + debug.
+         * accounts and the departments to attach them to. It and ClientSeeder
+         * are the two that do nothing at all outside local + debug.
+         */
+        /*
+         * ClientSeeder is before AccountSeeder because the client accounts it
+         * creates point at those rows through `client_ref` — an account whose
+         * client does not exist is a portal session scoped to nothing.
          */
         $this->call([
             RbacSeeder::class,
             MasterDataSeeder::class,
+            ClientSeeder::class,
             AccountSeeder::class,
             EmployeeSeeder::class,
         ]);

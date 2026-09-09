@@ -21,8 +21,11 @@
                  handlers are blocked by our Content-Security-Policy (§6). --}}
             <select class="chip-btn" id="client-status" name="status" data-auto-submit>
                 <option value="">All statuses</option>
-                @foreach (['active' => 'Active', 'pending' => 'Pending', 'review' => 'In Review', 'on_hold' => 'On Hold', 'completed' => 'Completed'] as $value => $label)
-                    <option value="{{ $value }}" @selected($status === $value)>{{ $label }}</option>
+                {{-- The options come from the model's list, so the dropdown,
+                     the validation rule and the database enum cannot drift
+                     apart. --}}
+                @foreach (\App\Models\Client::STATUSES as $value)
+                    <option value="{{ $value }}" @selected($status === $value)>{{ P::status($value)['label'] }}</option>
                 @endforeach
             </select>
 
@@ -62,27 +65,39 @@
                     @endphp
                     <tr role="row">
                         <td role="cell" class="cell-lead" data-label="Client">
-                            <a class="row-link cl-name" href="{{ route('clients.show', ['client' => \Illuminate\Support\Str::slug($client['name'])]) }}">
+                            {{-- The reference, not a slug of the name. A URL
+                                 built from a name breaks the day somebody
+                                 renames the company. --}}
+                            <a class="row-link cl-name" href="{{ route('clients.show', ['client' => $client['reference']]) }}">
                                 <span class="avatar {{ P::tint($client['name']) }}" aria-hidden="true">{{ P::initial($client['name']) }}</span>
                                 <strong>{{ $client['name'] }}</strong>
                             </a>
                         </td>
-                        <td role="cell" data-label="Industry">{{ $client['industry'] }}</td>
-                        <td role="cell" data-label="Project">{{ $client['project'] }}</td>
+                        <td role="cell" data-label="Industry">{{ $client['industry'] ?: '—' }}</td>
+                        {{-- Projects and Invoices answer these two. Until those
+                             tables exist the cells say so, rather than carrying
+                             a stored value somebody would have to keep in step
+                             by hand — see App\Support\ClientDirectory. --}}
+                        <td role="cell" data-label="Project">{{ $client['project'] ?: '—' }}</td>
                         <td role="cell" class="cell-tight" data-label="Status">
                             <span class="pill {{ $statusPill['tone'] }}">{{ $statusPill['label'] }}</span>
                         </td>
-                        <td role="cell" class="cell-tight" data-label="Last activity">{{ $client['activity'] }}</td>
+                        <td role="cell" class="cell-tight" data-label="Last activity">{{ $client['activity'] ?: 'Nothing recorded' }}</td>
                         <td role="cell" class="cell-tight" data-label="Payment">
                             <span class="pill {{ $paymentPill['tone'] }}">{{ $paymentPill['label'] }}</span>
                         </td>
                         <td role="cell" class="cell-actions">
-                            <button class="row-menu" type="button" disabled title="Row actions are not built yet">
-                                <span class="sr-only">Actions for {{ $client['name'] }}</span>
-                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                    <circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>
-                                </svg>
-                            </button>
+                            @if ($mayEdit)
+                                <a class="chip-btn" href="{{ route('clients.edit', ['client' => $client['reference']]) }}">
+                                    <span class="sr-only">Edit {{ $client['name'] }}</span>
+                                    Edit
+                                </a>
+                            @else
+                                <a class="chip-btn" href="{{ route('clients.show', ['client' => $client['reference']]) }}">
+                                    <span class="sr-only">Open {{ $client['name'] }}</span>
+                                    Open
+                                </a>
+                            @endif
                         </td>
                     </tr>
                 @empty

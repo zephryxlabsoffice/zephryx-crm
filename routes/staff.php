@@ -62,9 +62,64 @@ Route::post('/shell', [ShellPreferenceController::class, 'store'])
  */
 Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
-Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
-Route::get('/clients/create', fn () => app(ModulePlaceholderController::class)('clients'))->name('clients.create');
-Route::get('/clients/{client}', fn () => app(ModulePlaceholderController::class)('clients'))->name('clients.show');
+/*
+ * Clients (2026-09-09).
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * `clients.view` IS ON THE LIST NOW, AND IT WAS NOT BEFORE
+ *
+ * The page had no permission on it at all while it was reading demo rows, which
+ * was survivable when there was nothing behind it and is not now. Three roles
+ * hold the key — Manager, Support and the CEO — and the sidebar entry has always
+ * been gated on it, so nothing about who sees the module changes; what changes
+ * is that typing the URL is no longer a way around the sidebar.
+ *
+ * Four write permissions, because they are four different sizes of act:
+ * recording that a company exists, correcting its details, moving it between
+ * engagement states, and handing somebody a login that can read its invoices.
+ * The last is sensitive — see RbacSeeder::SENSITIVE.
+ *
+ * There is no delete at any permission. Projects, invoices, tickets and
+ * meetings all point back at a client.
+ *
+ * `create` is declared BEFORE `{client}`, or the word "create" is read as a
+ * client reference and 404s.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+Route::get('/clients', [ClientController::class, 'index'])
+    ->middleware('permission:clients.view')
+    ->name('clients.index');
+
+Route::get('/clients/create', [ClientController::class, 'create'])
+    ->middleware('permission:clients.create')
+    ->name('clients.create');
+Route::post('/clients', [ClientController::class, 'store'])
+    ->middleware('permission:clients.create')
+    ->name('clients.store');
+
+Route::get('/clients/{client}', [ClientController::class, 'show'])
+    ->where('client', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:clients.view')
+    ->name('clients.show');
+
+Route::get('/clients/{client}/edit', [ClientController::class, 'edit'])
+    ->where('client', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:clients.edit')
+    ->name('clients.edit');
+Route::post('/clients/{client}', [ClientController::class, 'update'])
+    ->where('client', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:clients.edit')
+    ->name('clients.update');
+
+Route::post('/clients/{client}/status', [ClientController::class, 'status'])
+    ->where('client', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:clients.status')
+    ->name('clients.status');
+
+Route::post('/clients/{client}/invite', [ClientController::class, 'invite'])
+    ->where('client', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:clients.invite')
+    ->name('clients.invite');
 
 /*
  * Employees — the first module with real writes (2026-09-08).

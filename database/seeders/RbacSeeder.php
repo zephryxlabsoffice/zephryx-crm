@@ -97,6 +97,9 @@ class RbacSeeder extends Seeder
         // not clerical ones — see MODULE_WRITES.
         'employees.create',
         'employees.deactivate',
+        // Creates an account that can read one company's invoices. Recording
+        // that the company exists is not sensitive; handing over a login is.
+        'clients.invite',
     ];
 
     /**
@@ -115,12 +118,23 @@ class RbacSeeder extends Seeder
      * `employees.delete`: an employee who leaves is deactivated, because
      * attendance, payroll and the audit log all point back at them.
      *
+     * The client keys follow the same reasoning. `clients.status` is separate
+     * from `clients.edit` because putting an engagement on hold is a commercial
+     * decision and correcting a phone number is not, and `clients.invite` is
+     * separate again because it is the one that creates an account. There is no
+     * `clients.delete`: projects, invoices, tickets and meetings all point back
+     * at a client.
+     *
      * @var list<string>
      */
     public const MODULE_WRITES = [
         'employees.create',
         'employees.edit',
         'employees.deactivate',
+        'clients.create',
+        'clients.edit',
+        'clients.status',
+        'clients.invite',
     ];
 
     /**
@@ -192,6 +206,9 @@ class RbacSeeder extends Seeder
             'holiday' => 'Declare a closure',
             'triage' => 'Triage',
             'schedule' => 'Schedule',
+            'invite' => 'Give access to',
+            'status' => 'Change the status of',
+            'deactivate' => 'Close a record in',
             default => ucfirst($action),
         };
 
@@ -285,6 +302,9 @@ class RbacSeeder extends Seeder
                 'permissions' => [
                     ...$staffReading, 'employees.view', 'clients.view', 'leave.approve',
                     'meetings.schedule', 'leads.view',
+                    // The client relationship is the manager's, so the client
+                    // record is too — including who at the client gets a login.
+                    'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
                 ],
                 'ranks' => ['people' => 50, 'finance' => 30, 'work' => 70, 'support' => 40, 'system' => 10],
             ],
@@ -330,6 +350,7 @@ class RbacSeeder extends Seeder
                     'invoices.view', 'tickets.triage', 'meetings.schedule', 'announcements.post',
                     'announcements.holiday', 'reports.view', 'leads.view',
                     'employees.create', 'employees.edit', 'employees.deactivate',
+                    'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
                 ],
                 'ranks' => ['people' => 90, 'finance' => 90, 'work' => 90, 'support' => 80, 'system' => 40],
             ],

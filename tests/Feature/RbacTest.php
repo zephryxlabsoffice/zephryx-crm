@@ -142,7 +142,8 @@ class RbacTest extends TestCase
         $client = User::factory()->create([
             'account_type' => Realm::CLIENT,
             'staff_kind' => null,
-            'client_ref' => 'DGL International School',
+            // A reference, not a name — see the `clients` migration.
+            'client_ref' => 'CLT001',
         ]);
 
         foreach (Rbac::CLIENT_BASE as $permission) {

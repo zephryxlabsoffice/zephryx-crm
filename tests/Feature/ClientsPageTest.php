@@ -2,36 +2,38 @@
 
 namespace Tests\Feature;
 
-use App\Support\Demo\DemoClients;
+use App\Models\Client;
 use Tests\TestCase;
 
 /**
  * Clients — GET /clients.
  *
- * There is no `clients` table yet. Rows come from DemoClients, which is inert
- * outside local + debug, so most of these run against the empty state; the
- * ones that need rows force the demo source on.
+ * ─────────────────────────────────────────────────────────────────────────────
+ * `withDemoData()` IS GONE, AND THAT IS THE POINT OF THIS EDIT
+ *
+ * These tests used to make content appear by flipping the environment to
+ * local + debug, because DemoClients gated on exactly that. The page reads the
+ * `clients` table now, so that flip does nothing: there is no row to find, and a
+ * test "passing" against an empty page asserts the empty state while claiming to
+ * assert the list.
+ *
+ * So the demo clients are seeded properly, through the same seeder that
+ * populates a developer's machine — see TestCase::seedDemoWorkforce.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 class ClientsPageTest extends TestCase
 {
-
     protected function setUp(): void
     {
         parent::setUp();
 
         /*
-         * Every route in the staff realm is behind `realm:staff` now (§3.1), so
-         * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
-         * and the permission filtering have their own tests.
+         * Every route in the staff realm is behind `realm:staff` (§3.1), and
+         * the list is behind `clients.view` as well now. A CEO, because this
+         * file is about what the page renders rather than about who may see it
+         * — the guard has its own tests in ClientWritesTest.
          */
         $this->signInAsStaff();
-    }
-    protected function withDemoData(): void
-    {
-        // DemoClients keys off environment + debug; the suite runs as `testing`.
-        $this->app->detectEnvironment(fn () => 'local');
-        config(['app.debug' => true]);
     }
 
     public function test_it_renders_inside_the_app_shell(): void
@@ -53,7 +55,9 @@ class ClientsPageTest extends TestCase
 
     public function test_it_shows_an_empty_state_when_there_are_no_clients(): void
     {
-        // The real state of a deployed site today, and what production shows.
+        // The real state of a freshly deployed site: the production seeder
+        // creates no clients, because inventing one would be inventing a
+        // customer.
         $response = $this->get('/clients');
 
         $response->assertSee('No clients yet.', false);
@@ -71,49 +75,85 @@ class ClientsPageTest extends TestCase
         $response->assertDontSee('1,85,000', false);
     }
 
-    public function test_the_demo_source_is_inert_outside_local_debug(): void
+    public function test_receivables_and_tickets_read_zero_until_those_modules_exist(): void
     {
-        $this->app->detectEnvironment(fn () => 'production');
-        config(['app.debug' => false]);
+        /*
+         * Three of the four KPIs are questions for Invoices and Tickets. They
+         * report zero rather than the demo source's ₹1,85,000 — a figure on a
+         * page nobody can trace to a record is worse than an empty one, because
+         * somebody will quote it.
+         */
+        $this->seedDemoWorkforce();
 
-        $this->assertFalse(DemoClients::enabled());
-        $this->assertTrue(DemoClients::all()->isEmpty());
-        $this->assertSame([], DemoClients::activity());
-        $this->assertSame([], DemoClients::meetings());
+        $body = $this->pageBody('/clients');
+
+        $this->assertStringNotContainsString('1,85,000', $body);
+        $this->assertStringContainsString('Nothing overdue', $body);
     }
 
     public function test_it_lists_clients_and_paginates_them(): void
     {
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
         $first = $this->get('/clients');
-        $first->assertSee('DGL International School', false);
+        $first->assertSee('ABC Pvt Ltd', false);
         $first->assertSee('Showing 1 to 7 of 10 clients', false);
-        // Page size is 7, so the eighth client is not on page one.
-        $first->assertDontSee('Urban Nest Interiors', false);
 
         $second = $this->get('/clients?page=2');
-        $second->assertSee('Urban Nest Interiors', false);
         $second->assertSee('Showing 8 to 10 of 10 clients', false);
+    }
+
+    public function test_the_list_is_ordered_by_name(): void
+    {
+        // Alphabetical, because the name is the column people scan. The
+        // reference is an identifier, not an order anybody reads in.
+        $this->seedDemoWorkforce();
+
+        $body = $this->pageBody('/clients');
+
+        $this->assertLessThan(
+            strpos($body, 'Bright Future Academy'),
+            strpos($body, 'ABC Pvt Ltd'),
+        );
+    }
+
+    public function test_a_row_links_by_reference_and_not_by_a_slug_of_the_name(): void
+    {
+        /*
+         * A URL built from a name breaks the day somebody renames the company,
+         * and two clients sharing a name would share a URL. The reference is
+         * the identifier; the name is a label on it.
+         */
+        $this->seedDemoWorkforce();
+
+        $client = Client::where('name', 'ABC Pvt Ltd')->firstOrFail();
+        $body = $this->pageBody('/clients');
+
+        $this->assertStringContainsString('/clients/'.$client->reference, $body);
+        $this->assertStringNotContainsString('/clients/abc-pvt-ltd', $body);
     }
 
     public function test_search_filters_the_list(): void
     {
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
-        $response = $this->get('/clients?q=education');
+        $education = Client::where('industry', 'Education')->pluck('reference');
+        $software = Client::where('industry', 'Software')->pluck('reference');
 
-        // Asserted on the row links, not the names: the activity rail shows
-        // recent events across every client and is deliberately not filtered
-        // by the table's search, so the name alone is still on the page.
-        $response->assertSee('/clients/dgl-international-school', false);
-        $response->assertSee('/clients/bright-future-academy', false);
-        $response->assertDontSee('/clients/technova-solutions', false);
+        $body = $this->pageBody('/clients?q=education');
+
+        foreach ($education as $reference) {
+            $this->assertStringContainsString('/clients/'.$reference, $body);
+        }
+
+        foreach ($software as $reference) {
+            $this->assertStringNotContainsString('/clients/'.$reference, $body);
+        }
     }
 
     public function test_a_search_with_no_matches_offers_a_way_back(): void
     {
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
         $response = $this->get('/clients?q=zzzznothing');
 
@@ -123,25 +163,38 @@ class ClientsPageTest extends TestCase
 
     public function test_status_filtering_works(): void
     {
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
-        $response = $this->get('/clients?status=completed');
+        $completed = Client::where('status', 'completed')->firstOrFail();
+        $pending = Client::where('status', 'pending')->firstOrFail();
 
-        $response->assertSee('/clients/medicare-services', false);
-        $response->assertDontSee('/clients/technova-solutions', false);
+        $body = $this->pageBody('/clients?status=completed');
+
+        $this->assertStringContainsString('/clients/'.$completed->reference, $body);
+        $this->assertStringNotContainsString('/clients/'.$pending->reference, $body);
     }
 
     public function test_an_invalid_status_is_rejected_rather_than_ignored(): void
     {
-        $this->withDemoData();
-
         $this->get('/clients?status=;DROP TABLE')->assertSessionHasErrors('status');
+    }
+
+    public function test_a_search_term_with_wildcards_searches_for_itself(): void
+    {
+        /*
+         * `%` and `_` are LIKE wildcards. Unescaped, searching for "%" would
+         * return every client — which reads as a broken filter rather than as
+         * the injection-adjacent bug it is.
+         */
+        $this->seedDemoWorkforce();
+
+        $this->get('/clients?q=%')->assertSee('No clients match that search.', false);
     }
 
     public function test_filters_survive_paging(): void
     {
         // Paging through a filtered list must not silently reset the filter.
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
         $html = $this->get('/clients?q=e&page=1')->getContent();
 
@@ -150,7 +203,7 @@ class ClientsPageTest extends TestCase
 
     public function test_the_page_renders_nothing_the_content_security_policy_would_block(): void
     {
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
         $html = $this->get('/clients')->getContent();
 
@@ -165,7 +218,7 @@ class ClientsPageTest extends TestCase
         // Below 760px the CSS sets `display: block` on the table, which drops
         // the implicit ARIA roles; the markup states them so it still reads as
         // a table either way.
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
         $html = $this->get('/clients')->getContent();
 

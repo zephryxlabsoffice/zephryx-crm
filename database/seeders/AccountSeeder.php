@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Client;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Demo\DemoClients;
@@ -160,24 +161,42 @@ class AccountSeeder extends Seeder
     /**
      * Client accounts.
      *
-     * `client_ref` is the column every ownership check in the portal resolves
-     * through (§6). It is what DemoClientPortal's first argument becomes.
+     * ─────────────────────────────────────────────────────────────────────────
+     * `client_ref` HOLDS THE CLIENT'S REFERENCE, NOT ITS NAME
+     *
+     * It is the column every ownership check in the portal resolves through
+     * (§6), which makes it an identifier — and a name is not one. Two companies
+     * can share a name, and renaming one would silently detach its portal from
+     * its own invoices, tickets and projects.
+     *
+     * It held the name until the `clients` table existed and there was nothing
+     * else for it to hold. ClientSeeder runs before this one so there is.
+     * ─────────────────────────────────────────────────────────────────────────
      */
     protected function clients(): void
     {
-        foreach (DemoClients::all() as $index => $client) {
-            $slug = str($client['name'])->slug()->value();
+        foreach (DemoClients::all() as $index => $demo) {
+            $client = Client::where('name', $demo['name'])->first();
+
+            if ($client === null) {
+                continue;
+            }
+
+            $slug = str($client->name)->slug()->value();
 
             User::updateOrCreate(
                 ['user_id' => 'CLI'.str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT)],
                 [
-                    'name' => $client['name'],
+                    'name' => $client->name,
                     'email' => $slug.'@example.com',
                     'password' => self::DEV_PASSWORD,
                     'account_type' => Realm::CLIENT,
                     'staff_kind' => null,
-                    'status' => $client['status'] === 'completed' ? 'inactive' : 'active',
-                    'client_ref' => $client['name'],
+                    // The ENGAGEMENT being finished does not close the login:
+                    // a completed client still reads their old invoices. This
+                    // seed keeps them signed-in-able for exactly that reason.
+                    'status' => 'active',
+                    'client_ref' => $client->reference,
                     'password_changed_at' => Carbon::now(),
                 ],
             );

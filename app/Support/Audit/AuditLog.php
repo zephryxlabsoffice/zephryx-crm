@@ -64,6 +64,16 @@ class AuditLog
     public const EMPLOYEE_UPDATED = 'employee.updated';
     public const EMPLOYEE_STATUS_CHANGED = 'employee.status_changed';
 
+    public const CLIENT_CREATED = 'client.created';
+    public const CLIENT_UPDATED = 'client.updated';
+    public const CLIENT_STATUS_CHANGED = 'client.status_changed';
+    /*
+     * Portal access is its own action and not an update, because it is the one
+     * that creates an ACCOUNT — the entry somebody looks for when asking who
+     * could see this client's invoices, and when.
+     */
+    public const CLIENT_INVITED = 'client.invited';
+
     /* Admin Panel (§6 requires all of its actions) */
     public const PERMISSION_CHANGED = 'admin.permission_changed';
     public const SETTING_CHANGED = 'admin.setting_changed';

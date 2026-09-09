@@ -2,10 +2,12 @@
 
 namespace Tests;
 
+use App\Models\Client;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Realm;
 use Database\Seeders\AccountSeeder;
+use Database\Seeders\ClientSeeder;
 use Database\Seeders\EmployeeSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
@@ -78,17 +80,26 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * Sign in as a client. `client_ref` is what every ownership check in the
-     * portal resolves through (§6).
+     * Sign in as a client.
+     *
+     * Takes the client's NAME, because that is what a test asserting on the
+     * portal reads on the page — and creates the `clients` row behind it, since
+     * `client_ref` holds a reference now and an account pointing at a client
+     * that does not exist is a session scoped to nothing.
      */
     protected function signInAsClient(string $client = 'DGL International School'): User
     {
+        $record = Client::firstOrCreate(
+            ['name' => $client],
+            ['reference' => 'CLT-T'.fake()->unique()->numberBetween(100, 999), 'status' => 'active'],
+        );
+
         $user = User::factory()->create([
             'user_id' => 'CLI-T'.fake()->unique()->numberBetween(100, 999),
             'account_type' => Realm::CLIENT,
             'staff_kind' => null,
             'status' => 'active',
-            'client_ref' => $client,
+            'client_ref' => $record->reference,
         ]);
 
         return tap($user, fn (User $u) => $this->actingAs($u));
@@ -149,6 +160,8 @@ abstract class TestCase extends BaseTestCase
         config(['app.debug' => true]);
 
         try {
+            // Clients before accounts: the client accounts point at those rows.
+            (new ClientSeeder)->run();
             (new AccountSeeder)->run();
             (new EmployeeSeeder)->run();
         } finally {

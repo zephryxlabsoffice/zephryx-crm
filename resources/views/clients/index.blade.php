@@ -10,12 +10,17 @@
         </div>
 
         <div class="hd-actions">
-            <a class="btn btn-primary" href="{{ route('clients.create') }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Add Client
-            </a>
+            {{-- Hidden rather than disabled for somebody without the
+                 permission: a button that leads straight to a 403 is worse than
+                 no button. The route is guarded either way. --}}
+            @if ($mayCreate)
+                <a class="btn btn-primary" href="{{ route('clients.create') }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Add Client
+                </a>
+            @endif
 
             {{-- TODO (backend phase): streams a file, so it needs the
                  `clients.export` permission and an audit-log entry — an export

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Models\Client;
 use App\Support\Demo\DemoClientPortal;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -35,8 +36,28 @@ abstract class PortalController extends Controller
     protected function client(Request $request): string
     {
         return $this->preview($request)
-            ?? $request->user()?->client_ref
+            ?? $this->record($request)?->name
             ?? DemoClientPortal::viewer();
+    }
+
+    /**
+     * The client record behind the session.
+     *
+     * `client_ref` holds the client's REFERENCE — an identifier, because a name
+     * is not one: two companies can share a name, and renaming one must not
+     * detach its invoices from its portal.
+     *
+     * The name is what `client()` returns because the reads above it are still
+     * DemoClientPortal's, and those are keyed on the name. That is the last
+     * thing keeping this method's return value a string; when the portal's data
+     * comes from real tables, the ownership check becomes this record's id and
+     * the name goes back to being only a heading.
+     */
+    protected function record(Request $request): ?Client
+    {
+        $reference = $request->user()?->client_ref;
+
+        return $reference === null ? null : Client::where('reference', $reference)->first();
     }
 
     /**
