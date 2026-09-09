@@ -31,6 +31,39 @@ class AnnouncementsPageTest extends TestCase
      * through Milestones, which reads the `employees` table now — so the people
      * have to be seeded as well as the environment flipped.
      */
+    /**
+     * Put the clock on a day the demo people have a milestone near.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * WHY THE CLOCK IS FROZEN AND THE FIXTURE IS NOT CHANGED
+     *
+     * The milestone window is fourteen days, and the twelve demo birthdays are
+     * spread across the year — so for most of it none of them is inside it, and
+     * a test asserting the rail has content passed or failed on today's date
+     * rather than on anything in the application. It went red for the first
+     * time in September 2026, having been "green" purely by luck of the review
+     * dates before that.
+     *
+     * Adding a birthday near today would fix it until next month. Freezing the
+     * clock on a date a demo birthday IS near — Riya Sharma's, nine days out —
+     * makes the test say the same thing every day of the year.
+     *
+     * Carbon::setTestNow is undone in tearDown, or every test after this one in
+     * the process would quietly run in March.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    protected function onADayWithAMilestone(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-03-05'));
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
+
     protected function withDemoData(): void
     {
         // The people, as rows — the birthday and anniversary rails go through
@@ -185,6 +218,7 @@ class AnnouncementsPageTest extends TestCase
 
     public function test_the_birthday_rail_shows_a_day_and_month_and_no_year(): void
     {
+        $this->onADayWithAMilestone();
         $this->withDemoData();
 
         $birthdays = DemoEmployees::birthdays();
@@ -202,6 +236,7 @@ class AnnouncementsPageTest extends TestCase
 
     public function test_the_board_shows_upcoming_birthdays_and_anniversaries(): void
     {
+        $this->onADayWithAMilestone();
         $this->withDemoData();
 
         $upcoming = Milestones::upcoming();

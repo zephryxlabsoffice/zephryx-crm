@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Support\EmployeeDirectory;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
@@ -26,6 +27,17 @@ class EmployeesPageTest extends TestCase
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
+    }
+
+    /**
+     * Undo any frozen clock, or every test after it in the process runs in
+     * March.
+     */
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
     }
 
     public function test_it_renders_inside_the_app_shell(): void
@@ -160,6 +172,14 @@ class EmployeesPageTest extends TestCase
         // of birth arrived with it. It is stored in full; the year never
         // reaches a page — a colleague needs to know when to say happy
         // birthday, not how old somebody is.
+        //
+        // The clock is frozen on a day one of the demo birthdays is near,
+        // because the window is fourteen days and they are spread across the
+        // year — otherwise this test asserted the rail had content on the
+        // strength of today's date. See AnnouncementsPageTest for the long
+        // version of the argument.
+        Carbon::setTestNow(Carbon::parse('2026-03-05'));
+
         $this->seedDemoWorkforce();
 
         $birthdays = EmployeeDirectory::birthdays();

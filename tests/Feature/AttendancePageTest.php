@@ -419,7 +419,17 @@ class AttendancePageTest extends TestCase
         // The day the company granted must never come back as an absence.
         $this->withDemoData();
 
-        $past = Carbon::today()->subDays(3);
+        /*
+         * A past WORKING day, found rather than assumed. A fixed `subDays(3)`
+         * lands on a Sunday every Wednesday, and week-off outranks leave — so
+         * the test failed twice a week on the calendar rather than on anything
+         * in the code.
+         */
+        $past = Carbon::today()->subDay();
+
+        while (! AttendancePolicy::isWorkingDay($past)) {
+            $past->subDay();
+        }
 
         $this->assertSame(P::LEAVE, AttendancePolicy::evaluate($past, null, true)['state']);
         $this->assertSame(P::ABSENT, AttendancePolicy::evaluate($past, null, false)['state']);
