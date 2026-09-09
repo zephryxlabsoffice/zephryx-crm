@@ -42,28 +42,37 @@
         </div>
 
         <div class="hd-actions">
-            <a class="btn btn-primary" href="{{ route('projects.edit', ['project' => $project['id']]) }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/>
-                    <line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
-                </svg>
-                Assign Team
-            </a>
+            {{-- Anybody on the project may write today's update; it is not an
+                 authority, it is reporting your own day. Somebody who is not on
+                 it does not see the button and would be refused the route. --}}
+            @if ($mayPost)
+                <a class="btn btn-primary" href="{{ route('projects.updates.create', ['project' => $project['id']]) }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>
+                    </svg>
+                    Submit EOD
+                </a>
+            @endif
 
-            <a class="btn btn-outline" href="{{ route('projects.edit', ['project' => $project['id']]) }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>
-                </svg>
-                Edit Project
-            </a>
+            @if ($mayEdit)
+                <a class="btn btn-outline" href="{{ route('projects.edit', ['project' => $project['id']]) }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>
+                    </svg>
+                    Edit Project
+                </a>
+            @endif
         </div>
     </div>
 
     @include('projects.partials.overview-kpis')
 
     <section class="projects-grid">
-        @include('projects.partials.teams')
+        <div>
+            @include('projects.partials.teams')
+            @include('projects.partials.updates')
+        </div>
 
         <aside class="rail">
             @include('projects.partials.summary')

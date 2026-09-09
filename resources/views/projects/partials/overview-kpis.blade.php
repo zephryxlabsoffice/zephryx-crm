@@ -49,15 +49,22 @@
         <div class="kpi-body">
             <div class="kpi-lbl">Status</div>
             {{-- The handover had a custom listbox that changed the status in
-                 place. That is a write, and there is no backend for it, so the
-                 control keeps its shape and is disabled rather than silently
-                 doing nothing. --}}
-            <label class="sr-only" for="project-status-control">Project status</label>
-            <select class="status-select" id="project-status-control" disabled title="Changing status is not built yet">
-                @foreach (P::statusOptions() as $option)
-                    <option value="{{ $option }}" @selected($project['status'] === $option)>{{ P::status($option)['label'] }}</option>
-                @endforeach
-            </select>
+                 place with no backend behind it. It is a real control now, for
+                 whoever may edit the project — and a plain link to the form for
+                 everybody else, rather than a disabled box that reads as
+                 broken. Changing it is audited as its own action. --}}
+            @if ($mayEdit ?? false)
+                <a class="status-select-link" href="{{ route('projects.edit', ['project' => $project['id']]) }}">
+                    <span class="pill {{ P::status($project['status'])['tone'] }}">
+                        {{ P::status($project['status'])['label'] }}
+                    </span>
+                    <span class="sr-only">Change the status of {{ $project['name'] }}</span>
+                </a>
+            @else
+                <span class="pill {{ P::status($project['status'])['tone'] }}">
+                    {{ P::status($project['status'])['label'] }}
+                </span>
+            @endif
             <span class="kpi-sub">{{ $project['progress'] }}% complete</span>
         </div>
     </div>

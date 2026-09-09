@@ -84,6 +84,19 @@ class AuditLog
      */
     public const TEAM_MEMBERS_CHANGED = 'team.members_changed';
 
+    public const PROJECT_CREATED = 'project.created';
+    public const PROJECT_UPDATED = 'project.updated';
+    public const PROJECT_STATUS_CHANGED = 'project.status_changed';
+    /*
+     * Posting an update and publishing one are two actions, not one with a
+     * flag. "What was put in front of the client, and by whom" is the question
+     * this log gets asked about a project, and it must be answerable by
+     * filtering rather than by reading every entry's payload.
+     */
+    public const PROJECT_UPDATE_POSTED = 'project.update_posted';
+    public const PROJECT_UPDATE_PUBLISHED = 'project.update_published';
+    public const PROJECT_UPDATE_HIDDEN = 'project.update_hidden';
+
     /* Admin Panel (§6 requires all of its actions) */
     public const PERMISSION_CHANGED = 'admin.permission_changed';
     public const SETTING_CHANGED = 'admin.setting_changed';

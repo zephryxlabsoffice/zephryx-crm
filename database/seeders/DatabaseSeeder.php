@@ -44,8 +44,10 @@ class DatabaseSeeder extends Seeder
             ClientSeeder::class,
             AccountSeeder::class,
             EmployeeSeeder::class,
-            // Last: every lead and every member is an employment record.
+            // Teams need the employment records; projects need the teams, the
+            // clients and the people, so it goes last of all.
             TeamSeeder::class,
+            ProjectSeeder::class,
         ]);
     }
 }

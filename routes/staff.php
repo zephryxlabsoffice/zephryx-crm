@@ -239,20 +239,67 @@ Route::post('/teams/{team}/members/remove', [TeamController::class, 'removeMembe
     ->middleware('permission:teams.members')
     ->name('teams.members.remove');
 
-Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
+/*
+ * Projects (2026-09-09).
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * THE EOD ROUTES CARRY NO PERMISSION, AND THAT IS NOT AN OVERSIGHT
+ *
+ * Writing your own end-of-day update is not an authority — it is reporting your
+ * own day — so it is guarded by an ownership check instead: the controller
+ * refuses anybody who is not on the project. A permission would be the wrong
+ * shape entirely, because it would either be held by everybody (and guard
+ * nothing) or would stop people reporting the work they are doing.
+ *
+ * `projects.publish` IS a permission, and separate from `projects.edit`. It
+ * puts a sentence written at six in the evening in front of the company it is
+ * about, which is a disclosure and not an edit.
+ *
+ * `/projects/mine` and `/projects/updates` are the personal face (§12.1) and
+ * take no parameter: the person comes from the session.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+Route::get('/projects', [ProjectController::class, 'index'])
+    ->middleware('permission:projects.view')
+    ->name('projects.index');
+
 // These sit before /projects/{project} or they are read as project references.
 Route::get('/projects/mine', [ProjectController::class, 'mine'])->name('projects.mine');
 Route::get('/projects/updates', [ProjectController::class, 'updates'])->name('projects.updates');
-Route::get('/projects/create', fn () => app(ModulePlaceholderController::class)('projects'))->name('projects.create');
+
+Route::get('/projects/create', [ProjectController::class, 'create'])
+    ->middleware('permission:projects.create')
+    ->name('projects.create');
+Route::post('/projects', [ProjectController::class, 'store'])
+    ->middleware('permission:projects.create')
+    ->name('projects.store');
+
 Route::get('/projects/{project}', [ProjectController::class, 'show'])
     ->where('project', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:projects.view')
     ->name('projects.show');
-Route::get('/projects/{project}/edit', fn () => app(ModulePlaceholderController::class)('projects'))
+
+Route::get('/projects/{project}/edit', [ProjectController::class, 'edit'])
     ->where('project', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:projects.edit')
     ->name('projects.edit');
-Route::get('/projects/{project}/eod', fn () => app(ModulePlaceholderController::class)('projects'))
+Route::post('/projects/{project}', [ProjectController::class, 'update'])
+    ->where('project', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:projects.edit')
+    ->name('projects.update');
+
+Route::get('/projects/{project}/eod', [ProjectController::class, 'createUpdate'])
     ->where('project', '[A-Za-z0-9-]{1,32}')
     ->name('projects.updates.create');
+Route::post('/projects/{project}/eod', [ProjectController::class, 'storeUpdate'])
+    ->where('project', '[A-Za-z0-9-]{1,32}')
+    ->name('projects.updates.store');
+
+Route::post('/projects/{project}/updates/{update}/visibility', [ProjectController::class, 'publishUpdate'])
+    ->where('project', '[A-Za-z0-9-]{1,32}')
+    ->where('update', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:projects.publish')
+    ->name('projects.updates.visibility');
 
 Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
 // Before /tasks/{task}, or these are read as task references.

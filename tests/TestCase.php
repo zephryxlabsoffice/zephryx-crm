@@ -9,6 +9,7 @@ use App\Support\Realm;
 use Database\Seeders\AccountSeeder;
 use Database\Seeders\ClientSeeder;
 use Database\Seeders\EmployeeSeeder;
+use Database\Seeders\ProjectSeeder;
 use Database\Seeders\TeamSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
@@ -165,8 +166,10 @@ abstract class TestCase extends BaseTestCase
             (new ClientSeeder)->run();
             (new AccountSeeder)->run();
             (new EmployeeSeeder)->run();
-            // Teams last: every lead and member is an employment record.
+            // Teams need the employment records; projects need the teams, the
+            // clients and the people.
             (new TeamSeeder)->run();
+            (new ProjectSeeder)->run();
         } finally {
             $this->app->detectEnvironment(fn () => 'testing');
             config(['app.debug' => $debug]);

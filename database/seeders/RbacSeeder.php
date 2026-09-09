@@ -100,6 +100,8 @@ class RbacSeeder extends Seeder
         // Creates an account that can read one company's invoices. Recording
         // that the company exists is not sensitive; handing over a login is.
         'clients.invite',
+        // Puts an internal note in front of the client it is about.
+        'projects.publish',
     ];
 
     /**
@@ -150,6 +152,19 @@ class RbacSeeder extends Seeder
         'teams.create',
         'teams.edit',
         'teams.members',
+        /*
+         * Projects. `projects.publish` is separate from `projects.edit` and is
+         * sensitive: it is what puts an end-of-day note in front of the client
+         * it is about, and internal notes are the reason the visibility column
+         * exists at all.
+         *
+         * Writing an update has no key here on purpose — it is not an
+         * authority, it is reporting your own day, and the controller checks
+         * that the person is on the project instead.
+         */
+        'projects.create',
+        'projects.edit',
+        'projects.publish',
     ];
 
     /**
@@ -328,6 +343,8 @@ class RbacSeeder extends Seeder
                     // Teams are the work domain, where a Manager outranks a
                     // Team Lead — so the whole module, not just membership.
                     'teams.create', 'teams.edit', 'teams.members',
+                    // The project manager, in the literal sense.
+                    'projects.create', 'projects.edit', 'projects.publish',
                 ],
                 'ranks' => ['people' => 50, 'finance' => 30, 'work' => 70, 'support' => 40, 'system' => 10],
             ],
@@ -375,6 +392,7 @@ class RbacSeeder extends Seeder
                     'employees.create', 'employees.edit', 'employees.deactivate',
                     'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
                     'teams.create', 'teams.edit', 'teams.members',
+                    'projects.create', 'projects.edit', 'projects.publish',
                 ],
                 'ranks' => ['people' => 90, 'finance' => 90, 'work' => 90, 'support' => 80, 'system' => 40],
             ],

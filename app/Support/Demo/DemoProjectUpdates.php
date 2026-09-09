@@ -113,6 +113,20 @@ class DemoProjectUpdates
     }
 
     /**
+     * The fixture rows, for the seeder that turns them into real ones.
+     *
+     * Public where rows() is protected, and gated like everything else here:
+     * the seeder needs the whole list, internal notes included, and gets it
+     * only where a Demo class is allowed to answer at all.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function seedRows(): array
+    {
+        return self::enabled() ? self::rows() : [];
+    }
+
+    /**
      * `day` is an offset from today and `at` is [hour, minute], so the log
      * stays plausibly recent instead of drifting into last year the way the
      * handover's fixed 2024 dates did.

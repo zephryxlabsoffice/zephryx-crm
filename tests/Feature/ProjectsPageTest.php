@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Project;
 use App\Support\Demo\DemoProjects;
+use App\Support\ProjectDirectory;
 use Tests\TestCase;
 
 /**
@@ -24,10 +26,16 @@ class ProjectsPageTest extends TestCase
          */
         $this->signInAsStaff();
     }
+    /**
+     * The demo projects, as real rows.
+     *
+     * The environment flip this replaced did nothing once the module read the
+     * `projects` table: there was no row to find, and a test "passing" against
+     * an empty page asserts the empty state while claiming to assert the list.
+     */
     protected function withDemoData(): void
     {
-        $this->app->detectEnvironment(fn () => 'local');
-        config(['app.debug' => true]);
+        $this->seedDemoWorkforce();
     }
 
     public function test_the_four_pages_render(): void
@@ -127,20 +135,20 @@ class ProjectsPageTest extends TestCase
         // It landed late, which is history, not an outstanding problem.
         $this->withDemoData();
 
-        $stats = DemoProjects::stats();
-        $completedAndLate = DemoProjects::all()
-            ->filter(fn (array $p) => $p['status'] === 'completed' && $p['due_in'] < 0)
+        $completedAndLate = Project::query()
+            ->where('status', 'completed')
+            ->whereDate('deadline', '<', now()->toDateString())
             ->count();
 
         $this->assertGreaterThan(0, $completedAndLate, 'the sample data needs a late-but-delivered project');
-        $this->assertSame(2, $stats['overdue']);
+        $this->assertSame(2, ProjectDirectory::stats()['overdue']);
     }
 
     public function test_upcoming_deadlines_exclude_finished_work_and_are_soonest_first(): void
     {
         $this->withDemoData();
 
-        $upcoming = DemoProjects::upcoming();
+        $upcoming = ProjectDirectory::upcoming();
 
         $this->assertNotEmpty($upcoming);
         foreach ($upcoming as $project) {
@@ -153,12 +161,30 @@ class ProjectsPageTest extends TestCase
         $this->assertSame($sorted, $order);
     }
 
-    public function test_the_status_control_does_not_pretend_to_work(): void
+    public function test_the_status_control_is_real_now_and_leads_to_the_form(): void
     {
+        /*
+         * It was a disabled listbox saying "not built yet" — the honest state
+         * while there was no backend. There is one, so somebody who may edit
+         * gets a route to the change and somebody who may not gets a plain
+         * pill rather than a control that reads as broken.
+         */
         $this->withDemoData();
 
         $this->get('/projects/WD-2024-001')
-            ->assertSee('Changing status is not built yet', false);
+            ->assertOk()
+            ->assertDontSee('Changing status is not built yet', false)
+            ->assertSee('/projects/WD-2024-001/edit', false);
+    }
+
+    public function test_somebody_who_may_not_edit_gets_no_status_control(): void
+    {
+        $this->withDemoData();
+        $this->signInAsStaff(['employee']);
+
+        $body = $this->pageBody('/projects/WD-2024-001');
+
+        $this->assertStringNotContainsString('/projects/WD-2024-001/edit', $body);
     }
 
     public function test_the_overview_lists_assigned_teams(): void

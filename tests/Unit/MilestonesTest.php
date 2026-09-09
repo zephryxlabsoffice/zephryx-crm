@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\Employee;
+use App\Models\Project;
 use App\Models\Team;
 use App\Support\Milestones;
 use Illuminate\Support\Carbon;
@@ -229,11 +230,15 @@ class MilestonesTest extends TestCase
         config(['app.debug' => false]);
 
         /*
-         * Teams first. `team_members.employee_id` is restricted on delete —
-         * somebody's team history is part of their record — so emptying the
-         * employees table means emptying what points at it. Dropping the teams
-         * cascades their memberships away.
+         * Everything that points at an employee, innermost first.
+         *
+         * Team membership and update authorship are both restricted on delete —
+         * somebody's team history and their own written updates are part of
+         * their record — so emptying the employees table means emptying what
+         * points at it. Dropping the projects cascades their team assignments
+         * and updates; dropping the teams cascades their memberships.
          */
+        Project::query()->delete();
         Team::query()->delete();
         Employee::query()->delete();
 
