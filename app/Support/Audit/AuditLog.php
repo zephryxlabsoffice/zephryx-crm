@@ -159,6 +159,20 @@ class AuditLog
     public const INVOICE_PAYMENT_RECORDED = 'invoice.payment_recorded';
     public const INVOICE_CANCELLED = 'invoice.cancelled';
 
+    /*
+     * Meetings. The two FAILED actions are here on purpose: a calendar event
+     * that did not get created, and a cancellation that did not reach Google,
+     * are exactly the states somebody has to be able to find afterwards —
+     * "nobody was invited and nothing said so" is the failure this module is
+     * shaped to avoid.
+     */
+    public const MEETING_SCHEDULED = 'meeting.scheduled';
+    public const MEETING_REQUESTED = 'meeting.requested';
+    public const MEETING_EVENT_CREATED = 'meeting.event_created';
+    public const MEETING_EVENT_FAILED = 'meeting.event_failed';
+    public const MEETING_CANCELLED = 'meeting.cancelled';
+    public const MEETING_CANCEL_FAILED = 'meeting.cancel_failed';
+
     /* Admin Panel (§6 requires all of its actions) */
     public const PERMISSION_CHANGED = 'admin.permission_changed';
     public const SETTING_CHANGED = 'admin.setting_changed';

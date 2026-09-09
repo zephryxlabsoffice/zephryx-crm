@@ -2,17 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\Demo\DemoClients;
-use App\Support\Demo\DemoEmployees;
-use App\Support\Demo\DemoMeetings;
-use App\Support\Demo\DemoProjects;
+use App\Models\Client;
+use App\Models\Employee;
+use App\Models\Meeting;
+use App\Models\MeetingAttendee;
+use App\Models\Project;
+use App\Models\User;
+use App\Support\Audit\AuditLog;
+use App\Support\MeetingDirectory;
 use App\Support\MeetingPresenter;
+use App\Support\Meetings\MeetingProvider;
+use App\Support\Rbac\Rbac;
+use App\Support\Realm;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * Meetings — organising Google Meets. This server hosts none of them.
@@ -24,39 +36,32 @@ use Illuminate\Validation\Rule;
  * THE CRM ORGANISES; GOOGLE HOSTS
  *
  * Decided 2026-08-28. Every meeting is a Google Calendar event with a Meet
- * conference, created on the company Workspace account. This application holds
- * who is meeting whom about what, and a reference to that event. It never
- * hosts, records or proxies a call, and it never constructs a Meet URL — the
- * link comes back from Google or there is no link.
- *
- * Attendee responses belong to Google Calendar. They are read back and shown;
- * nothing here sets one.
+ * conference. This application holds who is meeting whom about what, and a
+ * reference to that event. It never hosts, records or proxies a call, and it
+ * never constructs a Meet URL — the link comes back from Google or there is no
+ * link.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * WHAT THE BACKEND OWES
+ * A FAILED CREATE LEAVES THE MEETING REQUESTED, AND SAYS SO
  *
- * 1. ONLY A PROJECT MANAGER OR THE SYSTEM ADMIN CREATES A MEETING
- *    (decided 2026-08-28). Clients may REQUEST one — that is a different act,
- *    and it produces a record with no Google event until somebody creates it.
- *
- * 2. THE JOIN LINK IS FOR ATTENDEES. A Meet link is effectively a password.
- *    It is withheld in PHP, not hidden with CSS: whatever the browser receives
- *    has already been read by whoever is at the browser.
- *
- * 3. CANCELLING MUST REACH GOOGLE. A meeting called off here but still live
- *    there is worse than not cancelling — the organiser believes it is off and
- *    the attendees turn up.
- *
- * 4. CREATING MUST BE IDEMPOTENT. Twice must not mean two events and two sets
- *    of invites.
- *
- * 5. TIMES ARE UTC IN STORE, IST ON SCREEN. Nothing renders a raw stored value;
- *    everything goes through App\Support\MeetingPresenter.
+ * The provider is not implemented yet and every method on it throws. That is
+ * deliberate (see GoogleMeetProvider), and this controller treats a throw the
+ * way it will treat a Google outage: the record stays, the event id stays null,
+ * the status reads "requested", and the person is told the invite did not go
+ * out. What it must never do is swallow the failure and show a scheduled
+ * meeting with no way to join.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 class MeetingController extends Controller
 {
     protected const PER_PAGE = 10;
+
+    public function __construct(
+        protected Rbac $rbac,
+        protected AuditLog $audit,
+        protected MeetingProvider $provider,
+    ) {
+    }
 
     /**
      * GET /meetings
@@ -67,89 +72,341 @@ class MeetingController extends Controller
             'tab' => ['nullable', Rule::in(array_merge(['all'], MeetingPresenter::statusOptions()))],
         ])['tab'] ?? MeetingPresenter::SCHEDULED;
 
-        $all = DemoMeetings::all();
-        $meetings = $tab === 'all' ? $all : $all->where('status', $tab)->values();
-
         $filters = $this->filters($request);
-        $counts = DemoMeetings::stats($all);
-        $viewer = DemoMeetings::VIEWER;
+        $viewer = $request->user();
+
+        $all = MeetingDirectory::rows(MeetingDirectory::query(), $viewer);
+        $meetings = $tab === 'all' ? $all : $all->where('status', $tab)->values();
 
         return response()->view('meetings.index', [
             'activeNav' => 'meetings',
-            'meetings' => $this->paginate($this->matching($meetings, $filters), $request),
-            'stats' => $counts,
+            'meetings' => $this->paginate(
+                $this->matching(MeetingDirectory::rows(MeetingDirectory::query($filters), $viewer, $tab === 'all' ? null : $tab)),
+                $request,
+            ),
+            'stats' => MeetingDirectory::stats($all),
             'tab' => $tab,
             'tabCounts' => [
-                'scheduled' => $counts['scheduled'],
-                'requested' => $counts['requested'],
-                'ended' => $counts['ended'],
-                'cancelled' => $counts['cancelled'],
-                'all' => $counts['total'],
+                'scheduled' => $all->where('status', MeetingPresenter::SCHEDULED)->count(),
+                'requested' => $all->where('status', MeetingPresenter::REQUESTED)->count(),
+                'ended' => $all->where('status', MeetingPresenter::ENDED)->count(),
+                'cancelled' => $all->where('status', MeetingPresenter::CANCELLED)->count(),
+                'all' => $all->count(),
             ],
-            'next' => $this->decorateForViewer(DemoMeetings::nextFor($viewer), $viewer),
-            'projects' => DemoProjects::all()->map(fn (array $p) => ['id' => $p['id'], 'name' => $p['name']])->values()->all(),
+            'next' => MeetingDirectory::nextFor($viewer),
+            'projects' => $this->projectOptions(),
+            'maySchedule' => $this->rbac->can($viewer, 'meetings.schedule'),
         ] + $filters);
     }
 
     /**
      * GET /meetings/{meeting}
      */
-    public function show(string $meeting): Response
+    public function show(Request $request, string $meeting): Response
     {
-        $record = DemoMeetings::find($meeting);
+        $record = $this->find($request, $meeting);
+        $model = $record['model'];
 
-        abort_if($record === null, 404);
-
-        $viewer = DemoMeetings::VIEWER;
+        $viewer = $request->user();
+        $employee = $this->employeeFor($request);
 
         return response()->view('meetings.show', [
             'activeNav' => 'meetings',
-            'meeting' => $this->decorateForViewer($record, $viewer),
-            'isAttendee' => DemoMeetings::isAttendee($record, $viewer),
-            'isOrganiser' => $record['organiser'] === $viewer,
+            'meeting' => $record,
+            'isAttendee' => $model->isAttendedBy($viewer),
+            'isOrganiser' => $employee !== null && $model->organiser_id === $employee->id,
+            'maySchedule' => $this->rbac->can($viewer, 'meetings.schedule'),
         ]);
     }
 
     /**
      * GET /meetings/schedule
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
         return response()->view('meetings.schedule', [
             'activeNav' => 'meetings',
-            'employees' => DemoEmployees::all()
-                ->where('status', '!=', 'inactive')
-                ->map(fn (array $e) => ['id' => $e['user_id'], 'name' => $e['name'], 'detail' => $e['designation']])
+            'employees' => Employee::query()
+                ->with('user')
+                ->active()
+                ->get()
+                ->map(fn (Employee $e) => [
+                    'id' => $e->user?->id,
+                    'name' => (string) $e->user?->name,
+                    'detail' => (string) $e->designation?->name,
+                ])
+                ->sortBy('name')
                 ->values()
                 ->all(),
-            'clients' => DemoClients::all()->pluck('name')->all(),
-            'projects' => DemoProjects::all()->map(fn (array $p) => ['id' => $p['id'], 'name' => $p['name']])->values()->all(),
+            'clients' => Client::query()->whereNot('status', 'completed')->orderBy('name')->get(['id', 'name']),
+            'projects' => $this->projectOptions(),
             'defaultDuration' => (int) config('meetings.default_duration', 30),
             'zone' => MeetingPresenter::zone(),
         ]);
     }
 
+    /* ══════════════════════════════════════════════════════════════════════
+       THE WRITES
+       ══════════════════════════════════════════════════════════════════════ */
+
     /**
-     * Strip the join link unless this viewer is on the invite.
+     * Schedule a meeting: write the record, then ask Google for the event.
      *
-     * Withheld here, in PHP. Not rendered-and-hidden, not passed in a data
-     * attribute: whatever reaches the browser has already been read by whoever
-     * is sitting at it.
+     * ─────────────────────────────────────────────────────────────────────────
+     * THE RECORD IS SAVED BEFORE THE NETWORK CALL, ON PURPOSE
      *
-     * @param  array<string, mixed>|null  $meeting
-     * @return array<string, mixed>|null
+     * If Google is asked first and this application then fails to save, an event
+     * exists that nothing here knows about — invites are out for a meeting with
+     * no record. The other way round, a failed create leaves a requested
+     * meeting somebody can retry, which is a state the pages already draw.
+     * ─────────────────────────────────────────────────────────────────────────
      */
-    protected function decorateForViewer(?array $meeting, string $viewer): ?array
+    public function store(Request $request): RedirectResponse
     {
-        if ($meeting === null) {
-            return null;
+        $data = $this->validated($request);
+
+        $organiser = $this->employeeFor($request);
+
+        $meeting = DB::transaction(function () use ($data, $organiser) {
+            $meeting = Meeting::create([
+                'reference' => MeetingDirectory::nextReference(),
+                'title' => $data['title'],
+                'agenda' => $data['agenda'] ?? null,
+                'project_id' => $data['project_id'] ?? null,
+                'organiser_id' => $organiser?->id,
+                'starts_at' => $data['starts_at'],
+                'ends_at' => $data['ends_at'],
+            ]);
+
+            $this->syncAttendees($meeting, $data['attendees'] ?? [], $organiser);
+
+            return $meeting;
+        });
+
+        $this->audit->record(
+            action: AuditLog::MEETING_SCHEDULED,
+            actor: $request->user(),
+            entityType: 'meeting',
+            entityId: $meeting->reference,
+            after: $meeting->title.' · '.MeetingPresenter::when($meeting->fresh()->toRecordArray($request->user())),
+            request: $request,
+        );
+
+        return $this->createEvent($request, $meeting->fresh(['attendees.user', 'organiser.user']));
+    }
+
+    /**
+     * Create the Google event for a meeting that has none.
+     *
+     * The retry for a failed create, and the act that turns a client's request
+     * into a real meeting. Idempotent: a meeting that already has an event id
+     * is left alone rather than given a second event and a second set of
+     * invites.
+     */
+    public function createEvent(Request $request, Meeting|string $meeting): RedirectResponse
+    {
+        $model = $meeting instanceof Meeting
+            ? $meeting
+            : $this->find($request, $meeting)['model'];
+
+        if ($model->event_id !== null) {
+            return redirect()
+                ->route('meetings.show', ['meeting' => $model->reference])
+                ->with('status', 'This meeting is already on the calendar.')
+                ->with('status_tone', 'info');
         }
 
-        if (! DemoMeetings::isAttendee($meeting, $viewer)) {
-            $meeting['join_url'] = null;
+        try {
+            $event = $this->provider->create($model->toRecordArray($request->user()));
+
+            $model->update([
+                'event_id' => $event['event_id'],
+                // Whatever came back. Never assembled here — see the head of
+                // MeetingProvider.
+                'join_url' => $event['join_url'],
+                'html_link' => $event['html_link'],
+            ]);
+
+            $this->audit->record(
+                action: AuditLog::MEETING_EVENT_CREATED,
+                actor: $request->user(),
+                entityType: 'meeting',
+                entityId: $model->reference,
+                after: 'Calendar event created',
+                request: $request,
+            );
+
+            return redirect()
+                ->route('meetings.show', ['meeting' => $model->reference])
+                ->with('status', 'Invites are out.')
+                ->with('status_tone', 'success');
+        } catch (Throwable $e) {
+            /*
+             * The failure is a STATE, not something to swallow. The meeting
+             * stays requested, the person is told, and nothing on screen
+             * pretends an invite went out.
+             */
+            $this->audit->record(
+                action: AuditLog::MEETING_EVENT_FAILED,
+                actor: $request->user(),
+                entityType: 'meeting',
+                entityId: $model->reference,
+                after: 'Calendar event not created: '.$e->getMessage(),
+                request: $request,
+            );
+
+            return redirect()
+                ->route('meetings.show', ['meeting' => $model->reference])
+                ->with('status', 'The meeting is saved, but the calendar invite did not go out. Nobody has been invited yet.')
+                ->with('status_tone', 'warning');
+        }
+    }
+
+    /**
+     * Call it off.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * GOOGLE IS TOLD FIRST, AND A FAILURE THERE STOPS THE CANCELLATION HERE
+     *
+     * A meeting called off in this application but still live on Google is
+     * worse than one not cancelled at all: the organiser believes it is off and
+     * the attendees turn up. So the local record is only marked cancelled once
+     * the provider has confirmed — and if it throws, the meeting stays
+     * scheduled and says why.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function cancel(Request $request, string $meeting): RedirectResponse
+    {
+        $record = $this->find($request, $meeting);
+        $model = $record['model'];
+
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'min:5', 'max:500'],
+        ]);
+
+        if ($model->cancelled_at !== null) {
+            return redirect()
+                ->route('meetings.show', ['meeting' => $model->reference])
+                ->with('status', 'This meeting was already cancelled.')
+                ->with('status_tone', 'info');
         }
 
-        return $meeting;
+        if ($model->event_id !== null) {
+            try {
+                $this->provider->cancel($model->toRecordArray($request->user()));
+            } catch (Throwable $e) {
+                $this->audit->record(
+                    action: AuditLog::MEETING_CANCEL_FAILED,
+                    actor: $request->user(),
+                    entityType: 'meeting',
+                    entityId: $model->reference,
+                    after: 'Calendar cancellation failed: '.$e->getMessage(),
+                    request: $request,
+                );
+
+                throw ValidationException::withMessages([
+                    'reason' => 'The calendar could not be updated, so the meeting has NOT been cancelled. '
+                        .'Everybody still has the invite — try again, or cancel it in Google Calendar.',
+                ]);
+            }
+        }
+
+        $model->update([
+            'cancelled_at' => now(),
+            'cancellation_reason' => $data['reason'],
+        ]);
+
+        $this->audit->record(
+            action: AuditLog::MEETING_CANCELLED,
+            actor: $request->user(),
+            entityType: 'meeting',
+            entityId: $model->reference,
+            after: 'Cancelled: '.$data['reason'],
+            request: $request,
+        );
+
+        return redirect()
+            ->route('meetings.show', ['meeting' => $model->reference])
+            ->with('status', 'Meeting cancelled and the invite withdrawn.')
+            ->with('status_tone', 'info');
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       THE PIECES
+       ══════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function find(Request $request, string $reference): array
+    {
+        $found = MeetingDirectory::find($reference, $request->user());
+
+        abort_if($found === null, 404);
+
+        return $found;
+    }
+
+    protected function employeeFor(Request $request): ?Employee
+    {
+        return Employee::where('user_id', $request->user()?->id)->first();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function validated(Request $request): array
+    {
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:200'],
+            'agenda' => ['nullable', 'string', 'max:2000'],
+            'project_id' => ['nullable', Rule::exists('projects', 'id')],
+            'date' => ['required', 'date'],
+            'time' => ['required', 'date_format:H:i'],
+            'duration' => ['required', 'integer', 'min:5', 'max:480'],
+            'attendees' => ['nullable', 'array'],
+            'attendees.*' => [Rule::exists('users', 'id')],
+        ]);
+
+        /*
+         * Typed in the display zone, stored in UTC. The conversion happens once,
+         * here, because a meeting is the one record where getting a timezone
+         * wrong means people miss it — see App\Support\MeetingPresenter.
+         */
+        $start = Carbon::parse($data['date'].' '.$data['time'], MeetingPresenter::zone())->utc();
+
+        return $data + [
+            'starts_at' => $start,
+            'ends_at' => $start->copy()->addMinutes((int) $data['duration']),
+        ];
+    }
+
+    /**
+     * @param  list<int|string>  $userIds
+     */
+    protected function syncAttendees(Meeting $meeting, array $userIds, ?Employee $organiser): void
+    {
+        $ids = collect($userIds)->map(fn ($id) => (int) $id);
+
+        /*
+         * The organiser is always on the invite. They called the meeting, and
+         * an organiser who cannot see the join link is somebody locked out of
+         * their own meeting — see Meeting::isAttendedBy, which is the other
+         * half of the same rule.
+         */
+        if ($organiser?->user_id !== null) {
+            $ids = $ids->push($organiser->user_id);
+        }
+
+        foreach ($ids->unique()->filter() as $userId) {
+            MeetingAttendee::firstOrCreate(
+                ['meeting_id' => $meeting->id, 'user_id' => $userId],
+                // `awaiting`, because nobody has replied yet — and this
+                // application never sets a response to anything else. That is
+                // Google's to report.
+                ['response' => MeetingPresenter::AWAITING],
+            );
+        }
     }
 
     /**
@@ -173,26 +430,23 @@ class MeetingController extends Controller
 
     /**
      * @param  Collection<int, array<string, mixed>>  $meetings
-     * @param  array<string, mixed>  $filters
      * @return Collection<int, array<string, mixed>>
      */
-    protected function matching(Collection $meetings, array $filters): Collection
+    protected function matching(Collection $meetings): Collection
     {
-        $viewer = DemoMeetings::VIEWER;
+        return $meetings->values();
+    }
 
-        return $meetings
-            ->when($filters['search'] !== '', fn (Collection $rows) => $rows->filter(
-                fn (array $m) => str_contains(
-                    mb_strtolower($m['title'].' '.$m['id'].' '.($m['project_record']['name'] ?? '')),
-                    mb_strtolower($filters['search'])
-                )
-            ))
-            ->when($filters['project'], fn (Collection $rows) => $rows->where('project', $filters['project']))
-            // Soonest first for anything still to come; most recent first for
-            // what has passed. One list, sorted the way it is read.
-            ->sortBy('starts_at')
-            ->map(fn (array $m) => $this->decorateForViewer($m, $viewer))
-            ->values();
+    /**
+     * @return list<array{id: string, name: string}>
+     */
+    protected function projectOptions(): array
+    {
+        return Project::query()
+            ->orderBy('name')
+            ->get(['id', 'reference', 'name'])
+            ->map(fn (Project $p) => ['id' => $p->reference, 'key' => $p->id, 'name' => $p->name])
+            ->all();
     }
 
     /**

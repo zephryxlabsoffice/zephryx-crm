@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Http\View\Composers\ShellComposer;
+use App\Support\Meetings\GoogleMeetProvider;
+use App\Support\Meetings\MeetingProvider;
 use App\Support\Navigation\NavigationGate;
 use App\Support\Navigation\RbacGate;
 use App\Support\Rbac\Rbac;
@@ -36,6 +38,23 @@ class AppServiceProvider extends ServiceProvider
         // One instance per request, so the permission union for a user is
         // resolved once however many times the page asks.
         $this->app->singleton(Rbac::class);
+
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * THE CONFERENCING SERVICE, BOUND TO ONE THAT THROWS
+         *
+         * GoogleMeetProvider is not implemented and every method on it raises.
+         * That is the binding on purpose: a stub returning a plausible event id
+         * and a fabricated meet.google.com link would make the pages look
+         * finished and put somebody in a room that does not exist.
+         *
+         * MeetingController treats a throw the way it will treat a Google
+         * outage — the meeting stays requested and the page says the invite did
+         * not go out — so wiring the real provider in later is this line and
+         * nothing else.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        $this->app->bind(MeetingProvider::class, GoogleMeetProvider::class);
     }
 
     /**

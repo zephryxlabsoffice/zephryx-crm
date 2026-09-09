@@ -547,11 +547,18 @@ Route::post('/leave/{leaveRequest}/cancel', [LeaveController::class, 'cancel'])
     ->where('leaveRequest', '[A-Za-z0-9-]{1,32}')
     ->name('leave.cancel');
 
-Route::get('/meetings', [MeetingController::class, 'index'])->name('meetings.index');
+Route::get('/meetings', [MeetingController::class, 'index'])
+    ->middleware('permission:meetings.view')
+    ->name('meetings.index');
+
 // Before /meetings/{meeting}, or "schedule" is read as a meeting reference.
-Route::get('/meetings/schedule', [MeetingController::class, 'create'])->name('meetings.create');
+Route::get('/meetings/schedule', [MeetingController::class, 'create'])
+    ->middleware('permission:meetings.schedule')
+    ->name('meetings.create');
+
 Route::get('/meetings/{meeting}', [MeetingController::class, 'show'])
     ->where('meeting', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:meetings.view')
     ->name('meetings.show');
 
 /*
@@ -567,18 +574,22 @@ Route::get('/meetings/{meeting}', [MeetingController::class, 'show'])
  * people accept or decline in their own calendar and this application reads
  * that back.
  */
-Route::post('/meetings', fn () => abort(501))->name('meetings.store');
+Route::post('/meetings', [MeetingController::class, 'store'])
+    ->middleware('permission:meetings.schedule')
+    ->name('meetings.store');
 /*
  * Requesting a meeting moved to the client realm on 2026-09-07, as
  * `client.meetings.request`. It was always described as the client's act, and
  * once /client existed, a client's POST sitting at a /meetings URL was a route
  * that realm middleware would refuse to the only people meant to use it.
  */
-Route::post('/meetings/{meeting}/create', fn () => abort(501))
+Route::post('/meetings/{meeting}/create', [MeetingController::class, 'createEvent'])
     ->where('meeting', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:meetings.schedule')
     ->name('meetings.create.event');
-Route::post('/meetings/{meeting}/cancel', fn () => abort(501))
+Route::post('/meetings/{meeting}/cancel', [MeetingController::class, 'cancel'])
     ->where('meeting', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:meetings.schedule')
     ->name('meetings.cancel');
 
 /*

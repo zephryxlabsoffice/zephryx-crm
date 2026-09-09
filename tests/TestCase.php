@@ -20,6 +20,7 @@ use Database\Seeders\ClientSeeder;
 use Database\Seeders\EmployeeSeeder;
 use Database\Seeders\InvoiceSeeder;
 use Database\Seeders\LeaveSeeder;
+use Database\Seeders\MeetingSeeder;
 use Database\Seeders\ProjectSeeder;
 use Database\Seeders\SalarySeeder;
 use Database\Seeders\TaskSeeder;
@@ -190,6 +191,7 @@ abstract class TestCase extends BaseTestCase
             (new SalarySeeder)->run();
             (new TicketSeeder)->run();
             (new InvoiceSeeder)->run();
+            (new MeetingSeeder)->run();
         } finally {
             $this->app->detectEnvironment(fn () => 'testing');
             config(['app.debug' => $debug]);

@@ -92,7 +92,7 @@ Route::get('/meetings/request', [ClientMeetingController::class, 'create'])->nam
  * — the client cannot put anything in anybody's calendar directly, and
  * there is deliberately no route here that would let them.
  */
-Route::post('/meetings/request', fn () => abort(501))->name('meetings.request');
+Route::post('/meetings/request', [ClientMeetingController::class, 'store'])->name('meetings.request');
 
 Route::get('/profile', [ClientProfileController::class, 'show'])->name('profile.show');
 

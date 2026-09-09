@@ -2,7 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Support\Demo\DemoMeetings;
+use App\Models\Meeting;
+use App\Models\Role;
+use App\Models\User;
+use App\Support\MeetingDirectory;
+use App\Support\Rbac\Rbac;
 use App\Support\Meetings\GoogleMeetProvider;
 use App\Support\Meetings\MeetingProvider;
 use App\Support\MeetingPresenter as P;
@@ -24,10 +28,49 @@ class MeetingsPageTest extends TestCase
          */
         $this->signInAsStaff();
     }
+    /** The demo person these pages are read as. */
+    protected const VIEWER = 'EMP002';
+
+    /**
+     * The demo meetings, as real rows, read as somebody who is on some.
+     *
+     * Every read in this module takes the viewer, because the join link is
+     * withheld per person — so a test about who can see a link has to be
+     * somebody, and the CEO the suite signs in as by default is on no meetings.
+     */
     protected function withDemoData(): void
     {
-        $this->app->detectEnvironment(fn () => 'local');
-        config(['app.debug' => true]);
+        $this->seedDemoWorkforce();
+
+        $user = User::where('user_id', self::VIEWER)->firstOrFail();
+        $user->roles()->syncWithoutDetaching(Role::whereIn('role_key', ['employee', 'manager'])->pluck('id'));
+
+        app(Rbac::class)->forget($user);
+        $this->actingAs($user);
+    }
+
+    protected function viewerAccount(): User
+    {
+        return User::where('user_id', self::VIEWER)->firstOrFail();
+    }
+
+    /**
+     * Every meeting, as rows, seen by the demo viewer.
+     *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    protected function allMeetings(): \Illuminate\Support\Collection
+    {
+        return MeetingDirectory::rows(MeetingDirectory::query(), $this->viewerAccount());
+    }
+
+    /**
+     * @param  array<string, mixed>  $meeting
+     */
+    protected function isAttendee(array $meeting, string $staffId): bool
+    {
+        return collect($meeting['attendees'])->contains('user_id', $staffId)
+            || $meeting['organiser'] === $staffId;
     }
 
     public function test_the_three_pages_render(): void
@@ -58,15 +101,23 @@ class MeetingsPageTest extends TestCase
     {
         $this->withDemoData();
 
-        $viewer = DemoMeetings::VIEWER;
-        $notMine = DemoMeetings::all()
-            ->first(fn (array $m) => $m['join_url'] !== null && ! DemoMeetings::isAttendee($m, $viewer));
+        /*
+         * Read from the MODEL, not from a row.
+         *
+         * A row for somebody not on the invite has already had its link
+         * removed — that is the whole design — so the raw value has to come
+         * from the record in order for there to be anything to look for.
+         */
+        $notMine = Meeting::with(['attendees.user', 'organiser.user'])
+            ->whereNotNull('join_url')
+            ->get()
+            ->first(fn (Meeting $m) => ! $m->isAttendedBy($this->viewerAccount()));
 
         $this->assertNotNull($notMine, 'no sample meeting the viewer is absent from');
 
-        $html = $this->get('/meetings/'.$notMine['id'])->getContent();
+        $html = $this->get('/meetings/'.$notMine->reference)->getContent();
 
-        $this->assertStringNotContainsString($notMine['join_url'], $html);
+        $this->assertStringNotContainsString($notMine->join_url, $html);
         $this->assertStringNotContainsString('meet.google.com', $html);
         // And it says why, rather than looking broken.
         $this->assertStringContainsString('not on this invite', $html);
@@ -76,15 +127,19 @@ class MeetingsPageTest extends TestCase
     {
         $this->withDemoData();
 
-        $viewer = DemoMeetings::VIEWER;
         $html = $this->get('/meetings?tab=all')->getContent();
+        $viewer = $this->viewerAccount();
 
-        foreach (DemoMeetings::all() as $meeting) {
-            if ($meeting['join_url'] === null || DemoMeetings::isAttendee($meeting, $viewer)) {
+        foreach (Meeting::with(['attendees.user', 'organiser.user'])->whereNotNull('join_url')->get() as $meeting) {
+            if ($meeting->isAttendedBy($viewer)) {
                 continue;
             }
 
-            $this->assertStringNotContainsString($meeting['join_url'], $html, "{$meeting['id']} leaked its link into the list");
+            $this->assertStringNotContainsString(
+                $meeting->join_url,
+                $html,
+                "{$meeting->reference} leaked its link into the list",
+            );
         }
     }
 
@@ -94,8 +149,8 @@ class MeetingsPageTest extends TestCase
         // links being switched off everywhere.
         $this->withDemoData();
 
-        $mine = DemoMeetings::all()->first(
-            fn (array $m) => $m['join_url'] !== null && DemoMeetings::isAttendee($m, DemoMeetings::VIEWER)
+        $mine = $this->allMeetings()->first(
+            fn (array $m) => $m['join_url'] !== null && $this->isAttendee($m, self::VIEWER)
         );
 
         $this->assertNotNull($mine);
@@ -108,10 +163,10 @@ class MeetingsPageTest extends TestCase
         // to is worse than showing nothing — they will act on it.
         $this->withDemoData();
 
-        $next = DemoMeetings::nextFor(DemoMeetings::VIEWER);
+        $next = MeetingDirectory::nextFor($this->viewerAccount());
 
         if ($next !== null) {
-            $this->assertTrue(DemoMeetings::isAttendee($next, DemoMeetings::VIEWER));
+            $this->assertTrue($this->isAttendee($next, self::VIEWER));
             $this->get('/meetings')->assertSee($next['title'], false);
         }
     }
@@ -162,7 +217,7 @@ class MeetingsPageTest extends TestCase
         // assembled from an event id.
         $this->withDemoData();
 
-        foreach (DemoMeetings::all() as $meeting) {
+        foreach ($this->allMeetings() as $meeting) {
             if ($meeting['event_id'] === null) {
                 $this->assertNull($meeting['join_url'], "{$meeting['id']} invented a link");
             }
@@ -199,7 +254,7 @@ class MeetingsPageTest extends TestCase
         // The handover showed none anywhere, and hardcoded one name in its rail.
         $this->withDemoData();
 
-        foreach (DemoMeetings::all() as $meeting) {
+        foreach ($this->allMeetings() as $meeting) {
             $this->assertNotEmpty($meeting['attendees'], "{$meeting['id']} has nobody on it");
         }
 
@@ -258,7 +313,7 @@ class MeetingsPageTest extends TestCase
         // drift when their clocks change.
         $this->withDemoData();
 
-        foreach (DemoMeetings::all() as $meeting) {
+        foreach ($this->allMeetings() as $meeting) {
             $starts = \Illuminate\Support\Carbon::parse($meeting['starts_at'], 'UTC');
             $ends = \Illuminate\Support\Carbon::parse($meeting['ends_at'], 'UTC');
 
@@ -278,14 +333,21 @@ class MeetingsPageTest extends TestCase
        THE USUAL GUARDS
        ══════════════════════════════════════════════════════════════════════ */
 
-    public function test_the_demo_source_is_inert_outside_local_debug(): void
+    public function test_an_empty_database_produces_an_empty_module(): void
     {
-        $this->app->detectEnvironment(fn () => 'production');
-        config(['app.debug' => false]);
 
-        $this->assertFalse(DemoMeetings::enabled());
-        $this->assertTrue(DemoMeetings::all()->isEmpty());
-        $this->assertNull(DemoMeetings::nextFor('EMP002'));
+        /*
+         * This replaced "the demo source is inert outside local + debug", which
+         * was true only because the fixture switched itself off. Meetings come
+         * from a table now, and in production real ones SHOULD be shown.
+         *
+         * What survives is the guarantee underneath it: nothing is invented —
+         * and in particular, no join link is composed for a meeting that has
+         * no event behind it.
+         */
+        $this->assertTrue(MeetingDirectory::rows(MeetingDirectory::query(), null)->isEmpty());
+        $this->assertNull(MeetingDirectory::nextFor(null));
+        $this->assertNull(MeetingDirectory::find('MTG-2026-058', null));
     }
 
     public function test_no_figure_is_written_into_the_markup(): void
@@ -324,11 +386,11 @@ class MeetingsPageTest extends TestCase
         $scheduled = $this->get('/meetings?tab=scheduled')->getContent();
 
         $this->assertStringContainsString('MTG-2026-054', $requested);
-        $this->assertSame(DemoMeetings::requested()->count(), $rows($requested));
-        $this->assertSame(DemoMeetings::upcoming()->count(), $rows($scheduled));
+        $this->assertSame($this->allMeetings()->where('status', 'requested')->count(), $rows($requested));
+        $this->assertSame($this->allMeetings()->where('status', 'scheduled')->count(), $rows($scheduled));
 
         // And the counts on the tabs match what each one lists.
-        $this->assertStringContainsString('Showing 1 to '.DemoMeetings::requested()->count(), $requested);
+        $this->assertStringContainsString('Showing 1 to '.$this->allMeetings()->where('status', 'requested')->count(), $requested);
     }
 
     public function test_an_invalid_tab_is_rejected(): void
