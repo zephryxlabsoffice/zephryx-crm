@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Task;
 use App\Support\Demo\DemoTasks;
+use App\Support\TaskDirectory;
 use Tests\TestCase;
 
 /**
@@ -24,10 +26,16 @@ class TasksPageTest extends TestCase
          */
         $this->signInAsStaff();
     }
+    /**
+     * The demo tasks, as real rows.
+     *
+     * The environment flip this replaced did nothing once the module read the
+     * `tasks` table: there was no row to find, and a test "passing" against an
+     * empty page asserts the empty state while claiming to assert the list.
+     */
     protected function withDemoData(): void
     {
-        $this->app->detectEnvironment(fn () => 'local');
-        config(['app.debug' => true]);
+        $this->seedDemoWorkforce();
     }
 
     public function test_the_four_pages_render(): void
@@ -68,7 +76,7 @@ class TasksPageTest extends TestCase
         // numbers above them.
         $this->withDemoData();
 
-        $stats = DemoTasks::stats();
+        $stats = TaskDirectory::stats();
         $expected = round($stats['completed'] / $stats['total'] * 100, 1).'% of all';
 
         $this->get('/tasks')->assertSee($expected, false);
@@ -128,8 +136,8 @@ class TasksPageTest extends TestCase
         // The point of the page is deciding who picks each one up.
         $this->withDemoData();
 
-        foreach (DemoTasks::teamTasks() as $task) {
-            $this->assertNull($task['assignee'], "{$task['id']} already has an assignee");
+        foreach (Task::unassigned()->whereNotNull('team_id')->get() as $task) {
+            $this->assertNull($task->assignee_id, "{$task->reference} already has an assignee");
         }
 
         $response = $this->get('/tasks/team');
@@ -142,12 +150,13 @@ class TasksPageTest extends TestCase
         // The same rule Projects uses, so the two do not contradict each other.
         $this->withDemoData();
 
-        $late = DemoTasks::all()
-            ->filter(fn (array $t) => $t['status'] === 'completed' && $t['due_in'] < 0)
+        $late = Task::query()
+            ->where('status', 'completed')
+            ->whereDate('due_on', '<', now()->toDateString())
             ->count();
 
         $this->assertGreaterThan(0, $late, 'the sample data needs a late-but-completed task');
-        $this->assertSame(2, DemoTasks::stats()['overdue']);
+        $this->assertSame(2, TaskDirectory::stats()['overdue']);
     }
 
     public function test_an_unassigned_team_task_says_so_on_its_page(): void
@@ -156,31 +165,53 @@ class TasksPageTest extends TestCase
 
         $this->get('/tasks/TSK-001')
             ->assertSee('Nobody assigned yet', false)
-            ->assertSee('Assign Employee', false);
+            ->assertSee('Assign someone', false);
 
         // A task with a person on it does not carry the banner.
         $this->get('/tasks/TSK-003')->assertDontSee('Nobody assigned yet', false);
     }
 
-    public function test_the_timeline_reflects_what_actually_happened(): void
+    public function test_the_timeline_is_what_was_recorded_and_not_a_reconstruction(): void
     {
+        /*
+         * The demo timeline invented four events from the task's own fields. It
+         * looked like history and was a guess: it could say a task had been
+         * assigned but never who reassigned it, or when. The audit log answers
+         * both, and says nothing when nothing was recorded.
+         */
         $this->withDemoData();
 
-        // A pending task has been created and nothing else.
-        $pending = DemoTasks::timeline(DemoTasks::find('TSK-010'));
-        $this->assertCount(1, $pending);
-        $this->assertSame('Task created', $pending[0]['what']);
+        $this->assertSame([], TaskDirectory::timeline('TSK-010'));
 
-        // A completed one carries its whole history.
-        $done = DemoTasks::timeline(DemoTasks::find('TSK-005'));
-        $this->assertSame('Marked as completed', end($done)['what']);
+        $this->get('/tasks/TSK-010')->assertSee('Nothing has been recorded', false);
     }
 
-    public function test_completing_a_task_does_not_pretend_to_work(): void
+    public function test_completing_a_task_is_real_now(): void
     {
         $this->withDemoData();
 
-        $this->get('/tasks/TSK-001')->assertSee('Completing a task is not built yet', false);
+        $this->get('/tasks/TSK-001')
+            ->assertDontSee('Completing a task is not built yet', false)
+            ->assertSee('Mark Completed', false);
+    }
+
+    public function test_the_description_shown_is_the_tasks_own(): void
+    {
+        /*
+         * The page printed the same paragraph about wireframes and brand
+         * guidelines on all fourteen demo tasks. It read as real, which is what
+         * made it worth removing — a blank is honest and a filled-in field is
+         * the task's.
+         */
+        $this->withDemoData();
+
+        Task::where('reference', 'TSK-001')->update(['description' => 'Rebuild the hero block.']);
+
+        $this->get('/tasks/TSK-001')
+            ->assertSee('Rebuild the hero block.', false)
+            ->assertDontSee('brand colours and typography', false);
+
+        $this->get('/tasks/TSK-002')->assertSee('No description was written for this task.', false);
     }
 
     public function test_the_pages_render_nothing_the_content_security_policy_would_block(): void

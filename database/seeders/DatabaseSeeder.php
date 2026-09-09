@@ -48,6 +48,7 @@ class DatabaseSeeder extends Seeder
             // clients and the people, so it goes last of all.
             TeamSeeder::class,
             ProjectSeeder::class,
+            TaskSeeder::class,
         ]);
     }
 }

@@ -301,17 +301,61 @@ Route::post('/projects/{project}/updates/{update}/visibility', [ProjectControlle
     ->middleware('permission:projects.publish')
     ->name('projects.updates.visibility');
 
-Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
+/*
+ * Tasks (2026-09-09).
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * COMPLETING A TASK CARRIES NO PERMISSION, AND THAT IS THE POINT
+ *
+ * Saying you have finished your own work is not an authority. The route is open
+ * to any signed-in staff member and the controller refuses anybody who is not
+ * the assignee, the lead of the team holding it, or somebody who may edit tasks
+ * outright (§2.6).
+ *
+ * `tasks.assign` is a permission, and the route guard is only its floor: a Team
+ * Lead holding it may assign within a team they actually lead and no other.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+Route::get('/tasks', [TaskController::class, 'index'])
+    ->middleware('permission:tasks.view')
+    ->name('tasks.index');
+
 // Before /tasks/{task}, or these are read as task references.
 Route::get('/tasks/mine', [TaskController::class, 'mine'])->name('tasks.mine');
-Route::get('/tasks/team', [TaskController::class, 'team'])->name('tasks.team');
-Route::get('/tasks/create', fn () => app(ModulePlaceholderController::class)('tasks'))->name('tasks.create');
+Route::get('/tasks/team', [TaskController::class, 'team'])
+    ->middleware('permission:tasks.view')
+    ->name('tasks.team');
+
+Route::get('/tasks/create', [TaskController::class, 'create'])
+    ->middleware('permission:tasks.create')
+    ->name('tasks.create');
+Route::post('/tasks', [TaskController::class, 'store'])
+    ->middleware('permission:tasks.create')
+    ->name('tasks.store');
+
 Route::get('/tasks/{task}', [TaskController::class, 'show'])
     ->where('task', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:tasks.view')
     ->name('tasks.show');
-Route::get('/tasks/{task}/edit', fn () => app(ModulePlaceholderController::class)('tasks'))
+
+Route::get('/tasks/{task}/edit', [TaskController::class, 'edit'])
     ->where('task', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:tasks.edit')
     ->name('tasks.edit');
+Route::post('/tasks/{task}', [TaskController::class, 'update'])
+    ->where('task', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:tasks.edit')
+    ->name('tasks.update');
+
+Route::post('/tasks/{task}/assign', [TaskController::class, 'assign'])
+    ->where('task', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:tasks.assign')
+    ->name('tasks.assign');
+
+// No permission: the controller's ownership check is the whole rule.
+Route::post('/tasks/{task}/complete', [TaskController::class, 'complete'])
+    ->where('task', '[A-Za-z0-9-]{1,32}')
+    ->name('tasks.complete');
 
 Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
 // Before /tickets/{ticket}, or these are read as ticket references.

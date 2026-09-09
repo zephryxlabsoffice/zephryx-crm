@@ -44,22 +44,31 @@
         </div>
 
         <div class="hd-actions">
-            {{-- TODO (backend phase): completing a task is a write, and §2.6
-                 applies — only the assignee, their lead or a manager may do it. --}}
-            <button class="btn btn-primary" type="button" disabled title="Completing a task is not built yet">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                Mark Completed
-            </button>
+            {{-- Real now, and shown to the people §2.6 names: the assignee,
+                 the lead of the team holding it, or somebody who may edit
+                 tasks outright. A POST, because it changes something. --}}
+            @if ($mayComplete)
+                <form method="POST" action="{{ route('tasks.complete', ['task' => $task['id']]) }}">
+                    @csrf
+                    <input type="hidden" name="status" value="{{ $task['status'] === 'completed' ? 'in_progress' : 'completed' }}">
+                    <button class="btn {{ $task['status'] === 'completed' ? 'btn-outline' : 'btn-primary' }}" type="submit">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        {{ $task['status'] === 'completed' ? 'Reopen Task' : 'Mark Completed' }}
+                    </button>
+                </form>
+            @endif
 
-            <a class="btn btn-outline" href="{{ route('tasks.edit', ['task' => $task['id']]) }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>
-                </svg>
-                Edit Task
-            </a>
+            @if ($mayEdit)
+                <a class="btn btn-outline" href="{{ route('tasks.edit', ['task' => $task['id']]) }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>
+                    </svg>
+                    Edit Task
+                </a>
+            @endif
         </div>
     </div>
 
@@ -78,9 +87,11 @@
                         <strong>Nobody assigned yet</strong>
                         <p>This task belongs to {{ $task['team_record']['name'] }}. Put someone on it to get it moving.</p>
                     </div>
-                    <span class="notice-action">
-                        <a class="btn btn-primary" href="{{ route('tasks.edit', ['task' => $task['id']]) }}">Assign Employee</a>
-                    </span>
+                    @if ($mayAssign)
+                        <span class="notice-action">
+                            <a class="btn btn-primary" href="#assign-task">Assign someone</a>
+                        </span>
+                    @endif
                 </div>
             @endif
 
@@ -96,18 +107,16 @@
                     </svg>
                     Description
                 </div>
+                {{-- The task's own description. This was a fixed paragraph
+                     about wireframes and brand guidelines, printed identically
+                     on all fourteen demo tasks — it read as real, which is
+                     what made it worth removing. --}}
                 <div class="prose">
-                    <p>
-                        Create a modern, responsive layout for this task's deliverable, in line
-                        with the brand guidelines and the wireframes agreed with the client.
-                    </p>
-                    <h4>Key requirements</h4>
-                    <ul>
-                        <li>Follow the agreed wireframes</li>
-                        <li>Responsive on mobile, tablet and desktop</li>
-                        <li>Use the brand colours and typography</li>
-                        <li>Hand over source files on completion</li>
-                    </ul>
+                    @if ($task['description'])
+                        <p>{{ $task['description'] }}</p>
+                    @else
+                        <p class="rail-empty">No description was written for this task.</p>
+                    @endif
                 </div>
             </div>
 
@@ -172,15 +181,38 @@
                 </div>
             </section>
 
-            <section class="rail-card">
-                <div class="rail-hd">
-                    <strong>Actions</strong>
-                </div>
-                <div class="rail-actions">
-                    <a class="btn btn-primary" href="{{ route('tasks.edit', ['task' => $task['id']]) }}">Assign Employee</a>
-                    <a class="btn btn-outline" href="{{ route('tasks.edit', ['task' => $task['id']]) }}">Edit Task</a>
-                </div>
-            </section>
+            @if ($mayAssign)
+                <section class="rail-card" id="assign-task">
+                    <div class="rail-hd">
+                        <strong>Who is on this</strong>
+                    </div>
+
+                    {{-- The Team Lead's daily act, on the page rather than
+                         behind the edit form: the rest of that form is the
+                         plan — the project, the deadline, the priority — and
+                         changing who picks a task up is not changing the plan. --}}
+                    <form method="POST" action="{{ route('tasks.assign', ['task' => $task['id']]) }}">
+                        @csrf
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="task-assignee">Assign to</label>
+                            <select id="task-assignee" name="assignee_id">
+                                <option value="">Nobody — leave it in the team's queue</option>
+                                @foreach ($employeeChoices as $employee)
+                                    <option value="{{ $employee->id }}" @selected($record->assignee_id === $employee->id)>
+                                        {{ $employee->user?->name }} ({{ $employee->user?->user_id }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('assignee_id')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <button class="btn btn-primary" type="submit">Save</button>
+                    </form>
+                </section>
+            @endif
         </aside>
     </section>
 @endsection

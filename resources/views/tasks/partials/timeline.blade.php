@@ -4,7 +4,10 @@
     </div>
 
     @if ($timeline === [])
-        <p class="rail-empty">Nothing recorded yet.</p>
+        {{-- The audit log, and nothing else. A task created before the log
+             existed shows an empty timeline, which says nothing was recorded
+             rather than that nothing happened. --}}
+        <p class="rail-empty">Nothing has been recorded against this task yet.</p>
     @else
         {{-- An ordered list, because the sequence is the meaning. Every entry
              here has already happened, so all of them are marked done — the

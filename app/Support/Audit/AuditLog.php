@@ -97,6 +97,18 @@ class AuditLog
     public const PROJECT_UPDATE_PUBLISHED = 'project.update_published';
     public const PROJECT_UPDATE_HIDDEN = 'project.update_hidden';
 
+    public const TASK_CREATED = 'task.created';
+    public const TASK_UPDATED = 'task.updated';
+    /*
+     * Assigning and completing are named separately from `task.updated`
+     * because they are what the task's timeline is read for: who was put on
+     * this, and when was it finished. Buried in an update entry, both become
+     * questions somebody has to read a payload to answer.
+     */
+    public const TASK_ASSIGNED = 'task.assigned';
+    public const TASK_COMPLETED = 'task.completed';
+    public const TASK_REOPENED = 'task.reopened';
+
     /* Admin Panel (§6 requires all of its actions) */
     public const PERMISSION_CHANGED = 'admin.permission_changed';
     public const SETTING_CHANGED = 'admin.setting_changed';

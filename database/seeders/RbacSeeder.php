@@ -165,6 +165,20 @@ class RbacSeeder extends Seeder
         'projects.create',
         'projects.edit',
         'projects.publish',
+        /*
+         * Tasks. `tasks.assign` is the Team Lead's daily act and is separate
+         * from `tasks.edit`, which is authority over the plan — the project,
+         * the deadline, the priority. Anybody granted the wider key is granted
+         * the narrower one with it, because the assign route is guarded by the
+         * narrower one.
+         *
+         * There is no `tasks.complete`: saying you have finished your own work
+         * is not an authority, and the controller checks who is close to the
+         * task instead.
+         */
+        'tasks.create',
+        'tasks.edit',
+        'tasks.assign',
     ];
 
     /**
@@ -324,9 +338,10 @@ class RbacSeeder extends Seeder
                 'description' => 'Authority over teams.',
                 'permissions' => [
                     ...$staffReading, 'employees.view',
-                    // Their own team's membership, and nothing wider. The key
-                    // opens the route; Team::isLedBy decides which team (§2.6).
-                    'teams.members',
+                    // Their own team's membership and their own team's queue,
+                    // and nothing wider. The key opens the route; Team::isLedBy
+                    // decides which team (§2.6).
+                    'teams.members', 'tasks.assign',
                 ],
                 'ranks' => ['people' => 30, 'work' => 50, 'support' => 30, 'system' => 10],
             ],
@@ -345,6 +360,7 @@ class RbacSeeder extends Seeder
                     'teams.create', 'teams.edit', 'teams.members',
                     // The project manager, in the literal sense.
                     'projects.create', 'projects.edit', 'projects.publish',
+                    'tasks.create', 'tasks.edit', 'tasks.assign',
                 ],
                 'ranks' => ['people' => 50, 'finance' => 30, 'work' => 70, 'support' => 40, 'system' => 10],
             ],
@@ -393,6 +409,7 @@ class RbacSeeder extends Seeder
                     'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
                     'teams.create', 'teams.edit', 'teams.members',
                     'projects.create', 'projects.edit', 'projects.publish',
+                    'tasks.create', 'tasks.edit', 'tasks.assign',
                 ],
                 'ranks' => ['people' => 90, 'finance' => 90, 'work' => 90, 'support' => 80, 'system' => 40],
             ],

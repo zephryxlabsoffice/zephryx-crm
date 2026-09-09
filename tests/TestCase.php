@@ -10,6 +10,7 @@ use Database\Seeders\AccountSeeder;
 use Database\Seeders\ClientSeeder;
 use Database\Seeders\EmployeeSeeder;
 use Database\Seeders\ProjectSeeder;
+use Database\Seeders\TaskSeeder;
 use Database\Seeders\TeamSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
@@ -170,6 +171,7 @@ abstract class TestCase extends BaseTestCase
             // clients and the people.
             (new TeamSeeder)->run();
             (new ProjectSeeder)->run();
+            (new TaskSeeder)->run();
         } finally {
             $this->app->detectEnvironment(fn () => 'testing');
             config(['app.debug' => $debug]);
