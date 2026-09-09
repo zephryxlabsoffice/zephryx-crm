@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\AttendanceRecord;
 use App\Models\Employee;
 use App\Models\Project;
 use App\Models\Team;
@@ -232,12 +233,14 @@ class MilestonesTest extends TestCase
         /*
          * Everything that points at an employee, innermost first.
          *
-         * Team membership and update authorship are both restricted on delete —
-         * somebody's team history and their own written updates are part of
-         * their record — so emptying the employees table means emptying what
-         * points at it. Dropping the projects cascades their team assignments
-         * and updates; dropping the teams cascades their memberships.
+         * Team membership, update authorship and attendance are all restricted
+         * on delete — somebody's team history, their own written updates and
+         * years of their attendance are part of their record — so emptying the
+         * employees table means emptying what points at it. Dropping the
+         * projects cascades their team assignments and updates; dropping the
+         * teams cascades their memberships.
          */
+        AttendanceRecord::query()->delete();
         Project::query()->delete();
         Team::query()->delete();
         Employee::query()->delete();

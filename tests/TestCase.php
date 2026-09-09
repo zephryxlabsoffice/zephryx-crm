@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Support\Realm;
 use Database\Seeders\AccountSeeder;
+use Database\Seeders\AttendanceSeeder;
 use Database\Seeders\ClientSeeder;
 use Database\Seeders\EmployeeSeeder;
 use Database\Seeders\ProjectSeeder;
@@ -172,6 +173,7 @@ abstract class TestCase extends BaseTestCase
             (new TeamSeeder)->run();
             (new ProjectSeeder)->run();
             (new TaskSeeder)->run();
+            (new AttendanceSeeder)->run();
         } finally {
             $this->app->detectEnvironment(fn () => 'testing');
             config(['app.debug' => $debug]);

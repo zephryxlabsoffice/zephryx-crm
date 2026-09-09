@@ -44,9 +44,9 @@
 
         <form method="POST" action="{{ route('attendance.restore', ['record' => $record['id']]) }}">
             @csrf
-            {{-- TODO (backend phase): `attendance.reject` (§2.6), audited (§6),
-                 and refused on a record the actor owns. --}}
-            <button class="btn btn-outline" type="submit" disabled title="Restoring is not built yet">
+            {{-- Behind `attendance.reject` (§2.6), audited (§6), and refused on
+                 a record the actor owns. --}}
+            <button class="btn btn-outline" type="submit">
                 Restore the record
             </button>
         </form>
@@ -65,8 +65,11 @@
 
             <div class="form-field">
                 <label class="form-field-lbl" for="reject-reason">Why is this record wrong?</label>
-                <textarea id="reject-reason" name="reason" rows="3"
-                          placeholder="e.g. Duplicate — the same day was recorded from the reception tablet under a shared login." disabled></textarea>
+                <textarea id="reject-reason" name="reason" rows="3" required minlength="10" maxlength="1000"
+                          placeholder="e.g. Duplicate — the same day was recorded from the reception tablet under a shared login.">{{ old('reason') }}</textarea>
+                @error('reason')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
                 {{-- Required, not optional. This is somebody's attendance
                      record, and "rejected" with no explanation is the version
                      they have to come and ask about in person. --}}
@@ -75,7 +78,7 @@
                 </span>
             </div>
 
-            <button class="btn btn-outline btn-danger" type="submit" disabled title="Rejecting is not built yet">
+            <button class="btn btn-outline btn-danger" type="submit">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>

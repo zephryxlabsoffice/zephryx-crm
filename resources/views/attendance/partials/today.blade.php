@@ -75,10 +75,10 @@
         @if (! $checkedIn)
             <form method="POST" action="{{ route('attendance.check-in') }}">
                 @csrf
-                {{-- TODO (backend phase): the server's clock, never a posted
-                     time; unique on (employee, date) so a double submit makes
-                     one record; audited (§6). --}}
-                <button class="btn btn-primary" type="submit" disabled title="Checking in is not built yet">
+                {{-- The server's clock, never a posted time; unique on
+                     (employee, date) so a double submit makes one record;
+                     audited (§6). --}}
+                <button class="btn btn-primary" type="submit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
                     </svg>
@@ -89,7 +89,7 @@
         @elseif (! $checkedOut)
             <form method="POST" action="{{ route('attendance.check-out') }}">
                 @csrf
-                <button class="btn btn-primary" type="submit" disabled title="Checking out is not built yet">
+                <button class="btn btn-primary" type="submit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
                     </svg>

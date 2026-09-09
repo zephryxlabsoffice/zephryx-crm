@@ -2,10 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\AttendanceRecord;
+use App\Models\Employee;
+use App\Models\Role;
+use App\Models\User;
+use App\Support\AttendanceDirectory;
 use App\Support\AttendancePolicy;
 use App\Support\AttendancePresenter as P;
-use App\Support\Demo\DemoAttendance;
 use App\Support\Holidays;
+use App\Support\Rbac\Rbac;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
@@ -17,40 +22,83 @@ class AttendancePageTest extends TestCase
         parent::setUp();
 
         /*
-         * Every route in the staff realm is behind `realm:staff` now (§3.1), so
+         * Every route in the staff realm is behind `realm:staff` now (Â§3.1), so
          * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
+         * what the page renders rather than about who may see it â€” the guard
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
 
         /*
-         * ─────────────────────────────────────────────────────────────────────
+         * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
          * THE CLOCK IS AN INPUT TO THIS MODULE, SO IT IS PINNED
          *
          * Attendance measures open records against `now`: hours worked so far,
          * and whether the ten-hour window has closed. Left to the wall clock,
          * tests in this file pass or fail depending on what time of day they
-         * are run, and they did — one asserting the window HAD closed failed
+         * are run, and they did â€” one asserting the window HAD closed failed
          * every morning, and one forbidding the handover's hardcoded "8h 15m"
          * failed at 18:07, when the demo viewer's 09:52 check-in had genuinely
          * been running for eight hours and fifteen minutes.
          *
          * Pinned to 11:00 on today's date. The date is deliberately still today
-         * — the demo data is generated relative to it, and moving it would be
-         * testing a different dataset — but the time of day is now ours.
-         * ─────────────────────────────────────────────────────────────────────
+         * â€” the demo data is generated relative to it, and moving it would be
+         * testing a different dataset â€” but the time of day is now ours.
+         * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
          */
         Carbon::setTestNow(Carbon::today()->setTime(11, 0));
     }
+    /** The demo person these pages are read as â€” see withDemoData. */
+    protected const VIEWER = 'EMP002';
+
+    /**
+     * The demo attendance as real rows, read as somebody who has some.
+     *
+     * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+     * THE VIEWER IS NOW A REAL SIGNED-IN PERSON
+     *
+     * `/attendance/mine` used to answer with a hardcoded EMP002 for everybody.
+     * It filters on the session now, so a test about somebody's own attendance
+     * has to BE somebody with attendance â€” and the CEO the suite signs in as by
+     * default has an account but no employment record at all.
+     *
+     * So this signs in as EMP002 and gives that account HR as well. Two roles on
+     * one person is the ordinary case (Â§2.4), and it is what these pages are
+     * read by: somebody with their own attendance who can also correct
+     * everybody else's.
+     * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+     */
     protected function withDemoData(): void
     {
+        $this->seedDemoWorkforce();
+
+        /*
+         * And then the environment stays flipped, because the holidays this
+         * module reads come off the announcements board and Announcements is
+         * still DemoAnnouncements, which gates on local + debug. That module
+         * has no table yet; when it gets one, this line goes.
+         *
+         * There are no POST tests in this file — Laravel only skips CSRF
+         * verification in the `testing` environment, so the writes have their
+         * own file, which does not flip anything.
+         */
         $this->app->detectEnvironment(fn () => 'local');
         config(['app.debug' => true]);
+
+        $user = User::where('user_id', self::VIEWER)->firstOrFail();
+        $user->roles()->syncWithoutDetaching(Role::whereIn('role_key', ['employee', 'hr'])->pluck('id'));
+
+        app(Rbac::class)->forget($user);
+        $this->actingAs($user);
+    }
+
+    protected function viewer(): Employee
+    {
+        return Employee::whereHas('user', fn ($q) => $q->where('user_id', self::VIEWER))->firstOrFail();
     }
 
     /**
-     * The viewer's most recent closed day — one they own, so the "nobody
+     * The viewer's most recent closed day â€” one they own, so the "nobody
      * corrects their own record" rule can be checked against it.
      *
      * Found rather than hardcoded: a fixed date drifts onto a Saturday within a
@@ -60,7 +108,7 @@ class AttendancePageTest extends TestCase
      */
     protected function viewerRecord(): array
     {
-        $record = DemoAttendance::forEmployee(DemoAttendance::VIEWER)
+        $record = AttendanceDirectory::forEmployee($this->viewer())
             ->first(fn (array $r) => $r['check_out'] !== null && $r['rejected_at'] === null);
 
         $this->assertNotNull($record, 'no closed record for the viewer');
@@ -73,11 +121,26 @@ class AttendancePageTest extends TestCase
      */
     protected function rejectedRecord(): array
     {
-        $record = DemoAttendance::rejected()->first();
+        $record = $this->rejectedRecords()->first();
 
         $this->assertNotNull($record, 'no rejected sample record to prove the point');
 
         return $record;
+    }
+
+    /**
+     * Records a PERSON rejected, newest first.
+     *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    protected function rejectedRecords(): \Illuminate\Support\Collection
+    {
+        return AttendanceRecord::query()
+            ->with(['employee.user', 'rejecter.user'])
+            ->rejected()
+            ->orderByDesc('date')
+            ->get()
+            ->map(fn (AttendanceRecord $r) => $r->toRecordArray());
     }
 
     /**
@@ -87,9 +150,9 @@ class AttendancePageTest extends TestCase
      */
     protected function someoneElsesRecord(): array
     {
-        $row = DemoAttendance::forDate(Carbon::today())
+        $row = AttendanceDirectory::forDate(Carbon::today())
             ->first(fn (array $r) => $r['id'] !== null
-                && $r['employee'] !== DemoAttendance::VIEWER
+                && $r['employee'] !== self::VIEWER
                 && ! $r['rejected']);
 
         $this->assertNotNull($row, 'nobody else has an open-to-rejection record today');
@@ -113,9 +176,9 @@ class AttendancePageTest extends TestCase
         $this->get('/attendance/mine')->assertOk()->assertSee('Attendance calendar', false);
     }
 
-    /* ══════════════════════════════════════════════════════════════════════
-       THERE IS NO APPROVAL — THE DECISION THE MODULE IS BUILT ON
-       ══════════════════════════════════════════════════════════════════════ */
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       THERE IS NO APPROVAL â€” THE DECISION THE MODULE IS BUILT ON
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
     public function test_no_route_approves_attendance(): void
     {
@@ -136,7 +199,7 @@ class AttendancePageTest extends TestCase
 
     public function test_no_page_offers_to_approve_or_to_mark_somebody_present(): void
     {
-        // Not a word search — "Approved leave is not counted here" is a sentence
+        // Not a word search â€” "Approved leave is not counted here" is a sentence
         // this module needs to be able to say. What must not exist is a CONTROL:
         // a form that submits a decision, or a queue of days waiting for one.
         $this->withDemoData();
@@ -188,9 +251,9 @@ class AttendancePageTest extends TestCase
         $this->assertSame(['_token'], $inputs[1]);
     }
 
-    /* ══════════════════════════════════════════════════════════════════════
-       REJECTION — A CORRECTION, NOT A GATE
-       ══════════════════════════════════════════════════════════════════════ */
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       REJECTION â€” A CORRECTION, NOT A GATE
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
     public function test_a_rejected_record_shows_the_reason_it_was_rejected(): void
     {
@@ -207,7 +270,7 @@ class AttendancePageTest extends TestCase
         /*
          * A record can be rejected by HR AND left open past the ten-hour
          * window. Both are true; the human reason is the one that explains
-         * anything, and it used to be the one that was hidden — the page
+         * anything, and it used to be the one that was hidden â€” the page
          * checked `auto_rejected` first and showed only "no check-out was
          * recorded".
          *
@@ -219,12 +282,12 @@ class AttendancePageTest extends TestCase
         /*
          * The window has to have actually closed, or the page is right to say
          * nothing about it. `autoRejected` counts from check-in to `now`, so a
-         * record dated today has not closed yet for most of the working day —
+         * record dated today has not closed yet for most of the working day â€”
          * which is why the sample record lives on an earlier one, and why this
          * asserts that rather than skipping when it cannot find one. A skip is
          * how a fixture that stopped demonstrating its point goes unnoticed.
          */
-        $record = DemoAttendance::rejected()
+        $record = $this->rejectedRecords()
             ->first(fn (array $r) => $r['check_out'] === null
                 && $r['rejection_reason'] !== null
                 && $r['date'] !== Carbon::today()->toDateString());
@@ -253,7 +316,7 @@ class AttendancePageTest extends TestCase
     {
         $this->withDemoData();
 
-        $record = DemoAttendance::find($this->rejectedRecord()['id']);
+        $record = AttendanceDirectory::find($this->rejectedRecord()['id']);
 
         $this->assertSame(P::REJECTED, $record['state']);
     }
@@ -312,9 +375,9 @@ class AttendancePageTest extends TestCase
         }
     }
 
-    /* ══════════════════════════════════════════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        THE CALENDAR
-       ══════════════════════════════════════════════════════════════════════ */
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
     public function test_the_calendar_shows_the_current_month_by_default(): void
     {
@@ -375,7 +438,7 @@ class AttendancePageTest extends TestCase
     {
         $this->withDemoData();
 
-        $weeks = P::calendar(Carbon::today()->startOfMonth(), DemoAttendance::forEmployee(DemoAttendance::VIEWER));
+        $weeks = P::calendar(Carbon::today()->startOfMonth(), AttendanceDirectory::forEmployee($this->viewer()));
 
         foreach ($weeks as $week) {
             foreach ($week as $cell) {
@@ -386,9 +449,9 @@ class AttendancePageTest extends TestCase
         }
     }
 
-    /* ══════════════════════════════════════════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        WHAT COUNTS, AND WHAT DOES NOT
-       ══════════════════════════════════════════════════════════════════════ */
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
     public function test_a_weekly_off_is_never_an_absence(): void
     {
@@ -421,7 +484,7 @@ class AttendancePageTest extends TestCase
 
         /*
          * A past WORKING day, found rather than assumed. A fixed `subDays(3)`
-         * lands on a Sunday every Wednesday, and week-off outranks leave — so
+         * lands on a Sunday every Wednesday, and week-off outranks leave â€” so
          * the test failed twice a week on the calendar rather than on anything
          * in the code.
          */
@@ -454,7 +517,7 @@ class AttendancePageTest extends TestCase
         // have to be on it.
         $this->withDemoData();
 
-        $roll = DemoAttendance::forDate(Carbon::today());
+        $roll = AttendanceDirectory::forDate(Carbon::today());
 
         $this->assertGreaterThan(0, $roll->whereNull('id')->count(), 'nobody without a record is on the roll');
         $this->assertSame(0, $roll->where('employee_record.status', 'inactive')->count());
@@ -467,8 +530,8 @@ class AttendancePageTest extends TestCase
 
         $summary = AttendancePolicy::monthSummary(
             Carbon::today()->startOfMonth(),
-            DemoAttendance::forEmployee(DemoAttendance::VIEWER),
-            DemoAttendance::leaveDates(DemoAttendance::VIEWER),
+            AttendanceDirectory::forEmployee($this->viewer()),
+            AttendanceDirectory::leaveDates($this->viewer()->id),
         );
 
         $this->assertSame(Carbon::today()->day, (int) $summary['days_counted']);
@@ -536,9 +599,9 @@ class AttendancePageTest extends TestCase
         $this->assertNotSame(P::HALF_DAY, $evaluated['state']);
     }
 
-    /* ══════════════════════════════════════════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        THE FORGOTTEN CHECK-OUT
-       ══════════════════════════════════════════════════════════════════════ */
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
     public function test_a_day_never_checked_out_of_is_surfaced_by_name(): void
     {
@@ -546,7 +609,7 @@ class AttendancePageTest extends TestCase
         // attendance data problem there is.
         $this->withDemoData();
 
-        $open = DemoAttendance::missingCheckOuts();
+        $open = AttendanceDirectory::missingCheckOuts();
 
         $this->assertNotEmpty($open, 'no sample open record to prove the point');
 
@@ -560,7 +623,7 @@ class AttendancePageTest extends TestCase
         // Somebody still at their desk has not forgotten anything.
         $this->withDemoData();
 
-        foreach (DemoAttendance::missingCheckOuts() as $record) {
+        foreach (AttendanceDirectory::missingCheckOuts() as $record) {
             $this->assertTrue(AttendancePolicy::autoRejected($record));
         }
     }
@@ -570,7 +633,7 @@ class AttendancePageTest extends TestCase
         $this->withDemoData();
 
         /*
-         * An open day that NOBODY rejected — the point is that the clock alone
+         * An open day that NOBODY rejected â€” the point is that the clock alone
          * is enough.
          *
          * Selected rather than taking the first, because a record can be both:
@@ -579,16 +642,16 @@ class AttendancePageTest extends TestCase
          * runs. This test failed for the first time at half past five one
          * afternoon, when today's records stopped being the newest open ones.
          */
-        $record = DemoAttendance::missingCheckOuts()
+        $record = AttendanceDirectory::missingCheckOuts()
             ->first(fn (array $r) => $r['rejected_at'] === null);
 
         $this->assertNotNull($record, 'no sample open record to prove the point');
 
-        $found = DemoAttendance::find($record['id']);
+        $found = AttendanceDirectory::find($record['id']);
 
         $this->assertSame(P::REJECTED, $found['state']);
         $this->assertTrue($found['auto_rejected']);
-        // Rejected by the rule, not by a person — nothing was stamped on it.
+        // Rejected by the rule, not by a person â€” nothing was stamped on it.
         $this->assertNull($found['rejected_at']);
     }
 
@@ -599,8 +662,8 @@ class AttendancePageTest extends TestCase
         $this->withDemoData();
 
         // Auto-rejected ONLY. On a record a person also rejected, their written
-        // reason is shown instead — see the test above.
-        $record = DemoAttendance::missingCheckOuts()
+        // reason is shown instead â€” see the test above.
+        $record = AttendanceDirectory::missingCheckOuts()
             ->first(fn (array $r) => $r['rejected_at'] === null);
 
         $this->assertNotNull($record, 'no sample open record to prove the point');
@@ -617,8 +680,8 @@ class AttendancePageTest extends TestCase
         // still missing, so "restoring" it would mean inventing the time.
         $this->withDemoData();
 
-        $record = DemoAttendance::missingCheckOuts()
-            ->first(fn (array $r) => $r['employee'] !== DemoAttendance::VIEWER);
+        $record = AttendanceDirectory::missingCheckOuts()
+            ->first(fn (array $r) => $r['employee'] !== self::VIEWER);
 
         $this->assertNotNull($record);
 
@@ -637,9 +700,9 @@ class AttendancePageTest extends TestCase
         $this->get('/attendance/mine')->assertSee('stops counting', false);
     }
 
-    /* ══════════════════════════════════════════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        HOLIDAYS COME FROM THE BOARD
-       ══════════════════════════════════════════════════════════════════════ */
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
     public function test_a_holiday_announcement_closes_the_office(): void
     {
@@ -695,9 +758,9 @@ class AttendancePageTest extends TestCase
         $this->assertLessThanOrEqual(2, count(Holidays::all()));
     }
 
-    /* ══════════════════════════════════════════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        WHAT PAYS FOR READING HOLIDAYS OFF THE BOARD
-       ══════════════════════════════════════════════════════════════════════ */
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
     public function test_a_wrong_holiday_can_only_ever_hide_absences(): void
     {
@@ -738,9 +801,9 @@ class AttendancePageTest extends TestCase
     /**
      * The day-notice partial, rendered on its own.
      *
-     * The doubt branch cannot occur in the demo data by construction — the
+     * The doubt branch cannot occur in the demo data by construction â€” the
      * generator writes no records on a non-working day, so nobody ever has one
-     * on a holiday — and a branch that only appears when something has gone
+     * on a holiday â€” and a branch that only appears when something has gone
      * wrong is exactly the one that ships broken.
      *
      * @param  array<string, mixed>  $data
@@ -811,7 +874,7 @@ class AttendancePageTest extends TestCase
 
     public function test_declaring_a_closure_is_its_own_permission(): void
     {
-        // Posting is broad — HR, project managers, the owner — because a board
+        // Posting is broad â€” HR, project managers, the owner â€” because a board
         // nobody can post to is a board nobody reads. Closing the office is not.
         $this->assertNotSame(
             config('announcements.post_permission'),
@@ -849,20 +912,29 @@ class AttendancePageTest extends TestCase
         }
     }
 
-    /* ══════════════════════════════════════════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        THE USUAL GUARDS
-       ══════════════════════════════════════════════════════════════════════ */
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-    public function test_the_demo_source_is_inert_outside_local_debug(): void
+    public function test_an_empty_database_produces_an_empty_module(): void
     {
-        $this->app->detectEnvironment(fn () => 'production');
-        config(['app.debug' => false]);
-
-        $this->assertFalse(DemoAttendance::enabled());
-        $this->assertTrue(DemoAttendance::forDate(Carbon::today())->isEmpty());
-        $this->assertTrue(DemoAttendance::forEmployee(DemoAttendance::VIEWER)->isEmpty());
-        $this->assertTrue(DemoAttendance::missingCheckOuts()->isEmpty());
-        $this->assertNull(DemoAttendance::find('ATT-2026-09-03-EMP002'));
+        /*
+         * This replaced "the demo source is inert outside local + debug", which
+         * was true only because the fixture switched itself off. Attendance
+         * comes from a table now, and in production real records SHOULD be
+         * shown — asserting otherwise would assert that the module does not
+         * work where it matters.
+         *
+         * What survives is the guarantee underneath it: nothing is invented. No
+         * records, no roll, no open days, and no record behind a made-up id.
+         */
+        $this->assertTrue(AttendanceDirectory::forDate(Carbon::today())->every(
+            fn (array $row) => $row['id'] === null
+        ));
+        $this->assertTrue(AttendanceDirectory::missingCheckOuts()->isEmpty());
+        $this->assertNull(AttendanceDirectory::find('ATT-2026-09-03-EMP002'));
+        // And a reference that is not one is refused before any lookup happens.
+        $this->assertNull(AttendanceDirectory::find('not-a-reference'));
     }
 
     public function test_no_figure_is_written_into_the_markup(): void
@@ -889,7 +961,7 @@ class AttendancePageTest extends TestCase
     {
         $this->withDemoData();
 
-        $roll = DemoAttendance::forDate(Carbon::today());
+        $roll = AttendanceDirectory::forDate(Carbon::today());
 
         foreach ([P::PRESENT, P::ABSENT, P::HALF_DAY] as $state) {
             $expected = $roll->where('state', $state)->count();
@@ -915,7 +987,7 @@ class AttendancePageTest extends TestCase
     public function test_the_pages_render_nothing_the_content_security_policy_would_block(): void
     {
         // The handover wired its month arrows and its status dropdowns with
-        // inline <script>, and coloured its donut with style="--dot:#15A848" —
+        // inline <script>, and coloured its donut with style="--dot:#15A848" â€”
         // none of it would have worked.
         $this->withDemoData();
 
@@ -942,3 +1014,4 @@ class AttendancePageTest extends TestCase
         }
     }
 }
+

@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AttendanceRecord;
+use App\Models\Employee;
+use App\Support\AttendanceDirectory;
 use App\Support\AttendancePolicy;
 use App\Support\AttendancePresenter as P;
-use App\Support\Demo\DemoAttendance;
-use App\Support\Demo\DemoEmployees;
+use App\Support\Audit\AuditLog;
 use App\Support\Holidays;
+use App\Support\Rbac\Rbac;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -14,6 +18,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Attendance — checking in, checking out, and keeping the record honest.
@@ -83,6 +88,10 @@ class AttendanceController extends Controller
 {
     protected const PER_PAGE = 10;
 
+    public function __construct(protected Rbac $rbac, protected AuditLog $audit)
+    {
+    }
+
     /**
      * GET /attendance — one day's roll across the company.
      */
@@ -91,8 +100,8 @@ class AttendanceController extends Controller
         $filters = $this->filters($request);
         $date = $filters['date'];
 
-        $roll = DemoAttendance::forDate($date);
-        $stats = DemoAttendance::stats($roll);
+        $roll = AttendanceDirectory::forDate($date);
+        $stats = AttendanceDirectory::stats($roll);
 
         return response()->view('attendance.index', [
             'activeNav' => 'attendance',
@@ -101,8 +110,8 @@ class AttendanceController extends Controller
             'breakdown' => P::breakdown($stats, $stats['headcount']),
             // Days somebody checked into and never out of. The one thing on
             // this page that is actually actionable.
-            'openRecords' => DemoAttendance::missingCheckOuts(),
-            'departments' => DemoEmployees::all()->pluck('department')->unique()->sort()->values()->all(),
+            'openRecords' => AttendanceDirectory::missingCheckOuts(),
+            'departments' => \App\Support\EmployeeDirectory::departmentsInUse(),
             'isToday' => Carbon::parse($date)->isToday(),
             'workingDay' => AttendancePolicy::isWorkingDay($date),
             'holiday' => AttendancePolicy::holidayOn($date),
@@ -119,16 +128,21 @@ class AttendanceController extends Controller
      */
     public function mine(Request $request): Response
     {
-        $viewer = DemoAttendance::VIEWER;
+        /*
+         * The viewer's own employment record, from the session. There is no
+         * parameter here for anybody to change to somebody else's — the same
+         * reason the payslip route takes a period and no employee.
+         */
+        $viewer = $this->employeeFor($request);
 
         $month = P::month($request->validate([
             'month' => ['nullable', 'string', 'regex:/^\d{4}-\d{2}$/'],
         ])['month'] ?? null);
 
-        $records = DemoAttendance::forEmployee($viewer);
-        $leaveDates = DemoAttendance::leaveDates($viewer);
+        $records = AttendanceDirectory::forEmployee($viewer);
+        $leaveDates = $viewer ? AttendanceDirectory::leaveDates($viewer->id) : [];
 
-        $today = DemoAttendance::today($viewer);
+        $today = AttendanceDirectory::today($viewer);
         $summary = AttendancePolicy::monthSummary($month, $records, $leaveDates);
 
         return response()->view('attendance.mine', [
@@ -153,37 +167,292 @@ class AttendanceController extends Controller
                 $today,
                 in_array(Carbon::today()->toDateString(), $leaveDates, true),
             ),
-            // TODO (backend phase): `attendance.view.all`. This page is reached
-            // from the roll, so it needs a way back — but only for the people
-            // who could have come from there.
-            'canTrack' => true,
+            // The way back to the roll, for the people who could have come from
+            // it. Everybody else has no roll to return to.
+            'canTrack' => $this->rbac->can($request->user(), 'attendance.view.all'),
+            // Somebody with no employment record — a Mentor, the owner — has no
+            // attendance of their own at all (§2.1), and the page says so
+            // rather than drawing an empty calendar as though they were absent
+            // every day.
+            'hasRecord' => $viewer !== null,
         ]);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       THE CLOCK
+       ══════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * Check in.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * THE TIME IS THE SERVER'S AND THE PERSON IS THE SESSION'S
+     *
+     * Neither is a parameter, so there is nothing here to tamper with: no
+     * employee id to swap and no timestamp to type. That is the whole design of
+     * the route, and it is why this method validates nothing.
+     *
+     * Idempotent per day, enforced by the unique key rather than by the button
+     * being hidden — a second submit finds the existing record and does not
+     * move its time.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function checkIn(Request $request): RedirectResponse
+    {
+        $employee = $this->requireEmployee($request);
+        $today = Carbon::today();
+
+        $existing = AttendanceRecord::where('employee_id', $employee->id)
+            ->whereDate('date', $today->toDateString())
+            ->first();
+
+        if ($existing !== null) {
+            return redirect()
+                ->route('attendance.mine')
+                ->with('status', 'You are already checked in for today, at '
+                    .Carbon::parse($existing->check_in)->format('g:i A').'.')
+                ->with('status_tone', 'info');
+        }
+
+        $record = AttendanceRecord::create([
+            'employee_id' => $employee->id,
+            'date' => $today,
+            'check_in' => Carbon::now()->format('H:i'),
+        ]);
+
+        $this->audit->record(
+            action: AuditLog::ATTENDANCE_CHECKED_IN,
+            actor: $request->user(),
+            entityType: 'attendance',
+            entityId: $record->fresh('employee.user')->reference(),
+            after: 'Checked in at '.Carbon::now()->format('g:i A'),
+            request: $request,
+        );
+
+        return redirect()
+            ->route('attendance.mine')
+            ->with('status', 'Checked in at '.Carbon::now()->format('g:i A').'.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * Check out.
+     *
+     * Also idempotent: a second check-out does not move the first one's time.
+     * There is no way to check out of a day you never checked into, which is
+     * why the missing record is a message rather than a new row.
+     */
+    public function checkOut(Request $request): RedirectResponse
+    {
+        $employee = $this->requireEmployee($request);
+
+        $record = AttendanceRecord::where('employee_id', $employee->id)
+            ->whereDate('date', Carbon::today()->toDateString())
+            ->first();
+
+        if ($record === null) {
+            return redirect()
+                ->route('attendance.mine')
+                ->with('status', 'There is no check-in for today to close.')
+                ->with('status_tone', 'warning');
+        }
+
+        if ($record->check_out !== null) {
+            return redirect()
+                ->route('attendance.mine')
+                ->with('status', 'You checked out at '.Carbon::parse($record->check_out)->format('g:i A').'.')
+                ->with('status_tone', 'info');
+        }
+
+        $record->update(['check_out' => Carbon::now()->format('H:i')]);
+
+        $this->audit->record(
+            action: AuditLog::ATTENDANCE_CHECKED_OUT,
+            actor: $request->user(),
+            entityType: 'attendance',
+            entityId: $record->fresh('employee.user')->reference(),
+            after: 'Checked out at '.Carbon::now()->format('g:i A'),
+            request: $request,
+        );
+
+        return redirect()
+            ->route('attendance.mine')
+            ->with('status', 'Checked out at '.Carbon::now()->format('g:i A').'.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * Reject a record, with a reason.
+     *
+     * A correction applied after the fact, never a gate — see the head of this
+     * class for why there is no approval anywhere in this module. The reason is
+     * required because "rejected" with no explanation is the version somebody
+     * has to come and ask about, and it is their attendance record.
+     *
+     * The times are not touched. A wrong record stays legible.
+     */
+    public function reject(Request $request, string $record): RedirectResponse
+    {
+        $found = $this->findRecord($record);
+        $model = $found['model'];
+
+        $actor = $this->employeeFor($request);
+
+        if ($actor !== null && $model->employee_id === $actor->id) {
+            // Nobody rejects their own record — the same rule, for the same
+            // reason, as nobody approving their own leave (§2.6).
+            throw ValidationException::withMessages([
+                'reason' => 'You cannot reject your own attendance record.',
+            ]);
+        }
+
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'min:10', 'max:1000'],
+        ]);
+
+        if ($model->rejected_at !== null) {
+            return redirect()
+                ->route('attendance.show', ['record' => $record])
+                ->with('status', 'This record was already rejected.')
+                ->with('status_tone', 'info');
+        }
+
+        $model->update([
+            'rejected_at' => Carbon::now(),
+            'rejected_by' => $actor?->id,
+            'rejection_reason' => $data['reason'],
+        ]);
+
+        $this->audit->record(
+            action: AuditLog::ATTENDANCE_REJECTED,
+            actor: $request->user(),
+            entityType: 'attendance',
+            entityId: $record,
+            before: 'recorded',
+            after: 'Rejected: '.$data['reason'],
+            request: $request,
+        );
+
+        return redirect()
+            ->route('attendance.show', ['record' => $record])
+            ->with('status', 'Record rejected.')
+            ->with('status_tone', 'info');
+    }
+
+    /**
+     * Undo a rejection somebody made in error.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * ONLY A PERSON'S REJECTION CAN BE LIFTED
+     *
+     * A day the ten-hour window closed on is not restorable: there is no flag
+     * to lift, because the state is derived from a check-out that is still
+     * missing. "Restoring" it would mean inventing the time somebody went home.
+     * The honest answer is that the day is gone.
+     *
+     * The correction mechanism needs to be correctable, or it needs a
+     * correction mechanism of its own.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function restore(Request $request, string $record): RedirectResponse
+    {
+        $found = $this->findRecord($record);
+        $model = $found['model'];
+
+        if ($model->rejected_at === null) {
+            return redirect()
+                ->route('attendance.show', ['record' => $record])
+                ->with('status', 'This record is not rejected.')
+                ->with('status_tone', 'info');
+        }
+
+        $reason = $model->rejection_reason;
+
+        $model->update([
+            'rejected_at' => null,
+            'rejected_by' => null,
+            'rejection_reason' => null,
+        ]);
+
+        $this->audit->record(
+            action: AuditLog::ATTENDANCE_RESTORED,
+            actor: $request->user(),
+            entityType: 'attendance',
+            entityId: $record,
+            // The reason the rejection gave is carried into the entry that
+            // undoes it: the log has to keep saying what was once claimed about
+            // this day, even after the claim was withdrawn.
+            before: 'Rejected: '.$reason,
+            after: 'Rejection withdrawn',
+            request: $request,
+        );
+
+        return redirect()
+            ->route('attendance.show', ['record' => $record])
+            ->with('status', 'Rejection withdrawn.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * The signed-in person's employment record.
+     */
+    protected function employeeFor(Request $request): ?Employee
+    {
+        return Employee::where('user_id', $request->user()?->id)->first();
+    }
+
+    /**
+     * The same, refusing anybody who has none.
+     *
+     * A Mentor and the owner hold no Employee base at all (§2.1), so they have
+     * no attendance to record — and a clock button that half-worked for them
+     * would be worse than one that says no.
+     */
+    protected function requireEmployee(Request $request): Employee
+    {
+        $employee = $this->employeeFor($request);
+
+        abort_if($employee === null, 403);
+
+        return $employee;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function findRecord(string $reference): array
+    {
+        $found = AttendanceDirectory::find($reference);
+
+        abort_if($found === null, 404);
+
+        return $found;
     }
 
     /**
      * GET /attendance/{record} — one day, one person, and the rejection on it.
      */
-    public function show(string $record): Response
+    public function show(Request $request, string $record): Response
     {
-        $found = DemoAttendance::find($record);
+        $found = $this->findRecord($record);
 
-        abort_if($found === null, 404);
-
-        $viewer = DemoAttendance::VIEWER;
-        $own = $found['employee'] === $viewer;
+        $viewer = $this->employeeFor($request);
+        $own = $viewer !== null && $found['model']->employee_id === $viewer->id;
 
         return response()->view('attendance.show', [
             'activeNav' => 'attendance',
             'record' => $found,
             'own' => $own,
-            // Nobody rejects their own record — the same rule, for the same
-            // reason, as nobody approving their own leave. Stubbed here; the
-            // real check lands with the RBAC engine.
-            // TODO (backend phase): gate on `attendance.reject` (§2.6).
-            //
-            // A day the ten-hour window already closed on is not offered
-            // either: it is rejected, and rejecting it again does nothing.
-            'canReject' => ! $own && ! $found['rejected'],
+            /*
+             * Rejecting needs the permission AND not being your own record
+             * (§2.6) — a control somebody can apply to themselves is not a
+             * control. A day the ten-hour window already closed on is not
+             * offered either: it is rejected, and rejecting it again does
+             * nothing.
+             */
+            'canReject' => $this->rbac->can($request->user(), 'attendance.reject')
+                && ! $own
+                && ! $found['rejected'],
             // A rejection made in error has to be reversible, or the correction
             // mechanism needs a correction mechanism.
             //
@@ -191,7 +460,10 @@ class AttendanceController extends Controller
             // derived from a check-out that is still missing, so "restoring" it
             // would either do nothing or mean inventing the time. The honest
             // answer is that the day is gone.
-            'canRestore' => ! $own && $found['rejected_at'] !== null && ! $found['auto_rejected'],
+            'canRestore' => $this->rbac->can($request->user(), 'attendance.reject')
+                && ! $own
+                && $found['rejected_at'] !== null
+                && ! $found['auto_rejected'],
             'policy' => [
                 'start' => AttendancePolicy::workStart(),
                 'end' => AttendancePolicy::workEnd(),

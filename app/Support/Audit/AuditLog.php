@@ -109,6 +109,17 @@ class AuditLog
     public const TASK_COMPLETED = 'task.completed';
     public const TASK_REOPENED = 'task.reopened';
 
+    /*
+     * Attendance. The clock entries are here because §6 asks for them and
+     * because a check-in somebody disputes is answered by the log rather than
+     * by the record it wrote — the record says 09:21, the entry says who was
+     * signed in and from which address when it said so.
+     */
+    public const ATTENDANCE_CHECKED_IN = 'attendance.checked_in';
+    public const ATTENDANCE_CHECKED_OUT = 'attendance.checked_out';
+    public const ATTENDANCE_REJECTED = 'attendance.rejected';
+    public const ATTENDANCE_RESTORED = 'attendance.restored';
+
     /* Admin Panel (§6 requires all of its actions) */
     public const PERMISSION_CHANGED = 'admin.permission_changed';
     public const SETTING_CHANGED = 'admin.setting_changed';

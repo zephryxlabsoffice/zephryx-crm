@@ -576,7 +576,10 @@ Route::get('/attendance', [AttendanceController::class, 'index'])->name('attenda
 // Before /attendance/{record}, or "mine" is read as a record reference.
 Route::get('/attendance/mine', [AttendanceController::class, 'mine'])->name('attendance.mine');
 Route::get('/attendance/{record}', [AttendanceController::class, 'show'])
-    ->where('record', 'ATT-[0-9]{4}-[0-9]{2}-[0-9]{2}-EMP[0-9]{3}')
+    // The staff id half is no longer pinned to EMP000: test and future accounts
+    // carry other shapes, and a route pattern that quietly 404s a real record is
+    // worse than one that lets the lookup answer.
+    ->where('record', 'ATT-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Za-z0-9-]{1,16}')
     ->name('attendance.show');
 
 /*
@@ -598,13 +601,25 @@ Route::get('/attendance/{record}', [AttendanceController::class, 'show'])
  * Note what is NOT here: nothing approves, nothing edits a recorded time, and
  * nothing deletes a record. A wrong record is rejected and stays legible.
  */
-Route::post('/attendance/check-in', fn () => abort(501))->name('attendance.check-in');
-Route::post('/attendance/check-out', fn () => abort(501))->name('attendance.check-out');
-Route::post('/attendance/{record}/reject', fn () => abort(501))
-    ->where('record', 'ATT-[0-9]{4}-[0-9]{2}-[0-9]{2}-EMP[0-9]{3}')
+/*
+ * The clock. No permission and no parameters: the person is the session and the
+ * time is the server's, so there is nothing to guard beyond being staff with an
+ * employment record — which the controller checks, because a Mentor has none.
+ */
+Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.check-in');
+Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.check-out');
+
+/*
+ * Correcting a record IS a permission, and its own one (§2.6). The controller
+ * adds the second half of the rule: nobody rejects their own record.
+ */
+Route::post('/attendance/{record}/reject', [AttendanceController::class, 'reject'])
+    ->where('record', 'ATT-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Za-z0-9-]{1,16}')
+    ->middleware('permission:attendance.reject')
     ->name('attendance.reject');
-Route::post('/attendance/{record}/restore', fn () => abort(501))
-    ->where('record', 'ATT-[0-9]{4}-[0-9]{2}-[0-9]{2}-EMP[0-9]{3}')
+Route::post('/attendance/{record}/restore', [AttendanceController::class, 'restore'])
+    ->where('record', 'ATT-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Za-z0-9-]{1,16}')
+    ->middleware('permission:attendance.reject')
     ->name('attendance.restore');
 
 /*
