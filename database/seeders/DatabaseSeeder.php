@@ -54,6 +54,7 @@ class DatabaseSeeder extends Seeder
             LeaveSeeder::class,
             AttendanceSeeder::class,
             SalarySeeder::class,
+            TicketSeeder::class,
         ]);
     }
 }

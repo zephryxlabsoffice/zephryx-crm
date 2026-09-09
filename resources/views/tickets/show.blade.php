@@ -31,22 +31,41 @@
         </div>
 
         <div class="hd-actions">
-            {{-- Both are writes with rules attached: resolving belongs to the
-                 assignee or someone above them, escalating hands the ticket to
-                 the review queue. Neither pretends to work yet. --}}
-            <button class="btn btn-primary" type="button" disabled title="Resolving a ticket is not built yet">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                Mark Resolved
-            </button>
+            {{--
+                Both are the same write — a triage — with one field pre-filled,
+                rather than two endpoints that could disagree about what
+                resolving means. They are shown to whoever holds the triage
+                permission; everybody else reads the ticket and replies to it.
+            --}}
+            @if ($mayTriage)
+                @if (! in_array($ticket['status'], ['resolved', 'closed'], true))
+                    <form method="POST" action="{{ route('tickets.triage', ['ticket' => $ticket['id']]) }}">
+                        @csrf
+                        <input type="hidden" name="status" value="resolved">
+                        <input type="hidden" name="assignee_id" value="{{ $ticket['assignee_record']['employee_id'] ?? '' }}">
+                        <button class="btn btn-primary" type="submit">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Mark Resolved
+                        </button>
+                    </form>
+                @endif
 
-            <button class="btn btn-outline" type="button" disabled title="Escalating a ticket is not built yet">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M12 19V5"/><polyline points="5 12 12 5 19 12"/>
-                </svg>
-                Escalate
-            </button>
+                @if ($ticket['status'] !== 'escalated')
+                    <form method="POST" action="{{ route('tickets.triage', ['ticket' => $ticket['id']]) }}">
+                        @csrf
+                        <input type="hidden" name="status" value="escalated">
+                        <input type="hidden" name="assignee_id" value="{{ $ticket['assignee_record']['employee_id'] ?? '' }}">
+                        <button class="btn btn-outline" type="submit">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 19V5"/><polyline points="5 12 12 5 19 12"/>
+                            </svg>
+                            Escalate
+                        </button>
+                    </form>
+                @endif
+            @endif
         </div>
     </div>
 

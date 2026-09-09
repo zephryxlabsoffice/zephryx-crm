@@ -2,45 +2,56 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\Demo\DemoEmployees;
-use App\Support\Demo\DemoProjects;
-use App\Support\Demo\DemoTickets;
-use App\Support\TicketPresenter;
+use App\Models\Client;
+use App\Models\Employee;
+use App\Models\Project;
+use App\Models\Ticket;
+use App\Models\TicketComment;
+use App\Support\Audit\AuditLog;
+use App\Support\EmployeeDirectory;
+use App\Support\Rbac\Rbac;
+use App\Support\TicketDirectory;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 
 /**
  * Tickets — internal operations and client support.
  *
  * Five lists: everything (`/tickets`), raised by me (`/tickets/mine`),
- * assigned to me (`/tickets/assigned`), on my projects
- * (`/tickets/projects`) and the review queue (`/tickets/escalated`). One
- * overview at `/tickets/{ticket}`, whose panels vary by the viewer's
- * relationship to the ticket rather than by being four separate templates.
+ * assigned to me (`/tickets/assigned`), on my projects (`/tickets/projects`)
+ * and the review queue (`/tickets/escalated`). One overview at
+ * `/tickets/{ticket}`, whose panels vary by the viewer's relationship to the
+ * ticket rather than by being four separate templates.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * FRONT END ONLY, and this module has two obligations the backend must honour:
+ * TWO OBLIGATIONS, AND THEY ARE KEPT BY THE SHAPE OF THE CALLS
  *
- * 1. INTERNAL NOTES. `DemoTickets::commentsFor()` takes the audience as a
+ * 1. INTERNAL NOTES. `TicketDirectory::commentsFor()` takes the audience as a
  *    required argument. Every read here passes AUDIENCE_STAFF because this is
- *    the staff realm. When /client is built it passes AUDIENCE_CLIENT, and
- *    nothing else changes. Do not add a method that returns comments without
- *    an audience.
+ *    the staff realm; the client portal passes AUDIENCE_CLIENT and gets public
+ *    replies only. There is no method that returns a thread without an
+ *    audience, and adding one would be the bug.
  *
- * 2. OWNERSHIP. Every client ticket carries a client. The client realm must
- *    scope every read to the signed-in client's own tickets and verify
- *    ownership on the detail route (§6) — a client opening
- *    /client/tickets/TKT-2026-151 and seeing another company's ticket is the
- *    worst failure this module can have.
+ * 2. OWNERSHIP. Every client ticket carries a client, and the client realm
+ *    scopes every read to the signed-in client's own — a client opening
+ *    somebody else's ticket is the worst failure this module can have.
+ *
+ * ESCALATION IS FLAT (decided 2026-08-27): one shared queue, no L1→L2→L3
+ * ladder, and whoever holds `tickets.triage` works it.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 class TicketController extends Controller
 {
     protected const PER_PAGE = 8;
+
+    public function __construct(protected Rbac $rbac, protected AuditLog $audit)
+    {
+    }
 
     /**
      * GET /tickets — every ticket, with a tab per queue.
@@ -51,31 +62,35 @@ class TicketController extends Controller
             'tab' => ['nullable', Rule::in(['all', 'unassigned', 'escalated', 'client', 'in_progress', 'resolved'])],
         ])['tab'] ?? 'all';
 
-        $tickets = match ($tab) {
-            'unassigned' => DemoTickets::unassigned(),
-            'escalated' => DemoTickets::escalated(),
-            'client' => DemoTickets::all()->where('type', 'client')->values(),
-            'in_progress' => DemoTickets::all()->where('status', 'in_progress')->values(),
-            'resolved' => DemoTickets::all()->where('status', 'resolved')->values(),
-            default => DemoTickets::all(),
+        $filters = $this->filters($request);
+
+        $query = TicketDirectory::query($filters);
+
+        $query = match ($tab) {
+            'unassigned' => $query->unassigned(),
+            'escalated' => $query->escalated(),
+            'client' => $query->where('type', 'client'),
+            'in_progress' => $query->where('status', 'in_progress'),
+            'resolved' => $query->where('status', 'resolved'),
+            default => $query,
         };
 
-        $counts = DemoTickets::stats();
+        $counts = TicketDirectory::stats();
 
         return response()->view('tickets.index', [
             'activeNav' => 'tickets',
-            'tickets' => $this->paginate($this->matching($tickets, $this->filters($request)), $request),
+            'tickets' => $this->paginate($query),
             'stats' => $counts,
             'tab' => $tab,
             'tabCounts' => [
                 'all' => $counts['total'],
                 'unassigned' => $counts['unassigned'],
                 'escalated' => $counts['escalated'],
-                'client' => DemoTickets::all()->where('type', 'client')->count(),
+                'client' => Ticket::where('type', 'client')->count(),
                 'in_progress' => $counts['in_progress'],
                 'resolved' => $counts['resolved'],
             ],
-        ] + $this->filters($request) + $this->options());
+        ] + $filters + $this->options());
     }
 
     /**
@@ -83,7 +98,13 @@ class TicketController extends Controller
      */
     public function mine(Request $request): Response
     {
-        return $this->personalList($request, DemoTickets::raisedBy(), 'tickets.mine');
+        $employee = $this->employeeFor($request);
+
+        return $this->personalList(
+            $request,
+            fn (Builder $q) => $q->where('raised_by', $employee?->id ?? 0),
+            'tickets.mine',
+        );
     }
 
     /**
@@ -91,7 +112,13 @@ class TicketController extends Controller
      */
     public function assigned(Request $request): Response
     {
-        return $this->personalList($request, DemoTickets::assignedTo(), 'tickets.assigned');
+        $employee = $this->employeeFor($request);
+
+        return $this->personalList(
+            $request,
+            fn (Builder $q) => $q->where('assignee_id', $employee?->id ?? 0),
+            'tickets.assigned',
+        );
     }
 
     /**
@@ -99,24 +126,28 @@ class TicketController extends Controller
      */
     public function projects(Request $request): Response
     {
-        return $this->personalList($request, DemoTickets::onMyProjects(), 'tickets.projects');
+        $employee = $this->employeeFor($request);
+
+        return $this->personalList(
+            $request,
+            fn (Builder $q) => TicketDirectory::onProjectsOf($q, $employee),
+            'tickets.projects',
+        );
     }
 
     /**
      * GET /tickets/escalated — the review queue.
-     *
-     * Escalation is flat: one shared queue rather than an L1→L2→L3 ladder
-     * (decided 2026-08-27). Whoever holds the triage permission works it.
      */
     public function escalated(Request $request): Response
     {
-        $queue = DemoTickets::escalated();
+        $filters = $this->filters($request);
+        $query = TicketDirectory::query($filters)->escalated();
 
         return response()->view('tickets.escalated', [
             'activeNav' => 'tickets',
-            'tickets' => $this->paginate($this->matching($queue, $this->filters($request)), $request),
-            'stats' => DemoTickets::stats($queue),
-        ] + $this->filters($request) + $this->options());
+            'tickets' => $this->paginate(clone $query),
+            'stats' => TicketDirectory::stats(clone $query),
+        ] + $filters + $this->options());
     }
 
     /**
@@ -124,37 +155,243 @@ class TicketController extends Controller
      */
     public function show(Request $request, string $ticket): Response
     {
-        $record = DemoTickets::find($ticket);
-
-        abort_if($record === null, 404);
-
-        $decorated = $this->decorate($record);
+        $record = $this->find($ticket);
 
         return response()->view('tickets.show', [
             'activeNav' => 'tickets',
-            'ticket' => $decorated,
-            // Staff realm, so the whole thread. The client realm will pass
-            // AUDIENCE_CLIENT and get only public replies.
-            'comments' => DemoTickets::commentsFor($record, DemoTickets::AUDIENCE_STAFF),
-            'attachments' => DemoTickets::attachments($record),
+            'ticket' => $record,
+            // Staff realm, so the whole thread. The client realm passes
+            // AUDIENCE_CLIENT and gets only public replies.
+            'comments' => TicketDirectory::commentsFor($record['model'], TicketDirectory::AUDIENCE_STAFF),
+            // Files wait on the payslip store being extended to threads; the
+            // route and the check exist, the ticket-side upload does not yet.
+            'attachments' => [],
             // Triage is offered when the ticket needs it — unassigned, or
             // escalated back for someone else to route.
             'needsTriage' => in_array($record['status'], ['unassigned', 'escalated'], true),
+            'mayTriage' => $this->rbac->can($request->user(), 'tickets.triage'),
+        ] + $this->options());
+    }
+
+    public function create(Request $request): Response
+    {
+        return response()->view('tickets.form', [
+            'activeNav' => 'tickets',
+            'reference' => TicketDirectory::nextReference(),
+            'projects' => Project::query()->open()->orderBy('name')->get(),
+            'clients' => Client::query()->whereNot('status', 'completed')->orderBy('name')->get(),
+            'mayTriage' => $this->rbac->can($request->user(), 'tickets.triage'),
         ] + $this->options());
     }
 
     /**
-     * The four personal lists differ only in which collection they show.
+     * Raise a ticket.
      *
-     * @param  Collection<int, array<string, mixed>>  $tickets
+     * ─────────────────────────────────────────────────────────────────────────
+     * IT ARRIVES UNASSIGNED AND UNPRIORITISED, AND THAT IS NOT AN OMISSION
+     *
+     * A priority nobody set is different from a low one, and the queue sorts on
+     * the difference: an untriaged ticket is one nobody has looked at, not one
+     * judged unimportant. Letting the person raising it set the priority makes
+     * every ticket high, which is the same as none of them being.
+     * ─────────────────────────────────────────────────────────────────────────
      */
-    protected function personalList(Request $request, Collection $tickets, string $view): Response
+    public function store(Request $request): RedirectResponse
     {
+        $employee = $this->employeeFor($request);
+
+        $data = $request->validate([
+            'type' => ['required', Rule::in(Ticket::TYPES)],
+            'subject' => ['required', 'string', 'max:200'],
+            'description' => ['required', 'string', 'max:5000'],
+            'project_id' => ['nullable', Rule::exists('projects', 'id')],
+            'client_id' => ['nullable', 'required_if:type,client', Rule::exists('clients', 'id')],
+        ]);
+
+        $ticket = Ticket::create([
+            'reference' => TicketDirectory::nextReference(),
+            'type' => $data['type'],
+            'subject' => $data['subject'],
+            'description' => $data['description'],
+            'raised_by' => $data['type'] === 'internal' ? $employee?->id : null,
+            'client_id' => $data['type'] === 'client' ? $data['client_id'] : null,
+            'project_id' => $data['project_id'] ?? null,
+            'status' => 'unassigned',
+        ]);
+
+        $this->audit->record(
+            action: AuditLog::TICKET_RAISED,
+            actor: $request->user(),
+            entityType: 'ticket',
+            entityId: $ticket->reference,
+            after: $ticket->subject,
+            request: $request,
+        );
+
+        return redirect()
+            ->route('tickets.show', ['ticket' => $ticket->reference])
+            ->with('status', 'Ticket raised. It is in the queue for triage.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * Reply on a ticket.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * PUBLIC BY DEFAULT, WHICH IS THE OPPOSITE OF A PROJECT UPDATE
+     *
+     * A ticket comment is a REPLY: the normal case is answering the person who
+     * asked. A default that hid it would leave a client waiting for a response
+     * that was written days ago — the failure here is silence, not disclosure,
+     * and the internal note is the exception somebody chooses.
+     *
+     * The author's name and role are copied onto the row, so a thread survives
+     * the removal of an account.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function comment(Request $request, string $ticket): RedirectResponse
+    {
+        $record = $this->find($ticket);
+        $model = $record['model'];
+
+        $data = $request->validate([
+            'body' => ['required', 'string', 'max:5000'],
+            'visibility' => ['nullable', Rule::in([TicketComment::PUBLIC, TicketComment::INTERNAL])],
+        ]);
+
+        $comment = TicketComment::create([
+            'ticket_id' => $model->id,
+            'author_id' => $request->user()->id,
+            'author_label' => $request->user()->name,
+            'author_role' => $request->user()->display_role,
+            'body' => $data['body'],
+            'visibility' => $data['visibility'] ?? TicketComment::PUBLIC,
+        ]);
+
+        // The thread moving is what makes a ticket "recently touched", and the
+        // queue is ordered on it.
+        $model->touch();
+
+        $this->audit->record(
+            action: AuditLog::TICKET_COMMENTED,
+            actor: $request->user(),
+            entityType: 'ticket',
+            entityId: $model->reference,
+            after: $comment->isInternal() ? 'Internal note added' : 'Replied on the ticket',
+            request: $request,
+        );
+
+        return redirect()
+            ->route('tickets.show', ['ticket' => $model->reference])
+            ->with('status', $comment->isInternal() ? 'Internal note added.' : 'Reply posted.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * Triage: route it, prioritise it, and say who is picking it up.
+     *
+     * One act rather than four separate writes, because it is one decision —
+     * somebody reads the ticket once and answers every question about it. Split
+     * into four buttons it becomes four half-triaged tickets.
+     */
+    public function triage(Request $request, string $ticket): RedirectResponse
+    {
+        $record = $this->find($ticket);
+        $model = $record['model'];
+
+        $data = $request->validate([
+            'assignee_id' => ['nullable', Rule::exists('employees', 'id')],
+            'priority' => ['nullable', Rule::in(Ticket::PRIORITIES)],
+            'category' => ['nullable', 'string', 'max:60'],
+            'department' => ['nullable', 'string', 'max:60'],
+            'status' => ['nullable', Rule::in(Ticket::STATUSES)],
+        ]);
+
+        $before = $this->describe($model);
+
+        $status = $data['status'] ?? null;
+
+        if ($status === null) {
+            /*
+             * No status chosen: assigning somebody opens the ticket, and
+             * leaving it unassigned keeps it in the queue. Inferred rather than
+             * asked, because "assign to Amit and leave it unassigned" is not a
+             * state anybody means.
+             */
+            $status = ($data['assignee_id'] ?? null) !== null
+                ? ($model->status === 'unassigned' ? 'open' : $model->status)
+                : $model->status;
+        }
+
+        $model->update([
+            'assignee_id' => $data['assignee_id'] ?? null,
+            'priority' => $data['priority'] ?? $model->priority,
+            'category' => $data['category'] ?? $model->category,
+            'department' => $data['department'] ?? $model->department,
+            'status' => $status,
+            'resolved_at' => in_array($status, ['resolved', 'closed'], true)
+                ? ($model->resolved_at ?? now())
+                : $model->resolved_at,
+            'escalated_by' => $status === 'escalated'
+                ? ($this->employeeFor($request)?->id ?? $model->escalated_by)
+                : $model->escalated_by,
+            'escalated_at' => $status === 'escalated' ? ($model->escalated_at ?? now()) : $model->escalated_at,
+        ]);
+
+        $model->refresh()->load(['assignee.user', 'escalator.user']);
+
+        $this->audit->record(
+            action: AuditLog::TICKET_TRIAGED,
+            actor: $request->user(),
+            entityType: 'ticket',
+            entityId: $model->reference,
+            before: $before,
+            after: $this->describe($model),
+            request: $request,
+        );
+
+        return redirect()
+            ->route('tickets.show', ['ticket' => $model->reference])
+            ->with('status', 'Ticket updated.')
+            ->with('status_tone', 'success');
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       THE PIECES
+       ══════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function find(string $reference): array
+    {
+        $found = TicketDirectory::find($reference);
+
+        abort_if($found === null, 404);
+
+        return $found;
+    }
+
+    protected function employeeFor(Request $request): ?Employee
+    {
+        return Employee::where('user_id', $request->user()?->id)->first();
+    }
+
+    /**
+     * The four personal lists differ only in how they narrow the query.
+     *
+     * @param  callable(Builder<Ticket>): Builder<Ticket>  $narrow
+     */
+    protected function personalList(Request $request, callable $narrow, string $view): Response
+    {
+        $filters = $this->filters($request);
+        $query = $narrow(TicketDirectory::query($filters));
+
         return response()->view($view, [
             'activeNav' => 'tickets',
-            'tickets' => $this->paginate($this->matching($tickets, $this->filters($request)), $request),
-            'stats' => DemoTickets::stats($tickets),
-        ] + $this->filters($request) + $this->options());
+            'tickets' => $this->paginate(clone $query),
+            'stats' => TicketDirectory::stats(clone $query),
+        ] + $filters + $this->options());
     }
 
     /**
@@ -164,9 +401,9 @@ class TicketController extends Controller
     {
         $validated = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
-            'status' => ['nullable', Rule::in(TicketPresenter::statusOptions())],
-            'type' => ['nullable', Rule::in(TicketPresenter::typeOptions())],
-            'priority' => ['nullable', Rule::in(TicketPresenter::priorityOptions())],
+            'status' => ['nullable', Rule::in(Ticket::STATUSES)],
+            'type' => ['nullable', Rule::in(Ticket::TYPES)],
+            'priority' => ['nullable', Rule::in(Ticket::PRIORITIES)],
         ]);
 
         $search = trim($validated['q'] ?? '');
@@ -184,77 +421,49 @@ class TicketController extends Controller
     }
 
     /**
-     * @param  Collection<int, array<string, mixed>>  $tickets
-     * @param  array<string, mixed>  $filters
-     * @return Collection<int, array<string, mixed>>
-     */
-    protected function matching(Collection $tickets, array $filters): Collection
-    {
-        return $tickets
-            ->when($filters['search'] !== '', fn (Collection $rows) => $rows->filter(
-                fn (array $t) => str_contains(
-                    mb_strtolower($t['subject'].' '.$t['id'].' '.($t['client'] ?? '')),
-                    mb_strtolower($filters['search'])
-                )
-            ))
-            ->when($filters['status'], fn (Collection $rows) => $rows->where('status', $filters['status']))
-            ->when($filters['type'], fn (Collection $rows) => $rows->where('type', $filters['type']))
-            ->when($filters['priority'], fn (Collection $rows) => $rows->where('priority', $filters['priority']))
-            ->map(fn (array $t) => $this->decorate($t))
-            ->values();
-    }
-
-    /**
-     * Attach the people and project a ticket refers to.
+     * Options for the triage selects.
      *
-     * @param  array<string, mixed>  $ticket
-     * @return array<string, mixed>
-     */
-    protected function decorate(array $ticket): array
-    {
-        $employees = DemoEmployees::all()->keyBy('user_id');
-
-        return $ticket + [
-            'raiser_record' => $ticket['raised_by'] ? $employees->get($ticket['raised_by']) : null,
-            'assignee_record' => $ticket['assignee'] ? $employees->get($ticket['assignee']) : null,
-            'escalator_record' => $ticket['escalated_by'] ? $employees->get($ticket['escalated_by']) : null,
-            'project_record' => $ticket['project'] ? DemoProjects::find($ticket['project']) : null,
-        ];
-    }
-
-    /**
-     * Options for the triage selects. Categories and departments are master
-     * data (§8); hard-coded here only until that module exists.
+     * Categories are the support team's own labels and nothing points at one,
+     * so they are a config list rather than a table — see config/tickets.php.
+     * Departments come from master data, because employees are already in them.
      *
      * @return array<string, mixed>
      */
     protected function options(): array
     {
         return [
-            'categories' => ['Access', 'Billing', 'Bug', 'Network', 'Performance', 'Reporting', 'Feature request'],
-            'departments' => DemoEmployees::all()->pluck('department')->unique()->sort()->values()->all(),
-            'agents' => DemoEmployees::all()
-                ->map(fn (array $e) => ['id' => $e['user_id'], 'name' => $e['name']])
+            'categories' => (array) config('tickets.categories', []),
+            'departments' => EmployeeDirectory::departmentsInUse(),
+            'agents' => Employee::query()
+                ->with('user')
+                ->active()
+                ->get()
+                ->map(fn (Employee $e) => ['id' => $e->id, 'name' => (string) $e->user?->name])
                 ->sortBy('name')
                 ->values()
                 ->all(),
         ];
     }
 
+    protected function describe(Ticket $ticket): string
+    {
+        return implode(' · ', array_filter([
+            str_replace('_', ' ', $ticket->status),
+            $ticket->priority ? $ticket->priority.' priority' : 'no priority',
+            $ticket->category,
+            $ticket->department,
+            $ticket->assignee?->user?->name ? 'with '.$ticket->assignee->user->name : 'unassigned',
+        ]));
+    }
+
     /**
-     * @param  Collection<int, array<string, mixed>>  $rows
+     * @param  Builder<Ticket>  $query
      * @return LengthAwarePaginator<int, array<string, mixed>>
      */
-    protected function paginate(Collection $rows, Request $request): LengthAwarePaginator
+    protected function paginate(Builder $query): LengthAwarePaginator
     {
-        $page = LengthAwarePaginator::resolveCurrentPage();
-
-        return new LengthAwarePaginator(
-            items: $rows->forPage($page, self::PER_PAGE)->values(),
-            total: $rows->count(),
-            perPage: self::PER_PAGE,
-            currentPage: $page,
-            options: ['path' => $request->url(), 'query' => $request->query()],
-        );
+        return $query->paginate(self::PER_PAGE)
+            ->withQueryString()
+            ->through(fn (Ticket $t) => TicketDirectory::row($t));
     }
 }

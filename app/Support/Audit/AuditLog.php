@@ -145,6 +145,10 @@ class AuditLog
     public const SALARY_PAYSLIP_DOWNLOADED = 'salary.payslip_downloaded';
     public const SALARY_BANKING_CHANGED = 'salary.banking_changed';
 
+    public const TICKET_RAISED = 'ticket.raised';
+    public const TICKET_COMMENTED = 'ticket.commented';
+    public const TICKET_TRIAGED = 'ticket.triaged';
+
     /* Admin Panel (§6 requires all of its actions) */
     public const PERMISSION_CHANGED = 'admin.permission_changed';
     public const SETTING_CHANGED = 'admin.setting_changed';

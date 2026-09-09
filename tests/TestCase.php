@@ -23,6 +23,7 @@ use Database\Seeders\ProjectSeeder;
 use Database\Seeders\SalarySeeder;
 use Database\Seeders\TaskSeeder;
 use Database\Seeders\TeamSeeder;
+use Database\Seeders\TicketSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
@@ -186,6 +187,7 @@ abstract class TestCase extends BaseTestCase
             (new LeaveSeeder)->run();
             (new AttendanceSeeder)->run();
             (new SalarySeeder)->run();
+            (new TicketSeeder)->run();
         } finally {
             $this->app->detectEnvironment(fn () => 'testing');
             config(['app.debug' => $debug]);

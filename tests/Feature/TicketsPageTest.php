@@ -2,7 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Support\Demo\DemoTickets;
+use App\Models\Ticket;
+use App\Support\TicketDirectory;
 use Tests\TestCase;
 
 /**
@@ -27,10 +28,21 @@ class TicketsPageTest extends TestCase
          */
         $this->signInAsStaff();
     }
+    /**
+     * The demo tickets and their threads, as real rows.
+     *
+     * The environment flip this replaced did nothing once the module read the
+     * `tickets` table: there was no row to find, and a test "passing" against
+     * an empty page asserts the empty state while claiming to assert the list.
+     */
     protected function withDemoData(): void
     {
-        $this->app->detectEnvironment(fn () => 'local');
-        config(['app.debug' => true]);
+        $this->seedDemoWorkforce();
+    }
+
+    protected function ticket(string $reference): Ticket
+    {
+        return Ticket::where('reference', $reference)->firstOrFail();
     }
 
     public function test_the_six_pages_render(): void
@@ -58,10 +70,10 @@ class TicketsPageTest extends TestCase
     {
         $this->withDemoData();
 
-        $ticket = DemoTickets::find('TKT-2026-151');
+        $ticket = $this->ticket('TKT-2026-151');
 
-        $staff = DemoTickets::commentsFor($ticket, DemoTickets::AUDIENCE_STAFF);
-        $client = DemoTickets::commentsFor($ticket, DemoTickets::AUDIENCE_CLIENT);
+        $staff = TicketDirectory::commentsFor($ticket, TicketDirectory::AUDIENCE_STAFF);
+        $client = TicketDirectory::commentsFor($ticket, TicketDirectory::AUDIENCE_CLIENT);
 
         // The sample thread must actually contain an internal note, or this
         // test proves nothing.
@@ -80,7 +92,7 @@ class TicketsPageTest extends TestCase
         // change filters on the wrong field.
         $this->withDemoData();
 
-        $client = DemoTickets::commentsFor(DemoTickets::find('TKT-2026-151'), DemoTickets::AUDIENCE_CLIENT);
+        $client = TicketDirectory::commentsFor($this->ticket('TKT-2026-151'), TicketDirectory::AUDIENCE_CLIENT);
         $bodies = implode(' ', array_column($client, 'body'));
 
         $this->assertStringNotContainsString('Not telling them', $bodies);
@@ -182,7 +194,7 @@ class TicketsPageTest extends TestCase
         // Nothing on a ticket records a level, and nothing should start to.
         $this->withDemoData();
 
-        foreach (DemoTickets::escalated() as $ticket) {
+        foreach (Ticket::escalated()->get() as $ticket) {
             $this->assertSame('escalated', $ticket['status']);
             $this->assertArrayNotHasKey('escalation_level', $ticket);
         }
@@ -198,14 +210,31 @@ class TicketsPageTest extends TestCase
 
     /* ───────────────────────  the usual guards  ─────────────────────── */
 
-    public function test_the_demo_source_is_inert_outside_local_debug(): void
+    public function test_an_empty_database_produces_an_empty_module(): void
     {
-        $this->app->detectEnvironment(fn () => 'production');
-        config(['app.debug' => false]);
+        /*
+         * This replaced "the demo source is inert outside local + debug", which
+         * was true only because the fixture switched itself off. Tickets come
+         * from a table now, and in production real ones SHOULD be shown.
+         *
+         * What survives is the guarantee underneath it: nothing is invented.
+         */
+        $this->assertTrue(Ticket::all()->isEmpty());
+        $this->assertNull(TicketDirectory::find('TKT-2026-151'));
+        $this->assertSame(0, TicketDirectory::stats()['unassigned']);
+    }
 
-        $this->assertFalse(DemoTickets::enabled());
-        $this->assertTrue(DemoTickets::all()->isEmpty());
-        $this->assertSame([], DemoTickets::commentsFor(['id' => 'TKT-2026-151'], DemoTickets::AUDIENCE_STAFF));
+    public function test_there_is_no_way_to_read_a_thread_without_naming_the_audience(): void
+    {
+        /*
+         * The contract of the module, checked as a signature rather than as
+         * behaviour: a caller cannot ask for "the comments" and get internal
+         * notes by accident, because the argument has no default.
+         */
+        $method = new \ReflectionMethod(TicketDirectory::class, 'commentsFor');
+
+        $this->assertSame(2, $method->getNumberOfRequiredParameters());
+        $this->assertSame('audience', $method->getParameters()[1]->getName());
     }
 
     public function test_no_figure_is_written_into_the_markup(): void

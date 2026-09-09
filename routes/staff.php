@@ -357,28 +357,45 @@ Route::post('/tasks/{task}/complete', [TaskController::class, 'complete'])
     ->where('task', '[A-Za-z0-9-]{1,32}')
     ->name('tasks.complete');
 
-Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
-// Before /tickets/{ticket}, or these are read as ticket references.
+Route::get('/tickets', [TicketController::class, 'index'])
+    ->middleware('permission:tickets.view')
+    ->name('tickets.index');
+
+// Before /tickets/{ticket}, or these are read as ticket references. The three
+// personal queues carry no permission: they are the viewer's own work.
 Route::get('/tickets/mine', [TicketController::class, 'mine'])->name('tickets.mine');
 Route::get('/tickets/assigned', [TicketController::class, 'assigned'])->name('tickets.assigned');
 Route::get('/tickets/projects', [TicketController::class, 'projects'])->name('tickets.projects');
-Route::get('/tickets/escalated', [TicketController::class, 'escalated'])->name('tickets.escalated');
-Route::get('/tickets/create', fn () => app(ModulePlaceholderController::class)('tickets'))->name('tickets.create');
+
+// The review queue is the triage team's, not everybody's.
+Route::get('/tickets/escalated', [TicketController::class, 'escalated'])
+    ->middleware('permission:tickets.triage')
+    ->name('tickets.escalated');
+
+/*
+ * Raising one needs nothing beyond being staff. A ticket is how somebody asks
+ * for help, and a permission on that is a permission to ask.
+ */
+Route::get('/tickets/create', [TicketController::class, 'create'])->name('tickets.create');
+Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
+
 Route::get('/tickets/{ticket}', [TicketController::class, 'show'])
     ->where('ticket', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:tickets.view')
     ->name('tickets.show');
 
 /*
- * Both are writes the backend phase implements. Named now so the forms they
- * belong to are real forms with CSRF tokens rather than dead markup — and so
- * the visibility choice on a comment is a submitted value from day one, not
- * something bolted on later.
+ * Replying is not an authority either — anybody who can see the ticket can
+ * answer it. Triage IS: routing, prioritising and escalating are the support
+ * team's judgement, and `tickets.triage` is the key for it.
  */
-Route::post('/tickets/{ticket}/comment', fn () => abort(501))
+Route::post('/tickets/{ticket}/comment', [TicketController::class, 'comment'])
     ->where('ticket', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:tickets.view')
     ->name('tickets.comment');
-Route::post('/tickets/{ticket}/triage', fn () => abort(501))
+Route::post('/tickets/{ticket}/triage', [TicketController::class, 'triage'])
     ->where('ticket', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:tickets.triage')
     ->name('tickets.triage');
 
 Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
