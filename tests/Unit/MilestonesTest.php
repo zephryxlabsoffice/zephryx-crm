@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\AttendanceRecord;
 use App\Models\Employee;
+use App\Models\LeaveRequest;
 use App\Models\Project;
 use App\Models\Team;
 use App\Support\Milestones;
@@ -241,6 +242,7 @@ class MilestonesTest extends TestCase
          * teams cascades their memberships.
          */
         AttendanceRecord::query()->delete();
+        LeaveRequest::query()->delete();
         Project::query()->delete();
         Team::query()->delete();
         Employee::query()->delete();

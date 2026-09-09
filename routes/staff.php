@@ -479,14 +479,24 @@ Route::get('/leave/{leaveRequest}', [LeaveController::class, 'show'])
  * is only valid on a still-pending request, checked inside the transaction so
  * two approvers cannot both decide it.
  */
-Route::post('/leave', fn () => abort(501))->name('leave.store');
-Route::post('/leave/{leaveRequest}/approve', fn () => abort(501))
+Route::post('/leave', [LeaveController::class, 'store'])->name('leave.store');
+
+Route::post('/leave/{leaveRequest}/approve', [LeaveController::class, 'approve'])
     ->where('leaveRequest', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:leave.approve')
     ->name('leave.approve');
-Route::post('/leave/{leaveRequest}/reject', fn () => abort(501))
+Route::post('/leave/{leaveRequest}/reject', [LeaveController::class, 'reject'])
     ->where('leaveRequest', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:leave.approve')
     ->name('leave.reject');
-Route::post('/leave/{leaveRequest}/cancel', fn () => abort(501))
+
+/*
+ * Withdrawing carries no permission: it is the requester's own act on their own
+ * request, and the controller refuses anybody else. An approver refusing leave
+ * is a rejection, with a reason — calling it a withdrawal would put words in
+ * somebody's mouth.
+ */
+Route::post('/leave/{leaveRequest}/cancel', [LeaveController::class, 'cancel'])
     ->where('leaveRequest', '[A-Za-z0-9-]{1,32}')
     ->name('leave.cancel');
 

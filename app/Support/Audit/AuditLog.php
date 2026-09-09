@@ -120,6 +120,21 @@ class AuditLog
     public const ATTENDANCE_REJECTED = 'attendance.rejected';
     public const ATTENDANCE_RESTORED = 'attendance.restored';
 
+    /*
+     * Leave. Approving and rejecting are separate actions and not one
+     * "decided", because "who approved this, and who refused that" is the whole
+     * question the log gets asked about leave.
+     *
+     * Note what the entries deliberately do NOT carry: the reason somebody gave
+     * for asking. "Fever, seeing a doctor" is health information and belongs on
+     * the request, in front of the approver, not in a log the Admin Panel lists
+     * by the page.
+     */
+    public const LEAVE_REQUESTED = 'leave.requested';
+    public const LEAVE_APPROVED = 'leave.approved';
+    public const LEAVE_REJECTED = 'leave.rejected';
+    public const LEAVE_CANCELLED = 'leave.cancelled';
+
     /* Admin Panel (§6 requires all of its actions) */
     public const PERMISSION_CHANGED = 'admin.permission_changed';
     public const SETTING_CHANGED = 'admin.setting_changed';

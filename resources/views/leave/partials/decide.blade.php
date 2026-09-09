@@ -32,11 +32,11 @@
     <div class="lv-decide-actions">
         <form method="POST" action="{{ route('leave.approve', ['leaveRequest' => $request['id']]) }}">
             @csrf
-            {{-- TODO (backend phase): §2.6 and §6 — `leave.approve` in its own
-                 right, an audit entry naming who decided and when, and a status
-                 check INSIDE the transaction so two approvers cannot both
-                 decide the same request. --}}
-            <button class="btn btn-primary" type="submit" disabled title="Approving is not built yet">
+            {{-- Behind `leave.approve` in its own right (§2.6), audited with
+                 who decided and when (§6), and with the status checked INSIDE
+                 the transaction so two approvers cannot both decide the same
+                 request. --}}
+            <button class="btn btn-primary" type="submit">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polyline points="20 6 9 17 4 12"/>
                 </svg>
@@ -49,12 +49,17 @@
 
             <div class="form-field">
                 <label class="form-field-lbl" for="reject-reason">If you are rejecting, say why</label>
-                <textarea id="reject-reason" name="note" rows="2"
-                          placeholder="What would make this workable — a different week, shorter dates?" disabled></textarea>
+                <textarea id="reject-reason" name="note" rows="2" minlength="5" maxlength="1000"
+                          placeholder="What would make this workable — a different week, shorter dates?">{{ old('note') }}</textarea>
                 <span class="pay-hint">Sent to {{ $request['employee_record']['name'] }} with the decision.</span>
+                {{-- Required on a rejection and not on an approval: "yes" needs
+                     no explanation, and demanding one only produces "ok". --}}
+                @error('note')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
             </div>
 
-            <button class="btn btn-outline btn-danger" type="submit" disabled title="Rejecting is not built yet">
+            <button class="btn btn-outline btn-danger" type="submit">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>

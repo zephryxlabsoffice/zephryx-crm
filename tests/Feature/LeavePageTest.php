@@ -2,8 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Support\Demo\DemoLeave;
+use App\Models\Employee;
+use App\Models\LeaveRequest;
+use App\Models\Role;
+use App\Models\User;
+use App\Support\LeaveDirectory;
 use App\Support\LeavePolicy;
+use App\Support\Rbac\Rbac;
 use App\Support\LeavePresenter as P;
 use Tests\TestCase;
 
@@ -22,10 +27,54 @@ class LeavePageTest extends TestCase
          */
         $this->signInAsStaff();
     }
+    /** The demo person these pages are read as. */
+    protected const VIEWER = 'EMP002';
+
+    /**
+     * The demo leave as real rows, read as somebody who has some.
+     *
+     * `/leave/mine` and the "nobody decides their own request" rule both turn
+     * on who is signed in, and the CEO the suite signs in as by default has an
+     * account but no employment record — so no leave, and nothing to fail to
+     * decide. This signs in as EMP002 with HR alongside Employee: their own
+     * leave, and the permission to decide everybody else's.
+     */
     protected function withDemoData(): void
     {
-        $this->app->detectEnvironment(fn () => 'local');
-        config(['app.debug' => true]);
+        $this->seedDemoWorkforce();
+
+        $user = User::where('user_id', self::VIEWER)->firstOrFail();
+        $user->roles()->syncWithoutDetaching(Role::whereIn('role_key', ['employee', 'hr'])->pluck('id'));
+
+        app(Rbac::class)->forget($user);
+        $this->actingAs($user);
+    }
+
+    protected function viewer(): Employee
+    {
+        return Employee::whereHas('user', fn ($q) => $q->where('user_id', self::VIEWER))->firstOrFail();
+    }
+
+    /**
+     * Every request, as rows.
+     *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    protected function allRequests(): \Illuminate\Support\Collection
+    {
+        return LeaveRequest::query()
+            ->with(['employee.user', 'decider.user'])
+            ->orderBy('from_date')
+            ->get()
+            ->map(fn (LeaveRequest $r) => LeaveDirectory::row($r));
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    protected function pendingRequests(): \Illuminate\Support\Collection
+    {
+        return $this->allRequests()->where('status', P::PENDING)->values();
     }
 
     public function test_the_four_pages_render(): void
@@ -53,11 +102,11 @@ class LeavePageTest extends TestCase
 
         $html = $this->get('/leave')->getContent();
 
-        foreach (DemoLeave::pending() as $request) {
+        foreach ($this->pendingRequests() as $request) {
             $this->assertStringContainsString($request['id'], $html);
         }
 
-        $decided = DemoLeave::all()->firstWhere('status', P::APPROVED);
+        $decided = $this->allRequests()->firstWhere('status', P::APPROVED);
         $this->assertStringNotContainsString($decided['id'], $html);
     }
 
@@ -117,8 +166,8 @@ class LeavePageTest extends TestCase
         // who can grant themselves leave makes the whole record meaningless.
         $this->withDemoData();
 
-        $own = DemoLeave::all()
-            ->where('employee', DemoLeave::VIEWER)
+        $own = $this->allRequests()
+            ->where('employee', self::VIEWER)
             ->firstWhere('status', P::PENDING);
 
         $this->assertNotNull($own, 'no pending request by the viewer to prove the rule against');
@@ -140,7 +189,7 @@ class LeavePageTest extends TestCase
         // asking, not about deciding being switched off everywhere.
         $this->withDemoData();
 
-        $theirs = DemoLeave::pending()->firstWhere('employee', '!=', DemoLeave::VIEWER);
+        $theirs = $this->pendingRequests()->firstWhere('employee', '!=', self::VIEWER);
 
         $this->assertNotNull($theirs);
         $this->get('/leave/'.$theirs['id'])->assertSee('Your decision', false);
@@ -163,8 +212,8 @@ class LeavePageTest extends TestCase
     {
         $this->withDemoData();
 
-        $request = DemoLeave::find('LV-2026-039');
-        $clashes = DemoLeave::clashesWith($request);
+        $request = LeaveDirectory::find('LV-2026-039');
+        $clashes = LeaveDirectory::clashesWith($request);
 
         $this->assertNotEmpty($clashes, 'no sample clash to prove the point');
 
@@ -182,7 +231,7 @@ class LeavePageTest extends TestCase
         // catching before either is approved.
         $this->withDemoData();
 
-        $clashes = DemoLeave::clashesWith(DemoLeave::find('LV-2026-039'));
+        $clashes = LeaveDirectory::clashesWith(LeaveDirectory::find('LV-2026-039'));
 
         $this->assertContains(P::PENDING, $clashes->pluck('status')->all());
     }
@@ -191,8 +240,8 @@ class LeavePageTest extends TestCase
     {
         $this->withDemoData();
 
-        foreach (DemoLeave::all() as $request) {
-            $this->assertNotContains($request['id'], DemoLeave::clashesWith($request)->pluck('id')->all());
+        foreach ($this->allRequests() as $request) {
+            $this->assertNotContains($request['id'], LeaveDirectory::clashesWith($request)->pluck('id')->all());
         }
     }
 
@@ -201,8 +250,8 @@ class LeavePageTest extends TestCase
         // Nobody is off on a day they were refused.
         $this->withDemoData();
 
-        foreach (DemoLeave::all() as $request) {
-            foreach (DemoLeave::clashesWith($request) as $clash) {
+        foreach ($this->allRequests() as $request) {
+            foreach (LeaveDirectory::clashesWith($request) as $clash) {
                 $this->assertContains($clash['status'], [P::APPROVED, P::PENDING]);
             }
         }
@@ -229,7 +278,7 @@ class LeavePageTest extends TestCase
         foreach (['/leave', '/leave?tab=all', '/leave/mine'] as $url) {
             $html = $this->get($url)->getContent();
 
-            foreach (DemoLeave::all() as $request) {
+            foreach ($this->allRequests() as $request) {
                 $this->assertStringNotContainsString($request['reason'], $html, "a reason appears on {$url}");
 
                 if ($request['contact']) {
@@ -257,7 +306,7 @@ class LeavePageTest extends TestCase
         // The handover granted 34 days, said 12 taken, and showed 18 left.
         $this->withDemoData();
 
-        $balance = LeavePolicy::balance(DemoLeave::forEmployee(DemoLeave::VIEWER));
+        $balance = LeavePolicy::balance(LeaveDirectory::forEmployee($this->viewer()));
 
         $this->assertSame($balance['entitlement'] - $balance['taken'], $balance['remaining']);
         $this->assertSame(LeavePolicy::totalEntitlement(), $balance['entitlement']);
@@ -308,14 +357,19 @@ class LeavePageTest extends TestCase
        THE USUAL GUARDS
        ══════════════════════════════════════════════════════════════════════ */
 
-    public function test_the_demo_source_is_inert_outside_local_debug(): void
+    public function test_an_empty_database_produces_an_empty_module(): void
     {
-        $this->app->detectEnvironment(fn () => 'production');
-        config(['app.debug' => false]);
-
-        $this->assertFalse(DemoLeave::enabled());
-        $this->assertTrue(DemoLeave::all()->isEmpty());
-        $this->assertTrue(DemoLeave::upcomingAbsences()->isEmpty());
+        /*
+         * This replaced "the demo source is inert outside local + debug", which
+         * was true only because the fixture switched itself off. Leave comes
+         * from a table now, and in production real requests SHOULD be shown.
+         *
+         * What survives is the guarantee underneath it: nothing is invented.
+         */
+        $this->assertTrue($this->allRequests()->isEmpty());
+        $this->assertTrue(LeaveDirectory::upcomingAbsences()->isEmpty());
+        $this->assertNull(LeaveDirectory::find('LV-2026-039'));
+        $this->assertSame(0, LeaveDirectory::stats()['pending']);
     }
 
     public function test_no_figure_is_written_into_the_markup(): void

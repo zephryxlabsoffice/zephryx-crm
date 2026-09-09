@@ -18,12 +18,6 @@
         </div>
     </div>
 
-    @include('partials.notice', [
-        'tone' => 'info',
-        'title' => 'This form does not submit yet',
-        'message' => 'The fields and the validation shape are real; the write lands with the backend. Nothing typed here is stored.',
-    ])
-
     <form class="lv-form" method="POST" action="{{ route('leave.store') }}">
         @csrf
 
@@ -41,7 +35,7 @@
                     <div class="form-grid">
                         <div class="form-field">
                             <label class="form-field-lbl" for="leave-type-field">Leave type</label>
-                            <select id="leave-type-field" name="type" disabled>
+                            <select id="leave-type-field" name="type" required>
                                 @foreach ($types as $key => $meta)
                                     <option value="{{ $key }}">
                                         {{ $meta['label'] }}@if ($meta['days'] !== null) — {{ collect($balance['types'])->firstWhere('key', $key)['remaining'] ?? $meta['days'] }} days left @endif
@@ -64,19 +58,31 @@
                                 agrees it. Half days are allowed, hence 0.5
                                 steps.
                             --}}
-                            <input id="leave-days" name="days" type="number" min="0.5" step="0.5" value="1" disabled>
+                            <input id="leave-days" name="days" type="number" min="0.5" step="0.5" required value="{{ old('days', 1) }}">
                             <span class="pay-hint">Half days are fine. Do not count weekends or holidays you would not have worked.</span>
+                            {{-- The only arithmetic in the module: a figure the
+                                 range could not contain at all is a typo, not a
+                                 judgement. --}}
+                            @error('days')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-field">
                             <label class="form-field-lbl" for="leave-from">First day</label>
-                            <input id="leave-from" name="from" type="date" disabled>
+                            <input id="leave-from" name="from" type="date" required value="{{ old('from') }}">
                         </div>
 
                         <div class="form-field">
                             <label class="form-field-lbl" for="leave-to">Last day</label>
-                            <input id="leave-to" name="to" type="date" disabled>
+                            <input id="leave-to" name="to" type="date" required value="{{ old('to') }}">
                             <span class="pay-hint">Same as the first day for a single day off.</span>
+                            @error('to')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                            @error('from')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
                         </div>
                     </div>
                 </div>
@@ -92,16 +98,19 @@
                     <div class="form-grid">
                         <div class="form-field lv-form-wide">
                             <label class="form-field-lbl" for="leave-reason">Reason</label>
-                            <textarea id="leave-reason" name="reason" rows="3" placeholder="A line is enough." disabled></textarea>
+                            <textarea id="leave-reason" name="reason" rows="3" required maxlength="1000" placeholder="A line is enough.">{{ old('reason') }}</textarea>
                             {{-- Says who reads it, because "fever, seeing a
                                  doctor" is health information and people should
                                  know where it goes before they type it. --}}
                             <span class="pay-hint">Read by whoever decides the request. It is not shown on any list.</span>
+                            @error('reason')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-field">
                             <label class="form-field-lbl" for="leave-contact">Contact while away <span class="lv-optional">(optional)</span></label>
-                            <input id="leave-contact" name="contact" type="tel" placeholder="+91 …" disabled>
+                            <input id="leave-contact" name="contact" type="tel" placeholder="+91 …" value="{{ old('contact') }}">
                             <span class="pay-hint">Only if you are happy to be reached.</span>
                         </div>
                     </div>
@@ -114,7 +123,7 @@
                 <section class="rail-card">
                     <div class="rail-hd"><strong>Then what</strong></div>
                     <div class="lv-submit">
-                        <button class="btn btn-primary" type="submit" disabled title="Submitting is not built yet">
+                        <button class="btn btn-primary" type="submit">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
                             </svg>

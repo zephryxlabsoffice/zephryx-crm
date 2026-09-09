@@ -49,6 +49,9 @@ class DatabaseSeeder extends Seeder
             TeamSeeder::class,
             ProjectSeeder::class,
             TaskSeeder::class,
+            // Leave before Attendance: approved leave is what stops a day being
+            // drawn as an absence, and the attendance fixture skips those days.
+            LeaveSeeder::class,
             AttendanceSeeder::class,
         ]);
     }

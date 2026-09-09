@@ -10,6 +10,7 @@ use Database\Seeders\AccountSeeder;
 use Database\Seeders\AttendanceSeeder;
 use Database\Seeders\ClientSeeder;
 use Database\Seeders\EmployeeSeeder;
+use Database\Seeders\LeaveSeeder;
 use Database\Seeders\ProjectSeeder;
 use Database\Seeders\TaskSeeder;
 use Database\Seeders\TeamSeeder;
@@ -173,6 +174,7 @@ abstract class TestCase extends BaseTestCase
             (new TeamSeeder)->run();
             (new ProjectSeeder)->run();
             (new TaskSeeder)->run();
+            (new LeaveSeeder)->run();
             (new AttendanceSeeder)->run();
         } finally {
             $this->app->detectEnvironment(fn () => 'testing');

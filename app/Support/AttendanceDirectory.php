@@ -18,15 +18,11 @@ use Illuminate\Support\Collection;
  * heart of this module and they predate the table — handing them models instead
  * would have meant rewriting them to prove nothing.
  *
- * WHERE `onLeave` COMES FROM, AND WHY IT IS EMPTY TODAY
+ * WHERE `onLeave` COMES FROM
  *
  * A day the company already granted must never be drawn as an absence, and
- * Attendance does not store leave — it asks. The Leave module has no table yet,
- * so `leaveDates()` answers with nothing, and days somebody was on leave read as
- * absent until it lands. That is a visibly wrong answer rather than a hidden
- * one, and it is one query away from being right; the alternative was storing a
- * copy of somebody else's data here, which is the thing that silently disagrees
- * forever.
+ * Attendance does not store leave — it asks. `leaveDates()` is one call into
+ * LeaveDirectory, and it is the only thing this module knows about leave.
  * ═════════════════════════════════════════════════════════════════════════════
  */
 class AttendanceDirectory
@@ -34,13 +30,16 @@ class AttendanceDirectory
     /**
      * The dates one person's approved leave covers.
      *
+     * Asked of the Leave module, never stored here. Two copies of "was this
+     * person off on the 14th" is one copy that eventually disagrees — and the
+     * disagreement shows up as somebody being marked absent on a day the
+     * company granted them.
+     *
      * @return list<string>
      */
     public static function leaveDates(int $employeeId): array
     {
-        // Filled in when the Leave module has a table — see the head of this
-        // class. Deliberately not a copy of anything.
-        return [];
+        return LeaveDirectory::datesFor($employeeId);
     }
 
     /**

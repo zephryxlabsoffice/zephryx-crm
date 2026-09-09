@@ -24,11 +24,14 @@
             <p>{{ $request['employee_record']['name'] }} · {{ $request['id'] }}</p>
         </div>
 
-        @if ($own && P::isCancellable($request))
+        @if ($canCancel)
             <div class="hd-actions">
                 <form method="POST" action="{{ route('leave.cancel', ['leaveRequest' => $request['id']]) }}">
                     @csrf
-                    <button class="btn btn-outline" type="submit" disabled title="Withdrawing is not built yet">
+                    {{-- The requester's own act. Pending, or approved and not
+                         yet started — leave already under way is a conversation,
+                         not a button. --}}
+                    <button class="btn btn-outline" type="submit">
                         Withdraw request
                     </button>
                 </form>
@@ -48,8 +51,10 @@
             'title' => 'Withdrawn by ' . ($own ? 'you' : $request['employee_record']['name']),
             'message' => $request['note'] ?: 'No longer needed. Nothing was deducted from the balance.',
         ])
-    @elseif ($request['status'] === P::PENDING && ! $own && ! $canDecide)
-        {{-- The one rule that cannot be delegated away. --}}
+    @elseif ($request['status'] === P::PENDING && $own)
+        {{-- The one rule that cannot be delegated away. Shown on your OWN
+             pending request — somebody who simply lacks the permission is not
+             being told about a rule that has nothing to do with them. --}}
         @include('partials.notice', [
             'tone' => 'info',
             'title' => 'You cannot decide this request',
