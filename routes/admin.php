@@ -51,21 +51,21 @@ Route::get('/accounts/{account}', [AdminAccountController::class, 'show'])
     ->name('accounts.show');
 
 /*
- * The writes the backend phase implements.
- *
  * Suspending an account is not deleting one: the person's attendance,
  * leave and payslips stay exactly where they are, and their records keep
- * naming them. Nothing here deletes a user.
+ * naming them. Nothing here deletes a user, and there is no route that could.
  *
  * THE OWNER ACCOUNT CANNOT BE SUSPENDED OR STRIPPED OF ITS ROLES BY THIS
  * PANEL. It is the only account that can reach these routes, so allowing it
  * would mean one click locks the company out of its own configuration with
- * no way back in that does not involve the database.
+ * no way back in that does not involve the database. It is excluded from
+ * App\Support\Admin\AccountDirectory's query, so these routes 404 on it — a
+ * row nobody may act on is a row that invites the attempt.
  */
-Route::post('/accounts/{account}/status', fn () => abort(501))
+Route::post('/accounts/{account}/status', [AdminAccountController::class, 'status'])
     ->where('account', '[A-Za-z0-9-]{1,32}')
     ->name('accounts.status');
-Route::post('/accounts/{account}/roles', fn () => abort(501))
+Route::post('/accounts/{account}/roles', [AdminAccountController::class, 'roles'])
     ->where('account', '[A-Za-z0-9-]{1,32}')
     ->name('accounts.roles');
 
@@ -76,13 +76,15 @@ Route::get('/access/{role}', [AdminAccessController::class, 'show'])
 
 /*
  * Changing what a role may do. Audited with the people it lands on, not
- * just the key that moved (§6) — see App\Support\Demo\DemoRbac::whoWouldHold.
+ * just the key that moved (§6) — see App\Support\Admin\AccessDirectory::
+ * whoWouldHold, computed before the write, because afterwards the answer to
+ * "who would this land on" is "nobody, they hold it already".
  *
  * The Employee base is not a role and must not be editable here (§5): it is
  * granted implicitly to every staff account of kind `employee` precisely so
  * that it cannot be revoked by a role edit.
  */
-Route::post('/access/{role}', fn () => abort(501))
+Route::post('/access/{role}', [AdminAccessController::class, 'update'])
     ->where('role', '[a-z_]{1,32}')
     ->name('access.update');
 

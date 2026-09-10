@@ -18,13 +18,6 @@
         </div>
     </div>
 
-    @include('partials.notice', [
-        'tone' => 'info',
-        'title' => 'Saving is not built yet',
-        'message' => 'The permissions and their effect are real; the write lands with the backend. '
-            .'Nothing toggled here is stored.',
-    ])
-
     <form method="POST" action="{{ route('admin.access.update', $role['key']) }}">
         @csrf
 
@@ -47,7 +40,7 @@
 
                                     <label class="ad-perm @if ($isSensitive) is-sensitive @endif">
                                         <input type="checkbox" name="permissions[]" value="{{ $entry['key'] }}"
-                                               @checked($held) disabled>
+                                               @checked($held)>
 
                                         <span class="ad-perm-body">
                                             <span class="ad-perm-head">
@@ -186,9 +179,7 @@
 
                 <section class="rail-card">
                     <div class="dash-punch-action">
-                        <button class="btn btn-primary" type="submit" disabled title="Saving is not built yet">
-                            Save permissions
-                        </button>
+                        <button class="btn btn-primary" type="submit">Save permissions</button>
                     </div>
                 </section>
             </aside>

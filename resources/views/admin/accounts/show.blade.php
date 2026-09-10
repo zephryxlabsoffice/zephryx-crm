@@ -23,12 +23,6 @@
         </div>
     </div>
 
-    @include('partials.notice', [
-        'tone' => 'info',
-        'title' => 'Saving is not built yet',
-        'message' => 'Roles and status are shown as they stand; the writes land with the backend.',
-    ])
-
     <section class="dash-grid">
         <div class="dash-main">
             <section class="card">
@@ -49,7 +43,7 @@
                             @foreach ($roles as $key => $role)
                                 <label class="ad-perm">
                                     <input type="checkbox" name="roles[]" value="{{ $key }}"
-                                           @checked(in_array($key, $held, true)) disabled>
+                                           @checked(in_array($key, $held, true))>
                                     <span class="ad-perm-body">
                                         <span class="ad-perm-head">
                                             <strong>{{ $role['name'] }}</strong>
@@ -62,9 +56,7 @@
                         </div>
 
                         <div class="form-actions">
-                            <button class="btn btn-primary" type="submit" disabled title="Saving is not built yet">
-                                Save roles
-                            </button>
+                            <button class="btn btn-primary" type="submit">Save roles</button>
                         </div>
                     </form>
                 </div>
@@ -164,19 +156,29 @@
                         leave and payslips stay where they are and keep naming
                         them — a deleted user is a payroll record with nobody
                         attached to it.
-
-                        TODO (backend phase): suspending must also kill live
-                        sessions and trusted devices. An account that cannot sign
-                        in but is already signed in is not suspended.
                     --}}
                     <p class="dash-note">
-                        Suspending stops the sign-in. Their attendance, leave and payslips
-                        are untouched and keep their name on them. Nothing here deletes an
+                        Suspending stops the sign-in, and signs them out of anywhere they
+                        are already signed in. Their attendance, leave and payslips are
+                        untouched and keep their name on them. Nothing here deletes an
                         account.
                     </p>
 
+                    <input type="hidden" name="status" value="{{ $account['status'] === 'active' ? 'suspended' : 'active' }}">
+
+                    @if ($account['status'] === 'active')
+                        {{-- Asked for on the way out and not on the way back in:
+                             taking somebody's access away is the act that gets
+                             asked about later; giving it back explains itself. --}}
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="ac-reason">Why</label>
+                            <input id="ac-reason" name="reason" type="text" maxlength="500" required
+                                   placeholder="Left the company on 30 September" value="{{ old('reason') }}">
+                        </div>
+                    @endif
+
                     <div class="dash-punch-action">
-                        <button class="btn btn-outline" type="submit" disabled title="Not built yet">
+                        <button class="btn btn-outline" type="submit">
                             {{ $account['status'] === 'active' ? 'Suspend account' : 'Restore account' }}
                         </button>
                     </div>

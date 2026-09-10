@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Support\Admin\AccessDirectory;
+use App\Support\Admin\AccountDirectory;
 use App\Support\Admin\SettingsCatalogue;
 use App\Support\Demo\DemoAudit;
-use App\Support\Demo\DemoEmployees;
 use App\Support\Demo\DemoMasterData;
-use App\Support\Demo\DemoRbac;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
@@ -36,15 +36,15 @@ class DashboardController extends Controller
 {
     public function __invoke(Request $request): Response
     {
-        $employees = DemoEmployees::all();
+        $accounts = AccountDirectory::stats();
 
         return response()->view('admin.dashboard', [
             'activeNav' => 'dashboard',
 
             'accounts' => [
-                'total' => $employees->count(),
-                'active' => $employees->where('status', 'active')->count(),
-                'suspended' => $employees->whereIn('status', ['inactive', 'suspended'])->count(),
+                'total' => $accounts['total'],
+                'active' => $accounts['active'],
+                'suspended' => $accounts['inactive'],
             ],
 
             /*
@@ -53,12 +53,12 @@ class DashboardController extends Controller
              * list of roles, and "who can see payroll" is the question this
              * page exists to answer without being asked.
              */
-            'sensitive' => collect(DemoRbac::sensitive())->map(fn (string $key) => [
+            'sensitive' => collect(AccessDirectory::sensitive())->map(fn (string $key) => [
                 'key' => $key,
-                'holders' => DemoRbac::whoHolds($key),
+                'holders' => AccessDirectory::whoHolds($key),
             ]),
 
-            'attention' => $this->attention($employees),
+            'attention' => $this->attention(),
 
             'recent' => DemoAudit::all()->take(6),
             'notable' => DemoAudit::notable(),
@@ -68,10 +68,9 @@ class DashboardController extends Controller
     /**
      * The loose ends. Each one is a thing somebody meant to finish.
      *
-     * @param  \Illuminate\Support\Collection<int, array<string, mixed>>  $employees
      * @return list<array<string, mixed>>
      */
-    protected function attention(\Illuminate\Support\Collection $employees): array
+    protected function attention(): array
     {
         $items = [];
 
@@ -79,10 +78,14 @@ class DashboardController extends Controller
          * An account that cannot sign in but still holds roles. Harmless while
          * it is inactive and a live account the moment somebody reactivates it
          * without checking what it can do.
+         *
+         * Counted with a query rather than in PHP now that these are rows: the
+         * demo version pulled every employee into memory to filter two of them,
+         * which was fine at twelve people and is not the shape to leave behind.
          */
-        $strandedRoles = $employees
-            ->whereIn('status', ['inactive', 'suspended'])
-            ->filter(fn (array $e) => DemoRbac::rolesOf($e['user_id']) !== [])
+        $strandedRoles = AccountDirectory::query()
+            ->whereNot('status', 'active')
+            ->whereHas('roles')
             ->count();
 
         if ($strandedRoles > 0) {
@@ -95,11 +98,15 @@ class DashboardController extends Controller
             ];
         }
 
-        // An account with no roles cannot do anything, including the things
-        // whoever created it assumed it could.
-        $noRoles = $employees
-            ->filter(fn (array $e) => DemoRbac::rolesOf($e['user_id']) === [])
-            ->count();
+        /*
+         * An account with no roles cannot do anything, including the things
+         * whoever created it assumed it could.
+         *
+         * Staff only. A client account holds no roles by construction (§2.2),
+         * so counting them would report a loose end for every client the
+         * company has — and the page would be permanently, uselessly amber.
+         */
+        $noRoles = AccountDirectory::stats()['no_roles'];
 
         if ($noRoles > 0) {
             $items[] = [

@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 /**
@@ -92,6 +93,21 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Role::class, 'user_roles')
             ->withPivot(['assigned_by', 'assigned_at']);
+    }
+
+    /**
+     * The employment record behind this account, where there is one.
+     *
+     * Not every account has one and that is the point of the relation being
+     * nullable rather than assumed: a Mentor is staff with no Employee base
+     * (§2.1), a client account is an organisation, and the owner's is neither.
+     * Every screen that joins the two has to draw the empty case.
+     *
+     * @return HasOne<Employee, $this>
+     */
+    public function employee(): HasOne
+    {
+        return $this->hasOne(Employee::class);
     }
 
     /**

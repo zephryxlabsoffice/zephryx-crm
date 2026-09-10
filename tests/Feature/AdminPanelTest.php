@@ -5,9 +5,10 @@ namespace Tests\Feature;
 use App\Support\Admin\Retroactive;
 use App\Support\Admin\SettingsCatalogue;
 use App\Support\AttendancePolicy;
+use App\Support\Admin\AccessDirectory;
 use App\Support\Demo\DemoAudit;
 use App\Support\Demo\DemoMasterData;
-use App\Support\Demo\DemoRbac;
+use App\Support\Rbac\Rbac;
 use Tests\TestCase;
 
 /**
@@ -323,21 +324,31 @@ class AdminPanelTest extends TestCase
        ACCESS CONTROL
        ══════════════════════════════════════════════════════════════════════ */
 
-    public function test_the_permission_list_is_derived_from_where_permissions_are_used(): void
+    public function test_every_permission_the_application_uses_can_be_granted(): void
     {
-        $this->withDemoData();
-
-        $keys = collect(DemoRbac::permissions())->flatten(1)->pluck('key');
+        $keys = collect(AccessDirectory::permissions())->flatten(1)->pluck('key');
 
         /*
-         * A hand-kept list drifts within a month: somebody adds a module, wires
-         * its key into config/navigation.php, and the Admin Panel cannot grant
-         * the permission the sidebar is already filtering on.
+         * The demo source DERIVED this list by reading keys back out of the
+         * navigation config and the dashboard registry; the catalogue is the
+         * `permissions` table now, seeded by RbacSeeder.
          *
-         * Checked against all three sidebars and the dashboard registry.
+         * The property is unchanged and still worth asserting: a key the
+         * application gates on but the Admin Panel cannot grant is a module
+         * that is invisible to everyone with no explanation.
+         *
+         * Checked against the two staff-facing sidebars and the dashboard
+         * registry — not navigation-admin, which is the realm base and is
+         * deliberately ungrantable (see the test below).
          */
         foreach (['navigation', 'navigation-client'] as $file) {
             foreach ((array) config($file) as $entry) {
+                if (str_starts_with($entry['permission'], 'client.')) {
+                    // A realm base too (§2.2): held by account type, never by a
+                    // role. Its absence here is the point of the next test.
+                    continue;
+                }
+
                 $this->assertTrue(
                     $keys->contains($entry['permission']),
                     $entry['permission'].' is used by '.$file.' but cannot be granted',
@@ -350,10 +361,23 @@ class AdminPanelTest extends TestCase
         }
     }
 
+    public function test_the_write_permissions_the_backend_added_are_grantable(): void
+    {
+        /*
+         * The gap the table closed. Derivation could only see keys some sidebar
+         * or widget mentioned, so every permission gating a write route and
+         * nothing else — the whole of RbacSeeder::MODULE_WRITES — was invisible
+         * to the screen that assigns it.
+         */
+        $keys = collect(AccessDirectory::permissions())->flatten(1)->pluck('key');
+
+        foreach (\Database\Seeders\RbacSeeder::MODULE_WRITES as $key) {
+            $this->assertTrue($keys->contains($key), $key.' gates a route but cannot be granted');
+        }
+    }
+
     public function test_admin_permissions_are_not_offered_to_any_role(): void
     {
-        $this->withDemoData();
-
         /*
          * §2.1: the Admin Panel is "not a role and not assignable". It is an
          * account type in its own realm.
@@ -363,7 +387,7 @@ class AdminPanelTest extends TestCase
          * keys it holds — and would imply the panel's authority is something a
          * person can be given a piece of.
          */
-        $keys = collect(DemoRbac::permissions())->flatten(1)->pluck('key');
+        $keys = collect(AccessDirectory::permissions())->flatten(1)->pluck('key');
 
         foreach ((array) config('navigation-admin') as $entry) {
             $this->assertFalse(
@@ -371,6 +395,11 @@ class AdminPanelTest extends TestCase
                 $entry['permission'].' is offered as a role permission',
             );
         }
+
+        // And the write refuses one too, not merely the form: a request naming
+        // an admin key is rejected rather than silently dropped.
+        $this->postWithToken('/admin/access/hr', ['permissions' => ['admin.settings.view']])
+            ->assertSessionHasErrors('permissions.0');
 
         $body = $this->pageBody('/admin/access/hr');
 
@@ -381,7 +410,7 @@ class AdminPanelTest extends TestCase
 
     public function test_a_permission_toggle_names_who_it_would_land_on(): void
     {
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
         $body = $this->pageBody('/admin/access/manager');
 
@@ -393,22 +422,28 @@ class AdminPanelTest extends TestCase
          */
         $this->assertStringContainsString('Granting gives it to', $body);
 
-        foreach (DemoRbac::holdersOf('manager') as $person) {
+        $holders = AccessDirectory::holdersOf('manager');
+
+        $this->assertNotEmpty($holders, 'nobody holds the role, so this proves nothing');
+
+        foreach ($holders as $person) {
             $this->assertStringContainsString($person['name'], $body);
         }
     }
 
     public function test_the_blast_radius_excludes_people_who_already_hold_it_elsewhere(): void
     {
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
         /*
          * Roles stack as a union (§2.4). Granting salary.view to Employee — a
          * role everybody holds — must not count the HR staff who already have
          * it, or the number overstates the change.
          */
-        $everyone = DemoRbac::whoWouldHold('salary.view', 'employee');
-        $hrHolders = DemoRbac::holdersOf('hr');
+        $everyone = AccessDirectory::whoWouldHold('salary.view', 'employee');
+        $hrHolders = AccessDirectory::holdersOf('hr');
+
+        $this->assertNotEmpty($hrHolders, 'nobody holds HR, so this proves nothing');
 
         foreach ($hrHolders as $person) {
             $this->assertFalse(
@@ -420,14 +455,12 @@ class AdminPanelTest extends TestCase
 
     public function test_the_employee_base_is_not_editable_as_a_role(): void
     {
-        $this->withDemoData();
-
         /*
          * §5: it is not a role, and it is granted implicitly precisely so a
          * role edit cannot revoke it. An owner who could remove it would take
          * everyone's own attendance, leave and payslips away at once.
          */
-        $this->assertNull(DemoRbac::role('employee_base'));
+        $this->assertNull(AccessDirectory::role('employee_base'));
         $this->get('/admin/access/employee_base')->assertNotFound();
 
         // And the page says why it is absent, rather than leaving a puzzle.
@@ -436,17 +469,191 @@ class AdminPanelTest extends TestCase
 
     public function test_rank_is_per_domain_and_hr_outranks_system_in_people(): void
     {
-        $this->withDemoData();
-
         // The row that makes rank per-domain rather than one ladder (§2.5).
-        $hr = DemoRbac::role('hr');
-        $ceo = DemoRbac::role('ceo');
+        $hr = AccessDirectory::role('hr');
+        $ceo = AccessDirectory::role('ceo');
 
         $this->assertGreaterThan($hr['ranks']['system'], $hr['ranks']['people']);
         $this->assertGreaterThan(0, $ceo['ranks']['finance']);
 
         // A Mentor has no standing anywhere — read-only, no Employee base.
-        $this->assertSame(0, array_sum(DemoRbac::role('mentor')['ranks']));
+        $this->assertSame(0, array_sum(AccessDirectory::role('mentor')['ranks']));
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       THE ACCESS AND ACCOUNT WRITES
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_granting_a_permission_takes_effect_immediately(): void
+    {
+        $this->seedDemoWorkforce();
+
+        $holder = AccessDirectory::holdersOf('manager')->first();
+
+        $this->assertNotNull($holder, 'nobody holds the role, so this proves nothing');
+
+        $user = \App\Models\User::where('user_id', $holder['user_id'])->firstOrFail();
+
+        $this->assertFalse(app(Rbac::class)->can($user, 'salary.view'));
+
+        $manager = \App\Models\Role::where('role_key', 'manager')->firstOrFail();
+
+        $this->postWithToken('/admin/access/manager', [
+            'permissions' => [...$manager->permissions->pluck('permission_key')->all(), 'salary.view'],
+        ])->assertRedirect();
+
+        app(Rbac::class)->forget();
+
+        $this->assertTrue(app(Rbac::class)->can($user->fresh(), 'salary.view'));
+    }
+
+    public function test_the_audit_entry_for_a_permission_change_names_the_people(): void
+    {
+        /*
+         * The entry that answers the question somebody brings six months later.
+         * "Now holds 14 permissions" does not; "granted salary.view, which gave
+         * it to Rahul Mehta and Vikram Joshi" does.
+         */
+        $this->seedDemoWorkforce();
+
+        $names = AccessDirectory::whoWouldHold('salary.view', 'manager')->pluck('name');
+
+        $this->assertNotEmpty($names, 'nobody would be affected, so this proves nothing');
+
+        $manager = \App\Models\Role::where('role_key', 'manager')->firstOrFail();
+
+        $this->postWithToken('/admin/access/manager', [
+            'permissions' => [...$manager->permissions->pluck('permission_key')->all(), 'salary.view'],
+        ])->assertRedirect();
+
+        $entry = \Illuminate\Support\Facades\DB::table('audit_log')
+            ->where('action', \App\Support\Audit\AuditLog::PERMISSION_CHANGED)
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($entry);
+        $this->assertStringContainsString('granted salary.view', $entry->after_json);
+
+        foreach ($names as $name) {
+            $this->assertStringContainsString($name, $entry->after_json);
+        }
+    }
+
+    public function test_suspending_an_account_signs_it_out_of_everywhere(): void
+    {
+        /*
+         * §4.4 and §4.6. An account that cannot sign in but is already signed
+         * in is not suspended, and a remembered cookie would sign it straight
+         * back in.
+         */
+        $this->seedDemoWorkforce();
+
+        $user = \App\Models\User::where('user_id', 'EMP002')->firstOrFail();
+
+        \Illuminate\Support\Facades\DB::table('trusted_devices')->insert([
+            'user_id' => $user->id,
+            'token_hash' => 'whatever',
+            'trusted_until' => now()->addDays(30),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->postWithToken('/admin/accounts/EMP002/status', [
+            'status' => 'suspended',
+            'reason' => 'Left the company.',
+        ])->assertRedirect();
+
+        $this->assertSame('suspended', $user->fresh()->status);
+
+        $this->assertSame(0, \Illuminate\Support\Facades\DB::table('trusted_devices')
+            ->where('user_id', $user->id)->whereNull('revoked_at')->count());
+
+        // And an inactive account holds nothing, whatever roles it still has.
+        app(Rbac::class)->forget();
+        $this->assertSame([], app(Rbac::class)->permissionsFor($user->fresh()));
+    }
+
+    public function test_suspending_asks_for_a_reason_and_restoring_does_not(): void
+    {
+        $this->seedDemoWorkforce();
+
+        $this->postWithToken('/admin/accounts/EMP002/status', ['status' => 'suspended'])
+            ->assertSessionHasErrors('reason');
+
+        $this->postWithToken('/admin/accounts/EMP002/status', [
+            'status' => 'suspended', 'reason' => 'Left the company.',
+        ])->assertRedirect();
+
+        $this->postWithToken('/admin/accounts/EMP002/status', ['status' => 'active'])
+            ->assertRedirect();
+
+        $this->assertSame('active', \App\Models\User::where('user_id', 'EMP002')->firstOrFail()->status);
+    }
+
+    public function test_the_owner_account_cannot_be_reached_by_either_write(): void
+    {
+        /*
+         * It is the only account that can open this page, so one click would
+         * lock the company out of its own configuration. Excluded from the
+         * directory's query rather than refused by the write — a row nobody may
+         * act on is a row that invites the attempt.
+         */
+        $owner = \App\Models\User::where('account_type', \App\Support\Realm::ADMIN)->firstOrFail();
+
+        $this->get('/admin/accounts/'.$owner->user_id)->assertNotFound();
+
+        $this->postWithToken('/admin/accounts/'.$owner->user_id.'/status', [
+            'status' => 'suspended', 'reason' => 'Trying it on.',
+        ])->assertNotFound();
+
+        $this->postWithToken('/admin/accounts/'.$owner->user_id.'/roles', ['roles' => []])
+            ->assertNotFound();
+
+        $this->assertSame('active', $owner->fresh()->status);
+    }
+
+    public function test_saving_roles_records_what_moved_and_who_assigned_it(): void
+    {
+        $this->seedDemoWorkforce();
+
+        $user = \App\Models\User::where('user_id', 'EMP002')->firstOrFail();
+
+        $this->postWithToken('/admin/accounts/EMP002/roles', ['roles' => ['employee', 'hr']])
+            ->assertRedirect();
+
+        $this->assertSame(['employee', 'hr'], $user->fresh()->roles->pluck('role_key')->sort()->values()->all());
+
+        // §8's `assigned_by` is the column that only makes sense if assignment
+        // happens somewhere with an accountable actor. This is that somewhere.
+        $pivot = \Illuminate\Support\Facades\DB::table('user_roles')->where('user_id', $user->id)->first();
+        $this->assertNotNull($pivot->assigned_by);
+        $this->assertNotNull($pivot->assigned_at);
+
+        $entry = \Illuminate\Support\Facades\DB::table('audit_log')
+            ->where('action', \App\Support\Audit\AuditLog::ACCOUNT_CHANGED)
+            ->latest('id')
+            ->first();
+
+        // What MOVED, not what the set now is.
+        $this->assertStringContainsString('granted hr', $entry->after_json);
+    }
+
+    public function test_a_client_account_cannot_be_given_a_staff_role(): void
+    {
+        /*
+         * §2.2: everything a client can reach comes from the realm base.
+         * Granting it a staff role would put keys on an account realm
+         * middleware refuses anyway — a grant that reads as real and does
+         * nothing.
+         */
+        $this->seedDemoWorkforce();
+
+        $client = \App\Models\User::where('account_type', \App\Support\Realm::CLIENT)->firstOrFail();
+
+        $this->postWithToken('/admin/accounts/'.$client->user_id.'/roles', ['roles' => ['hr']])
+            ->assertForbidden();
+
+        $this->assertSame(0, $client->fresh()->roles()->count());
     }
 
     /* ══════════════════════════════════════════════════════════════════════
@@ -502,6 +709,7 @@ class AdminPanelTest extends TestCase
 
     public function test_every_page_renders(): void
     {
+        $this->seedDemoWorkforce();
         $this->withDemoData();
 
         foreach ((array) config('navigation-admin') as $entry) {

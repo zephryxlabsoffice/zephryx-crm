@@ -2,10 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Support\Demo\DemoRbac;
+use App\Models\Permission;
+use App\Models\Role;
+use App\Support\Admin\AccessDirectory;
+use App\Support\Audit\AuditLog;
+use App\Support\Rbac\Rbac;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 
 /**
  * Access Control — which roles hold which permissions, and where each role
@@ -21,7 +28,7 @@ use Illuminate\Routing\Controller;
  * to read everybody's pay.
  *
  * So every toggle names its blast radius: how many people gain or lose the
- * permission, and who. DemoRbac::whoWouldHold computes it, and it subtracts
+ * permission, and who. AccessDirectory::whoWouldHold computes it, and it subtracts
  * people who already hold the permission through another role — because roles
  * stack as a union (§2.4), granting salary.view to Manager changes nothing for
  * a Manager who is also HR, and counting them would overstate the change.
@@ -44,35 +51,37 @@ use Illuminate\Routing\Controller;
  */
 class AccessController extends Controller
 {
+    public function __construct(protected AuditLog $audit, protected Rbac $rbac)
+    {
+    }
+
     public function index(Request $request): Response
     {
-        $roles = DemoRbac::roles();
-
         return response()->view('admin.access.index', [
             'activeNav' => 'access',
-            'roles' => $roles,
-            'domains' => DemoRbac::domains(),
-            'permissions' => DemoRbac::permissions(),
+            'roles' => AccessDirectory::roles(),
+            'domains' => AccessDirectory::domains(),
+            'permissions' => AccessDirectory::permissions(),
             /*
              * Who can do the sensitive things right now, whatever role they got
              * it through. The question an owner opens this page to answer is
              * usually "who can see payroll", and it should not require reading
              * nine roles and doing the union in their head.
              */
-            'sensitive' => collect(DemoRbac::sensitive())->map(fn (string $key) => [
+            'sensitive' => collect(AccessDirectory::sensitive())->map(fn (string $key) => [
                 'key' => $key,
-                'holders' => DemoRbac::whoHolds($key),
+                'holders' => AccessDirectory::whoHolds($key),
             ]),
         ]);
     }
 
     public function show(Request $request, string $role): Response
     {
-        $record = DemoRbac::role($role);
+        $record = AccessDirectory::role($role);
 
         abort_if($record === null, 404);
 
-        $permissions = DemoRbac::permissions();
+        $permissions = AccessDirectory::permissions();
 
         /*
          * The blast radius of every toggle on the page, computed up front so
@@ -83,7 +92,7 @@ class AccessController extends Controller
 
         foreach ($permissions as $module => $entries) {
             foreach ($entries as $entry) {
-                $impact[$entry['key']] = DemoRbac::whoWouldHold($entry['key'], $role);
+                $impact[$entry['key']] = AccessDirectory::whoWouldHold($entry['key'], $role);
             }
         }
 
@@ -92,8 +101,138 @@ class AccessController extends Controller
             'role' => $record,
             'permissions' => $permissions,
             'impact' => $impact,
-            'domains' => DemoRbac::domains(),
-            'sensitive' => DemoRbac::sensitive(),
+            'domains' => AccessDirectory::domains(),
+            'sensitive' => AccessDirectory::sensitive(),
         ]);
+    }
+
+    /**
+     * POST /admin/access/{role}
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * THE AUDIT ENTRY NAMES THE PEOPLE, NOT THE KEYS
+     *
+     * §6 wants a before and an after, and here the honest after is not "now
+     * holds 14 permissions". Ticking a box on a role is action at a distance:
+     * the entry that answers the question somebody brings six months later is
+     * "granted salary.view, which gave it to Rahul Mehta and Vikram Joshi".
+     *
+     * Computed BEFORE the write, because afterwards the answer to "who would
+     * this land on" is "nobody, they hold it already".
+     *
+     * WHAT THIS ROUTE CANNOT DO
+     *
+     * Grant `admin.*` or `client.*`. Both are realm bases (§2.1, §2.2) — held
+     * by account type, never by a role — and the validator refuses them rather
+     * than silently dropping them, because a toggle that appears to work and
+     * grants nothing is worse than one that says no.
+     *
+     * Touch the Employee base either: it is not a permission on a role at all,
+     * so there is nothing here that could reach it.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function update(Request $request, string $role): RedirectResponse
+    {
+        $record = Role::where('role_key', $role)->first();
+
+        abort_if($record === null, 404);
+
+        $data = $request->validate([
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => [Rule::in(AccessDirectory::assignableKeys())],
+        ]);
+
+        $was = $record->permissions->pluck('permission_key')->sort()->values();
+        $now = collect($data['permissions'] ?? [])->unique()->sort()->values();
+
+        $granted = $now->diff($was)->values();
+        $revoked = $was->diff($now)->values();
+
+        if ($granted->isEmpty() && $revoked->isEmpty()) {
+            return redirect()
+                ->route('admin.access.show', ['role' => $role])
+                ->with('status', 'Nothing changed.')
+                ->with('status_tone', 'info');
+        }
+
+        // Who each change lands on, while it is still true.
+        $landsOn = $granted->merge($revoked)
+            ->mapWithKeys(fn (string $key) => [
+                $key => AccessDirectory::whoWouldHold($key, $role)->pluck('name')->all(),
+            ]);
+
+        $record->permissions()->sync(Permission::whereIn('permission_key', $now)->pluck('id'));
+
+        // Roles changed inside this request, so anything already resolved is
+        // stale — including the session of the person who just saved.
+        $this->rbac->forget();
+
+        $this->audit->record(
+            action: AuditLog::PERMISSION_CHANGED,
+            actor: $request->user(),
+            entityType: 'role',
+            entityId: $record->role_key,
+            before: $was->isEmpty() ? 'no permissions' : $was->join(', '),
+            after: $this->describe($granted, $revoked, $landsOn),
+            request: $request,
+        );
+
+        return redirect()
+            ->route('admin.access.show', ['role' => $role])
+            ->with('status', $this->summarise($granted, $revoked, $landsOn))
+            ->with('status_tone', 'success');
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       THE PIECES
+       ══════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * The audit entry's `after`: what moved, and onto whom.
+     *
+     * @param  Collection<int, string>  $granted
+     * @param  Collection<int, string>  $revoked
+     * @param  Collection<string, list<string>>  $landsOn
+     */
+    protected function describe(Collection $granted, Collection $revoked, Collection $landsOn): string
+    {
+        $lines = [];
+
+        foreach (['granted' => $granted, 'revoked' => $revoked] as $verb => $keys) {
+            foreach ($keys as $key) {
+                $people = $landsOn->get($key, []);
+
+                $lines[] = $verb.' '.$key.' ('.($people === []
+                    ? 'nobody holds this role'
+                    : count($people).': '.implode(', ', $people)).')';
+            }
+        }
+
+        return implode(' · ', $lines);
+    }
+
+    /**
+     * The sentence on the page afterwards.
+     *
+     * Counts rather than the full list: the flash message is read in passing,
+     * and the names are one click away in the audit log where somebody is
+     * looking for them.
+     *
+     * @param  Collection<int, string>  $granted
+     * @param  Collection<int, string>  $revoked
+     * @param  Collection<string, list<string>>  $landsOn
+     */
+    protected function summarise(Collection $granted, Collection $revoked, Collection $landsOn): string
+    {
+        $people = $landsOn->flatten()->unique()->count();
+
+        $parts = array_filter([
+            $granted->isEmpty() ? null : $granted->count().' granted',
+            $revoked->isEmpty() ? null : $revoked->count().' revoked',
+        ]);
+
+        return implode(', ', $parts).'. '.($people === 0
+            ? 'Nobody holds this role, so nobody is affected today.'
+            : ($people === 1 ? 'One person is affected.' : $people.' people are affected.'));
     }
 }
