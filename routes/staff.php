@@ -632,8 +632,13 @@ Route::post('/announcements/{announcement}/expire', [AnnouncementController::cla
     ->name('announcements.expire');
 
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-// Marking read is the reader's own act; nobody clears anybody else's.
-Route::post('/notifications/read', fn () => abort(501))->name('notifications.read');
+/*
+ * Marking read is the reader's own act; nobody clears anybody else's.
+ *
+ * No permission on either route, and no `{notification}` on this one. Both are
+ * decisions rather than omissions — see the head of NotificationController.
+ */
+Route::post('/notifications/read', [NotificationController::class, 'read'])->name('notifications.read');
 
 /*
  * Attendance. Read the shape of this group carefully, because it is the

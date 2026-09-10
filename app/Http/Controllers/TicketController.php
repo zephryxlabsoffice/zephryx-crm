@@ -9,6 +9,7 @@ use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Support\Audit\AuditLog;
 use App\Support\EmployeeDirectory;
+use App\Support\Notifier;
 use App\Support\Rbac\Rbac;
 use App\Support\TicketDirectory;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -49,8 +50,11 @@ class TicketController extends Controller
 {
     protected const PER_PAGE = 8;
 
-    public function __construct(protected Rbac $rbac, protected AuditLog $audit)
-    {
+    public function __construct(
+        protected Rbac $rbac,
+        protected AuditLog $audit,
+        protected Notifier $notify,
+    ) {
     }
 
     /**
@@ -281,6 +285,10 @@ class TicketController extends Controller
             request: $request,
         );
 
+        // Both staff readers, minus whoever wrote it. The note's text is never
+        // carried — see Notifier::ticketCommented.
+        $this->notify->ticketCommented($model->load(['assignee.user', 'raiser.user']), $comment, $request->user());
+
         return redirect()
             ->route('tickets.show', ['ticket' => $model->reference])
             ->with('status', $comment->isInternal() ? 'Internal note added.' : 'Reply posted.')
@@ -308,6 +316,14 @@ class TicketController extends Controller
         ]);
 
         $before = $this->describe($model);
+
+        /*
+         * Held separately from `$before`, which is a sentence for the audit log
+         * and cannot be compared. Triage is one write covering four decisions,
+         * so without this a correction to the category would notify the person
+         * on the ticket again about work they have had for a week.
+         */
+        $assigneeBefore = $model->assignee_id;
 
         $status = $data['status'] ?? null;
 
@@ -349,6 +365,8 @@ class TicketController extends Controller
             after: $this->describe($model),
             request: $request,
         );
+
+        $this->notify->ticketAssigned($model, $assigneeBefore, $request->user());
 
         return redirect()
             ->route('tickets.show', ['ticket' => $model->reference])

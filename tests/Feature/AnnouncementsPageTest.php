@@ -2,10 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Notification;
+use App\Models\User;
 use App\Support\AnnouncementPresenter as P;
 use App\Support\Demo\DemoAnnouncements;
 use App\Support\Demo\DemoEmployees;
-use App\Support\Demo\DemoNotifications;
 use App\Support\Milestones;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -105,79 +106,67 @@ class AnnouncementsPageTest extends TestCase
 
     public function test_task_and_ticket_notifications_never_reach_the_board(): void
     {
-        $this->withDemoData();
+        /*
+         * Asserted against the whole seeded table rather than one example: the
+         * property is "no personal notification is on the board", and a single
+         * example stops proving it the moment the seed changes.
+         */
+        $this->seedDemoWorkforce();
+        $this->signInAsStaff();
+
+        $notifications = Notification::query()->get();
+
+        $this->assertNotEmpty($notifications, 'no notifications were seeded, so this proves nothing');
 
         $board = $this->pageBody('/announcements');
 
-        foreach (DemoNotifications::for(DemoNotifications::VIEWER) as $notification) {
-            $this->assertStringNotContainsString($notification['title'], $board, 'a personal notification reached the board');
+        foreach ($notifications as $notification) {
+            $this->assertStringNotContainsString(
+                $notification->title,
+                $board,
+                'a personal notification reached the board',
+            );
         }
     }
 
     public function test_the_board_never_carries_somebody_elses_notifications(): void
     {
         $this->withDemoData();
+        $this->signInAsStaff();
 
-        $board = $this->get('/announcements')->getContent();
+        $somebodyElse = User::factory()->create([
+            'user_id' => 'EMP995',
+            'account_type' => 'staff',
+            'staff_kind' => 'employee',
+            'status' => 'active',
+        ]);
 
-        // EMP004 has one in the sample data.
-        $this->assertStringNotContainsString('Review the payment gateway logs', $board);
+        Notification::create([
+            'user_id' => $somebodyElse->id,
+            'kind' => 'task',
+            'title' => 'Review the payment gateway logs',
+            'body' => 'Not yours.',
+        ]);
+
+        // The whole document, shell included: this is the one assertion where
+        // the bell is part of what is being checked.
+        $this->assertStringNotContainsString(
+            'Review the payment gateway logs',
+            $this->get('/announcements')->getContent(),
+        );
     }
 
-    public function test_a_notification_belongs_to_one_reader(): void
+    public function test_the_bell_badge_counts_the_viewers_own_unread(): void
     {
-        // There is deliberately no `all()`: fetching somebody else's queue is
-        // not something a forgotten where clause can cause.
-        $this->withDemoData();
+        $viewer = $this->signInAsStaff();
 
-        $this->assertFalse(method_exists(DemoNotifications::class, 'all'));
+        Notification::create([
+            'user_id' => $viewer->id,
+            'kind' => 'task',
+            'title' => 'Something to do',
+            'body' => 'x',
+        ]);
 
-        foreach (DemoNotifications::for('EMP002') as $notification) {
-            $this->assertSame('EMP002', $notification['user']);
-        }
-
-        $mine = DemoNotifications::for('EMP002')->pluck('title');
-        $theirs = DemoNotifications::for('EMP004')->pluck('title');
-
-        $this->assertNotEmpty($theirs);
-        $this->assertEmpty($mine->intersect($theirs));
-    }
-
-    public function test_the_notification_page_shows_only_the_viewers_own(): void
-    {
-        $this->withDemoData();
-
-        $html = $this->get('/notifications')->getContent();
-
-        foreach (DemoNotifications::for('EMP004') as $notification) {
-            $this->assertStringNotContainsString($notification['title'], $html);
-        }
-    }
-
-    public function test_a_notification_only_links_somewhere_that_exists(): void
-    {
-        // One aimed at a page that has not been built is a promise the
-        // application cannot keep, and it fails when somebody acts on it.
-        $this->withDemoData();
-
-        foreach (DemoNotifications::for(DemoNotifications::VIEWER) as $notification) {
-            if ($notification['link'] === null) {
-                continue;
-            }
-
-            $this->assertStringStartsWith('http', $notification['link']);
-            $this->assertTrue(app('router')->has($notification['route']));
-        }
-    }
-
-    public function test_the_bell_is_fed_from_the_viewers_own_notifications(): void
-    {
-        $this->withDemoData();
-
-        // The badge counts unread, and the panel lists them.
-        $unread = DemoNotifications::unreadFor(DemoNotifications::VIEWER)->count();
-
-        $this->assertGreaterThan(0, $unread);
         $this->get('/announcements')->assertSee('class="badge"', false);
     }
 
@@ -394,7 +383,6 @@ class AnnouncementsPageTest extends TestCase
 
         $this->assertTrue(DemoAnnouncements::authored()->isEmpty());
         $this->assertTrue(DemoAnnouncements::milestones()->isEmpty());
-        $this->assertTrue(DemoNotifications::for('EMP002')->isEmpty());
         $this->assertSame([], Milestones::upcoming());
     }
 

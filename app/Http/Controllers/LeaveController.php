@@ -9,6 +9,7 @@ use App\Support\EmployeeDirectory;
 use App\Support\LeaveDirectory;
 use App\Support\LeavePolicy;
 use App\Support\LeavePresenter;
+use App\Support\Notifier;
 use App\Support\Rbac\Rbac;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -59,8 +60,11 @@ class LeaveController extends Controller
 {
     protected const PER_PAGE = 10;
 
-    public function __construct(protected Rbac $rbac, protected AuditLog $audit)
-    {
+    public function __construct(
+        protected Rbac $rbac,
+        protected AuditLog $audit,
+        protected Notifier $notify,
+    ) {
     }
 
     /**
@@ -386,6 +390,14 @@ class LeaveController extends Controller
                 : 'Rejected: '.$data['note'],
             request: $request,
         );
+
+        /*
+         * Outside the transaction, and after the "already decided" return
+         * above. A second approver whose write lost the race gets the message
+         * and sends nothing — one decision, one notification, however many
+         * people pressed the button.
+         */
+        $this->notify->leaveDecided($decided->load('employee.user'), $request->user());
 
         return redirect()
             ->route('leave.show', ['leaveRequest' => $decided->reference])

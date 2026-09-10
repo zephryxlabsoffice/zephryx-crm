@@ -6,8 +6,8 @@ use App\Support\Realm;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 
 /**
  * An account (foundation spec §8).
@@ -35,7 +35,37 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory;
+
+    /**
+     * The bell's rows for this account.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * THIS REPLACED Laravel's `Notifiable`, AND HAD TO
+     *
+     * The stock trait was on this model from the scaffold and never used —
+     * nothing in the application calls `notify()`, and every message this
+     * system sends goes out through a Mailable. What it did do was claim the
+     * `notifications` table for `DatabaseNotification`, whose shape (a uuid
+     * key, `type`, `notifiable_type`, a json `data` blob) is nothing like the
+     * one §8 specifies and this module built.
+     *
+     * Left in place, `$user->notifications` would have quietly queried our
+     * table through Laravel's model and returned rows with no `data` — a
+     * collision that produces wrong answers rather than an error, and only on
+     * the day somebody reaches for the relation they assume is there.
+     *
+     * Nothing is lost. Adding Laravel's notification system later means
+     * choosing a table name then, which is a decision better made in the open
+     * than inherited from a trait nobody put there on purpose.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * @return HasMany<Notification, $this>
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class)->orderByDesc('id');
+    }
 
     protected $fillable = [
         'user_id', 'name', 'email', 'password',

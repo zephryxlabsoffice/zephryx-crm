@@ -12,6 +12,7 @@ use App\Support\Audit\AuditLog;
 use App\Support\MeetingDirectory;
 use App\Support\MeetingPresenter;
 use App\Support\Meetings\MeetingProvider;
+use App\Support\Notifier;
 use App\Support\Rbac\Rbac;
 use App\Support\Realm;
 use Illuminate\Http\RedirectResponse;
@@ -60,6 +61,7 @@ class MeetingController extends Controller
         protected Rbac $rbac,
         protected AuditLog $audit,
         protected MeetingProvider $provider,
+        protected Notifier $notify,
     ) {
     }
 
@@ -191,6 +193,13 @@ class MeetingController extends Controller
             after: $meeting->title.' · '.MeetingPresenter::when($meeting->fresh()->toRecordArray($request->user())),
             request: $request,
         );
+
+        /*
+         * Before the provider call, and not inside its try. Google may be down;
+         * the attendees are told either way, and this is the only thing that
+         * tells them anything when it is.
+         */
+        $this->notify->meetingScheduled($meeting->fresh(), $request->user());
 
         return $this->createEvent($request, $meeting->fresh(['attendees.user', 'organiser.user']));
     }
@@ -324,6 +333,14 @@ class MeetingController extends Controller
             after: 'Cancelled: '.$data['reason'],
             request: $request,
         );
+
+        /*
+         * After the provider succeeded, which is the opposite of scheduling
+         * above and for the same reason as the ordering there: a failed cancel
+         * throws before this line, so nobody is ever told a meeting is off
+         * while the invite is still live in their calendar.
+         */
+        $this->notify->meetingCancelled($model, $data['reason'], $request->user());
 
         return redirect()
             ->route('meetings.show', ['meeting' => $model->reference])

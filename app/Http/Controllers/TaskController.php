@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\Team;
 use App\Support\Audit\AuditLog;
+use App\Support\Notifier;
 use App\Support\Rbac\Rbac;
 use App\Support\TaskDirectory;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -40,8 +41,11 @@ class TaskController extends Controller
 {
     protected const PER_PAGE = 8;
 
-    public function __construct(protected Rbac $rbac, protected AuditLog $audit)
-    {
+    public function __construct(
+        protected Rbac $rbac,
+        protected AuditLog $audit,
+        protected Notifier $notify,
+    ) {
     }
 
     /**
@@ -459,6 +463,16 @@ class TaskController extends Controller
         return 'TSK-'.str_pad((string) (((int) $highest) + 1), 3, '0', STR_PAD_LEFT);
     }
 
+    /**
+     * The one place an assignment is recorded, which is why the notification is
+     * here too.
+     *
+     * All three routes that can move a task onto somebody — create, edit and
+     * assign — come through this method, and each of them already knows to call
+     * it only when the assignee actually changed. Notifying from the call sites
+     * instead would mean three chances to forget, and the one that forgot would
+     * be silent.
+     */
     protected function recordAssignment(Request $request, Task $task): void
     {
         $this->audit->record(
@@ -471,6 +485,10 @@ class TaskController extends Controller
                 : $task->name.' has nobody on it',
             request: $request,
         );
+
+        // Unassigning is audited but notifies nobody: there is no reader, and
+        // the person losing the task finds out by looking at their own list.
+        $this->notify->taskAssigned($task, $request->user());
     }
 
     protected function describe(Task $task): string

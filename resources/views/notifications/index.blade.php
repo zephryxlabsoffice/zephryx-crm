@@ -13,10 +13,12 @@
             <div class="hd-actions">
                 <form method="POST" action="{{ route('notifications.read') }}">
                     @csrf
-                    {{-- The reader's own act. Nobody clears anybody else's, and
-                         nothing marks a row read on behalf of somebody who has
-                         not seen it. --}}
-                    <button class="btn btn-outline" type="submit" disabled title="Marking read is not built yet">
+                    {{-- The reader's own act. The form carries no id, because
+                         the route works on the signed-in account's own unread
+                         rows and nothing else — nobody clears anybody else's,
+                         and nothing marks a row read on behalf of somebody who
+                         has not seen it. --}}
+                    <button class="btn btn-outline" type="submit">
                         Mark all as read
                     </button>
                 </form>

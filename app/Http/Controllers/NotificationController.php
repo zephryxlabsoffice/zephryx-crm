@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\Demo\DemoNotifications;
+use App\Support\NotificationDirectory;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
@@ -22,18 +23,35 @@ use Illuminate\Validation\Rule;
  * are two surfaces sharing one feed component rather than one merged list.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * WHAT THE BACKEND OWES
+ * THE THREE RULES, AND WHERE EACH ONE NOW LIVES
  *
- * 1. SCOPING IS NOT OPTIONAL. `DemoNotifications::for()` takes the reader as a
- *    required argument and there is no `all()`, so fetching somebody else's
- *    queue is not something a forgotten `where` can cause. Keep that shape.
+ * 1. SCOPING IS NOT OPTIONAL. `NotificationDirectory` takes the reader as a
+ *    required argument on every method and has no `all()`, so fetching somebody
+ *    else's queue is not something a forgotten `where` can cause.
  *
- * 2. MARKING READ IS THE READER'S OWN. Nobody clears anybody else's, and
- *    nothing marks a row read on behalf of a person who has not seen it.
+ * 2. MARKING READ IS THE READER'S OWN. `read()` works on the signed-in
+ *    account's rows and takes no id, so there is no parameter to tamper with —
+ *    nobody clears anybody else's, and nothing marks a row read on behalf of a
+ *    person who has not seen it.
  *
- * 3. A LINK POINTS SOMEWHERE REAL. A notification for a page that does not
- *    exist is a promise the application cannot keep, and it fails at the moment
- *    somebody acts on it — see DemoNotifications::linkFor().
+ * 3. A LINK POINTS SOMEWHERE REAL. Checked at render, from a stored route name
+ *    — see Notification::link().
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * NO PERMISSION GATES ANYWHERE ON THIS PAGE
+ *
+ * Every other module's writes sit behind a §5 permission. This one has none,
+ * and it is not a gap: the page shows the signed-in person their own queue and
+ * the only write marks their own rows read. A permission would be a control
+ * over whether somebody may read something addressed to them, which is not a
+ * question the company has — and one nobody would ever be safe to revoke,
+ * because it would silently stop leave decisions reaching people.
+ *
+ * NOT AUDITED, FOR THE SAME REASON
+ *
+ * §6 is for things somebody could later argue about. "Read your own
+ * notifications" is not one, and at one entry per bell click it would bury the
+ * ones that are.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 class NotificationController extends Controller
@@ -47,17 +65,39 @@ class NotificationController extends Controller
             'tab' => ['nullable', Rule::in(['all', 'unread'])],
         ])['tab'] ?? 'all';
 
-        $viewer = DemoNotifications::VIEWER;
-        $mine = DemoNotifications::for($viewer);
+        $reader = $request->user();
+
+        $mine = NotificationDirectory::for($reader);
+        $unread = $mine->whereNull('read_at')->values();
 
         return response()->view('notifications.index', [
             'activeNav' => 'notifications',
-            'notificationList' => $tab === 'unread' ? $mine->whereNull('read_at')->values() : $mine,
+            'notificationList' => $tab === 'unread' ? $unread : $mine,
             'tab' => $tab,
             'tabCounts' => [
                 'all' => $mine->count(),
-                'unread' => $mine->whereNull('read_at')->count(),
+                'unread' => $unread->count(),
             ],
         ]);
+    }
+
+    /**
+     * POST /notifications/read — mark the reader's own unread rows read.
+     *
+     * Takes nothing. There is no `{notification}` to pass, because a route that
+     * accepted one would need a check that it belonged to the person asking,
+     * and the check that is never written is the one guarding the route nobody
+     * thought was interesting.
+     */
+    public function read(Request $request): RedirectResponse
+    {
+        $moved = NotificationDirectory::markAllRead($request->user());
+
+        return redirect()
+            ->route('notifications.index')
+            ->with('status', $moved === 0
+                ? 'Nothing was unread.'
+                : ($moved === 1 ? 'One notification marked as read.' : $moved.' notifications marked as read.'))
+            ->with('status_tone', $moved === 0 ? 'info' : 'success');
     }
 }

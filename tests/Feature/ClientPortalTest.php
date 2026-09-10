@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Notification;
 use App\Support\Demo\DemoClientPortal;
 use App\Support\Demo\DemoInvoices;
 use App\Support\Demo\DemoProjects;
@@ -366,10 +367,9 @@ class ClientPortalTest extends TestCase
         $this->withDemoData();
 
         /*
-         * Every notification in DemoNotifications is addressed to an employee
-         * and worded for one. Handing a client the staff bell would leak the
-         * lot, so the client realm gets none until a client-addressed stream
-         * exists.
+         * Every row Notifier writes is addressed to a staff account and worded
+         * for one. Handing a client the staff bell would leak the lot, so the
+         * client realm gets none until a client-addressed stream exists.
          *
          * The two halves need two sessions now — the staff dashboard is behind
          * `realm:staff` and this file signs in as a client. Which is itself the
@@ -378,7 +378,22 @@ class ClientPortalTest extends TestCase
         $client = $this->get('/client/dashboard')->getContent();
         $this->assertStringNotContainsString('notif-item', $client);
 
-        $this->signInAsStaff();
+        /*
+         * The control half writes its own notification rather than leaning on
+         * the seed. The bell is per-account now, so "a staff session sees
+         * something" is only demonstrated by a row addressed to the account
+         * doing the looking — and a control that quietly stopped controlling
+         * for anything is worse than no control at all.
+         */
+        $staffUser = $this->signInAsStaff();
+
+        Notification::create([
+            'user_id' => $staffUser->id,
+            'kind' => 'task',
+            'title' => 'Somebody assigned you a task',
+            'body' => 'Something to do.',
+        ]);
+
         $staff = $this->get('/dashboard')->getContent();
 
         $this->assertStringContainsString('notif-item', $staff, 'the staff bell is empty, so this proves nothing');

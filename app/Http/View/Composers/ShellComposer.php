@@ -2,9 +2,10 @@
 
 namespace App\Http\View\Composers;
 
+use App\Models\User;
 use App\Support\Demo\DemoClientPortal;
-use App\Support\Demo\DemoNotifications;
 use App\Support\Navigation\Navigation;
+use App\Support\NotificationDirectory;
 use App\Support\Realm;
 use App\Support\Shell;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -44,7 +45,7 @@ class ShellComposer
             'realm' => $realm,
             'sidebarState' => Shell::sidebarState($this->request),
             'density' => Shell::density($this->request),
-            'notifications' => $this->notifications($realm),
+            'notifications' => $this->notifications($realm, $user),
             'userName' => $identity['name'],
             'userInitials' => Shell::initials($identity['name']),
             'userRole' => $identity['role'],
@@ -111,39 +112,40 @@ class ShellComposer
     /**
      * The bell's contents — the signed-in person's own, newest first.
      *
-     * Scoped to one reader by construction: DemoNotifications has no `all()`,
-     * only `bellFor($employee)`, so there is no way to fill this panel with
-     * somebody else's queue by forgetting a where clause.
+     * Scoped to one reader by construction: NotificationDirectory has no
+     * `all()`, only `bellFor($user)`, so there is no way to fill this panel
+     * with somebody else's queue by forgetting a where clause.
      *
-     * Kept as plain arrays so the view does not depend on a model that does not
-     * exist yet, and empty outside local + debug so a deployed shell shows its
-     * own empty state rather than invented activity.
+     * Kept as plain arrays because this is drawn on every page in the
+     * application and the partial should not be able to lazy-load a relation
+     * once per row.
      *
      * @return list<array<string, mixed>>
      */
-    protected function notifications(string $realm): array
+    protected function notifications(string $realm, ?Authenticatable $user): array
     {
         /*
          * The bell is empty in the client portal, and that is a decision rather
          * than an omission.
          *
-         * Every notification in DemoNotifications is addressed to an EMPLOYEE
-         * and worded for one — "Rahul assigned you a task", "your leave was
-         * approved". Handing a client the staff bell would leak the lot. There
-         * is no client-addressed notification stream yet, and inventing one
-         * here would mean deciding what a client gets told about their own
+         * Every row Notifier writes is addressed to a staff account and worded
+         * for one — "Rahul assigned you a task", "your leave was approved".
+         * Handing a client the staff bell would leak the lot. There is no
+         * client-addressed notification stream yet, and inventing one here
+         * would mean deciding what a client gets told about their own
          * projects, which is a product question this module has not been asked.
          *
-         * So it renders its own empty state until that stream exists, which is
-         * what the panel already does outside local + debug.
+         * So it renders its own empty state until that stream exists.
+         *
+         * The account type is checked as well as the realm, and that is not
+         * belt-and-braces: `$realm` is read from the PATH (see
+         * Realm::forRequest) and is a drawing decision, never an authorisation
+         * one. What decides whose bell this is has to come from the account.
          */
-        if ($realm !== Realm::STAFF) {
+        if ($realm !== Realm::STAFF || ! $user instanceof User || $user->account_type !== Realm::STAFF) {
             return [];
         }
 
-        // TODO (backend phase): the signed-in user, not a fixed one. Until
-        // authentication lands there is nobody to scope to, so the demo viewer
-        // stands in — and returns nothing at all outside local + debug.
-        return DemoNotifications::bellFor(DemoNotifications::VIEWER);
+        return NotificationDirectory::bellFor($user);
     }
 }

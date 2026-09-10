@@ -58,6 +58,13 @@ class DatabaseSeeder extends Seeder
             InvoiceSeeder::class,
             MeetingSeeder::class,
             AnnouncementSeeder::class,
+            /*
+             * Last, and it has to be: it does not write notifications, it
+             * replays the events that produce them against the records above.
+             * Moved up the list it would find fewer tasks, tickets and meetings
+             * than exist and quietly seed a thinner bell.
+             */
+            NotificationSeeder::class,
         ]);
     }
 }
