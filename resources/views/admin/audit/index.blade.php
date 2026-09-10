@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@php use App\Support\Demo\DemoAudit; @endphp
+@php use App\Support\Admin\AuditDirectory; @endphp
 
 @section('title', 'Audit Log')
 
@@ -47,7 +47,7 @@
                 </thead>
                 <tbody>
                     @forelse ($entries as $entry)
-                        @php $meta = DemoAudit::kind($entry['kind']); @endphp
+                        @php $meta = AuditDirectory::kind($entry['kind']); @endphp
                         <tr>
                             <td>
                                 <a class="row-link" href="{{ route('admin.audit.show', $entry['id']) }}">

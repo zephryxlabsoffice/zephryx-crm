@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Support\Admin\AccessDirectory;
 use App\Support\Admin\AccountDirectory;
+use App\Support\Admin\AuditDirectory;
 use App\Support\Admin\MasterDataDirectory;
 use App\Support\Admin\SettingsCatalogue;
-use App\Support\Demo\DemoAudit;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
@@ -60,8 +60,8 @@ class DashboardController extends Controller
 
             'attention' => $this->attention(),
 
-            'recent' => DemoAudit::all()->take(6),
-            'notable' => DemoAudit::notable(),
+            'recent' => AuditDirectory::recent(),
+            'notable' => AuditDirectory::notable(),
         ]);
     }
 

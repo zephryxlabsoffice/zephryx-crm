@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Support\Demo\DemoAudit;
+use App\Support\Admin\AuditDirectory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 
 /**
@@ -22,6 +20,16 @@ use Illuminate\Validation\Rule;
  * on every entry, and the detail page shows all of them. Before and after
  * matter most: an entry recording that a value changed, without saying from
  * what to what, cannot answer the question somebody comes here with.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * IT PAGINATES IN SQL, WHICH THE FIXTURE DID NOT HAVE TO
+ *
+ * The demo source held nine rows and the controller sliced them in PHP. This is
+ * the one table in the application with no upper bound on its size — every
+ * sign-in, every module write, forever — so the page, the filter and the counts
+ * are all queries. A version that loaded the log to show fifteen rows of it
+ * would work for a year and then stop working suddenly.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 class AuditController extends Controller
 {
@@ -29,24 +37,24 @@ class AuditController extends Controller
 
     public function index(Request $request): Response
     {
-        $filters = $request->validate([
-            'kind' => ['nullable', Rule::in(array_keys(DemoAudit::kinds()))],
-        ]);
+        $kinds = AuditDirectory::kinds();
 
-        $entries = DemoAudit::ofKind($filters['kind'] ?? null);
+        $filters = $request->validate([
+            'kind' => ['nullable', Rule::in(array_keys($kinds))],
+        ]);
 
         return response()->view('admin.audit.index', [
             'activeNav' => 'audit',
-            'entries' => $this->paginate($entries, $request),
-            'counts' => DemoAudit::counts(),
+            'entries' => AuditDirectory::paginate($filters['kind'] ?? null, self::PER_PAGE),
+            'counts' => AuditDirectory::counts(),
             'kind' => $filters['kind'] ?? null,
-            'kinds' => DemoAudit::kinds(),
+            'kinds' => $kinds,
         ]);
     }
 
     public function show(Request $request, string $entry): Response
     {
-        $record = DemoAudit::find($entry);
+        $record = AuditDirectory::find($entry);
 
         abort_if($record === null, 404);
 
@@ -54,22 +62,5 @@ class AuditController extends Controller
             'activeNav' => 'audit',
             'entry' => $record,
         ]);
-    }
-
-    /**
-     * @param  Collection<int, array<string, mixed>>  $rows
-     * @return LengthAwarePaginator<int, array<string, mixed>>
-     */
-    protected function paginate(Collection $rows, Request $request): LengthAwarePaginator
-    {
-        $page = LengthAwarePaginator::resolveCurrentPage();
-
-        return new LengthAwarePaginator(
-            items: $rows->forPage($page, self::PER_PAGE)->values(),
-            total: $rows->count(),
-            perPage: self::PER_PAGE,
-            currentPage: $page,
-            options: ['path' => $request->url(), 'query' => $request->query()],
-        );
     }
 }

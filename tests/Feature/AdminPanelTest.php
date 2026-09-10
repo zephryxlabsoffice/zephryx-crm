@@ -7,9 +7,9 @@ use App\Support\Admin\SettingsCatalogue;
 use App\Support\AttendancePolicy;
 use App\Models\MasterDataItem;
 use App\Support\Admin\AccessDirectory;
+use App\Support\Admin\AuditDirectory;
 use App\Support\Admin\CompanySettings;
 use App\Support\Admin\MasterDataDirectory;
-use App\Support\Demo\DemoAudit;
 use App\Support\Rbac\Rbac;
 use Tests\TestCase;
 
@@ -930,21 +930,86 @@ class AdminPanelTest extends TestCase
     {
         $this->withDemoData();
 
-        $entry = DemoAudit::all()->firstWhere('kind', DemoAudit::SETTING);
+        $this->postWithToken('/admin/settings', [
+            'key' => 'attendance.half_day_hours',
+            'value' => '9',
+        ])->assertRedirect();
+
+        $entry = AuditDirectory::query('setting')->get()->first();
 
         $this->assertNotNull($entry);
 
+        $row = AuditDirectory::row($entry);
+
         /*
-         * "half_day_hours: 4 → 6" is true and useless. The log has to carry
+         * "half_day_hours: 4 → 9" is true and useless. The log has to carry
          * what the change did, because that is what somebody comes here for.
          */
-        $this->assertNotSame('', $entry['before']);
-        $this->assertStringContainsString('reclassified', strtolower($entry['after']));
+        $this->assertNotSame('', $row['before']);
+        $this->assertStringContainsString('re-judged', $row['after']);
 
         // §6 requires all of these on every entry.
         foreach (['actor', 'action', 'entity', 'before', 'after', 'ip', 'agent'] as $field) {
-            $this->assertArrayHasKey($field, $entry);
+            $this->assertArrayHasKey($field, $row);
         }
+    }
+
+    public function test_the_audit_filter_covers_every_kind_the_log_holds(): void
+    {
+        /*
+         * The demo source named five kinds, because those are the five §6 calls
+         * out and the log held nothing else. It holds every module write now —
+         * and a five-entry filter over sixty action types is worse than no
+         * filter: most of the page would be unreachable through it, and the tab
+         * counts would not add up to the total.
+         */
+        $this->seedDemoWorkforce();
+
+        $this->postWithToken('/admin/accounts/EMP002/roles', ['roles' => ['employee', 'hr']])->assertRedirect();
+        $this->postWithToken('/admin/settings', [
+            'key' => 'attendance.half_day_hours', 'value' => '5',
+        ])->assertRedirect();
+
+        $counts = AuditDirectory::counts();
+        $kinds = AuditDirectory::kinds();
+
+        $this->assertNotEmpty($kinds);
+
+        $summed = collect($kinds)->keys()->sum(fn (string $kind) => $counts[$kind]);
+
+        $this->assertSame($counts['total'], $summed, 'the tab counts do not add up to the total');
+    }
+
+    public function test_the_audit_log_has_no_write_route_in_either_direction(): void
+    {
+        /*
+         * An audit log with a delete button is not an audit log, and this is
+         * the account whose actions most need the record. Asserted on the
+         * router rather than on a page: the risk is a route somebody adds, not
+         * a button somebody draws.
+         */
+        foreach (app('router')->getRoutes() as $route) {
+            if (! str_contains($route->uri(), 'audit')) {
+                continue;
+            }
+
+            $this->assertSame(['GET', 'HEAD'], $route->methods(), $route->uri().' is not read-only');
+        }
+
+        /*
+         * And the writing class offers one write and no way to unwrite. Named
+         * individually rather than by counting methods: the class is allowed to
+         * grow readers — the audit page itself uses one — and a test that broke
+         * when it did would be deleted rather than fixed.
+         */
+        foreach (['update', 'delete', 'truncate', 'prune', 'forget', 'clear'] as $method) {
+            $this->assertFalse(
+                method_exists(\App\Support\Audit\AuditLog::class, $method),
+                'AuditLog::'.$method.'() exists, and an audit log the application can edit is not one',
+            );
+        }
+
+        $this->assertTrue(method_exists(\App\Support\Audit\AuditLog::class, 'record'));
     }
 
     /* ══════════════════════════════════════════════════════════════════════
@@ -963,7 +1028,15 @@ class AdminPanelTest extends TestCase
         $this->get('/admin/access/hr')->assertOk();
         $this->get('/admin/accounts/EMP005')->assertOk();
         $this->get('/admin/master-data/departments')->assertOk();
-        $this->get('/admin/audit/AUD-4021')->assertOk();
+
+        // A real entry, written by a real change rather than seeded.
+        $this->postWithToken('/admin/accounts/EMP002/roles', ['roles' => ['employee', 'hr']])
+            ->assertRedirect();
+
+        $entry = AuditDirectory::recent(1)->firstOrFail();
+
+        $this->get('/admin/audit/'.$entry['id'])->assertOk();
+        $this->get('/admin/audit/AUD-99999999')->assertNotFound();
     }
 
     public function test_the_admin_sidebar_shows_no_staff_or_client_entries(): void

@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
 @php
-    use App\Support\Demo\DemoAudit;
+    use App\Support\Admin\AuditDirectory;
 
-    $meta = DemoAudit::kind($entry['kind']);
+    $meta = AuditDirectory::kind($entry['kind']);
 @endphp
 
 @section('title', $entry['id'])

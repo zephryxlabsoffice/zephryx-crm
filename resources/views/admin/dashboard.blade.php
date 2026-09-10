@@ -2,7 +2,7 @@
 
 @php
     use App\Support\Avatar;
-    use App\Support\Demo\DemoAudit;
+    use App\Support\Admin\AuditDirectory;
 @endphp
 
 @section('title', 'Overview')
@@ -99,7 +99,7 @@
                         </thead>
                         <tbody>
                             @forelse ($recent as $entry)
-                                @php $meta = DemoAudit::kind($entry['kind']); @endphp
+                                @php $meta = AuditDirectory::kind($entry['kind']); @endphp
                                 <tr>
                                     <td>
                                         <a class="row-link" href="{{ route('admin.audit.show', $entry['id']) }}">
