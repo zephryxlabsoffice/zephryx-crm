@@ -736,21 +736,31 @@ Route::get('/profile/activity', [ProfileController::class, 'activity'])->name('p
  * reporting line, date of birth or role. Those are HR's, and a route that let
  * somebody set their own designation would make the record meaningless.
  */
-Route::post('/profile', fn () => abort(501))->name('profile.update');
-Route::post('/profile/preferences', fn () => abort(501))->name('profile.preferences.update');
-Route::post('/profile/password', fn () => abort(501))->name('profile.password.update');
-Route::post('/profile/email', fn () => abort(501))->name('profile.email.change');
-Route::post('/profile/photo', fn () => abort(501))->name('profile.photo');
+Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+Route::post('/profile/preferences', [ProfileController::class, 'updatePreferences'])
+    ->name('profile.preferences.update');
+Route::post('/profile/password', [ProfileController::class, 'updatePassword'])
+    ->name('profile.password.update');
+Route::post('/profile/email', [ProfileController::class, 'changeEmail'])->name('profile.email.change');
+
+/*
+ * The photo is still 501, and deliberately. The rule this module states is that
+ * an uploaded photo is re-encoded rather than stored as received, because a
+ * phone photo carries GPS coordinates — and this host has neither GD nor
+ * Imagick. See ProfileController::photo.
+ */
+Route::post('/profile/photo', [ProfileController::class, 'photo'])->name('profile.photo');
 
 /*
  * Documents are downloaded through a route that checks who is asking and writes
  * an audit entry, never served as a static file. A PAN or Aadhaar scan under a
  * guessable path in the webroot is a link somebody can forward.
  */
-Route::get('/profile/documents/{document}', fn () => abort(501))
+Route::get('/profile/documents/{document}', [ProfileController::class, 'downloadDocument'])
     ->where('document', 'DOC-[0-9]{4}')
     ->name('profile.documents.download');
-Route::post('/profile/documents', fn () => abort(501))->name('profile.documents.store');
+Route::post('/profile/documents', [ProfileController::class, 'storeDocument'])
+    ->name('profile.documents.store');
 
 // Deferred to v2. §12 keeps the navigation entries so adding the modules later
 // reshuffles nothing users have learned, but the pages 404 until then — the

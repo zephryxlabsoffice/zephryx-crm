@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Middleware\EnsureRealm;
 use App\Support\Realm;
@@ -66,6 +67,32 @@ Route::get('/reset-password/{token}', [PasswordResetController::class, 'showRese
 Route::post('/reset-password', [PasswordResetController::class, 'reset'])
     ->middleware('throttle:5,1')
     ->name('password.reset');
+
+/*
+ * Confirming an email change (§4.1).
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * PUBLIC, AND IT HAS TO BE
+ *
+ * Half of these links go to an address that is not yet on any account, opened
+ * by somebody on a phone that has never signed in to this application. Behind
+ * the staff guard, the new-address half would be unusable by exactly the people
+ * it is for — and the flow would quietly degrade to "confirm from the old
+ * address only", which is the flow it exists to not be.
+ *
+ * Safe because the token is the whole authority: 64 characters from a CSPRNG,
+ * stored hashed, carrying which change and which half. Nothing else in the
+ * request is trusted, including who is signed in — see App\Support\Auth\
+ * EmailChanges.
+ *
+ * Throttled like the reset links, because it is an unauthenticated route that
+ * touches an account.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+Route::get('/profile/email/confirm/{token}', [ProfileController::class, 'confirmEmail'])
+    ->where('token', '[A-Za-z0-9._-]{1,128}')
+    ->middleware('throttle:10,1')
+    ->name('profile.email.confirm');
 
 Route::post('/logout', LogoutController::class)->name('logout');
 

@@ -24,6 +24,7 @@ use Database\Seeders\InvoiceSeeder;
 use Database\Seeders\LeaveSeeder;
 use Database\Seeders\MeetingSeeder;
 use Database\Seeders\NotificationSeeder;
+use Database\Seeders\ProfileSeeder;
 use Database\Seeders\ProjectSeeder;
 use Database\Seeders\SalarySeeder;
 use Database\Seeders\TaskSeeder;
@@ -196,6 +197,7 @@ abstract class TestCase extends BaseTestCase
             (new InvoiceSeeder)->run();
             (new MeetingSeeder)->run();
             (new AnnouncementSeeder)->run();
+            (new ProfileSeeder)->run();
             // Last: it replays the events the seeders above produced records
             // for, so it has to see all of them.
             app(NotificationSeeder::class)->run();

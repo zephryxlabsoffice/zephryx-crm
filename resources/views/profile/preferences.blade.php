@@ -31,7 +31,7 @@
             <div class="pf-toggle-row">
                 <label class="pf-toggle" for="pf-milestones">
                     <input id="pf-milestones" name="announce_milestones" type="checkbox" value="1"
-                           @checked($profile['announce_milestones']) disabled>
+                           @checked($profile['announce_milestones'])>
                     <span class="pf-toggle-body">
                         <strong>Announce my birthday and work anniversary</strong>
                         <span>
@@ -67,7 +67,7 @@
             <div class="form-grid pf-form-grid">
                 <div class="form-field">
                     <label class="form-field-lbl" for="pf-theme">Appearance</label>
-                    <select id="pf-theme" name="theme" disabled>
+                    <select id="pf-theme" name="theme">
                         @foreach ($themes as $option)
                             <option value="{{ $option }}" @selected($theme === $option)>{{ ucfirst($option) }}</option>
                         @endforeach
@@ -77,7 +77,7 @@
 
                 <div class="form-field">
                     <label class="form-field-lbl" for="pf-density">Density</label>
-                    <select id="pf-density" name="density" disabled>
+                    <select id="pf-density" name="density">
                         <option value="comfortable" @selected($density === 'comfortable')>Comfortable</option>
                         <option value="compact" @selected($density === 'compact')>Compact</option>
                     </select>
@@ -86,7 +86,7 @@
 
                 <div class="form-field">
                     <label class="form-field-lbl" for="pf-sidebar">Sidebar</label>
-                    <select id="pf-sidebar" name="sidebar" disabled>
+                    <select id="pf-sidebar" name="sidebar">
                         <option value="expanded" @selected($sidebar === 'expanded')>Expanded</option>
                         <option value="collapsed" @selected($sidebar === 'collapsed')>Collapsed</option>
                     </select>
@@ -104,45 +104,48 @@
 
             <div class="prose prose-quiet pf-section-note">
                 <p>
-                    {{-- Honest about the one that cannot be switched off, rather
-                         than offering a control that quietly ignores it. --}}
-                    What reaches the bell. Announcements to everyone and anything
-                    needing your decision always arrive — those are how work gets
-                    to you, and a company board nobody receives is not a board.
+                    {{-- Honest about the ones that cannot be switched off, rather
+                         than offering a control that quietly ignores them. --}}
+                    What reaches the bell. Announcements to everyone, decisions on
+                    your leave and meeting invites always arrive — those are how
+                    work reaches you, and a decision nobody receives is not a
+                    decision.
                 </p>
             </div>
 
             <div class="pf-toggle-row">
                 <label class="pf-toggle" for="pf-notify-tasks">
-                    <input id="pf-notify-tasks" name="notify_tasks" type="checkbox" value="1" checked disabled>
+                    <input id="pf-notify-tasks" name="notify_tasks" type="checkbox" value="1"
+                           @checked($profile['notify_tasks'])>
                     <span class="pf-toggle-body">
                         <strong>Tasks assigned to me</strong>
-                        <span>When somebody assigns you a task or changes its deadline.</span>
+                        <span>When somebody puts you on a task.</span>
                     </span>
                 </label>
 
                 <label class="pf-toggle" for="pf-notify-tickets">
-                    <input id="pf-notify-tickets" name="notify_tickets" type="checkbox" value="1" checked disabled>
+                    <input id="pf-notify-tickets" name="notify_tickets" type="checkbox" value="1"
+                           @checked($profile['notify_tickets'])>
                     <span class="pf-toggle-body">
                         <strong>Tickets I raised or was assigned</strong>
-                        <span>Replies, status changes and escalations.</span>
-                    </span>
-                </label>
-
-                <label class="pf-toggle" for="pf-notify-email">
-                    <input id="pf-notify-email" name="notify_email" type="checkbox" value="1" disabled>
-                    <span class="pf-toggle-body">
-                        <strong>Also send these by email</strong>
-                        <span>Off by default. The bell already has them.</span>
+                        <span>Replies, and tickets routed to you.</span>
                     </span>
                 </label>
             </div>
+
+            {{--
+                The handover's third toggle — "also send these by email" — is
+                gone rather than disabled.
+
+                Nothing in this application emails a notification. A switch that
+                turns on a thing that does not exist is a promise, and the
+                person who sets it stops watching the bell. It comes back the
+                day there is something behind it.
+            --}}
         </div>
 
         <div class="form-actions form-actions-padded">
-            <button class="btn btn-primary" type="submit" disabled title="Saving is not built yet">
-                Save preferences
-            </button>
+            <button class="btn btn-primary" type="submit">Save preferences</button>
         </div>
     </form>
 @endsection

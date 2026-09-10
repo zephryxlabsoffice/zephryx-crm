@@ -70,12 +70,27 @@
 
     <form method="POST" action="{{ route('profile.documents.store') }}" enctype="multipart/form-data">
         @csrf
+
         <div class="form-field">
             <label class="form-field-lbl sr-only" for="pf-doc">Add a document</label>
-            <input id="pf-doc" name="document" type="file" accept="application/pdf,image/*" disabled>
+            {{-- `accept` narrows the file picker and protects nothing. The
+                 write checks the CONTENT through finfo, because an extension is
+                 whatever somebody typed. --}}
+            <input id="pf-doc" name="document" type="file" accept="application/pdf,image/png,image/jpeg" required>
         </div>
-        <button class="btn btn-outline btn-sm pf-rail-btn" type="submit" disabled title="Uploading is not built yet">
-            Add a document
-        </button>
+
+        <div class="form-field">
+            <label class="form-field-lbl" for="pf-doc-kind">What it is</label>
+            {{-- Asked rather than guessed from the filename. "identity" is the
+                 one that changes how the row is drawn, and a scan of somebody's
+                 Aadhaar filed as a resume is a scan nobody notices is there. --}}
+            <select id="pf-doc-kind" name="kind" required>
+                @foreach ($documentKinds as $kind)
+                    <option value="{{ $kind }}" @selected(old('kind') === $kind)>{{ ucfirst($kind) }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <button class="btn btn-outline btn-sm pf-rail-btn" type="submit">Add a document</button>
     </form>
 </section>

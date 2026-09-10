@@ -183,6 +183,28 @@ class AuditLog
     public const ANNOUNCEMENT_POSTED = 'announcement.posted';
     public const ANNOUNCEMENT_EXPIRED = 'announcement.expired';
 
+    /*
+     * My Profile.
+     *
+     * Every write on those pages is here, and the reason is the activity tab:
+     * it is the screen somebody checks when they think their account has been
+     * used by somebody else, and it only works if a missing entry can be
+     * trusted to mean nothing happened. A profile write that skipped the log
+     * would make the page worse than not having it.
+     *
+     * The email change is TWO actions, not one. "Somebody asked to move this
+     * account to that address" is the entry that matters when it was not the
+     * account's owner asking — and it is written whether or not the change ever
+     * completes, which is exactly the case a single `email_changed` would miss.
+     */
+    public const PROFILE_UPDATED = 'profile.updated';
+    public const PROFILE_PREFERENCES_UPDATED = 'profile.preferences_updated';
+    public const PROFILE_PASSWORD_CHANGED = 'profile.password_changed';
+    public const PROFILE_EMAIL_CHANGE_REQUESTED = 'profile.email_change_requested';
+    public const PROFILE_EMAIL_CHANGED = 'profile.email_changed';
+    public const PROFILE_DOCUMENT_UPLOADED = 'profile.document_uploaded';
+    public const PROFILE_DOCUMENT_DOWNLOADED = 'profile.document_downloaded';
+
     /* Admin Panel (§6 requires all of its actions) */
     public const PERMISSION_CHANGED = 'admin.permission_changed';
     public const SETTING_CHANGED = 'admin.setting_changed';

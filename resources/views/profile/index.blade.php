@@ -5,12 +5,6 @@
 @section('title', 'My Profile')
 
 @section('panel')
-    @include('partials.notice', [
-        'tone' => 'info',
-        'title' => 'This form does not save yet',
-        'message' => 'The fields and the validation shape are real; the write lands with the backend. Nothing typed here is stored.',
-    ])
-
     <form class="pf-form" method="POST" action="{{ route('profile.update') }}">
         @csrf
 
@@ -37,13 +31,16 @@
                          picker with a flag: the company has one office in one
                          country, and a dropdown with a single meaningful entry
                          teaches people the controls are decorative. --}}
-                    <input id="pf-phone" name="phone" type="tel" value="{{ $profile['phone'] }}" placeholder="+91 …" disabled>
+                    {{-- `old()` over the stored value throughout this form: a
+                         validation error must not throw away the other ten
+                         fields somebody had just finished typing. --}}
+                    <input id="pf-phone" name="phone" type="tel" value="{{ old('phone', $profile['phone']) }}" placeholder="+91 …">
                     <span class="pay-hint">Colleagues can see this. It is not published outside the company.</span>
                 </div>
 
                 <div class="form-field">
                     <label class="form-field-lbl" for="pf-nationality">{{ ProfilePolicy::labelOf('nationality') }}</label>
-                    <input id="pf-nationality" name="nationality" type="text" value="{{ $profile['nationality'] }}" disabled>
+                    <input id="pf-nationality" name="nationality" type="text" value="{{ old('nationality', $profile['nationality']) }}">
                 </div>
 
                 <div class="form-field">
@@ -52,18 +49,18 @@
                          answer, not a blank. Somebody who does not want to
                          state this should not have to pick the least wrong
                          option from a list they did not write. --}}
-                    <select id="pf-gender" name="gender" disabled>
+                    <select id="pf-gender" name="gender">
                         @foreach ($options['gender'] as $option)
-                            <option value="{{ $option }}" @selected($profile['gender'] === $option)>{{ $option }}</option>
+                            <option value="{{ $option }}" @selected(old('gender', $profile['gender']) === $option)>{{ $option }}</option>
                         @endforeach
                     </select>
                 </div>
 
                 <div class="form-field">
                     <label class="form-field-lbl" for="pf-marital">{{ ProfilePolicy::labelOf('marital_status') }}</label>
-                    <select id="pf-marital" name="marital_status" disabled>
+                    <select id="pf-marital" name="marital_status">
                         @foreach ($options['marital_status'] as $option)
-                            <option value="{{ $option }}" @selected($profile['marital_status'] === $option)>{{ $option }}</option>
+                            <option value="{{ $option }}" @selected(old('marital_status', $profile['marital_status']) === $option)>{{ $option }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -75,14 +72,14 @@
                          works with the keyboard, works with JavaScript off, and
                          is one thing to validate. --}}
                     <input id="pf-languages" name="languages" type="text"
-                           value="{{ implode(', ', $profile['languages']) }}"
-                           placeholder="English, Hindi, Bengali" disabled>
+                           value="{{ old('languages', implode(', ', $profile['languages'])) }}"
+                           placeholder="English, Hindi, Bengali">
                     <span class="pay-hint">Separate them with commas.</span>
                 </div>
 
                 <div class="form-field pf-form-wide">
                     <label class="form-field-lbl" for="pf-address">{{ ProfilePolicy::labelOf('address') }}</label>
-                    <textarea id="pf-address" name="address" rows="3" disabled>{{ $profile['address'] }}</textarea>
+                    <textarea id="pf-address" name="address" rows="3">{{ old('address', $profile['address']) }}</textarea>
                     {{-- Says who reads it, before somebody types their home
                          address into it. Same rule as the leave reason. --}}
                     <span class="pay-hint">Held for your employment record. Seen by HR and the owner, and on no list of people.</span>
@@ -110,17 +107,17 @@
             <div class="form-grid pf-form-grid">
                 <div class="form-field">
                     <label class="form-field-lbl" for="pf-emg-name">{{ ProfilePolicy::labelOf('emergency_name') }}</label>
-                    <input id="pf-emg-name" name="emergency_name" type="text" value="{{ $profile['emergency_name'] }}" disabled>
+                    <input id="pf-emg-name" name="emergency_name" type="text" value="{{ old('emergency_name', $profile['emergency_name']) }}">
                 </div>
 
                 <div class="form-field">
                     <label class="form-field-lbl" for="pf-emg-rel">{{ ProfilePolicy::labelOf('emergency_relationship') }}</label>
-                    <input id="pf-emg-rel" name="emergency_relationship" type="text" value="{{ $profile['emergency_relationship'] }}" disabled>
+                    <input id="pf-emg-rel" name="emergency_relationship" type="text" value="{{ old('emergency_relationship', $profile['emergency_relationship']) }}">
                 </div>
 
                 <div class="form-field">
                     <label class="form-field-lbl" for="pf-emg-phone">{{ ProfilePolicy::labelOf('emergency_phone') }}</label>
-                    <input id="pf-emg-phone" name="emergency_phone" type="tel" value="{{ $profile['emergency_phone'] }}" placeholder="+91 …" disabled>
+                    <input id="pf-emg-phone" name="emergency_phone" type="tel" value="{{ old('emergency_phone', $profile['emergency_phone']) }}" placeholder="+91 …">
                 </div>
             </div>
         </div>
@@ -137,8 +134,8 @@
                 <div class="form-field pf-form-wide">
                     <label class="form-field-lbl" for="pf-skills">{{ ProfilePolicy::labelOf('skills') }}</label>
                     <input id="pf-skills" name="skills" type="text"
-                           value="{{ implode(', ', $profile['skills']) }}"
-                           placeholder="Laravel, Vue, Code review" disabled>
+                           value="{{ old('skills', implode(', ', $profile['skills'])) }}"
+                           placeholder="Laravel, Vue, Code review">
                     <span class="pay-hint">
                         Shown on your profile and on team pages, so people know who to ask.
                     </span>
@@ -155,9 +152,7 @@
         </div>
 
         <div class="form-actions form-actions-padded">
-            <button class="btn btn-primary" type="submit" disabled title="Saving is not built yet">
-                Save changes
-            </button>
+            <button class="btn btn-primary" type="submit">Save changes</button>
             {{-- Cancel is a link back to the page, not a button that clears the
                  form. A reset button next to a save button is a mis-click that
                  throws away everything somebody just typed. --}}

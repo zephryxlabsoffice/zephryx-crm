@@ -32,23 +32,21 @@
                     changing a password is its own page rather than three fields
                     at the bottom of a profile form.
                 --}}
-                <input id="pf-current" name="current_password" type="password" autocomplete="current-password" disabled>
+                <input id="pf-current" name="current_password" type="password" autocomplete="current-password" required>
                 <span class="pay-hint">Asked for even though you are signed in — it is what stops somebody using an unlocked screen.</span>
             </div>
 
             <div class="form-field">
                 <label class="form-field-lbl" for="pf-new">New password</label>
-                <input id="pf-new" name="password" type="password" autocomplete="new-password" minlength="12" disabled>
+                <input id="pf-new" name="password" type="password" autocomplete="new-password" minlength="12" required>
             </div>
 
             <div class="form-field">
                 <label class="form-field-lbl" for="pf-confirm">New password again</label>
-                <input id="pf-confirm" name="password_confirmation" type="password" autocomplete="new-password" minlength="12" disabled>
+                <input id="pf-confirm" name="password_confirmation" type="password" autocomplete="new-password" minlength="12" required>
             </div>
 
-            <button class="btn btn-primary" type="submit" disabled title="Changing your password is not built yet">
-                Change password
-            </button>
+            <button class="btn btn-primary" type="submit">Change password</button>
         </form>
     </div>
 
@@ -104,11 +102,38 @@
             </p>
         </div>
 
+        @if ($pendingEmail)
+            {{-- Said before the form, not instead of it: starting a second
+                 change cancels the first, and somebody should know that is what
+                 the button in front of them does. --}}
+            @include('partials.notice', [
+                'tone' => 'info',
+                'title' => 'A change is waiting',
+                'message' => 'You asked to move this account to '.$pendingEmail.'. Both addresses have to open '
+                    .'the link they were sent. Starting another change cancels this one.',
+            ])
+        @endif
+
         <form class="pf-email-change" method="POST" action="{{ route('profile.email.change') }}">
             @csrf
-            <button class="btn btn-outline" type="submit" disabled title="Changing your email is not built yet">
-                Start an email change
-            </button>
+
+            <div class="form-field">
+                <label class="form-field-lbl" for="pf-new-email">New address</label>
+                <input id="pf-new-email" name="new_email" type="email" autocomplete="email"
+                       value="{{ old('new_email') }}" required>
+                <span class="pay-hint">Both this address and {{ $profile['email'] }} will be sent a link.</span>
+            </div>
+
+            <div class="form-field">
+                <label class="form-field-lbl" for="pf-email-current">Your current password</label>
+                {{-- Asked for here as well as on the password form, and for the
+                     same reason: this is the other half of the login, and a
+                     borrowed session must not be able to move it. --}}
+                <input id="pf-email-current" name="current_password" type="password"
+                       autocomplete="current-password" required>
+            </div>
+
+            <button class="btn btn-outline" type="submit">Start an email change</button>
         </form>
     </div>
 @endsection

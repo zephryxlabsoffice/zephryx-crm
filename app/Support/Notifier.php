@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Employee;
 use App\Models\LeaveRequest;
 use App\Models\Meeting;
 use App\Models\Notification;
@@ -23,6 +24,11 @@ use Illuminate\Support\Str;
  * task to yourself — the most common thing anybody does with the task form —
  * and the result is a bell that is permanently unread with nothing in it worth
  * reading.
+ *
+ * AND TWO OF THE FOUR KINDS CAN BE SWITCHED OFF
+ *
+ * Tasks and tickets, from My Profile's preferences page. Leave decisions and
+ * meeting invites cannot be — see `wants()`.
  *
  * NAMED EVENTS, NOT A MESSAGE BUS
  *
@@ -83,6 +89,10 @@ class Notifier
             return;
         }
 
+        if (! $this->wants($reader, $kind)) {
+            return;
+        }
+
         Notification::create([
             'user_id' => $reader->id,
             'kind' => $kind,
@@ -94,6 +104,41 @@ class Notifier
             'link_route' => $route,
             'link_params' => $route === null ? null : $params,
         ]);
+    }
+
+    /**
+     * Whether this reader has switched this kind off.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * ONLY TWO KINDS HAVE A SWITCH, AND THAT IS THE DECISION
+     *
+     * Tasks and tickets are high-volume and about work in progress; somebody
+     * who lives in those pages all day can reasonably say the bell adds
+     * nothing. Leave decisions and meeting invites have no switch and will not
+     * get one: they are how a decision reaches the person waiting for it, and
+     * the preferences page says so rather than offering a control that quietly
+     * loses them.
+     *
+     * A reader with no profile row — never opened the page — wants everything.
+     * The default belongs in EmployeeProfile::blank(), not here, but the null
+     * case is handled explicitly because a missing row must never read as
+     * "switched off": the failure would be silent and would look like the
+     * notifications simply not working.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    protected function wants(User $reader, string $kind): bool
+    {
+        if ($kind !== 'task' && $kind !== 'ticket') {
+            return true;
+        }
+
+        $profile = Employee::where('user_id', $reader->id)->first()?->profile;
+
+        if ($profile === null) {
+            return true;
+        }
+
+        return $kind === 'task' ? $profile->notify_tasks : $profile->notify_tickets;
     }
 
     /* ══════════════════════════════════════════════════════════════════════

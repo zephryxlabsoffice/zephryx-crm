@@ -6,7 +6,6 @@ use App\Support\Dashboard\DashboardComposer;
 use App\Support\Dashboard\DashboardData;
 use App\Support\DashboardPresenter as P;
 use App\Support\Demo\DemoEmployees;
-use App\Support\Demo\DemoProfile;
 use App\Support\Demo\DemoRoles;
 use App\Support\Navigation\NavigationGate;
 use Illuminate\Http\Request;
@@ -172,14 +171,21 @@ class DashboardController extends Controller
      * employee record — a Mentor, or a staff account seeded outside the demo
      * directory — because the widgets read from demo sources that are keyed by
      * employee id. That fallback disappears with the demo data.
+     *
+     * The id is spelled out here rather than imported from DemoProfile, which
+     * is gone: My Profile reads the database now, and this was the last line in
+     * the application still borrowing that class's notion of who is signed in.
+     * The dashboard is the remaining module on demo sources.
      */
+    protected const DEMO_VIEWER = 'EMP002';
+
     protected function viewer(Request $request): string
     {
         $id = $request->user()?->user_id;
 
         return $id !== null && DemoEmployees::all()->contains('user_id', $id)
             ? $id
-            : DemoProfile::VIEWER;
+            : self::DEMO_VIEWER;
     }
 
     /**

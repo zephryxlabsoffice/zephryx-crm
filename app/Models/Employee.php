@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -19,7 +21,7 @@ use Illuminate\Support\Carbon;
 class Employee extends Model
 {
     protected $fillable = [
-        'user_id', 'department_id', 'designation_id',
+        'user_id', 'department_id', 'designation_id', 'reports_to',
         'joined_on', 'date_of_birth', 'announce_milestones',
     ];
 
@@ -68,6 +70,37 @@ class Employee extends Model
     public function teams(): BelongsToMany
     {
         return $this->belongsToMany(Team::class, 'team_members')->withTimestamps();
+    }
+
+    /**
+     * The fields this person owns about themselves.
+     *
+     * A person who has never opened My Profile has no row here, and that is a
+     * real state rather than a missing one — see EmployeeProfile::blank().
+     *
+     * @return HasOne<EmployeeProfile, $this>
+     */
+    public function profile(): HasOne
+    {
+        return $this->hasOne(EmployeeProfile::class);
+    }
+
+    /**
+     * @return HasMany<EmployeeDocument, $this>
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(EmployeeDocument::class)->orderByDesc('id');
+    }
+
+    /**
+     * The reporting line. HR's, shown on the profile and editable nowhere on it.
+     *
+     * @return BelongsTo<Employee, $this>
+     */
+    public function manager(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'reports_to');
     }
 
     /**

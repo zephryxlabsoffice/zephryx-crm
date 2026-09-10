@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Employee;
+use App\Models\EmployeeProfile;
 use App\Models\LeaveRequest;
 use App\Models\Meeting;
 use App\Models\Notification;
@@ -304,6 +305,78 @@ class NotificationsTest extends TestCase
             'The release is that week.',
             Notification::where('user_id', $asker->user_id)->firstOrFail()->body,
         );
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       THE TWO SWITCHES, AND THE TWO KINDS THAT HAVE NONE
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_switching_task_notifications_off_actually_stops_them(): void
+    {
+        $this->signInWith(['employee', 'manager'], 'EMP940');
+        $worker = $this->makeEmployee('EMP941');
+
+        EmployeeProfile::create(['employee_id' => $worker->id, 'notify_tasks' => false]);
+
+        $task = $this->makeTask();
+
+        $this->post('/tasks/'.$task->reference.'/assign', ['assignee_id' => $worker->id])
+            ->assertRedirect();
+
+        $this->assertSame(0, Notification::where('user_id', $worker->user_id)->count());
+    }
+
+    public function test_a_leave_decision_arrives_whatever_the_switches_say(): void
+    {
+        /*
+         * There is no switch for it, and this asserts that turning the other
+         * two off does not quietly take it with them — a decision somebody is
+         * waiting for must not be lost to a preference about task assignments.
+         */
+        $this->signInWith(['employee', 'hr'], 'EMP942');
+        $asker = $this->makeEmployee('EMP943');
+
+        EmployeeProfile::create([
+            'employee_id' => $asker->id,
+            'notify_tasks' => false,
+            'notify_tickets' => false,
+        ]);
+
+        $request = LeaveRequest::create([
+            'reference' => 'LV-2026-902',
+            'employee_id' => $asker->id,
+            'type' => 'casual',
+            'from_date' => Carbon::today()->addWeek()->toDateString(),
+            'to_date' => Carbon::today()->addWeek()->toDateString(),
+            'days' => 1,
+            'reason' => 'A day off, thank you.',
+            'status' => LeavePresenter::PENDING,
+            'applied_at' => Carbon::now(),
+        ]);
+
+        $this->post('/leave/'.$request->reference.'/approve', ['note' => 'Fine.'])->assertRedirect();
+
+        $this->assertSame(1, Notification::where('user_id', $asker->user_id)->count());
+    }
+
+    public function test_a_reader_with_no_profile_row_gets_everything(): void
+    {
+        /*
+         * Never opened My Profile. A missing row must not read as "switched
+         * off" — that failure is silent and looks exactly like notifications
+         * not working.
+         */
+        $this->signInWith(['employee', 'manager'], 'EMP944');
+        $worker = $this->makeEmployee('EMP945');
+
+        $this->assertNull($worker->profile);
+
+        $task = $this->makeTask();
+
+        $this->post('/tasks/'.$task->reference.'/assign', ['assignee_id' => $worker->id])
+            ->assertRedirect();
+
+        $this->assertSame(1, Notification::where('user_id', $worker->user_id)->count());
     }
 
     /* ══════════════════════════════════════════════════════════════════════

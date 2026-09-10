@@ -58,6 +58,9 @@ class DatabaseSeeder extends Seeder
             InvoiceSeeder::class,
             MeetingSeeder::class,
             AnnouncementSeeder::class,
+            // Profiles need the employment records, and the reporting line
+            // needs all of them to exist before it can point one at another.
+            ProfileSeeder::class,
             /*
              * Last, and it has to be: it does not write notifications, it
              * replays the events that produce them against the records above.

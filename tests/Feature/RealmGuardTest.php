@@ -252,6 +252,15 @@ class RealmGuardTest extends TestCase
          * is itself worth the list saying.
          *
          * `storage.local*` is Laravel's own local-disk server, not ours.
+         *
+         * `profile.email.confirm` is the one entry here that reads a record,
+         * and it is public deliberately: half of those links go to an address
+         * that is not yet on any account, opened by somebody who has never
+         * signed in. Behind the staff guard the new-address half would be
+         * unusable, and the flow would quietly degrade to confirming from the
+         * old address only — which is the flow it exists to not be. Its
+         * authority is the token, not the session, and it reveals nothing: the
+         * response says whether a link was live, never whose it was.
          */
         $this->assertSame([
             'account.inactive',
@@ -266,6 +275,7 @@ class RealmGuardTest extends TestCase
             'password.request',
             'password.reset',
             'password.reset.form',
+            'profile.email.confirm',
             'storage.local',
             'storage.local.upload',
             'theme.store',
