@@ -5,6 +5,38 @@
 @section('title', 'My Profile')
 
 @section('panel')
+    {{--
+        The photo is its own form, and it has to be: it is multipart, and a file
+        input inside the details form would make every save of a phone number a
+        file upload.
+    --}}
+    <div class="card">
+        <div class="section-hd">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+            </svg>
+            Your photo
+        </div>
+
+        <form class="pf-photo-form" method="POST" action="{{ route('profile.photo') }}" enctype="multipart/form-data">
+            @csrf
+
+            <div class="form-field">
+                <label class="form-field-lbl" for="pf-photo">Upload a photo</label>
+                <input id="pf-photo" name="photo" type="file" accept="image/jpeg,image/png" required>
+                <span class="pay-hint">
+                    {{-- Said before somebody uploads, not after. A phone photo
+                         carries the coordinates of wherever it was taken. --}}
+                    JPEG or PNG, up to 2 MB and {{ \App\Support\Images\PhotoIntake::MAX_SIDE }} pixels a side.
+                    Anything your camera recorded alongside the picture — where it was taken,
+                    when, and on what — is removed before the file is stored.
+                </span>
+            </div>
+
+            <button class="btn btn-outline" type="submit">Save photo</button>
+        </form>
+    </div>
+
     <form class="pf-form" method="POST" action="{{ route('profile.update') }}">
         @csrf
 

@@ -54,6 +54,22 @@
   flex-shrink: 0;
 }
 
+/*
+ * The photo, where there is one.
+ *
+ * `object-fit: cover` rather than a server-side crop: nothing here decodes an
+ * image (see App\Support\Images\PhotoIntake), so a photo arrives at whatever
+ * shape it was taken at and the circle has to do the framing. Centre-weighted,
+ * which is where a face is in almost every photo anybody uploads of themselves.
+ */
+.pf-photo {
+  object-fit: cover;
+  object-position: center;
+  background: var(--avatar-bg);
+}
+
+.pf-photo-form .form-field { margin-bottom: 14px; }
+
 .pf-identity-body { min-width: 0; }
 
 .pf-name-row {

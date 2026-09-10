@@ -82,6 +82,35 @@ class DocumentStore
         ];
     }
 
+    /**
+     * Store bytes we composed rather than a file we received.
+     *
+     * Added for the profile photo, which is not stored as it arrived: it is
+     * parsed and rebuilt from its picture segments first (see
+     * App\Support\Images\PhotoIntake), so what reaches the disk is a string
+     * this application produced and the UploadedFile is long gone by then.
+     *
+     * The same rules apply — whitelisted extension, a name that is ours, a path
+     * composed by the caller — because the reason for each of them is where the
+     * file ENDS UP, not where it came from.
+     *
+     * @return array{path: string, bytes: int}
+     */
+    public function putBytes(string $folder, string $extension, string $contents): array
+    {
+        $extension = mb_strtolower($extension);
+
+        if (! in_array($extension, self::ALLOWED, true)) {
+            throw new \InvalidArgumentException('That file type cannot be stored.');
+        }
+
+        $path = trim($folder, '/').'/'.Str::random(40).'.'.$extension;
+
+        $this->disk()->put($path, $contents);
+
+        return ['path' => $path, 'bytes' => strlen($contents)];
+    }
+
     public function exists(string $path): bool
     {
         return $this->disk()->exists($path);
@@ -93,6 +122,41 @@ class DocumentStore
     public function download(string $path, string $name): StreamedResponse
     {
         return $this->disk()->download($path, $name);
+    }
+
+    /**
+     * Show a stored file in the browser rather than saving it.
+     *
+     * Only for things this application produced and knows the shape of — the
+     * profile photo, which is rebuilt byte by byte from its picture segments
+     * before it is written (see App\Support\Images\PhotoIntake).
+     *
+     * Never for an uploaded document. `download()` sends
+     * `Content-Disposition: attachment`, which is what stops a browser
+     * rendering somebody's upload in the page's own origin; inline is only safe
+     * when the bytes are ours.
+     *
+     * The content type is stated, not sniffed from the file, for the same
+     * reason: a browser guessing at a type is a browser that can be talked into
+     * guessing "html".
+     */
+    public function stream(string $path): StreamedResponse
+    {
+        $extension = mb_strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        $type = match ($extension) {
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            default => throw new \InvalidArgumentException('That file is not one this store streams inline.'),
+        };
+
+        return $this->disk()->response($path, null, [
+            'Content-Type' => $type,
+            'Content-Disposition' => 'inline',
+            // Belt and braces: the type above is ours and correct, and this
+            // tells the browser not to look for a better one anyway.
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     /**

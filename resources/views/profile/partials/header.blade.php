@@ -15,9 +15,22 @@
 --}}
 <section class="card pf-header">
     <div class="pf-identity">
-        <span class="avatar avatar-xl {{ Avatar::tint($profile['name']) }}" aria-hidden="true">
-            {{ Avatar::initials($profile['name']) }}
-        </span>
+        {{--
+            The photo where there is one, initials where there is not.
+
+            Initials are the permanent fallback rather than a placeholder image:
+            they are always available, always legible, and never a broken icon.
+            The photo is served through a route because it lives on the private
+            disk — there is no public URL for it and there is not meant to be.
+        --}}
+        @if ($profile['photo_path'])
+            <img class="avatar avatar-xl pf-photo" src="{{ route('profile.photo.show') }}"
+                 alt="" width="96" height="96">
+        @else
+            <span class="avatar avatar-xl {{ Avatar::tint($profile['name']) }}" aria-hidden="true">
+                {{ Avatar::initials($profile['name']) }}
+            </span>
+        @endif
 
         <div class="pf-identity-body">
             <div class="pf-name-row">

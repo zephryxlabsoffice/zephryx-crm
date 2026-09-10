@@ -14,6 +14,7 @@ use App\Support\Auth\PasswordResets;
 use App\Support\Auth\RememberMe;
 use App\Support\Auth\TrustedDevices;
 use App\Support\Documents\DocumentStore;
+use App\Support\Images\PhotoIntake;
 use App\Support\ProfileDirectory;
 use App\Support\ProfilePolicy;
 use App\Support\ProfilePresenter as P;
@@ -30,6 +31,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -79,8 +81,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  *    is §4.7 — twelve characters, blocklist, no composition rules, no forced
  *    rotation. All sessions but this one are signed out on success.
  *
- * 4. THE PHOTO lands in the commit after this one. It is an upload, and this
- *    host has neither GD nor Imagick — see the note on `photo()`.
+ * 4. THE PHOTO IS AN UPLOAD, WITH EVERYTHING THAT IMPLIES. Type checked by
+ *    content, size and dimensions capped, and rebuilt from its picture segments
+ *    so nothing the camera recorded alongside the image survives. It is a strip
+ *    rather than a re-encode, because this host has neither GD nor Imagick —
+ *    App\Support\Images\PhotoIntake states what that buys and what it does not.
  *
  * 5. EVERY WRITE HERE IS AUDITED (§6), and the activity page reads those
  *    entries back. That page is how somebody notices an account being used by
@@ -102,6 +107,7 @@ class ProfileController extends Controller
         protected AuditLog $audit,
         protected EmailChanges $emailChanges,
         protected DocumentStore $documents,
+        protected PhotoIntake $photos,
         protected RememberMe $remember,
         protected TrustedDevices $devices,
         protected PasswordResets $resets,
@@ -518,18 +524,104 @@ class ProfileController extends Controller
     }
 
     /**
-     * POST /profile/photo — lands in the next commit.
+     * POST /profile/photo
      *
-     * Not left as `abort(501)` by accident. The rule this page states is that a
-     * photo is re-encoded rather than stored as received, and this host has
-     * neither GD nor Imagick — so the upload needs a metadata stripper written
-     * against the file formats themselves, which is its own piece of work and
-     * its own review. Shipping the upload without it would mean publishing
-     * everybody's GPS coordinates in a staff directory, quietly.
+     * ─────────────────────────────────────────────────────────────────────────
+     * WHAT REACHES THE DISK IS NOT WHAT ARRIVED
+     *
+     * The upload is parsed and rebuilt from its picture segments — every APPn
+     * block on a JPEG, every non-picture chunk on a PNG, dropped. A phone photo
+     * carries GPS coordinates, and a staff photo that publishes where somebody
+     * lives is not a feature.
+     *
+     * This is a strip and not a re-encode, because the host has no image
+     * library. App\Support\Images\PhotoIntake states exactly what that buys and
+     * what it does not; read it before deciding this is finished.
+     *
+     * The old file is deleted after the new path is saved, never before. The
+     * other order leaves somebody with no photo at all if the write fails.
+     * ─────────────────────────────────────────────────────────────────────────
      */
     public function photo(Request $request): RedirectResponse
     {
-        abort(501);
+        $employee = $this->requireEmployee($request);
+
+        $request->validate([
+            'photo' => [
+                'required', 'file',
+                'max:'.(int) (PhotoIntake::MAX_BYTES / 1024),
+                // Checked by content through finfo, then checked again by the
+                // parser. The extension is whatever somebody typed.
+                'mimes:'.implode(',', PhotoIntake::ALLOWED),
+            ],
+        ]);
+
+        try {
+            $clean = $this->photos->clean($request->file('photo'));
+        } catch (RuntimeException $e) {
+            throw ValidationException::withMessages(['photo' => $e->getMessage()]);
+        }
+
+        $profile = $this->profileFor($employee);
+
+        $was = $profile->photo_path;
+
+        $stored = $this->documents->putBytes(
+            'employees/'.$employee->id.'/photo',
+            $clean['extension'],
+            $clean['contents'],
+        );
+
+        $profile->fill(['photo_path' => $stored['path']])->save();
+
+        // Only now. See the head of this method.
+        if ($was !== null && $was !== $stored['path']) {
+            $this->documents->forget($was);
+        }
+
+        $this->audit->record(
+            action: AuditLog::PROFILE_UPDATED,
+            actor: $request->user(),
+            entityType: 'user',
+            entityId: $request->user()->user_id,
+            before: $was === null ? 'no photo' : 'photo on record',
+            after: 'Photo replaced ('.$clean['width'].'×'.$clean['height'].', metadata stripped)',
+            request: $request,
+        );
+
+        return redirect()
+            ->route('profile.show')
+            ->with('status', 'Your photo is saved. Anything the camera recorded with it was not.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * GET /profile/photo — the signed-in person's own.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * ONE ROUTE, AND IT SERVES NOBODY ELSE'S
+     *
+     * The photo is on the private disk with the documents, so it needs a route
+     * to be seen at all — and this one resolves the file from the session,
+     * exactly like the rest of the module.
+     *
+     * Which means, today, that a person's photo is visible to that person. A
+     * staff directory showing everybody's photograph to everybody is a
+     * reasonable thing to want and is NOT what this route is: who may see whose
+     * photo is a decision about the Employees module, and inventing it here
+     * would be answering a question nobody has asked by adding a parameter to a
+     * URL that deliberately has none.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function showPhoto(Request $request): StreamedResponse
+    {
+        $employee = $this->requireEmployee($request);
+
+        $path = $employee->profile?->photo_path;
+
+        abort_if($path === null || ! $this->documents->exists($path), 404);
+
+        return $this->documents->stream($path);
     }
 
     /* ══════════════════════════════════════════════════════════════════════

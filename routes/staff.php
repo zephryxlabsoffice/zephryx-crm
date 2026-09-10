@@ -744,12 +744,13 @@ Route::post('/profile/password', [ProfileController::class, 'updatePassword'])
 Route::post('/profile/email', [ProfileController::class, 'changeEmail'])->name('profile.email.change');
 
 /*
- * The photo is still 501, and deliberately. The rule this module states is that
- * an uploaded photo is re-encoded rather than stored as received, because a
- * phone photo carries GPS coordinates — and this host has neither GD nor
- * Imagick. See ProfileController::photo.
+ * The photo. Stored on the private disk with the documents, so it needs a route
+ * to be seen at all — and that route takes no identifier either: it serves the
+ * signed-in person's own. Who may see whose photograph is a decision about the
+ * Employees module, not this one.
  */
 Route::post('/profile/photo', [ProfileController::class, 'photo'])->name('profile.photo');
+Route::get('/profile/photo', [ProfileController::class, 'showPhoto'])->name('profile.photo.show');
 
 /*
  * Documents are downloaded through a route that checks who is asking and writes
