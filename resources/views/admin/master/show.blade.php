@@ -36,6 +36,7 @@
                                     <th scope="col">Code</th>
                                     <th scope="col">In use</th>
                                     <th scope="col">Status</th>
+                                    <th scope="col"><span class="sr-only">Retire</span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -53,7 +54,13 @@
                                                 something a real decision rather
                                                 than a click.
                                             --}}
-                                            @if ($row['in_use'] > 0)
+                                            @if ($row['in_use'] === null)
+                                                {{-- Null is not zero. "Nothing
+                                                     uses it" would turn "nobody
+                                                     counted" into a
+                                                     reassurance. --}}
+                                                <span class="dash-quiet-meta">Not counted</span>
+                                            @elseif ($row['in_use'] > 0)
                                                 {{ $row['in_use'] }} {{ $row['in_use'] === 1 ? $meta['unit'] : $meta['unit'].'s' }}
                                             @else
                                                 <span class="dash-quiet-meta">Nothing uses it</span>
@@ -64,6 +71,19 @@
                                                 <span class="pill pill-green">Active</span>
                                             @else
                                                 <span class="pill pill-gray">Retired</span>
+                                            @endif
+                                        </td>
+                                        <td class="cell-tight">
+                                            @if ($row['active'])
+                                                <form method="POST" action="{{ route('admin.master.deactivate', $list) }}">
+                                                    @csrf
+                                                    <input type="hidden" name="item" value="{{ $row['id'] }}">
+                                                    {{-- "Retire", not "Delete".
+                                                         The word is the rule:
+                                                         nothing here removes a
+                                                         row. --}}
+                                                    <button class="btn btn-outline btn-sm" type="submit">Retire</button>
+                                                </form>
                                             @endif
                                         </td>
                                     </tr>
@@ -86,18 +106,27 @@
                         <div class="form-grid">
                             <div class="form-field">
                                 <label class="form-field-lbl" for="md-name">Name</label>
-                                <input id="md-name" name="name" type="text" disabled>
+                                <input id="md-name" name="name" type="text" maxlength="120" required
+                                       value="{{ old('name') }}">
                             </div>
 
                             <div class="form-field">
                                 <label class="form-field-lbl" for="md-code">Code</label>
-                                <input id="md-code" name="code" type="text" disabled>
-                                <span class="pay-hint">Short, and permanent — other records will reference it.</span>
+                                <input id="md-code" name="code" type="text" maxlength="16" required
+                                       value="{{ old('code') }}">
+                                <span class="pay-hint">
+                                    Short, and permanent — other records will reference it.
+                                    {{-- Said here because it is the one
+                                         behaviour somebody would not guess: a
+                                         code that was retired comes back rather
+                                         than being duplicated. --}}
+                                    A code that was retired earlier is brought back rather than added twice.
+                                </span>
                             </div>
                         </div>
 
                         <div class="form-actions">
-                            <button class="btn btn-primary" type="submit" disabled title="Not built yet">Add</button>
+                            <button class="btn btn-primary" type="submit">Add</button>
                         </div>
                     </form>
                 </div>
@@ -127,8 +156,20 @@
 
                 <div class="stat-row">
                     <span class="stat-label">Records using this list</span>
-                    <span class="stat-value">{{ $inUse }}</span>
+                    <span class="stat-value">
+                        {{-- Null where nothing counts against this list at all.
+                             Printed as "0" it would read as "safe to retire
+                             anything here", which is a claim nobody checked. --}}
+                        {{ $inUse === null ? 'Not counted' : $inUse }}
+                    </span>
                 </div>
+
+                @if ($inUse === null)
+                    <p class="dash-note">
+                        Nothing in the application points at this list yet, so no count can be
+                        offered. Retiring a row here changes what is offered and nothing else.
+                    </p>
+                @endif
             </section>
         </aside>
     </section>

@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Support\Admin\CompanySettings;
 use App\Support\Admin\Retroactive;
 use App\Support\Admin\SettingsCatalogue;
+use App\Support\Audit\AuditLog;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
@@ -34,25 +37,33 @@ use Illuminate\Routing\Controller;
  * names who it lands on.
  * ═════════════════════════════════════════════════════════════════════════════
  *
- * WHAT THE BACKEND OWES
+ * HOW THE FOUR OBLIGATIONS ARE MET
  *
- * 1. WRITE TO `company_settings` (§8), not to config files. A deployed
+ * 1. IT WRITES TO `company_settings` (§8), not to config files. A deployed
  *    application cannot edit its own source, and a value that lives in a file
- *    is a value that a deploy silently reverts.
+ *    is a value the next deploy silently reverts. Config stays the DEFAULT and
+ *    the table is the decision — see App\Support\Admin\CompanySettings.
  *
- * 2. AUDIT EVERY CHANGE with actor, before, after and the computed effect (§6).
+ * 2. EVERY CHANGE IS AUDITED with actor, before, after and the computed effect
+ *    (§6). The effect is the point: "half_day_hours: 4 → 6" is a true log line
+ *    and a useless one.
  *
- * 3. RE-COMPUTE THE PREVIEW AT SAVE TIME and refuse if it has moved. The
- *    figures shown on the confirmation are a snapshot; between the two steps
- *    somebody may have checked in. Confirming against a stale preview would
- *    mean agreeing to a number nobody ever saw.
+ * 3. THE PREVIEW IS RE-COMPUTED AT SAVE TIME and the save is refused if it has
+ *    moved. The figures on the confirmation are a snapshot; between the two
+ *    steps somebody may have checked in, and confirming against a stale preview
+ *    means agreeing to a number nobody ever saw.
  *
- * 4. VALIDATE AGAINST THE CATALOGUE. A key not in SettingsCatalogue::groups()
- *    is not a setting, and a posted one must be dropped rather than written —
- *    the form is not the guard.
+ * 4. THE CATALOGUE IS THE VALIDATOR. A key not in SettingsCatalogue::groups()
+ *    is not a setting — the form is not the guard, and `config([$key => …])`
+ *    with an unchecked key would let a posted field rewrite anything in the
+ *    configuration.
  */
 class SettingsController extends Controller
 {
+    public function __construct(protected AuditLog $audit)
+    {
+    }
+
     public function index(Request $request): Response
     {
         return response()->view('admin.settings.index', [
@@ -97,10 +108,100 @@ class SettingsController extends Controller
              * See Retroactive for why this is safe to run here and how the
              * configuration is restored afterwards.
              */
-            'effect' => $setting['retroactive']
+            'effect' => $effect = $setting['retroactive']
                 ? Retroactive::preview($setting['key'], $proposed)
                 : null,
+            /*
+             * What the person is about to agree to, in one string. Posted back
+             * with the save and compared against a freshly computed one — see
+             * `update()`. Not a security token: it is a "has the world moved"
+             * check, and the CSRF token next to it is the security one.
+             */
+            'fingerprint' => $this->fingerprint($effect),
         ]);
+    }
+
+    /**
+     * POST /admin/settings — the second step, and the one that writes.
+     */
+    public function update(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'key' => ['required', 'string', 'max:120'],
+            'value' => ['nullable'],
+            'value.*' => ['string'],
+            'fingerprint' => ['nullable', 'string', 'max:64'],
+        ]);
+
+        $setting = SettingsCatalogue::find($validated['key']);
+
+        // A key outside the catalogue is not a setting, whatever was posted.
+        abort_if($setting === null, 404);
+
+        $proposed = $this->normalise($setting, $validated['value'] ?? null);
+
+        if ($this->same($proposed, $setting['value'])) {
+            return redirect()
+                ->route('admin.settings')
+                ->with('status', 'That is the value it already had. Nothing changed.')
+                ->with('status_tone', 'info');
+        }
+
+        $effect = $setting['retroactive']
+            ? Retroactive::preview($setting['key'], $proposed)
+            : null;
+
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * THE PREVIEW IS RE-COMPUTED, AND A CHANGED ONE STOPS THE SAVE
+         *
+         * The figures the person read were computed on the previous request.
+         * Somebody checking in, a leave request being approved, or simply the
+         * clock passing midnight can all move them — and the whole argument for
+         * the two-step is that the second step is agreement to a specific
+         * number.
+         *
+         * So a moved preview sends them back to look at the new one rather than
+         * writing against the old. Annoying exactly once, and the alternative
+         * is a confirmation that means nothing.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        $fingerprint = $this->fingerprint($effect);
+
+        if (($validated['fingerprint'] ?? null) !== null && $validated['fingerprint'] !== $fingerprint) {
+            return redirect()
+                ->route('admin.settings')
+                ->with('status', 'The records this would change have moved since you looked. '
+                    .'Nothing was saved — start again so you are agreeing to the current figures.')
+                ->with('status_tone', 'warning');
+        }
+
+        $before = $setting['value'];
+
+        CompanySettings::put($setting['key'], $proposed, $request->user());
+
+        $this->audit->record(
+            action: AuditLog::SETTING_CHANGED,
+            actor: $request->user(),
+            entityType: 'setting',
+            entityId: $setting['key'],
+            before: $this->readable($before),
+            /*
+             * The effect, not just the value. §6's `after` is meant to describe
+             * what happened, and for these keys what happened is that records
+             * nobody edited now read differently — which the records themselves
+             * do not show.
+             */
+            after: $this->readable($proposed)
+                .($effect !== null && $effect['affected'] > 0 ? ' — '.$effect['summary'] : ''),
+            request: $request,
+        );
+
+        return redirect()
+            ->route('admin.settings')
+            ->with('status', $setting['label'].' saved.'
+                .($effect !== null && $effect['affected'] > 0 ? ' '.ucfirst($effect['summary']).'.' : ''))
+            ->with('status_tone', 'success');
     }
 
     /**
@@ -142,5 +243,44 @@ class SettingsController extends Controller
         }
 
         return (string) $proposed === (string) $current;
+    }
+
+    /**
+     * One string standing for the effect the person was shown.
+     *
+     * The summary and the count, hashed. Deliberately NOT the examples: those
+     * are a handful of illustrative rows and the order they come back in is not
+     * guaranteed, so including them would refuse saves that agree perfectly
+     * with what was on the screen.
+     *
+     * @param  array<string, mixed>|null  $effect
+     */
+    protected function fingerprint(?array $effect): string
+    {
+        if ($effect === null) {
+            // A setting with no retroactive effect has nothing to go stale.
+            return '';
+        }
+
+        return hash('sha256', $effect['affected'].'|'.$effect['people'].'|'.$effect['summary']);
+    }
+
+    /**
+     * A value in words, for the audit entry.
+     *
+     * "0, 6" is a correct and unreadable description of the weekly off, and the
+     * log is read by somebody who was not on the screen that produced it.
+     */
+    protected function readable(mixed $value): string
+    {
+        if (is_array($value)) {
+            return $value === [] ? 'none' : implode(', ', array_map('strval', $value));
+        }
+
+        if (is_bool($value)) {
+            return $value ? 'on' : 'off';
+        }
+
+        return (string) $value;
     }
 }

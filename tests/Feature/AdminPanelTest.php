@@ -5,9 +5,11 @@ namespace Tests\Feature;
 use App\Support\Admin\Retroactive;
 use App\Support\Admin\SettingsCatalogue;
 use App\Support\AttendancePolicy;
+use App\Models\MasterDataItem;
 use App\Support\Admin\AccessDirectory;
+use App\Support\Admin\CompanySettings;
+use App\Support\Admin\MasterDataDirectory;
 use App\Support\Demo\DemoAudit;
-use App\Support\Demo\DemoMasterData;
 use App\Support\Rbac\Rbac;
 use Tests\TestCase;
 
@@ -318,6 +320,131 @@ class AdminPanelTest extends TestCase
             'key' => 'app.key',
             'value' => 'nonsense',
         ])->assertNotFound();
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       SAVING A SETTING
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_a_saved_setting_takes_effect_and_survives_a_deploy(): void
+    {
+        /*
+         * Written to `company_settings`, not to a config file. A deployed
+         * application cannot edit its own source, and a value in a file is one
+         * the next deploy silently reverts — so the assertion is on the row as
+         * well as on the running value.
+         */
+        $this->withDemoData();
+
+        $this->assertSame(4.0, AttendancePolicy::halfDayHours());
+
+        $this->postWithToken('/admin/settings', [
+            'key' => 'attendance.half_day_hours',
+            'value' => '6',
+        ])->assertRedirect('/admin/settings');
+
+        $this->assertDatabaseHas('company_settings', ['key' => 'attendance.half_day_hours']);
+        $this->assertSame(6.0, AttendancePolicy::halfDayHours());
+    }
+
+    public function test_the_stored_value_wins_over_the_shipped_default_on_the_next_request(): void
+    {
+        /*
+         * The overlay, and the reason it is applied at boot rather than at each
+         * call site: twenty-odd places read these values, and a version where
+         * every one had to ask a settings service is a version where one forgot
+         * and quietly kept applying last year's rule.
+         */
+        $this->withDemoData();
+
+        $this->postWithToken('/admin/settings', [
+            'key' => 'attendance.half_day_hours',
+            'value' => '6',
+        ])->assertRedirect();
+
+        // A fresh request, with config rebuilt from the file defaults first.
+        config(['attendance.half_day_hours' => 4.0]);
+        CompanySettings::apply();
+
+        $this->assertSame(6.0, AttendancePolicy::halfDayHours());
+    }
+
+    public function test_a_key_outside_the_catalogue_cannot_be_written(): void
+    {
+        /*
+         * `config([$key => …])` with an unchecked key would let a posted field
+         * rewrite anything in the configuration. The catalogue is the
+         * definition of what a setting is, and the form is not the guard.
+         */
+        $this->withDemoData();
+
+        $this->postWithToken('/admin/settings', ['key' => 'app.key', 'value' => 'nonsense'])
+            ->assertNotFound();
+
+        $this->assertDatabaseCount('company_settings', 0);
+    }
+
+    public function test_a_save_against_a_stale_preview_is_refused(): void
+    {
+        /*
+         * The figures somebody read were computed on the previous request. If
+         * they have moved, the second step is agreement to a number nobody ever
+         * saw — so it sends them back to look at the new one rather than
+         * writing against the old.
+         */
+        $this->withDemoData();
+
+        $this->postWithToken('/admin/settings', [
+            'key' => 'attendance.half_day_hours',
+            'value' => '6',
+            'fingerprint' => 'a figure from some other afternoon',
+        ])->assertRedirect('/admin/settings');
+
+        $this->assertDatabaseCount('company_settings', 0);
+        $this->assertSame(4.0, AttendancePolicy::halfDayHours());
+    }
+
+    public function test_the_audit_entry_carries_the_effect_and_not_only_the_value(): void
+    {
+        $this->withDemoData();
+
+        $this->postWithToken('/admin/settings', [
+            'key' => 'attendance.half_day_hours',
+            'value' => '9',
+        ])->assertRedirect();
+
+        $entry = \Illuminate\Support\Facades\DB::table('audit_log')
+            ->where('action', \App\Support\Audit\AuditLog::SETTING_CHANGED)
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($entry);
+
+        // "half_day_hours: 4 → 9" is true and useless. What happened is that
+        // days already worked now read differently.
+        $this->assertStringContainsString('4', $entry->before_json);
+        $this->assertStringContainsString('re-judged', $entry->after_json);
+    }
+
+    public function test_a_set_valued_setting_round_trips_through_the_table(): void
+    {
+        /*
+         * The weekly off is a list of integers and the policy compares with a
+         * strict in_array. Flattened to a string on the way in and parsed back
+         * as strings on the way out, it would match no day at all — and the
+         * symptom is a weekly off that silently stops applying.
+         */
+        $this->withDemoData();
+
+        $this->postWithToken('/admin/settings', [
+            'key' => 'attendance.week_off',
+            'value' => ['0', '6'],
+        ])->assertRedirect();
+
+        config(['attendance.week_off' => [0]]);
+        CompanySettings::apply();
+
+        $this->assertSame([0, 6], config('attendance.week_off'));
     }
 
     /* ══════════════════════════════════════════════════════════════════════
@@ -662,7 +789,7 @@ class AdminPanelTest extends TestCase
 
     public function test_master_data_states_what_uses_a_row_before_it_is_retired(): void
     {
-        $this->withDemoData();
+        $this->seedDemoWorkforce();
 
         $body = $this->pageBody('/admin/master-data/departments');
 
@@ -671,15 +798,132 @@ class AdminPanelTest extends TestCase
         $this->assertStringContainsString('In use', $body);
         $this->assertStringContainsString('There is no delete', $body);
 
-        $departments = DemoMasterData::rows('departments');
-        $this->assertGreaterThan(0, $departments->sum('in_use'));
+        $this->assertGreaterThan(
+            0,
+            MasterDataDirectory::rows('departments')->sum('in_use'),
+            'no department has anybody in it, so this proves nothing',
+        );
+    }
+
+    public function test_an_uncountable_list_says_so_rather_than_reporting_zero(): void
+    {
+        /*
+         * My Profile files documents against a fixed set of kinds rather than
+         * against this list, so nothing anywhere points at these rows. Zero
+         * would read as "nothing uses this, retiring it costs nothing"; the
+         * truth is that nobody is looking.
+         */
+        $this->assertNull(MasterDataDirectory::totalInUse('document-types'));
+
+        $body = $this->pageBody('/admin/master-data/document-types');
+
+        $this->assertStringContainsString('Not counted', $body);
+        $this->assertStringNotContainsString('Nothing uses it', $body);
+    }
+
+    public function test_retiring_a_row_keeps_it_and_stops_offering_it(): void
+    {
+        $this->seedDemoWorkforce();
+
+        $item = MasterDataItem::query()->inList('departments')->active()->firstOrFail();
+
+        $this->postWithToken('/admin/master-data/departments/deactivate', ['item' => $item->id])
+            ->assertRedirect();
+
+        // Kept, not deleted. Everything pointing at it still reads correctly.
+        $this->assertDatabaseHas('master_data_items', ['id' => $item->id, 'is_active' => false]);
+
+        // And no longer offered where a new record would pick one.
+        $this->assertFalse(
+            MasterDataItem::query()->inList('departments')->active()->pluck('id')->contains($item->id),
+        );
+    }
+
+    public function test_the_last_active_row_in_a_list_cannot_be_retired(): void
+    {
+        /*
+         * An employee form with no departments to choose from creates nobody,
+         * and the person retiring the last one is looking at a row rather than
+         * at the list.
+         */
+        $this->seedDemoWorkforce();
+
+        MasterDataItem::query()->inList('departments')->active()->get()->skip(1)
+            ->each(fn (MasterDataItem $item) => $item->update(['is_active' => false]));
+
+        $last = MasterDataItem::query()->inList('departments')->active()->firstOrFail();
+
+        $this->postWithToken('/admin/master-data/departments/deactivate', ['item' => $last->id])
+            ->assertSessionHasErrors('item');
+
+        $this->assertTrue($last->fresh()->is_active);
+    }
+
+    public function test_adding_a_retired_code_back_brings_the_row_back_rather_than_duplicating_it(): void
+    {
+        /*
+         * Somebody retires Operations, then a year later adds it again. A
+         * second row would give the list two Operations, one of which quietly
+         * holds all the history.
+         */
+        $item = MasterDataItem::query()->inList('departments')->firstOrFail();
+
+        $item->update(['is_active' => false]);
+
+        $before = MasterDataItem::query()->inList('departments')->count();
+
+        $this->postWithToken('/admin/master-data/departments', [
+            'name' => $item->name,
+            'code' => $item->code,
+        ])->assertRedirect();
+
+        $this->assertSame($before, MasterDataItem::query()->inList('departments')->count());
+        $this->assertTrue($item->fresh()->is_active);
+    }
+
+    public function test_a_code_is_unique_within_its_list_and_not_across_the_table(): void
+    {
+        /*
+         * The four lists share a table because they share a shape and a screen.
+         * They are still four lists — refusing a document type its code because
+         * a department has one would be the table leaking onto the screen.
+         */
+        $department = MasterDataItem::query()->inList('departments')->firstOrFail();
+
+        $this->postWithToken('/admin/master-data/document-types', [
+            'name' => 'Something else entirely',
+            'code' => $department->code,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('master_data_items', [
+            'list' => 'document-types',
+            'code' => $department->code,
+        ]);
+
+        // And a genuine duplicate within one list is refused.
+        $this->postWithToken('/admin/master-data/departments', [
+            'name' => 'A new name',
+            'code' => $department->code,
+        ])->assertSessionHasErrors('code');
+    }
+
+    public function test_nothing_in_master_data_deletes(): void
+    {
+        // The whole rule, asserted on the router rather than on a page.
+        foreach (app('router')->getRoutes() as $route) {
+            if (! str_contains($route->uri(), 'master-data')) {
+                continue;
+            }
+
+            $this->assertNotContains('DELETE', $route->methods(), $route->uri().' accepts DELETE');
+            $this->assertStringNotContainsString('delete', $route->uri());
+        }
     }
 
     public function test_an_unknown_master_data_list_is_not_found(): void
     {
-        $this->withDemoData();
-
         $this->get('/admin/master-data/salaries')->assertNotFound();
+        $this->postWithToken('/admin/master-data/salaries', ['name' => 'X', 'code' => 'X'])->assertNotFound();
     }
 
     public function test_the_audit_entry_records_the_effect_and_not_only_the_value(): void

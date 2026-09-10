@@ -149,14 +149,16 @@
                         <input type="hidden" name="value" value="{{ $proposed }}">
                     @endif
 
-                    {{-- TODO (backend phase): re-compute the preview here and
-                         refuse if it has moved. The figures above are a
-                         snapshot, and between the two steps somebody may have
-                         checked in — confirming against a stale preview means
-                         agreeing to a number nobody ever saw. --}}
+                    {{-- What the figures above say, in one string. The save
+                         re-computes them and refuses if they have moved: the
+                         numbers on this page are a snapshot, and between the
+                         two steps somebody may have checked in — confirming
+                         against a stale preview means agreeing to a number
+                         nobody ever saw. --}}
+                    <input type="hidden" name="fingerprint" value="{{ $fingerprint }}">
+
                     <div class="dash-punch-action">
-                        <button class="btn btn-primary" type="submit" disabled
-                                title="Saving is not built yet" @disabled($unchanged)>
+                        <button class="btn btn-primary" type="submit" @disabled($unchanged)>
                             Save change
                         </button>
                         <a class="dash-link" href="{{ route('admin.settings') }}">Cancel</a>

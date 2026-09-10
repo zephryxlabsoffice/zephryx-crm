@@ -70,17 +70,33 @@ class MasterDataItem extends Model
     /**
      * How many records point at this row.
      *
-     * Only departments and designations are countable here; leave types and
-     * document types are counted by their own modules once those tables exist,
-     * and this returns null rather than zero for them. Zero would read as "no
-     * one is using this, safe to deactivate", which is a different and possibly
-     * wrong statement.
+     * ─────────────────────────────────────────────────────────────────────────
+     * THREE LISTS ARE COUNTABLE AND ONE IS NOT, AND THE NULL IS THE POINT
+     *
+     * Departments and designations are foreign keys on `employees`, so the
+     * count is a join. Leave types are matched on `leave_requests.type`, which
+     * holds the policy KEY — the seeder writes the code as its uppercase, so
+     * the two meet here and nowhere else. Not a foreign key, and worth saying
+     * out loud: it is the one list whose link to its records is a string
+     * convention.
+     *
+     * DOCUMENT TYPES ARE COUNTED BY NOTHING, AND THAT IS A REAL GAP.
+     *
+     * My Profile files a document against EmployeeDocument::KINDS — a fixed
+     * four — rather than against this list, so no record anywhere points at
+     * these rows. Returning null rather than 0 is the honest answer: 0 reads as
+     * "nothing uses this, retiring it costs nothing", and the truth is that
+     * nobody knows because nothing is looking. Recorded for the review round
+     * rather than patched over by making the profile upload read this list,
+     * which is a product decision about what a document type IS.
+     * ─────────────────────────────────────────────────────────────────────────
      */
     public function inUse(): ?int
     {
         return match ($this->list) {
             self::DEPARTMENTS => Employee::where('department_id', $this->id)->count(),
             self::DESIGNATIONS => Employee::where('designation_id', $this->id)->count(),
+            self::LEAVE_TYPES => LeaveRequest::where('type', mb_strtolower($this->code))->count(),
             default => null,
         };
     }

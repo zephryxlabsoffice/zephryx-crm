@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Support\Admin\AccessDirectory;
 use App\Support\Admin\AccountDirectory;
+use App\Support\Admin\MasterDataDirectory;
 use App\Support\Admin\SettingsCatalogue;
 use App\Support\Demo\DemoAudit;
-use App\Support\Demo\DemoMasterData;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
@@ -119,8 +119,8 @@ class DashboardController extends Controller
         }
 
         // A lookup list with nothing in it is a module nobody can use yet.
-        foreach (DemoMasterData::lists() as $key => $meta) {
-            if (DemoMasterData::rows($key)->isEmpty()) {
+        foreach (MasterDataDirectory::overview() as $meta) {
+            if ($meta['empty']) {
                 $items[] = [
                     'label' => $meta['label'].' is empty',
                     'count' => 0,

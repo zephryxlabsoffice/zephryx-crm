@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Http\View\Composers\ShellComposer;
+use App\Support\Admin\CompanySettings;
 use App\Support\Meetings\GoogleMeetProvider;
 use App\Support\Meetings\MeetingProvider;
 use App\Support\Navigation\NavigationGate;
@@ -62,6 +63,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * THE STORED SETTINGS, OVER THE SHIPPED DEFAULTS
+         *
+         * First, and before anything reads a policy value. Everything
+         * downstream keeps calling `config()` and knows nothing about the
+         * table — which is the only shape this could take safely, because
+         * twenty-odd call sites read these values and a version where each had
+         * to remember to ask a settings service is a version where one forgot.
+         *
+         * Silent when there is no table: this runs during `migrate` and on a
+         * fresh checkout. See App\Support\Admin\CompanySettings.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        CompanySettings::apply();
+
         // Bound to the layout, so no module has to remember to hand the shell
         // its own navigation, notifications or viewer details.
         View::composer('layouts.app', ShellComposer::class);

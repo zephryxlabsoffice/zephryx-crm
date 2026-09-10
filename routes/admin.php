@@ -97,12 +97,12 @@ Route::get('/master-data/{list}', [AdminMasterDataController::class, 'show'])
  * Note what is missing: DELETE. These lists are referenced by records that
  * already exist, so the destructive act available is deactivation — the row
  * stops being offered and keeps answering for history. See the head of
- * App\Support\Demo\DemoMasterData.
+ * App\Support\Admin\MasterDataDirectory.
  */
-Route::post('/master-data/{list}', fn () => abort(501))
+Route::post('/master-data/{list}', [AdminMasterDataController::class, 'store'])
     ->where('list', '[a-z-]{1,32}')
     ->name('master.store');
-Route::post('/master-data/{list}/deactivate', fn () => abort(501))
+Route::post('/master-data/{list}/deactivate', [AdminMasterDataController::class, 'deactivate'])
     ->where('list', '[a-z-]{1,32}')
     ->name('master.deactivate');
 
@@ -121,7 +121,7 @@ Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settin
  * bookmarked or written to an access log.
  */
 Route::post('/settings/preview', [AdminSettingsController::class, 'preview'])->name('settings.preview');
-Route::post('/settings', fn () => abort(501))->name('settings.update');
+Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
 
 /*
  * The audit log. GET only, in both senses — nothing writes to it through
