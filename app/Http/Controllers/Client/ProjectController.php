@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Support\Demo\DemoClientPortal;
-use App\Support\Demo\DemoEmployees;
+use App\Support\ClientPortal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -22,10 +21,10 @@ class ProjectController extends PortalController
         $client = $this->client($request);
 
         return response()->view('client.projects.index', $this->shell($request, 'projects') + [
-            'projects' => DemoClientPortal::projects($client)->map(
+            'projects' => ClientPortal::projects($client)->map(
                 fn (array $project) => $this->decorate($project)
             ),
-            'stats' => DemoClientPortal::stats($client)['projects'],
+            'stats' => ClientPortal::stats($client)['projects'],
         ]);
     }
 
@@ -33,7 +32,7 @@ class ProjectController extends PortalController
     {
         $client = $this->client($request);
 
-        $record = DemoClientPortal::project($client, $project);
+        $record = ClientPortal::project($client, $project);
 
         /*
          * Null covers both "no such project" and "not yours", and they get the
@@ -47,7 +46,7 @@ class ProjectController extends PortalController
             'project' => $this->decorate($record),
             // Client-visible updates only, and the ownership check runs again
             // inside this call rather than trusting the one above.
-            'updates' => DemoClientPortal::updates($client, $project),
+            'updates' => ClientPortal::updates($client, $project),
         ]);
     }
 
@@ -56,12 +55,23 @@ class ProjectController extends PortalController
      *
      * ─────────────────────────────────────────────────────────────────────────
      * Note what is NOT attached: the teams on the project, and their members.
-     * DemoProjects::teamsOf would hand over every employee's name, department
+     * ProjectDirectory::teamsOf would hand over every employee's name, department
      * and designation — the staff project page shows that, and it should. A
      * client gets the one person they actually deal with, the project manager.
      *
-     * This is the kind of thing that leaks by accident: `+ DemoProjects::find()`
+     * This is the kind of thing that leaks by accident: `+ ProjectDirectory::row()`
      * looks like a harmless convenience and quietly publishes the org chart.
+     *
+     * AND THAT IS EXACTLY WHAT THE ROW NOW CARRIES.
+     *
+     * ProjectDirectory::row is the staff shape, and its `manager_record` is a
+     * full EmployeeDirectory row — name, staff id, email, department,
+     * designation, joining date, date of birth. The client needs one field of
+     * it. So this REPLACES the key rather than adding one, which is why the
+     * override is written as an array merge with `$project` on the right and
+     * not as `$project + [...]`: the union operator keeps the left side's value
+     * for a key that already exists, and would have silently kept the staff
+     * record.
      * ─────────────────────────────────────────────────────────────────────────
      *
      * @param  array<string, mixed>  $project
@@ -69,15 +79,15 @@ class ProjectController extends PortalController
      */
     protected function decorate(array $project): array
     {
-        $manager = DemoEmployees::all()->firstWhere('user_id', $project['manager']);
+        $manager = $project['manager_record'] ?? null;
 
-        return $project + [
+        return array_merge($project, [
             'manager_record' => $manager === null ? null : [
                 'name' => $manager['name'],
                 // Their role on this project, not their designation, department
                 // or staff id. The client needs to know who to ask.
                 'designation' => 'Project Manager',
             ],
-        ];
+        ]);
     }
 }

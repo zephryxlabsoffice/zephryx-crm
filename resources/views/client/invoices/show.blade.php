@@ -35,13 +35,16 @@
         </div>
 
         <div class="hd-actions">
-            {{-- TODO (backend phase): generated and streamed through a route
-                 that re-checks ownership and audits the download. --}}
+            {{-- The printable copy. Not a PDF file — this host has no PDF
+                 library, so the route returns a page built for printing and
+                 says so, rather than shipping a file that claims to be a PDF
+                 and is not. Ownership is re-checked and the download is
+                 audited. See Client\InvoiceController::download. --}}
             <a class="btn btn-outline" href="{{ route('client.invoices.download', $invoice['id']) }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
-                Download PDF
+                Printable copy
             </a>
         </div>
     </div>

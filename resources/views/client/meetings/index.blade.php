@@ -21,7 +21,6 @@
         </div>
     </div>
 
-    @include('client.partials.switcher')
 
     <section class="kpi-row" aria-label="Meeting summary">
         @include('client.partials.stat', [

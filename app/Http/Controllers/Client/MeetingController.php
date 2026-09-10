@@ -6,7 +6,7 @@ use App\Models\Meeting;
 use App\Models\MeetingAttendee;
 use App\Models\Project;
 use App\Support\Audit\AuditLog;
-use App\Support\Demo\DemoClientPortal;
+use App\Support\ClientPortal;
 use App\Support\MeetingDirectory;
 use App\Support\MeetingPresenter;
 use Illuminate\Http\RedirectResponse;
@@ -51,12 +51,12 @@ class MeetingController extends PortalController
     {
         $client = $this->client($request);
 
-        $meetings = DemoClientPortal::meetings($client);
+        $meetings = ClientPortal::meetings($client);
 
         return response()->view('client.meetings.index', $this->shell($request, 'meetings') + [
             'meetings' => $this->paginate($meetings->sortByDesc('starts_at')->values(), $request),
-            'stats' => DemoClientPortal::stats($client)['meetings'],
-            'next' => DemoClientPortal::nextMeeting($client),
+            'stats' => ClientPortal::stats($client)['meetings'],
+            'next' => ClientPortal::nextMeeting($client),
         ]);
     }
 
@@ -68,7 +68,7 @@ class MeetingController extends PortalController
         return response()->view('client.meetings.create', $this->shell($request, 'meetings') + [
             // Their own projects only, and the write must re-check rather than
             // trusting what the select posts back.
-            'projects' => DemoClientPortal::projects($this->client($request)),
+            'projects' => ClientPortal::projects($this->client($request)),
             'zone' => MeetingPresenter::zone(),
         ]);
     }
@@ -91,9 +91,7 @@ class MeetingController extends PortalController
      */
     public function store(Request $request): RedirectResponse
     {
-        $client = $this->record($request);
-
-        abort_if($client === null, 403);
+        $client = $this->client($request);
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:200'],

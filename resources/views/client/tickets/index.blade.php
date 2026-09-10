@@ -21,7 +21,6 @@
         </div>
     </div>
 
-    @include('client.partials.switcher')
 
     <section class="kpi-row" aria-label="Ticket summary">
         @include('client.partials.stat', [
@@ -64,10 +63,6 @@
                     <span class="card-title">Your tickets</span>
 
                     <form class="table-tools" method="GET" action="{{ route('client.tickets.index') }}">
-                        @if ($previewing)
-                            <input type="hidden" name="as" value="{{ $previewing }}">
-                        @endif
-
                         <label class="sr-only" for="tk-status">Status</label>
                         <select class="chip-btn" id="tk-status" name="status" data-auto-submit>
                             <option value="">All statuses</option>

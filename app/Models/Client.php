@@ -29,7 +29,7 @@ class Client extends Model
 
     protected $fillable = [
         'reference', 'name', 'industry', 'status',
-        'contact_name', 'contact_email', 'contact_phone',
+        'contact_name', 'contact_email', 'contact_phone', 'billing_address',
         'account_manager_id', 'signed_on', 'notes',
     ];
 

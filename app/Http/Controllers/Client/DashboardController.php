@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Support\Demo\DemoClientPortal;
-use App\Support\Demo\DemoProjectUpdates;
+use App\Support\ClientPortal;
+use App\Models\ProjectUpdate;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -40,28 +40,28 @@ class DashboardController extends PortalController
     {
         $client = $this->client($request);
 
-        $projects = DemoClientPortal::projects($client);
+        $projects = ClientPortal::projects($client);
 
         return response()->view('client.dashboard', $this->shell($request, 'dashboard') + [
-            'stats' => DemoClientPortal::stats($client),
+            'stats' => ClientPortal::stats($client),
             'projects' => $projects->take(3),
             // Newest first: what a client opens the portal to read.
-            'tickets' => DemoClientPortal::tickets($client)->take(3),
-            'meetings' => DemoClientPortal::meetings($client)->take(2),
-            'nextMeeting' => DemoClientPortal::nextMeeting($client),
+            'tickets' => ClientPortal::tickets($client)->take(3),
+            'meetings' => ClientPortal::meetings($client)->take(2),
+            'nextMeeting' => ClientPortal::nextMeeting($client),
             /*
              * The most recent client-visible update across their projects.
-             * Internal notes cannot reach this: DemoClientPortal::updates
-             * filters on ownership and DemoProjectUpdates on visibility, and
-             * neither is optional. See the head of DemoProjectUpdates.
+             * Internal notes cannot reach this: ClientPortal::updates
+             * filters on ownership and ProjectUpdate on visibility, and
+             * neither is optional. See the head of ProjectUpdate.
              */
             'updates' => $projects
-                ->flatMap(fn (array $p) => DemoClientPortal::updates($client, $p['id'])
+                ->flatMap(fn (array $p) => ClientPortal::updates($client, $p['id'])
                     ->map(fn (array $u) => $u + ['project_record' => $p]))
                 ->sortByDesc('posted_at')
                 ->take(3)
                 ->values(),
-            'visibility' => DemoProjectUpdates::CLIENT,
+            'visibility' => ProjectUpdate::CLIENT,
         ]);
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Http\View\Composers;
 
 use App\Models\User;
-use App\Support\Demo\DemoClientPortal;
 use App\Support\Navigation\Navigation;
 use App\Support\NotificationDirectory;
 use App\Support\Realm;
@@ -61,7 +60,8 @@ class ShellComposer
      * client may share it, and naming an individual in the corner of every page
      * would imply a per-person account that does not exist.
      *
-     * TODO (backend phase): the signed-in account, from the session.
+     * All three names come from the session now. The branches below are what is
+     * left for a request with no account on it.
      *
      * @return array{name: string, role: string}
      */
@@ -76,24 +76,18 @@ class ShellComposer
 
         if ($realm === Realm::CLIENT) {
             /*
-             * The development client switcher changes whose portal is being
-             * viewed, so the topbar has to follow it — a page listing
-             * GreenLeaf's tickets under DGL's name in the corner is worse than
-             * either alone, because it makes a correctly-scoped page look
-             * broken and a broken one look correct.
+             * Only reachable signed out — a client with a session is named by
+             * the branch above, from `users.name`, which for a portal account
+             * holds the ORGANISATION's name (§2.2: a client account is a
+             * company, and several people there may share it).
              *
-             * Validated through knows(), which is empty outside local + debug,
-             * so `?as=` cannot put arbitrary text in the topbar and does
-             * nothing at all in a deployed portal.
+             * This used to read the `?as=` development switch, which changed
+             * whose portal was on screen and therefore had to change the corner
+             * of the page with it. The switch is gone with the fixture it was
+             * written for; what is left is the signed-out case, which names
+             * nobody.
              */
-            $previewed = $this->request->query('as');
-
-            return [
-                'name' => DemoClientPortal::knows(is_string($previewed) ? $previewed : null)
-                    ? $previewed
-                    : DemoClientPortal::viewer(),
-                'role' => 'Client',
-            ];
+            return ['name' => 'Signed out', 'role' => 'Client'];
         }
 
         if ($realm === Realm::ADMIN) {

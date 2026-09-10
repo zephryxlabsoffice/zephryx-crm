@@ -16,7 +16,7 @@ use Illuminate\Support\Carbon;
  *
  * `commentsFor()` takes the audience as a required argument, exactly as the
  * demo source did, and the client audience cannot reach an internal note. That
- * is the same shape as DemoClientPortal and ProjectUpdate::clientVisible: the
+ * is the same shape as ClientPortal and ProjectUpdate::clientVisible: the
  * §6 rule is kept by not providing the call that could break it, rather than by
  * a check in a template that somebody eventually forgets.
  * ═════════════════════════════════════════════════════════════════════════════

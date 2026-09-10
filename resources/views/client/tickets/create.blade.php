@@ -1,7 +1,5 @@
 @extends('layouts.app')
 
-@php use App\Support\TicketPresenter as TP; @endphp
-
 @section('title', 'Raise a ticket')
 
 @section('content')
@@ -18,12 +16,6 @@
         </div>
     </div>
 
-    @include('partials.notice', [
-        'tone' => 'info',
-        'title' => 'This form does not submit yet',
-        'message' => 'The fields and the validation shape are real; the write lands with the backend. Nothing typed here is stored and nobody is notified.',
-    ])
-
     <form method="POST" action="{{ route('client.tickets.store') }}">
         @csrf
 
@@ -38,15 +30,16 @@
                         <div class="form-grid">
                             <div class="form-field cl-form-wide">
                                 <label class="form-field-lbl" for="tk-subject">Subject</label>
-                                <input id="tk-subject" name="subject" type="text"
-                                       placeholder="Contact form is not sending enquiries" disabled>
+                                <input id="tk-subject" name="subject" type="text" maxlength="200" required
+                                       value="{{ old('subject') }}"
+                                       placeholder="Contact form is not sending enquiries">
                                 <span class="pay-hint">One line. What the problem is, not how urgent it feels.</span>
                             </div>
 
                             <div class="form-field cl-form-wide">
                                 <label class="form-field-lbl" for="tk-description">Details</label>
-                                <textarea id="tk-description" name="description" rows="6"
-                                          placeholder="What you did, what you expected, and what happened instead. A page address helps." disabled></textarea>
+                                <textarea id="tk-description" name="description" rows="6" maxlength="5000" required
+                                          placeholder="What you did, what you expected, and what happened instead. A page address helps.">{{ old('description') }}</textarea>
                             </div>
 
                             <div class="form-field">
@@ -60,23 +53,32 @@
                                     otherwise raising a ticket becomes a way to
                                     file one against somebody else's project.
                                 --}}
-                                <select id="tk-project" name="project" disabled>
+                                <select id="tk-project" name="project">
                                     <option value="">Not about a specific project</option>
                                     @foreach ($projects as $project)
-                                        <option value="{{ $project['id'] }}">{{ $project['name'] }}</option>
+                                        <option value="{{ $project['id'] }}" @selected(old('project') === $project['id'])>
+                                            {{ $project['name'] }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
 
-                            <div class="form-field">
-                                <label class="form-field-lbl" for="tk-priority">How urgent is it</label>
-                                <select id="tk-priority" name="priority" disabled>
-                                    @foreach ($priorities as $option)
-                                        <option value="{{ $option }}" @selected($option === 'medium')>{{ TP::priority($option)['label'] }}</option>
-                                    @endforeach
-                                </select>
-                                <span class="pay-hint">Your assessment. We may adjust it when we triage.</span>
-                            </div>
+                            {{--
+                                The urgency select that was here is gone.
+
+                                A ticket arrives unprioritised, and an
+                                unprioritised ticket is one nobody has looked at
+                                — not one judged unimportant. The queue sorts on
+                                that difference. Letting the person raising it
+                                set the priority makes every ticket high, which
+                                is the same as none of them being, and the staff
+                                form does not offer it either for the same
+                                reason.
+
+                                A field the write deliberately ignores is worse
+                                than no field: somebody sets it to Critical and
+                                believes they have been heard.
+                            --}}
                         </div>
                     </div>
                 </div>
@@ -96,9 +98,7 @@
                     </p>
 
                     <div class="dash-punch-action">
-                        <button class="btn btn-primary" type="submit" disabled title="Raising a ticket is not built yet">
-                            Submit ticket
-                        </button>
+                        <button class="btn btn-primary" type="submit">Submit ticket</button>
                     </div>
                 </section>
 

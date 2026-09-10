@@ -67,6 +67,34 @@
 
 /* ─────────────────────────  the document  ───────────────────────── */
 
+/*
+ * The printable copy.
+ *
+ * `.inv-print-note` explains what the page is and how to save it, and is hidden
+ * when the page is actually printed — a sheet of paper carrying an instruction
+ * about how to make a sheet of paper is the sort of thing nobody notices until
+ * it is filed with an invoice.
+ */
+.inv-print { max-width: 860px; margin: 0 auto; }
+
+.inv-print-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.inv-print-note p { margin: 0; font-size: 13px; color: var(--muted); }
+
+@media print {
+  .inv-print-note,
+  .standalone-top { display: none !important; }
+
+  .inv-print { max-width: none; }
+}
+
 .inv-doc-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;

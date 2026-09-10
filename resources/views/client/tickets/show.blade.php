@@ -18,7 +18,6 @@
         </div>
     </div>
 
-    @include('client.partials.switcher')
 
     <section class="dash-grid">
         <div class="dash-main">
@@ -34,7 +33,7 @@
                 composer and its "Internal note" button was not.
 
                 The comments themselves are filtered twice before they reach
-                here: DemoClientPortal::ticketComments applies ownership, then
+                here: ClientPortal::ticketComments applies ownership, then
                 pins the audience to AUDIENCE_CLIENT. There is no argument this
                 page could pass to ask for the staff thread.
             --}}
@@ -46,8 +45,7 @@
                 </div>
 
                 <div class="card-body">
-                    {{-- A real form with a CSRF token from day one. The write
-                         lands in the backend phase; a comment posted here is
+                    {{-- A comment posted here is
                          client-visible by construction, because the client
                          wrote it. --}}
                     <form method="POST" action="{{ route('client.tickets.comment', $ticket['id']) }}">
@@ -56,11 +54,12 @@
                         <div class="form-field">
                             <label class="form-field-lbl sr-only" for="ticket-reply">Your reply</label>
                             <textarea id="ticket-reply" name="body" rows="4"
-                                      placeholder="Add anything that would help — a page, a screenshot, what you expected to happen." disabled></textarea>
+                                      maxlength="5000" required
+                                      placeholder="Add anything that would help — a page, a screenshot, what you expected to happen.">{{ old('body') }}</textarea>
                         </div>
 
                         <div class="form-actions">
-                            <button class="btn btn-primary" type="submit" disabled title="Replying is not built yet">Post reply</button>
+                            <button class="btn btn-primary" type="submit">Post reply</button>
                         </div>
                     </form>
                 </div>

@@ -158,6 +158,12 @@ class AuditLog
     public const INVOICE_SENT = 'invoice.sent';
     public const INVOICE_PAYMENT_RECORDED = 'invoice.payment_recorded';
     public const INVOICE_CANCELLED = 'invoice.cancelled';
+    /*
+     * Who took a copy of the document, and when. Its own action rather than a
+     * read nobody records, because an invoice is the page that gets argued
+     * about on a call — "we never received it" is answered by this entry.
+     */
+    public const INVOICE_DOWNLOADED = 'invoice.downloaded';
 
     /*
      * Meetings. The two FAILED actions are here on purpose: a calendar event

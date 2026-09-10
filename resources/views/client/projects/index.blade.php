@@ -10,7 +10,6 @@
         <p>Everything we are building for you, and where each piece has reached.</p>
     </div>
 
-    @include('client.partials.switcher')
 
     <section class="kpi-row" aria-label="Project summary">
         @include('client.partials.stat', [

@@ -4,7 +4,7 @@
     use App\Support\Avatar;
     use App\Support\ClientPresenter as CP;
 
-    $status = CP::status($profile['status']);
+    $status = CP::status($profile->status);
 @endphp
 
 @section('title', 'My Profile')
@@ -15,25 +15,18 @@
         <p>Your organisation's details, and how to reach us.</p>
     </div>
 
-    @include('client.partials.switcher')
-
-    @include('partials.notice', [
-        'tone' => 'info',
-        'title' => 'Editing is not built yet',
-        'message' => 'The fields below show what is on file. Changing your contact details lands with the backend.',
-    ])
 
     <section class="dash-grid">
         <div class="dash-main">
             <section class="card">
                 <div class="card-body cl-profile-hd">
-                    <span class="avatar cl-profile-avatar {{ Avatar::tint($profile['name']) }}" aria-hidden="true">
-                        {{ Avatar::initials($profile['name']) }}
+                    <span class="avatar cl-profile-avatar {{ Avatar::tint($profile->name) }}" aria-hidden="true">
+                        {{ Avatar::initials($profile->name) }}
                     </span>
 
                     <div class="cl-profile-id">
-                        <h2>{{ $profile['name'] }}</h2>
-                        <span class="dash-quiet-meta">{{ $profile['industry'] }}</span>
+                        <h2>{{ $profile->name }}</h2>
+                        <span class="dash-quiet-meta">{{ $profile->industry }}</span>
                         <span class="pill {{ $status['tone'] }}">{{ $status['label'] }}</span>
                     </div>
                 </div>
@@ -65,27 +58,39 @@
                         <div class="form-grid">
                             <div class="form-field">
                                 <label class="form-field-lbl" for="cp-contact">Main contact</label>
-                                <input id="cp-contact" name="contact_name" type="text" value="" placeholder="Who we usually speak to" disabled>
+                                <input id="cp-contact" name="contact_name" type="text"
+                                       value="{{ old('contact_name', $profile->contact_name) }}"
+                                       maxlength="120" placeholder="Who we usually speak to">
                             </div>
 
                             <div class="form-field">
                                 <label class="form-field-lbl" for="cp-email">Email</label>
-                                <input id="cp-email" name="contact_email" type="email" value="" placeholder="name@company.com" disabled>
+                                <input id="cp-email" name="contact_email" type="email"
+                                       value="{{ old('contact_email', $profile->contact_email) }}"
+                                       maxlength="190" placeholder="name@company.com">
                             </div>
 
                             <div class="form-field">
                                 <label class="form-field-lbl" for="cp-phone">Phone</label>
-                                <input id="cp-phone" name="contact_phone" type="tel" value="" placeholder="+91 98765 43210" disabled>
+                                <input id="cp-phone" name="contact_phone" type="tel"
+                                       value="{{ old('contact_phone', $profile->contact_phone) }}"
+                                       maxlength="32" placeholder="+91 98765 43210">
                             </div>
 
                             <div class="form-field cl-form-wide">
-                                <label class="form-field-lbl" for="cp-address">Address</label>
-                                <textarea id="cp-address" name="address" rows="3" placeholder="Where invoices should be addressed" disabled></textarea>
+                                <label class="form-field-lbl" for="cp-address">Billing address</label>
+                                {{-- `billing_address`, not `address`. A client
+                                     organisation has a registered office, a
+                                     site we visit and a place to send invoices;
+                                     a field called "address" collects whichever
+                                     of the three came to mind. --}}
+                                <textarea id="cp-address" name="billing_address" rows="3" maxlength="500"
+                                          placeholder="Where invoices should be addressed">{{ old('billing_address', $profile->billing_address) }}</textarea>
                             </div>
                         </div>
 
                         <div class="form-actions">
-                            <button class="btn btn-primary" type="submit" disabled title="Saving is not built yet">Save changes</button>
+                            <button class="btn btn-primary" type="submit">Save changes</button>
                         </div>
                     </div>
                 </div>
@@ -99,10 +104,10 @@
                 <div class="card-body">
                     <div class="field-grid">
                         <span class="field-lbl">Organisation</span>
-                        <span class="field-val">{{ $profile['name'] }}</span>
+                        <span class="field-val">{{ $profile->name }}</span>
 
                         <span class="field-lbl">Industry</span>
-                        <span class="field-val">{{ $profile['industry'] }}</span>
+                        <span class="field-val">{{ $profile->industry }}</span>
 
                         <span class="field-lbl">Account status</span>
                         <span class="field-val">{{ $status['label'] }}</span>

@@ -10,7 +10,6 @@
         <p>What has been billed, what has been paid, and what is outstanding.</p>
     </div>
 
-    @include('client.partials.switcher')
 
     {{--
         Four tiles, computed from the same collection the table below lists.
@@ -67,10 +66,6 @@
                     {{-- A GET form, so a filtered list is a URL somebody can
                          bookmark and the back button behaves. --}}
                     <form class="table-tools" method="GET" action="{{ route('client.invoices.index') }}">
-                        @if ($previewing)
-                            <input type="hidden" name="as" value="{{ $previewing }}">
-                        @endif
-
                         <label class="sr-only" for="inv-status">Status</label>
                         <select class="chip-btn" id="inv-status" name="status" data-auto-submit>
                             <option value="">All statuses</option>

@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Route;
 | applications of this shape.
 |
 | Ownership is structural rather than remembered: every read in this group goes
-| through App\Support\Demo\DemoClientPortal, which takes the client as its first
+| through App\Support\ClientPortal, which takes the client record as its first
 | argument on every method and has no all(). A controller here cannot fetch a
 | record without saying whose it is, because no such call exists to write. Read
 | the head of that class before adding a page.
@@ -34,6 +34,10 @@ use Illuminate\Support\Facades\Route;
 | routes. The client is the session; the id in the URL is only ever a project,
 | invoice or ticket reference, and one belonging to somebody else 404s exactly
 | as an imaginary one does.
+|
+| The `?as=` development switch that used to override the session is gone with
+| the fixture it was written for. See App\Http\Controllers\Client\
+| PortalController.
 |
 */
 
@@ -50,12 +54,16 @@ Route::get('/invoices/{invoice}', [ClientInvoiceController::class, 'show'])
     ->name('invoices.show');
 
 /*
- * A PDF is generated and streamed through a route that checks ownership and
- * audits the download — never a static file under a guessable path, for the
- * same reason profile documents are not. An invoice names what a company
- * pays and for what.
+ * The document, through a route that checks ownership and audits the
+ * download — never a static file under a guessable path, for the same
+ * reason profile documents are not. An invoice names what a company pays
+ * and for what.
+ *
+ * It renders a printable page rather than generating a PDF: this host has no
+ * PDF library, and a route that returned a file claiming to be one would be
+ * worse than an honest page. See Client\InvoiceController::download.
  */
-Route::get('/invoices/{invoice}/download', fn () => abort(501))
+Route::get('/invoices/{invoice}/download', [ClientInvoiceController::class, 'download'])
     ->where('invoice', '[A-Za-z0-9-]{1,32}')
     ->name('invoices.download');
 
@@ -67,19 +75,18 @@ Route::get('/tickets/{ticket}', [ClientTicketController::class, 'show'])
     ->name('tickets.show');
 
 /*
- * The writes the backend phase implements.
- *
- * `tickets.store` must set the ticket's client from the SESSION and ignore
- * any client the form sends — otherwise raising a ticket becomes a way to
- * file one against somebody else. Same rule as the check-in routes taking
+ * `tickets.store` sets the ticket's client from the SESSION and there is no
+ * `client_id` in its validated set, so a posted one is dropped before it can
+ * be read — not overwritten afterwards, which is the version that breaks the
+ * day somebody reorders two lines. Same rule as the check-in routes taking
  * no employee.
  *
  * A comment posted here is always client-visible by construction: the
- * client wrote it. It must never be possible to post an internal note
- * through this route, whatever the payload says.
+ * client wrote it. `visibility` is not read from the request at all, so
+ * there is no branch that could be made to post an internal note.
  */
-Route::post('/tickets', fn () => abort(501))->name('tickets.store');
-Route::post('/tickets/{ticket}/comment', fn () => abort(501))
+Route::post('/tickets', [ClientTicketController::class, 'store'])->name('tickets.store');
+Route::post('/tickets/{ticket}/comment', [ClientTicketController::class, 'comment'])
     ->where('ticket', '[A-Za-z0-9-]{1,32}')
     ->name('tickets.comment');
 
@@ -102,5 +109,14 @@ Route::get('/profile', [ClientProfileController::class, 'show'])->name('profile.
  * about their projects or what they owe — those are ours, and a form
  * letting a client edit them would make the record meaningless.
  */
-Route::post('/profile', fn () => abort(501))->name('profile.update');
-Route::post('/profile/photo', fn () => abort(501))->name('profile.photo');
+Route::post('/profile', [ClientProfileController::class, 'update'])->name('profile.update');
+
+/*
+ * Still 501, and deliberately. A client account is an ORGANISATION, not a
+ * person, so what this would upload is a company LOGO — which appears on
+ * invoices, belongs in the client record we keep, and raises a question
+ * nobody has answered: whether a client may set the image that appears on
+ * their own invoice. The staff photo landed because a person's own
+ * photograph is unambiguously theirs. This one waits for a decision.
+ */
+Route::post('/profile/photo', [ClientProfileController::class, 'photo'])->name('profile.photo');

@@ -31,7 +31,7 @@ use Illuminate\Support\Collection;
  *
  * There is deliberately NO `all()` returning both kinds to a caller who then
  * filters. The client portal calls clientVisibleFor() and cannot reach the
- * others; see the head of DemoClientPortal for why that shape rather than a
+ * others; see the head of ClientPortal for why that shape rather than a
  * check in the view.
  * ═════════════════════════════════════════════════════════════════════════════
  *

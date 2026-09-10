@@ -24,7 +24,6 @@
         </div>
     </div>
 
-    @include('client.partials.switcher')
 
     <section class="dash-grid">
         <div class="dash-main">
@@ -82,26 +81,20 @@
                                     <strong>{{ $update['title'] }}</strong>
                                     <p>{{ $update['body'] }}</p>
 
-                                    @if ($update['attachments'] !== [])
-                                        <div class="attachment-grid">
-                                            @foreach ($update['attachments'] as $file)
-                                                {{-- TODO (backend phase): served through a route that
-                                                     re-checks ownership and audits the download, never a
-                                                     static path. Same rule as profile documents. --}}
-                                                <span class="attachment">
-                                                    <span class="attachment-ic ft-pdf" aria-hidden="true">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>
-                                                        </svg>
-                                                    </span>
-                                                    <span class="attachment-body">
-                                                        <strong>{{ $file['name'] }}</strong>
-                                                        <span>{{ $file['kind'] }} · {{ $file['size'] }}</span>
-                                                    </span>
-                                                </span>
-                                            @endforeach
-                                        </div>
-                                    @endif
+                                    {{--
+                                        The attachment grid that was here is
+                                        gone with the fixture that fed it.
+
+                                        `project_updates` has no attachment
+                                        table behind it and never had one — the
+                                        files were invented for the mockup. The
+                                        markup rendered nothing against real
+                                        rows and would have gone on rendering
+                                        nothing forever, which is worse than its
+                                        absence: it reads as a feature that is
+                                        broken rather than one that was never
+                                        built. It comes back with the table.
+                                    --}}
                                 </li>
                             @endforeach
                         </ol>

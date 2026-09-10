@@ -15,7 +15,6 @@
         <p>Where your work with ZephryxLabs stands today.</p>
     </div>
 
-    @include('client.partials.switcher')
 
     {{--
         Two actions, not four navigation cards.
