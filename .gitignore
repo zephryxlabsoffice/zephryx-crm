@@ -35,7 +35,13 @@
 /.phpunit.cache
 
 # Uploads (stored outside the web root in production, spec §6)
+#
+# `/storage/app/private` is where Laravel's `local` disk points, and therefore
+# where App\Support\Documents\DocumentStore writes everything — payslips,
+# identity documents, profile photos. None of it is source, and the test suite
+# writes real files there on every run.
 /storage/app/uploads/
+/storage/app/private/
 
 # Editor / OS
 .DS_Store
