@@ -3,7 +3,11 @@
 namespace Tests\Feature;
 
 use App\Support\Dashboard\DashboardComposer;
-use App\Support\Demo\DemoRoles;
+use App\Models\Employee;
+use App\Models\Role;
+use App\Models\User;
+use App\Support\Rbac\Rbac;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
@@ -22,17 +26,55 @@ class DashboardPageTest extends TestCase
         parent::setUp();
 
         /*
-         * Every route in the staff realm is behind `realm:staff` now (§3.1), so
-         * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
-         * and the permission filtering have their own tests.
+         * ─────────────────────────────────────────────────────────────────────
+         * A SEEDED PERSON, NOT A BARE ACCOUNT
+         *
+         * Every route in the staff realm is behind `realm:staff` (§3.1), so a
+         * page test has to be somebody. It now has to be somebody with an
+         * EMPLOYMENT RECORD as well: the personal widgets read the viewer's own
+         * tasks, leave, attendance and pay, and a `User` with no `employees`
+         * row would render every one of them empty — passing the assertions
+         * about what is hidden and proving nothing about what is shown.
+         *
+         * The dashboard used to paper over exactly this with a fallback to a
+         * fixed demo employee. That fallback is gone, and this is what
+         * replaced it.
+         * ─────────────────────────────────────────────────────────────────────
          */
-        $this->signInAsStaff();
+        $this->seedDemoWorkforce();
+
+        /*
+         * A CEO, because this file is about what the page RENDERS rather than
+         * about who may see it — the guard and the permission filtering have
+         * their own tests, and the preview below can only narrow what this
+         * account already holds.
+         *
+         * With an employment record attached, which `signInAsStaff` does not
+         * create: `staff_kind` of `employee` and no `employees` row is a state
+         * the application never produces, and it made every personal widget
+         * render empty.
+         */
+        $user = $this->signInAsStaff(['ceo']);
+
+        Employee::create([
+            'user_id' => $user->id,
+            'joined_on' => Carbon::today()->subYear(),
+        ]);
     }
+
     protected function withDemoData(): void
     {
         $this->app->detectEnvironment(fn () => 'local');
         config(['app.debug' => true]);
+    }
+
+    protected function signInAsSeeded(string $staffId): User
+    {
+        $user = User::where('user_id', $staffId)->firstOrFail();
+
+        app(Rbac::class)->forget($user);
+
+        return tap($user, fn (User $u) => $this->actingAs($u));
     }
 
     public function test_it_renders(): void
@@ -44,7 +86,9 @@ class DashboardPageTest extends TestCase
 
     public function test_it_greets_the_viewer_by_their_first_name(): void
     {
-        $this->withDemoData();
+        // The name comes from the ACCOUNT, not the employment record, so a
+        // Mentor — who has no record — is still greeted properly.
+        $this->signInAsSeeded('EMP002');
 
         $body = $this->pageBody('/dashboard');
 
@@ -57,10 +101,13 @@ class DashboardPageTest extends TestCase
     {
         $this->withDemoData();
 
-        $this->assertNotEmpty(DemoRoles::keys());
+        $roles = Role::pluck('role_key');
 
-        // Driven off the registry, so a role added to it cannot skip the check.
-        foreach (DemoRoles::keys() as $role) {
+        $this->assertNotEmpty($roles);
+
+        // Driven off the roles table, so a role added there cannot skip the
+        // check — the preview reads the real definitions now.
+        foreach ($roles as $role) {
             $this->get('/dashboard?as='.$role)->assertOk();
         }
     }
@@ -144,13 +191,13 @@ class DashboardPageTest extends TestCase
          * it — a preview that added a widget would be a privilege-escalation
          * query parameter.
          */
-        foreach (DemoRoles::all() as $key => $role) {
-            $body = $this->pageBody('/dashboard?as='.$key);
+        foreach (Role::all() as $role) {
+            $body = $this->pageBody('/dashboard?as='.$role->role_key);
 
             $this->assertLessThanOrEqual(
                 substr_count($everything, '<section class="card'),
                 substr_count($body, '<section class="card'),
-                $role['label'].' renders more cards than the unfiltered page',
+                $role->role_name.' renders more cards than the unfiltered page',
             );
         }
     }
@@ -170,8 +217,8 @@ class DashboardPageTest extends TestCase
     public function test_the_preview_switcher_does_not_exist_outside_local_debug(): void
     {
         /*
-         * It is a development affordance. DemoRoles returns an empty registry
-         * anywhere else, and the whole block disappears with it.
+         * It is a development affordance, gated on local + debug, and the
+         * whole block disappears with it.
          *
          * Asserted against the page body and on the block's own class: the
          * topbar carries the words "Development preview" as a placeholder role
@@ -235,15 +282,5 @@ class DashboardPageTest extends TestCase
         $this->assertSame(0, preg_match_all('/\sstyle="/i', $html), 'inline style attribute');
         $this->assertSame(0, preg_match_all('/\son[a-z]+="/i', $html), 'inline event handler');
         $this->assertSame(0, preg_match_all('/<script(?![^>]*\ssrc=)/i', $html), 'inline <script> block');
-    }
-
-    public function test_it_renders_its_empty_states_without_demo_data(): void
-    {
-        // Outside local + debug every Demo source returns nothing. A deployed
-        // dashboard must show that honestly rather than failing on a missing
-        // key or inventing activity.
-        $this->get('/dashboard')
-            ->assertOk()
-            ->assertDontSee('Amit Verma', false);
     }
 }

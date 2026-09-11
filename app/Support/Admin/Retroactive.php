@@ -2,13 +2,14 @@
 
 namespace App\Support\Admin;
 
+use App\Models\Employee;
+use App\Support\AttendanceDirectory;
 use App\Support\AttendancePolicy;
 use App\Support\AttendancePresenter;
-use App\Support\Demo\DemoAttendance;
-use App\Support\Demo\DemoEmployees;
-use App\Support\Demo\DemoLeave;
+use App\Support\LeaveDirectory;
 use App\Support\LeavePolicy;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * What a settings change would do to records that already exist.
@@ -80,10 +81,6 @@ class Retroactive
      */
     protected static function attendance(string $key, mixed $proposed): array
     {
-        if (! DemoAttendance::enabled()) {
-            return self::nothing();
-        }
-
         $before = self::attendanceStates();
 
         $original = config($key);
@@ -134,7 +131,7 @@ class Retroactive
                 $added = true;
 
                 $changes[] = [
-                    'who' => DemoEmployees::all()->firstWhere('user_id', $employee)['name'] ?? $employee,
+                    'who' => self::names()[$employee] ?? $employee,
                     'when' => AttendancePresenter::date($entries[$round]['date']),
                     'from' => AttendancePresenter::state($entries[$round]['from'])['label'],
                     'to' => AttendancePresenter::state($entries[$round]['to'])['label'],
@@ -174,11 +171,11 @@ class Retroactive
     {
         $states = [];
 
-        foreach (DemoEmployees::all()->where('status', '!=', 'inactive') as $employee) {
-            $id = $employee['user_id'];
+        foreach (self::workforce() as $employee) {
+            $id = (string) $employee->id;
 
-            $records = DemoAttendance::forEmployee($id)->keyBy('date');
-            $leaveDates = DemoAttendance::leaveDates($id);
+            $records = AttendanceDirectory::forEmployee($employee, self::WINDOW_DAYS)->keyBy('date');
+            $leaveDates = AttendanceDirectory::leaveDates($employee->id);
 
             for ($offset = 0; $offset < self::WINDOW_DAYS; $offset++) {
                 $date = Carbon::today()->subDays($offset);
@@ -208,10 +205,6 @@ class Retroactive
      */
     protected static function leave(string $key, mixed $proposed): array
     {
-        if (! DemoLeave::enabled()) {
-            return self::nothing();
-        }
-
         // leave.types.casual.days → casual
         $type = explode('.', $key)[2] ?? null;
 
@@ -223,8 +216,8 @@ class Retroactive
         $changes = [];
         $over = 0;
 
-        foreach (DemoEmployees::all()->where('status', '!=', 'inactive') as $employee) {
-            $balance = LeavePolicy::balance(DemoLeave::forEmployee($employee['user_id']));
+        foreach (self::workforce() as $employee) {
+            $balance = LeavePolicy::balance(LeaveDirectory::forEmployee($employee));
 
             $row = collect($balance['types'])->firstWhere('key', $type);
 
@@ -236,7 +229,7 @@ class Retroactive
 
             if (count($changes) < 8) {
                 $changes[] = [
-                    'who' => $employee['name'],
+                    'who' => $employee->user?->name ?? $employee->id,
                     'when' => 'This year',
                     'from' => $row['taken'].' of '.$row['entitlement'].' taken',
                     'to' => $row['taken'].' of '.$proposed.' — over by '.($row['taken'] - $proposed),
@@ -252,6 +245,43 @@ class Retroactive
                 : self::plural($over, 'person', 'people').' would be over the new allowance.',
             'changes' => $changes,
         ];
+    }
+
+    /**
+     * Everybody a settings change could land on.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * ACTIVE ACCOUNTS ONLY, AND THAT IS A JUDGEMENT WORTH STATING
+     *
+     * A closed record's attendance would be re-judged by the same rule change,
+     * and its history is genuinely rewritten too. It is left out because the
+     * confirmation is a warning about consequences somebody has to act on, and
+     * "3 days for a person who left in March" is noise in front of the number
+     * that matters.
+     *
+     * The rule still applies to them. This is a preview, not the change.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * @return Collection<int, Employee>
+     */
+    protected static function workforce(): Collection
+    {
+        return Employee::query()->with('user')->active()->get();
+    }
+
+    /**
+     * Employee id to name, resolved once.
+     *
+     * The example rows name people, and looking each one up inside the loop
+     * would be a query per example on a form submit.
+     *
+     * @return array<string, string>
+     */
+    protected static function names(): array
+    {
+        return self::workforce()
+            ->mapWithKeys(fn (Employee $e) => [(string) $e->id => (string) $e->user?->name])
+            ->all();
     }
 
     protected static function plural(int $n, string $singular, ?string $plural = null): string

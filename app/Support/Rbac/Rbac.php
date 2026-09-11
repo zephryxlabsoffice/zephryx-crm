@@ -67,6 +67,21 @@ class Rbac
     ];
 
     /**
+     * The one role whose holders carry no Employee base.
+     *
+     * §2.1: "a Mentor is staff and has none of it." The base is granted by
+     * `staff_kind` and never by a role, so this constant is NOT how the engine
+     * decides anything — `permissionsFor` reads the column, as it must.
+     *
+     * It exists because a role NAME is sometimes used to stand for the kind of
+     * account that holds it: the dashboard's development preview builds "what
+     * a Mentor sees" out of a role, and a Mentor with an Employee base is not a
+     * Mentor. Written here rather than in that controller so the exception sits
+     * beside the rule it qualifies.
+     */
+    public const NO_EMPLOYEE_BASE_ROLE = 'mentor';
+
+    /**
      * What a client account can reach, by virtue of being one.
      *
      * Implicit for the same reason as the Employee base: these are not a

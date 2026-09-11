@@ -180,6 +180,7 @@ class AdminPanelTest extends TestCase
 
     public function test_changing_the_half_day_threshold_reports_what_it_would_reclassify(): void
     {
+        $this->seedDemoWorkforce();
         $this->withDemoData();
 
         // Well above the current threshold, so days that count as full become
@@ -242,6 +243,7 @@ class AdminPanelTest extends TestCase
 
     public function test_a_setting_whose_value_is_a_set_previews_correctly(): void
     {
+        $this->seedDemoWorkforce();
         $this->withDemoData();
 
         /*
@@ -334,6 +336,7 @@ class AdminPanelTest extends TestCase
          * the next deploy silently reverts — so the assertion is on the row as
          * well as on the running value.
          */
+        $this->seedDemoWorkforce();
         $this->withDemoData();
 
         $this->assertSame(4.0, AttendancePolicy::halfDayHours());
@@ -406,6 +409,7 @@ class AdminPanelTest extends TestCase
 
     public function test_the_audit_entry_carries_the_effect_and_not_only_the_value(): void
     {
+        $this->seedDemoWorkforce();
         $this->withDemoData();
 
         $this->postWithToken('/admin/settings', [
@@ -928,6 +932,7 @@ class AdminPanelTest extends TestCase
 
     public function test_the_audit_entry_records_the_effect_and_not_only_the_value(): void
     {
+        $this->seedDemoWorkforce();
         $this->withDemoData();
 
         $this->postWithToken('/admin/settings', [
