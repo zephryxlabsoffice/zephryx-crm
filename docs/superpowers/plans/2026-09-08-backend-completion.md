@@ -155,51 +155,148 @@ follow-up answer. Nothing here is built yet.
 
 - **Status:** Active / Inactive (replaces the project-style statuses).
 - **No Leads module.** The unused `leads.view` permission goes.
-- **No GST billing fields.** Invoices will be uploaded like payslips, not
-  generated. *(open: this reverses the built Invoices module.)*
+- **No GST billing fields.** Invoices are uploaded like payslips, not
+  generated. Amount, due date and bank payments are still recorded by hand, so
+  overdue and balance keep working. **No payment gateway** — everything is
+  bank to bank. *(This reverses the built line-item invoice builder.)*
 - **Country and currency** per client.
 - **Several contacts** per client, but **one login** per client, which sees
-  everything for that client (projects, invoices, tickets, meetings).
+  everything for that client (projects, invoices, tickets, meetings). The
+  login uses whichever email the client gives us; who at their end uses it is
+  their business. A client is one entity.
+  (Employees differ: work email is the sign-in, personal email is record only.)
 - **No delete**, only Inactive. **One account manager.**
 - **Signed date only.** Agreements and other documents are kept as hardcopy.
 
-## PENDING — resume the review round here
+### Teams
 
-Asked 2026-09-11, not yet answered. Re-ask exactly these, in this format
-(short, point-wise, ⭐ = recommendation), then continue module by module:
-Tasks → Attendance → Leave → Salary → Tickets → Invoices → Meetings →
-Announcements → Notifications → Profile → Admin.
+- **Status:** Active / Inactive only — "Archived" goes.
+- An employee may be in several teams. **One lead** per team.
+- **Interns can be members; freelancers cannot.**
 
-**Clients: checks**
+### Projects
 
-1. ⚠️ Invoices are currently BUILT by the CRM (line items, totals, payments,
-   send). Owner said "upload like payslips".
-   a) Switch to upload: PDF + amount + due date, payments still recorded so
-      overdue/balance keeps working ⭐
-   b) Upload the PDF only, with no amounts or payment tracking
-2. Several contacts but one login — whose email is the login?
-   a) A separate company login email, and contacts are just for reference ⭐
-   b) One chosen contact's email
+- **Progress % is derived from completed tasks**, not typed in.
+- Statuses stay: Planning / In progress / Review / On hold / Completed /
+  Cancelled.
+- **Reference:** `PRJ-YYYY-NNN` (the type code becomes the fixed `PRJ`).
+- Work is assigned to **whole teams and to individuals**.
+- **No project value or budget** in the CRM.
+- The client sees status, progress, deadline and client-visible updates only.
+- **No delete anywhere** — everything is documentation for later.
 
-**Teams** (today: name, purpose, lead, status Active/Inactive/Archived,
-formed date, members)
+### Tasks
 
-3. Statuses: a) keep all 3  b) Active / Inactive only ⭐
-4. Can one employee be in more than one team? a) Yes ⭐  b) No
-5. Team lead: a) one lead per team ⭐  b) several leads
-6. Can interns and freelancers be team members? a) Both  b) Interns only
+- **Several assignees** per task — a task can go to a team and flow to its
+  members.
+- **Comments and file attachments** on a task. **No time tracking.**
+- Created by Manager and Team Lead only.
+- A ticket can be turned into a task.
 
-**Projects** (today: client, manager, teams, progress %, status, priority,
-start date, deadline, updates internal/client-visible)
+### File storage — applies to every module
 
-7. Progress %: a) typed in by the manager (current)  b) worked out from
-   completed tasks ⭐
-8. Statuses Planning / In progress / Review / On hold / Completed / Cancelled:
-   a) fine as is ⭐  b) change them
-9. Project ID (now `WD-2024-001`): a) keep it  b) use a ZEPH style (owner
-   gives the format)
-10. Who works on a project: a) whole teams  b) individual people  c) both ⭐
-11. Project value or budget: a) not in the CRM ⭐  b) add a project value
-12. What the client sees: a) status, progress, deadline and client-visible
-    updates ⭐  b) also their tasks
-13. Deleting a project: a) no delete, only Cancelled ⭐  b) allow delete
+- **All uploaded files live on Google Drive, reached through an index**, not on
+  the server disk. Website assets (logos and the like) are the exception.
+  *(open: mechanism, and what happens to the payslip / photo / attachment
+  storage already built on a private local disk. Owner will explain.)*
+
+### Attendance
+
+- Clock in from anywhere for now. Office-IP vs other-IP handling comes later —
+  the owner has a logic for it and will explain.
+- **No WFH marking. No "late" status.**
+- A day left open stays **rejected**; there is no correction request.
+- **No attendance export here** — it belongs to a Reports module shipped as
+  v1.2 after go-live.
+
+### Leave
+
+- **The leave year runs from each employee's own joining month**, not a company
+  year. Unused days lapse at the end of it.
+- **Earned monthly**, not granted up front. Leave starts from day one — there
+  is no probation rule, because everyone is hired as an intern first.
+- **Interns get the same leave as full-time.**
+- Beyond the balance, days become **Unpaid automatically**.
+- **Full days only, no half-day leave.**
+- Sick leave of 3 days or more needs a medical certificate — **emailed to the
+  office, not uploaded**. The request carries a "certificate emailed" tick HR
+  sets when it arrives.
+- **Privilege leave is granted in full** at the start of each employee's own
+  year (it can be taken in month one or month twelve). Casual and sick accrue
+  monthly — and **sick leave is granted in full** as well.
+- **Comp-off:** half a Sunday earns nothing — only a full day earns one
+  (overrides the earlier half-comp-off answer), which keeps leave full-day only.
+  "Full day" is the ordinary 4-hour present threshold.
+
+### Salary
+
+- LOP, bonus, incentive and arrears are all absorbed into the one monthly
+  amount; HR works them out outside the CRM. A **rejected attendance day is
+  fixed by HR in the payroll sheet outside the CRM**, not in it.
+- HR and CEO mark a salary paid. The employee sees only their own payslips and
+  paid status. Freelancer payments stay out of the CRM. **HR types the monthly
+  amount**; the CRM does not compute it.
+
+### Tickets
+
+- Statuses stay as built. Priority is set by staff at triage, never by the
+  client. Categories and departments come from Master Data.
+- Attachments allowed (storage per the Drive decision above).
+- **Closed is final.** A new ticket can reference the previous one, and closes
+  it. **No SLA targets** for now.
+
+### Meetings
+
+- The Google Calendar / Meet link stays automatic. If Google fails the meeting
+  is still saved and a link can be added later.
+- **No CRM reminders** (Google's own are enough) and **no recurring meetings**.
+
+### Announcements
+
+- Categories move to Master Data.
+- Audience stays everyone or one department, plus a **"clients" marking** —
+  clients see an announcement only when it is marked for them.
+
+### Notifications
+
+- **In-app only**, no email.
+- A new client ticket notifies the **Support role and the Project Manager**
+  first; once they assign it, the assignee is notified too.
+
+### My Profile
+
+- The employee edits photo, phone, address and emergency contact themselves.
+  Changes apply immediately and are audited. No HR approval step.
+
+### Security
+
+- **Two-factor by email OTP for every account**, on a new device or browser
+  only, then trusted for 30 days.
+- **No idle sign-out.** These are office machines.
+- **Audit entries are kept forever.** Backups are handled on cPanel, not by
+  the CRM.
+
+### Client portal
+
+- Clients may raise tickets, reply to them and request meetings — no comments
+  on project updates.
+- Invoices: they see and download the uploaded PDF and its paid/unpaid state.
+- They may edit their phone and contact person only.
+
+### Admin panel and permissions
+
+- Admin panel, role changes, master data and company settings: **CEO and
+  System Administrator**. Master data may also be edited by HR.
+- Company settings are **CEO only**.
+
+### Everyone, including the top
+
+- CEO and HR clock in like everyone else. The CEO's leave is recorded and
+  auto-approved — nobody approves it.
+- Closing an employee record warns about their open tasks first, so they can
+  be reassigned.
+
+### Support
+
+- The sidebar "Support" link opens a page with two buttons: raise a ticket
+  (goes to the ticket form) and email us (opens mail).
