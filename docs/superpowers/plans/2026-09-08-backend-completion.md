@@ -300,3 +300,27 @@ follow-up answer. Nothing here is built yet.
 
 - The sidebar "Support" link opens a page with two buttons: raise a ticket
   (goes to the ticket form) and email us (opens mail).
+
+## RESUME HERE — the rework order (agreed 2026-09-12)
+
+The review round is finished. Nothing below is built. The original module
+order at the top of this plan is superseded by this one, because the decisions
+change modules that are already committed.
+
+1. **Employee record and the ZEPH ID scheme** — everything hangs off it: type
+   (full-time / intern / freelance), ID proof, PAN, addresses, bank, salary
+   breakdown, masking rules, convert-to-full-time.
+2. **Clients → Teams → Projects → Tasks** — client statuses, country and
+   currency, contacts; "Archived" off teams; derived project progress and
+   `PRJ-YYYY-NNN`; task comments, attachments and several assignees.
+3. **Attendance roster and comp-off → Leave year rules** — Sunday roster,
+   comp-off earning and expiry; the per-employee leave year, monthly casual
+   accrual, privilege and sick granted in full.
+4. **Salary → the Invoices rewrite** — the line-item builder is replaced by an
+   uploaded PDF with amount, due date and hand-recorded bank payments. This is
+   the largest single change.
+5. **Tickets, Meetings, Announcements, Notifications, Profile.**
+6. **2FA on new devices, the Support page, Admin tidy-up.**
+
+Storage moves to Google Drive as one job, once the owner explains the "index"
+mechanism. The office-IP attendance logic also waits on their explanation.
