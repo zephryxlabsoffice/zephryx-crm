@@ -96,6 +96,10 @@
                 </dl>
             </div>
 
+            @if ($identity !== null)
+                @include('employees.partials.identity', ['identity' => $identity])
+            @endif
+
             @if ($mayDeactivate)
                 <div class="card att-reject">
                     <div class="section-hd">

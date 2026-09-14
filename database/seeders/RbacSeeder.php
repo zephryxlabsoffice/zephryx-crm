@@ -97,6 +97,14 @@ class RbacSeeder extends Seeder
         // not clerical ones — see MODULE_WRITES.
         'employees.create',
         'employees.deactivate',
+        /*
+         * Somebody else's identity documents and bank details. Sensitive for
+         * the reason the whole module is careful: `employees.view` is the
+         * directory, which every role above Employee holds so that people can
+         * find a colleague. Looking up who is in Design must not be the same
+         * act as reading their passport number.
+         */
+        'employees.identifiers',
         // Creates an account that can read one company's invoices. Recording
         // that the company exists is not sensitive; handing over a login is.
         'clients.invite',
@@ -208,6 +216,29 @@ class RbacSeeder extends Seeder
     ];
 
     /**
+     * Reads that have to be declared, because nothing else would discover them.
+     *
+     * `permissionKeys()` finds a key in one of three ways: a sidebar entry, a
+     * dashboard widget, or MODULE_WRITES. A permission that gates a SECTION of
+     * a page rather than the page itself is none of those — it opens no
+     * navigation entry and changes nothing.
+     *
+     * Left undeclared, the row would simply not exist, and a permission with no
+     * row cannot be granted by anybody: Rbac::can resolves from the table, so
+     * the gate would fail closed and HR would be refused silently rather than
+     * loudly. That is the failure this list exists to prevent.
+     *
+     * It is NOT part of MODULE_WRITES, though adding it there would have worked
+     * — a read filed under a constant documented as "write permissions" is the
+     * kind of small lie that makes the next person mistrust the whole file.
+     *
+     * @var list<string>
+     */
+    public const MODULE_READS = [
+        'employees.identifiers',
+    ];
+
+    /**
      * @return list<string>
      */
     protected function permissionKeys(): array
@@ -238,6 +269,12 @@ class RbacSeeder extends Seeder
          * closed, because Rbac::can cannot grant a permission with no row.
          */
         foreach (self::MODULE_WRITES as $key) {
+            $keys[$key] = true;
+        }
+
+        // And the reads that gate a section rather than a page, which no
+        // sidebar or widget mentions — see MODULE_READS.
+        foreach (self::MODULE_READS as $key) {
             $keys[$key] = true;
         }
 
@@ -279,6 +316,7 @@ class RbacSeeder extends Seeder
             'invite' => 'Give access to',
             'status' => 'Change the status of',
             'deactivate' => 'Close a record in',
+            'identifiers' => 'See identity and bank details in',
             default => ucfirst($action),
         };
 
@@ -413,6 +451,10 @@ class RbacSeeder extends Seeder
                     // adds somebody, corrects their record and closes it when
                     // they leave.
                     'employees.create', 'employees.edit', 'employees.deactivate',
+                    // People operations includes the paperwork: HR is who chases
+                    // a missing PAN and who checks the photocopy against the
+                    // number on file.
+                    'employees.identifiers',
                     // And who runs payroll: adds the payslip Excel produced and
                     // marks the transfer done.
                     'salary.manage',
@@ -446,6 +488,7 @@ class RbacSeeder extends Seeder
                     'invoices.view', 'tickets.triage', 'meetings.schedule', 'announcements.post',
                     'announcements.holiday', 'reports.view', 'leads.view',
                     'employees.create', 'employees.edit', 'employees.deactivate',
+                    'employees.identifiers',
                     'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
                     'teams.create', 'teams.edit', 'teams.members',
                     'projects.create', 'projects.edit', 'projects.publish',

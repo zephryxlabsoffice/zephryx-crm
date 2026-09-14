@@ -13,6 +13,8 @@ use App\Support\EmployeeDirectory;
 use App\Support\EmployeePresenter;
 use App\Support\Rbac\Rbac;
 use App\Support\Realm;
+use App\Support\SalaryDirectory;
+use App\Support\Sensitive;
 use App\Support\StaffId;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -93,6 +95,13 @@ class EmployeeController extends Controller
             'employee' => EmployeeDirectory::row($record),
             'record' => $record,
             'history' => $this->audit->entriesFor('employee', $employee),
+            /*
+             * Masked here, in PHP, before anything reaches the template. The
+             * view never receives a full number to hide — markup the browser
+             * was sent has already been read by whoever is sitting at it.
+             */
+            'identity' => $this->maskedIdentity($request, $record),
+            'maySeeIdentifiers' => $this->rbac->can($request->user(), 'employees.identifiers'),
             'mayEdit' => $this->rbac->can($request->user(), 'employees.edit'),
             'mayDeactivate' => $this->rbac->can($request->user(), 'employees.deactivate')
                 // Nobody closes their own record. The same rule as nobody
@@ -307,6 +316,51 @@ class EmployeeController extends Controller
     /* ══════════════════════════════════════════════════════════════════════
        THE PIECES
        ══════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * Somebody else's identifiers, masked — or nothing at all.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * THE QUERY IS THE GATE, NOT THE TEMPLATE
+     *
+     * Without the permission this returns null and the row is never loaded, so
+     * there is nothing for a markup mistake to leak. A card rendered inside an
+     * `@if` around values the controller fetched anyway is one refactor away
+     * from being a card rendered outside it.
+     *
+     * Returns null for "may not see" and an array with `on_file => false` for
+     * "may see, and there is nothing there" — two different facts. The second
+     * is the one that matters operationally: somebody nobody has set up cannot
+     * be paid, and that has to be visible as an absence rather than as a
+     * section that quietly does not appear.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function maskedIdentity(Request $request, Employee $record): ?array
+    {
+        if (! $this->rbac->can($request->user(), 'employees.identifiers')) {
+            return null;
+        }
+
+        $banking = SalaryDirectory::banked($record);
+
+        if ($banking === null) {
+            return ['on_file' => false];
+        }
+
+        return [
+            'on_file' => true,
+            'id_proof_label' => $banking['id_proof_label'],
+            'id_proof' => Sensitive::idProof($banking['id_proof_type'], $banking['id_proof_number']),
+            'copy_received_on' => $banking['id_proof_copy_received_on'],
+            'pan' => Sensitive::pan($banking['pan']),
+            'bank' => $banking['bank'],
+            'account' => Sensitive::accountNumber($banking['account']),
+            // Unmasked on purpose: it identifies a branch, not a person, and is
+            // printed on every cheque.
+            'ifsc' => Sensitive::ifsc($banking['ifsc']),
+        ];
+    }
 
     protected function find(string $staffId): Employee
     {
