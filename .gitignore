@@ -34,6 +34,16 @@
 .phpunit.result.cache
 /.phpunit.cache
 
+# A local SQLite database.
+#
+# The application runs on MySQL; a file here is somebody's development or
+# review copy, seeded with the demo people. It is data, not source, and a
+# committed one would put invented employees and their fixture identifiers into
+# the repository.
+/database/*.sqlite
+/database/*.sqlite-journal
+/database/*.sqlite3
+
 # Uploads (stored outside the web root in production, spec §6)
 #
 # `/storage/app/private` is where Laravel's `local` disk points, and therefore
