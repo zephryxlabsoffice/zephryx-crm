@@ -9,8 +9,10 @@ use App\Models\Role;
 use App\Models\User;
 use App\Support\Audit\AuditLog;
 use App\Support\Auth\PasswordResets;
+use App\Models\EmployeeBanking;
 use App\Support\EmployeeDirectory;
 use App\Support\EmployeePresenter;
+use App\Support\IdProof;
 use App\Support\Rbac\Rbac;
 use App\Support\Realm;
 use App\Support\SalaryDirectory;
@@ -123,6 +125,8 @@ class EmployeeController extends Controller
              * dropdown would be worse than saying it is assigned on save.
              */
             'staffId' => null,
+            // Nothing on file for somebody who does not exist yet.
+            'identity' => null,
         ] + $this->formOptions());
     }
 
@@ -169,7 +173,7 @@ class EmployeeController extends Controller
 
             $user->roles()->sync(Role::where('role_key', 'employee')->pluck('id'));
 
-            return Employee::create([
+            $employee = Employee::create([
                 'user_id' => $user->id,
                 // The column, not the digit in the identifier. The digit was
                 // true on the day it was issued; this is what every rule that
@@ -181,6 +185,12 @@ class EmployeeController extends Controller
                 'date_of_birth' => $data['date_of_birth'] ?? null,
                 'announce_milestones' => $data['announce_milestones'] ?? true,
             ]);
+
+            // Inside the same transaction: an account with no identity record
+            // when the form demanded one is a half-made hire.
+            $this->writeIdentity($employee, $data, $request);
+
+            return $employee;
         });
 
         $this->invite($employee, $request);
@@ -209,6 +219,13 @@ class EmployeeController extends Controller
             'activeNav' => 'employees',
             'employee' => $record,
             'staffId' => $record->user->user_id,
+            /*
+             * Masked, as a hint beside an EMPTY input. The form never receives
+             * a real number, so there is nothing for it to post back — which is
+             * what stops a saved mask overwriting somebody's actual Aadhaar
+             * with `XXXX XXXX 1234`.
+             */
+            'identity' => $this->maskedIdentity($request, $record),
         ] + $this->formOptions());
     }
 
@@ -219,11 +236,13 @@ class EmployeeController extends Controller
 
         $before = $this->describe($record);
 
-        DB::transaction(function () use ($record, $data) {
+        DB::transaction(function () use ($record, $data, $request) {
             $record->user->update([
                 'name' => $data['name'],
                 'email' => $data['email'],
             ]);
+
+            $this->writeIdentity($record, $data, $request);
 
             $record->update([
                 'department_id' => $data['department_id'] ?? null,
@@ -350,6 +369,10 @@ class EmployeeController extends Controller
 
         return [
             'on_file' => true,
+            // The type itself is not sensitive — which document somebody
+            // produced is not the half worth protecting — and the edit form
+            // needs it to preselect the dropdown.
+            'type' => $banking['id_proof_type'],
             'id_proof_label' => $banking['id_proof_label'],
             'id_proof' => Sensitive::idProof($banking['id_proof_type'], $banking['id_proof_number']),
             'copy_received_on' => $banking['id_proof_copy_received_on'],
@@ -435,7 +458,151 @@ class EmployeeController extends Controller
             $rules['employment_type'] = ['required', Rule::in(Employee::TYPES)];
         }
 
-        return $request->validate($rules);
+        return $request->validate(
+            $rules + $this->identityRules($request, $existing),
+            $this->identityMessages($request),
+        );
+    }
+
+    /**
+     * Identity documents and bank details.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * REQUIRED WHEN HIRING, OPTIONAL WHEN CORRECTING
+     *
+     * On a CREATE these are required, because the owner decided a record is not
+     * complete without them (2026-09-12) — with one exception: an intern is not
+     * required to have a PAN, because students frequently do not have one and
+     * refusing would mean the intern cannot be added at all. A freelancer must,
+     * since they invoice us and that is a TDS matter.
+     *
+     * On an EDIT every one of them is optional, and that is not laxness — it is
+     * the whole mechanism. The form is rendered with EMPTY inputs beside masked
+     * hints, because filling them would put the real numbers into the HTML. So
+     * an empty field means "leave what is stored alone", and Laravel's
+     * conversion of empty strings to null is what makes `nullable` say exactly
+     * that. A field that is filled in is still checked against its document's
+     * shape.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * @return array<string, list<mixed>>
+     */
+    protected function identityRules(Request $request, ?Employee $existing): array
+    {
+        $creating = $existing === null;
+        $required = $creating ? 'required' : 'nullable';
+
+        // The intern exception, and only on a create — an edit demands nothing.
+        $panRequired = $creating && $request->input('employment_type') !== Employee::INTERN
+            ? 'required'
+            : 'nullable';
+
+        return [
+            'id_proof_type' => [$creating ? 'required' : 'nullable', Rule::in(array_keys(IdProof::TYPES))],
+            'id_proof_number' => array_merge(
+                [$required, 'string'],
+                IdProof::numberRules((string) $request->input('id_proof_type')),
+            ),
+            // The photocopy arrives on paper. Null means nobody has it yet,
+            // which is the state HR has to be able to chase.
+            'id_proof_copy_received_on' => ['nullable', 'date', 'before_or_equal:today'],
+
+            // Five letters, four digits, a check letter.
+            'pan' => [$panRequired, 'string', 'regex:/^[A-Za-z]{5}[0-9]{4}[A-Za-z]$/'],
+
+            'bank_name' => [$required, 'string', 'max:120'],
+            // Four letters, then a zero, then six more. The zero is the
+            // character people get wrong, and a wrong IFSC is a failed transfer.
+            'ifsc' => [$required, 'string', 'regex:/^[A-Za-z]{4}0[A-Za-z0-9]{6}$/'],
+            // Indian account numbers run nine to eighteen digits.
+            'account_number' => [$required, 'string', 'regex:/^[0-9]{9,18}$/'],
+        ];
+    }
+
+    /**
+     * Messages a person can act on, rather than ones naming a regex.
+     *
+     * @return array<string, string>
+     */
+    protected function identityMessages(Request $request): array
+    {
+        return [
+            'id_proof_number.regex' => IdProof::formatMessage((string) $request->input('id_proof_type')),
+            'pan.regex' => 'A PAN is five letters, four digits and a letter — like ABCDE1234F.',
+            'ifsc.regex' => 'An IFSC is four letters, a zero, then six characters — like HDFC0001234.',
+            'account_number.regex' => 'An account number is 9 to 18 digits, with no spaces.',
+        ];
+    }
+
+    /**
+     * Write the identity record, and record THAT it changed.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * ONLY WHAT WAS ACTUALLY TYPED IS WRITTEN
+     *
+     * Every null is skipped rather than saved. On an edit that is what "blank
+     * keeps" means; on a create it simply means the field was optional and not
+     * supplied.
+     *
+     * THE AUDIT ENTRY NAMES FIELDS, NEVER VALUES
+     *
+     * Where somebody's pay lands is worth a permanent record of who changed it
+     * and when. The new account number is not: writing it here would copy the
+     * value into the one table this application refuses to let anybody edit,
+     * and the audit screen lists that table by the page.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function writeIdentity(Employee $employee, array $data, Request $request): void
+    {
+        $columns = [
+            'id_proof_type' => 'ID proof',
+            'id_proof_number' => 'ID proof number',
+            'id_proof_copy_received_on' => 'Photocopy received',
+            'pan' => 'PAN',
+            'bank_name' => 'Bank',
+            'ifsc' => 'IFSC',
+            'account_number' => 'Account number',
+        ];
+
+        $supplied = [];
+
+        foreach (array_keys($columns) as $column) {
+            $value = $data[$column] ?? null;
+
+            if ($value !== null && $value !== '') {
+                $supplied[$column] = $value;
+            }
+        }
+
+        if ($supplied === []) {
+            return;
+        }
+
+        $existing = EmployeeBanking::where('employee_id', $employee->id)->first();
+
+        $changed = [];
+
+        foreach ($supplied as $column => $value) {
+            if ($existing === null || (string) $existing->{$column} !== (string) $value) {
+                $changed[] = $columns[$column];
+            }
+        }
+
+        EmployeeBanking::updateOrCreate(['employee_id' => $employee->id], $supplied);
+
+        if ($changed === []) {
+            return;
+        }
+
+        $this->audit->record(
+            action: AuditLog::SALARY_BANKING_CHANGED,
+            actor: $request->user(),
+            entityType: 'employee',
+            entityId: $employee->user?->user_id ?? (string) $employee->id,
+            after: ($existing === null ? 'Recorded: ' : 'Changed: ').implode(', ', $changed),
+            request: $request,
+        );
     }
 
     /**

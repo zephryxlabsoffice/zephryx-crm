@@ -209,6 +209,140 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="card">
+                    <div class="section-hd">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>
+                        </svg>
+                        Identity and payment
+                    </div>
+
+                    @php $onFile = $identity['on_file'] ?? false; @endphp
+
+                    <div class="prose">
+                        @if ($editing)
+                            <p>
+                                {{-- Why the boxes are empty on an edit. Without
+                                     this the natural reading is that the record
+                                     is blank. --}}
+                                These are never filled in for you: putting the real numbers in this
+                                page would put them in front of anyone who can see the screen.
+                                <strong>Leave a box empty to keep what is on file</strong>, or type a
+                                new value to replace it.
+                            </p>
+                        @else
+                            <p>
+                                Held encrypted, and shown masked everywhere afterwards — including to
+                                you. The photocopy itself is submitted to the office on paper.
+                            </p>
+                        @endif
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-id-proof-type">ID proof</label>
+                            <select id="emp-id-proof-type" name="id_proof_type"
+                                    @if ($errors->has('id_proof_type')) aria-invalid="true" @endif>
+                                @foreach (\App\Support\IdProof::options() as $key => $label)
+                                    <option value="{{ $key }}"
+                                        @selected(old('id_proof_type', $identity['type'] ?? \App\Support\IdProof::AADHAAR) === $key)>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <span class="pay-hint">A document showing their address.</span>
+                            @error('id_proof_type')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-id-proof-number">ID proof number</label>
+                            <input id="emp-id-proof-number" name="id_proof_number" type="text"
+                                   autocomplete="off" spellcheck="false"
+                                   value="{{ old('id_proof_number') }}"
+                                   @if ($errors->has('id_proof_number')) aria-invalid="true" aria-describedby="emp-id-proof-number-error" @endif>
+                            @if ($onFile)
+                                <span class="pay-hint">On file: {{ $identity['id_proof'] }}</span>
+                            @endif
+                            @error('id_proof_number')
+                                <span class="field-error" id="emp-id-proof-number-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-copy-received">
+                                Photocopy received <span class="an-optional">(optional)</span>
+                            </label>
+                            <input id="emp-copy-received" name="id_proof_copy_received_on" type="date"
+                                   max="{{ now()->toDateString() }}"
+                                   value="{{ old('id_proof_copy_received_on', $onFile && $identity['copy_received_on'] ? $identity['copy_received_on']->toDateString() : '') }}"
+                                   @if ($errors->has('id_proof_copy_received_on')) aria-invalid="true" @endif>
+                            <span class="pay-hint">Leave empty until the paper copy is actually in the office.</span>
+                            @error('id_proof_copy_received_on')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-pan">
+                                PAN
+                                @if (! $editing)
+                                    <span class="an-optional">(not required for an intern)</span>
+                                @endif
+                            </label>
+                            <input id="emp-pan" name="pan" type="text"
+                                   autocomplete="off" spellcheck="false" autocapitalize="characters"
+                                   value="{{ old('pan') }}"
+                                   @if ($errors->has('pan')) aria-invalid="true" aria-describedby="emp-pan-error" @endif>
+                            @if ($onFile)
+                                <span class="pay-hint">On file: {{ $identity['pan'] }}</span>
+                            @endif
+                            @error('pan')
+                                <span class="field-error" id="emp-pan-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-bank">Bank</label>
+                            <input id="emp-bank" name="bank_name" type="text"
+                                   value="{{ old('bank_name', $onFile ? $identity['bank'] : '') }}"
+                                   @if ($errors->has('bank_name')) aria-invalid="true" @endif>
+                            {{-- Not masked anywhere: "HDFC Bank" identifies no
+                                 one, so it is prefilled like an ordinary field. --}}
+                            @error('bank_name')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-ifsc">IFSC</label>
+                            <input id="emp-ifsc" name="ifsc" type="text"
+                                   autocomplete="off" spellcheck="false" autocapitalize="characters"
+                                   value="{{ old('ifsc', $onFile ? $identity['ifsc'] : '') }}"
+                                   @if ($errors->has('ifsc')) aria-invalid="true" aria-describedby="emp-ifsc-error" @endif>
+                            <span class="pay-hint">Identifies a branch, not a person — it is printed on every cheque.</span>
+                            @error('ifsc')
+                                <span class="field-error" id="emp-ifsc-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-account">Account number</label>
+                            <input id="emp-account" name="account_number" type="text"
+                                   autocomplete="off" spellcheck="false" inputmode="numeric"
+                                   value="{{ old('account_number') }}"
+                                   @if ($errors->has('account_number')) aria-invalid="true" aria-describedby="emp-account-error" @endif>
+                            @if ($onFile)
+                                <span class="pay-hint">On file: {{ $identity['account'] }}</span>
+                            @endif
+                            @error('account_number')
+                                <span class="field-error" id="emp-account-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <aside class="rail">

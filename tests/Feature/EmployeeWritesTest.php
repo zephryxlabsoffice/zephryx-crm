@@ -354,6 +354,22 @@ class EmployeeWritesTest extends TestCase
             'employment_type' => Employee::FULL_TIME,
             'joined_on' => Carbon::now()->subMonth()->toDateString(),
             'date_of_birth' => '1995-04-11',
+
+            /*
+             * Identity and bank details, required of a full-time hire since
+             * 2026-09-14. Carried here rather than in every test because none
+             * of the cases in this file is about them — they are about the
+             * account, the audit entry and the staff ID — and a payload missing
+             * a required field would fail all of them for the wrong reason.
+             *
+             * What these fields do on their own is EmployeeIdentityWritesTest.
+             */
+            'id_proof_type' => \App\Support\IdProof::AADHAAR,
+            'id_proof_number' => '123456781234',
+            'pan' => 'ABCDE1234F',
+            'bank_name' => 'HDFC Bank',
+            'ifsc' => 'HDFC0001234',
+            'account_number' => '50100234567890',
             'announce_milestones' => '1',
         ];
     }

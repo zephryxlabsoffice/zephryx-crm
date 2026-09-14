@@ -68,6 +68,60 @@ class IdProof
     }
 
     /**
+     * The shape this particular document's number has.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * THE RULE FOLLOWS THE DOCUMENT, NOT THE COLUMN
+     *
+     * Twelve digits is a valid Aadhaar and an invalid passport. A single
+     * "identity number" rule loose enough to accept both would accept anything,
+     * which is the same as having no rule while looking like having one.
+     *
+     * An unknown type gets no format rule rather than a permissive one — it
+     * cannot reach validation anyway, because the type itself is checked
+     * against this class's list first.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * @return list<string>
+     */
+    public static function numberRules(?string $type): array
+    {
+        return match ($type) {
+            // Twelve digits, and UIDAI does not group them in the data.
+            self::AADHAAR => ['regex:/^[0-9]{12}$/'],
+            // An EPIC number: three letters then seven digits.
+            self::VOTER_ID => ['regex:/^[A-Za-z]{3}[0-9]{7}$/'],
+            // One letter then seven digits.
+            self::PASSPORT => ['regex:/^[A-Za-z][0-9]{7}$/'],
+            /*
+             * The one document without a single national format. Every state
+             * issues its own, so this checks length and character class and
+             * deliberately no more: a stricter rule would reject real licences
+             * from whichever states the author did not have to hand.
+             */
+            self::DRIVING_LICENCE => ['regex:/^[A-Za-z0-9]{15,16}$/'],
+            default => [],
+        };
+    }
+
+    /**
+     * What to say when a number does not match its document.
+     *
+     * The validator's own message names a regular expression, which tells
+     * somebody entering a passport number nothing they can act on.
+     */
+    public static function formatMessage(?string $type): string
+    {
+        return match ($type) {
+            self::AADHAAR => 'An Aadhaar number is twelve digits.',
+            self::VOTER_ID => 'A Voter ID is three letters followed by seven digits.',
+            self::PASSPORT => 'A passport number is one letter followed by seven digits.',
+            self::DRIVING_LICENCE => 'A driving licence number is 15 or 16 letters and digits.',
+            default => 'Choose which document this number is from.',
+        };
+    }
+
+    /**
      * @return array<string, string>
      */
     public static function options(): array
