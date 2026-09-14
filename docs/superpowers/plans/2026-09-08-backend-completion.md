@@ -323,6 +323,35 @@ record moves. Nothing changes on the strength of the form alone.
 - The sidebar "Support" link opens a page with two buttons: raise a ticket
   (goes to the ticket form) and email us (opens mail).
 
+## Built so far (2026-09-14)
+
+Step 1 is part done. What is committed, in order:
+
+- **The ZEPH staff ID** (`9ed7641`) — `ZEPH261001`, mentors `ZEPH4NNN`, clients
+  `ZEPH5NNN`, each series counted from its own highest so an identifier is
+  never reissued. With it, `employment_type` on the employment record: set when
+  somebody is added, refused by the edit form, because converting an intern is
+  its own act.
+- **ID proof replaces the Aadhaar column** (`3195e1a`) — renamed in place, since
+  the values are ciphertext and a copy would mean decrypting every row inside a
+  migration. Masking follows the document, not the column.
+- **The masked identity card** (`1a1a0fc`) — behind `employees.identifiers`, a
+  new sensitive READ. It needed a declared home (`MODULE_READS`): a key with no
+  row cannot be granted, so the gate would have failed closed and refused HR
+  silently.
+- **Capture** (`28a18bb`) — ID proof, PAN, bank and the photocopy date on the
+  form. The edit form renders empty inputs beside masked hints: blank keeps,
+  typed replaces. A full-time hire now cannot be created without documents.
+- **The audited reveal** (`c709002`) — POST only, one field, a required reason,
+  flashed for a single render, logged by field and reason and never by value.
+
+Still to do in step 1: current and permanent address, the salary structure
+(Basic / HRA / allowances / PF / PT / TDS), the profile change-request flow,
+and convert-intern-to-full-time.
+
+Also done, outside step 1: the donut restyle (`055cbb9`) across the five
+modules that share it.
+
 ## RESUME HERE — the rework order (agreed 2026-09-12)
 
 The review round is finished. Nothing below is built. The original module
