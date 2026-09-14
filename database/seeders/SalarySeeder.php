@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Models\EmployeeBanking;
 use App\Models\SalaryRecord;
 use App\Support\Demo\DemoSalaries;
+use App\Support\IdProof;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
@@ -63,7 +64,11 @@ class SalarySeeder extends Seeder
                     'ifsc' => $details['ifsc'],
                     'account_number' => $details['account'],
                     'pan' => $details['pan'],
-                    'aadhaar' => $details['aadhaar'],
+                    // Every demo person produced an Aadhaar. The type is stated
+                    // rather than inferred from the number: a number with no
+                    // document name is withheld from every screen.
+                    'id_proof_type' => IdProof::AADHAAR,
+                    'id_proof_number' => $details['id_proof_number'],
                 ],
             );
         }

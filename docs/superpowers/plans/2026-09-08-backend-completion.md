@@ -117,8 +117,14 @@ follow-up answer. Nothing here is built yet.
 - **PAN** is a separate field, required for full-time.
 - **Required by type:** full-time — everything. Interns — ID proof, phone, bank.
   Freelancers — ID proof, phone, PAN, bank.
-- **Sensitive fields** (ID proof, PAN, bank): full value to HR and CEO only.
-  The employee sees their own masked, to check it was entered correctly.
+- **Sensitive fields** (ID proof, PAN, bank): masked for everybody by default.
+  HR and CEO reveal **one field at a time**, and every reveal writes an audit
+  entry naming who looked at whose record and why (revised 2026-09-14). The
+  employee sees their own masked, to check it was entered correctly. Payroll
+  still never reads them: it uses the bank transfer file.
+- **ID proof and bank details share one encrypted record** — the existing
+  `employee_banking` table, whose Aadhaar-only column becomes an ID-proof type
+  and number.
 - **Salary details**: Basic, HRA, other allowances, PF, PT, TDS. Stored for
   payslip preparation, NOT shown on the Salary page. Visible to HR, CEO and
   the employee — who sees them only on their payslip. Payslips stay an HR
@@ -265,8 +271,24 @@ follow-up answer. Nothing here is built yet.
 
 ### My Profile
 
-- The employee edits photo, phone, address and emergency contact themselves.
-  Changes apply immediately and are audited. No HR approval step.
+**Revised 2026-09-14, replacing "changes apply immediately".** Personal data on
+My Profile is no longer self-service. An employee REQUESTS a change, submits
+the physical documents to the office, and HR accepts it — at which point the
+record moves. Nothing changes on the strength of the form alone.
+
+- Applies to: address (current and permanent), phone, emergency contact,
+  gender, marital status, nationality, languages, skills, photo.
+- Does NOT apply to preferences — theme, density, sidebar, and the task and
+  ticket notification toggles still save instantly. They are settings, not a
+  record of anything, and an approval queue full of dark-mode requests would
+  bury the ones that matter.
+- The flow follows the shape `email_changes` already uses: a pending row with
+  its own state, the live record untouched until it is applied, and nothing
+  deleted afterwards.
+- This reverses the 2026-09-03 profile decision ("nobody should raise a ticket
+  to correct their own phone number") deliberately and at the owner's
+  instruction: the profile is the company's record, and it is corrected against
+  documents rather than on assertion.
 
 ### Security
 

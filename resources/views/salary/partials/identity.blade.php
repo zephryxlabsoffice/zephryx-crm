@@ -39,8 +39,10 @@
                 <span class="stat-value stat-value-mono">{{ $identity['pan'] }}</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">Aadhaar</span>
-                <span class="stat-value stat-value-mono">{{ $identity['aadhaar'] }}</span>
+                {{-- The document this person actually produced, named by the
+                     record rather than assumed to be Aadhaar. --}}
+                <span class="stat-label">{{ $identity['id_proof_label'] }}</span>
+                <span class="stat-value stat-value-mono">{{ $identity['id_proof'] }}</span>
             </div>
         </div>
 

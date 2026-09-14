@@ -55,20 +55,20 @@ class DemoSalaries
     protected static function banking(): array
     {
         return [
-            'EMP001' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0001234', 'account' => '50100234567890', 'pan' => 'ABCDE1234F', 'aadhaar' => '123456781234'],
-            'EMP002' => ['bank' => 'ICICI Bank', 'ifsc' => 'ICIC0000456', 'account' => '004501556789',   'pan' => 'BCDEF2345G', 'aadhaar' => '234567892345'],
-            'EMP003' => ['bank' => 'Axis Bank',  'ifsc' => 'UTIB0000789', 'account' => '917010045678',   'pan' => 'CDEFG3456H', 'aadhaar' => '345678903456'],
-            'EMP004' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0000987', 'account' => '50100987654321', 'pan' => 'DEFGH4567I', 'aadhaar' => '456789014567'],
-            'EMP005' => ['bank' => 'SBI',        'ifsc' => 'SBIN0011223', 'account' => '38291045612',    'pan' => 'EFGHI5678J', 'aadhaar' => '567890125678'],
-            'EMP006' => ['bank' => 'ICICI Bank', 'ifsc' => 'ICIC0000456', 'account' => '004501778899',   'pan' => 'FGHIJ6789K', 'aadhaar' => '678901236789'],
-            'EMP007' => ['bank' => 'Axis Bank',  'ifsc' => 'UTIB0000789', 'account' => '917010112233',   'pan' => 'GHIJK7890L', 'aadhaar' => '789012347890'],
-            'EMP008' => ['bank' => 'SBI',        'ifsc' => 'SBIN0011223', 'account' => '38291099887',    'pan' => 'HIJKL8901M', 'aadhaar' => '890123458901'],
-            'EMP009' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0001234', 'account' => '50100445566778', 'pan' => 'IJKLM9012N', 'aadhaar' => '901234569012'],
-            'EMP010' => ['bank' => 'Kotak',      'ifsc' => 'KKBK0000321', 'account' => '7412583690',     'pan' => 'JKLMN0123O', 'aadhaar' => '012345670123'],
+            'EMP001' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0001234', 'account' => '50100234567890', 'pan' => 'ABCDE1234F', 'id_proof_number' => '123456781234'],
+            'EMP002' => ['bank' => 'ICICI Bank', 'ifsc' => 'ICIC0000456', 'account' => '004501556789',   'pan' => 'BCDEF2345G', 'id_proof_number' => '234567892345'],
+            'EMP003' => ['bank' => 'Axis Bank',  'ifsc' => 'UTIB0000789', 'account' => '917010045678',   'pan' => 'CDEFG3456H', 'id_proof_number' => '345678903456'],
+            'EMP004' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0000987', 'account' => '50100987654321', 'pan' => 'DEFGH4567I', 'id_proof_number' => '456789014567'],
+            'EMP005' => ['bank' => 'SBI',        'ifsc' => 'SBIN0011223', 'account' => '38291045612',    'pan' => 'EFGHI5678J', 'id_proof_number' => '567890125678'],
+            'EMP006' => ['bank' => 'ICICI Bank', 'ifsc' => 'ICIC0000456', 'account' => '004501778899',   'pan' => 'FGHIJ6789K', 'id_proof_number' => '678901236789'],
+            'EMP007' => ['bank' => 'Axis Bank',  'ifsc' => 'UTIB0000789', 'account' => '917010112233',   'pan' => 'GHIJK7890L', 'id_proof_number' => '789012347890'],
+            'EMP008' => ['bank' => 'SBI',        'ifsc' => 'SBIN0011223', 'account' => '38291099887',    'pan' => 'HIJKL8901M', 'id_proof_number' => '890123458901'],
+            'EMP009' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0001234', 'account' => '50100445566778', 'pan' => 'IJKLM9012N', 'id_proof_number' => '901234569012'],
+            'EMP010' => ['bank' => 'Kotak',      'ifsc' => 'KKBK0000321', 'account' => '7412583690',     'pan' => 'JKLMN0123O', 'id_proof_number' => '012345670123'],
             // EMP011 deliberately has no banking details on file: a recent
             // joiner nobody has set up yet. That state has to be reviewable,
             // because it is the one where somebody quietly does not get paid.
-            'EMP012' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0000987', 'account' => '50100778899001', 'pan' => 'LMNOP2345Q', 'aadhaar' => '234561092345'],
+            'EMP012' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0000987', 'account' => '50100778899001', 'pan' => 'LMNOP2345Q', 'id_proof_number' => '234561092345'],
         ];
     }
 

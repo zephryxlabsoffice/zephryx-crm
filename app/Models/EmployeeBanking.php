@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\IdProof;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -25,7 +26,8 @@ class EmployeeBanking extends Model
     protected $table = 'employee_banking';
 
     protected $fillable = [
-        'employee_id', 'bank_name', 'ifsc', 'account_number', 'pan', 'aadhaar',
+        'employee_id', 'bank_name', 'ifsc', 'account_number', 'pan',
+        'id_proof_type', 'id_proof_number', 'id_proof_copy_received_on',
     ];
 
     protected function casts(): array
@@ -36,7 +38,12 @@ class EmployeeBanking extends Model
             // none of them has a masking layer.
             'account_number' => 'encrypted',
             'pan' => 'encrypted',
-            'aadhaar' => 'encrypted',
+            'id_proof_number' => 'encrypted',
+
+            // NOT encrypted, deliberately: which document somebody produced is
+            // not the sensitive half, and HR has to be able to list who still
+            // owes a photocopy without decrypting a column to do it.
+            'id_proof_copy_received_on' => 'date',
         ];
     }
 
@@ -60,7 +67,12 @@ class EmployeeBanking extends Model
             'ifsc' => $this->ifsc,
             'account' => $this->account_number,
             'pan' => $this->pan,
-            'aadhaar' => $this->aadhaar,
+            'id_proof_type' => $this->id_proof_type,
+            'id_proof_number' => $this->id_proof_number,
+            // The document's name travels with its number so the page can label
+            // the row it renders without holding a vocabulary of its own.
+            'id_proof_label' => IdProof::label($this->id_proof_type),
+            'id_proof_copy_received_on' => $this->id_proof_copy_received_on,
         ];
     }
 }

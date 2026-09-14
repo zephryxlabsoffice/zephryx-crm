@@ -449,7 +449,10 @@ class SalaryController extends Controller
             'ifsc' => Sensitive::ifsc($banking['ifsc']),
             'account' => Sensitive::accountNumber($banking['account']),
             'pan' => Sensitive::pan($banking['pan']),
-            'aadhaar' => Sensitive::aadhaar($banking['aadhaar']),
+            // The document's own name, and its number masked by that
+            // document's rule — see App\Support\IdProof.
+            'id_proof_label' => $banking['id_proof_label'],
+            'id_proof' => Sensitive::idProof($banking['id_proof_type'], $banking['id_proof_number']),
         ];
     }
 

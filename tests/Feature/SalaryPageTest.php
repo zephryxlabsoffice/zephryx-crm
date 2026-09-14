@@ -389,13 +389,13 @@ class SalaryPageTest extends TestCase
         foreach (EmployeeBanking::all() as $banking) {
             $secrets[] = $banking->account_number;
             $secrets[] = $banking->pan;
-            $secrets[] = $banking->aadhaar;
+            $secrets[] = $banking->id_proof_number;
         }
 
         return array_values(array_filter(array_unique($secrets)));
     }
 
-    public function test_the_payroll_list_contains_no_bank_pan_or_aadhaar_at_all(): void
+    public function test_the_payroll_list_contains_no_bank_pan_or_id_proof_at_all(): void
     {
         // Not masked — absent. A masked value on a list of everybody still
         // confirms an account exists and hands over twelve people's last four
@@ -461,10 +461,10 @@ class SalaryPageTest extends TestCase
 
             $this->assertStringNotContainsString($banking['account'], $html, "full account number in {$url}");
             $this->assertStringNotContainsString($banking['pan'], $html, "full PAN in {$url}");
-            $this->assertStringNotContainsString($banking['aadhaar'], $html, "full Aadhaar in {$url}");
+            $this->assertStringNotContainsString($banking['id_proof_number'], $html, "full ID proof in {$url}");
 
             $this->assertStringContainsString('•••• •••• '.substr($banking['account'], -4), $html);
-            $this->assertStringContainsString('XXXX XXXX '.substr($banking['aadhaar'], -4), $html);
+            $this->assertStringContainsString('XXXX XXXX '.substr($banking['id_proof_number'], -4), $html);
         }
     }
 

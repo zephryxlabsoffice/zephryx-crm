@@ -73,6 +73,39 @@ class Sensitive
     }
 
     /**
+     * An identity document's number, masked by the rule that document's own
+     * issuer sets.
+     *
+     * Aadhaar keeps UIDAI's grouping — that rule is a regulation, not a
+     * preference. The other three are masked to their last four characters,
+     * which is enough for a person to recognise their own and not enough to
+     * quote anywhere it matters.
+     *
+     * A number whose TYPE is unknown is withheld entirely rather than masked
+     * generically. If the document cannot be named, the rule for how much of
+     * it may show cannot be stated either, and "last four of something nine
+     * digits long" is how too much of it reaches a screen.
+     */
+    public static function idProof(?string $type, ?string $value): string
+    {
+        if (! IdProof::isType($type)) {
+            return self::ABSENT;
+        }
+
+        if ($type === IdProof::AADHAAR) {
+            return self::aadhaar($value);
+        }
+
+        $number = strtoupper(preg_replace('/[\s-]+/', '', (string) $value));
+
+        if (strlen($number) < 4) {
+            return self::ABSENT;
+        }
+
+        return str_repeat('X', strlen($number) - 4).substr($number, -4);
+    }
+
+    /**
      * PAN, masked to the last four characters: `XXXXXX234F`.
      *
      * A PAN is ten characters — five letters, four digits, a check letter.
