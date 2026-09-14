@@ -13,6 +13,7 @@ use App\Support\EmployeeDirectory;
 use App\Support\EmployeePresenter;
 use App\Support\Rbac\Rbac;
 use App\Support\Realm;
+use App\Support\StaffId;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -106,7 +107,13 @@ class EmployeeController extends Controller
         return response()->view('employees.form', [
             'activeNav' => 'employees',
             'employee' => null,
-            'staffId' => $this->nextStaffId(),
+            /*
+             * No preview. The identifier carries the engagement type as a
+             * digit, so it is not known until the type is chosen — and a
+             * preview that silently went stale when somebody changed the
+             * dropdown would be worse than saying it is assigned on save.
+             */
+            'staffId' => null,
         ] + $this->formOptions());
     }
 
@@ -137,7 +144,7 @@ class EmployeeController extends Controller
 
         $employee = DB::transaction(function () use ($data, $request) {
             $user = User::create([
-                'user_id' => $this->nextStaffId(),
+                'user_id' => StaffId::forEmployee($data['employment_type']),
                 'name' => $data['name'],
                 'email' => $data['email'],
                 // Never used. Overwritten the moment they follow the link, and
@@ -155,6 +162,10 @@ class EmployeeController extends Controller
 
             return Employee::create([
                 'user_id' => $user->id,
+                // The column, not the digit in the identifier. The digit was
+                // true on the day it was issued; this is what every rule that
+                // turns on the engagement type actually reads.
+                'employment_type' => $data['employment_type'],
                 'department_id' => $data['department_id'] ?? null,
                 'designation_id' => $data['designation_id'] ?? null,
                 'joined_on' => $data['joined_on'],
@@ -310,7 +321,7 @@ class EmployeeController extends Controller
      */
     protected function validated(Request $request, ?Employee $existing = null): array
     {
-        return $request->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:120'],
 
             /*
@@ -349,7 +360,28 @@ class EmployeeController extends Controller
             'date_of_birth' => ['nullable', 'date', 'before:-15 years', 'after:-100 years'],
 
             'announce_milestones' => ['nullable', 'boolean'],
-        ]);
+        ];
+
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * THE ENGAGEMENT TYPE IS SET WHEN SOMEBODY IS ADDED, AND NEVER EDITED
+         *
+         * An intern becoming full-time is a conversion: a new identifier is
+         * issued, the old record is closed, and the leave balance starts
+         * again. Allowing the same change through the edit form would do none
+         * of that — it would leave a `ZEPH262001` whose column says full-time,
+         * with a year of intern leave behind it and no audit entry saying when
+         * it changed.
+         *
+         * So the rule exists only when creating. On an edit the field is not
+         * accepted at all, rather than accepted and ignored.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        if ($existing === null) {
+            $rules['employment_type'] = ['required', Rule::in(Employee::TYPES)];
+        }
+
+        return $request->validate($rules);
     }
 
     /**
@@ -366,25 +398,11 @@ class EmployeeController extends Controller
         return [
             'departments' => MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->active()->get(),
             'designations' => MasterDataItem::inList(MasterDataItem::DESIGNATIONS)->active()->get(),
+            // Not master data: the three types are rules in code — the staff ID
+            // digit, who the clock applies to, which fields are required — and
+            // a fourth one somebody typed into a list would satisfy none of them.
+            'employmentTypes' => EmployeePresenter::employmentTypeOptions(),
         ];
-    }
-
-    /**
-     * The next EMP number.
-     *
-     * Derived from the highest existing one rather than from a count, because a
-     * count reissues an id the moment anybody is removed — and an id that has
-     * belonged to two people is one that makes an audit trail ambiguous.
-     */
-    protected function nextStaffId(): string
-    {
-        $highest = User::query()
-            ->where('account_type', Realm::STAFF)
-            ->where('user_id', 'like', 'EMP%')
-            ->selectRaw('max(cast(substr(user_id, 4) as integer)) as n')
-            ->value('n');
-
-        return 'EMP'.str_pad((string) (((int) $highest) + 1), 3, '0', STR_PAD_LEFT);
     }
 
     /**

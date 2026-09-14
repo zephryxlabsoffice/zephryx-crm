@@ -70,11 +70,47 @@
                         <div class="form-field">
                             <label class="form-field-lbl" for="emp-staff-id">Staff ID</label>
                             {{-- Shown, never typed. It is derived from the highest
-                                 existing number so it can never be reissued to a
-                                 second person, which is what would make an audit
-                                 trail ambiguous. --}}
-                            <input id="emp-staff-id" type="text" value="{{ $staffId }}" disabled>
-                            <span class="pay-hint">Assigned automatically and never reused.</span>
+                                 existing number in its own series so it can never
+                                 be reissued to a second person, which is what
+                                 would make an audit trail ambiguous.
+
+                                 Not previewed when adding: the identifier carries
+                                 the engagement type as a digit, so it is not known
+                                 until the type below is chosen, and a preview that
+                                 went stale on a dropdown change would be worse
+                                 than none. --}}
+                            <input id="emp-staff-id" type="text"
+                                   value="{{ $staffId ?? 'Assigned when you save' }}" disabled>
+                            <span class="pay-hint">
+                                {{ $editing ? 'Assigned when this record was created, and never reused.' : 'Built from the year and the engagement type, e.g. ZEPH261001.' }}
+                            </span>
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-type">Engagement</label>
+                            @if ($editing)
+                                {{-- Deliberately not editable. Converting an intern
+                                     issues a NEW staff ID and closes the old record,
+                                     which is its own act with its own audit entry —
+                                     not a dropdown somebody can nudge while fixing a
+                                     phone number. --}}
+                                <input id="emp-type" type="text"
+                                       value="{{ \App\Support\EmployeePresenter::employmentType($employee->employment_type)['label'] }}" disabled>
+                                <span class="pay-hint">Changed by converting the record, not by editing it.</span>
+                            @else
+                                <select id="emp-type" name="employment_type" required
+                                        @if ($errors->has('employment_type')) aria-invalid="true" aria-describedby="emp-type-error" @endif>
+                                    @foreach ($employmentTypes as $key => $label)
+                                        <option value="{{ $key }}" @selected(old('employment_type', \App\Models\Employee::FULL_TIME) === $key)>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <span class="pay-hint">Freelancers have no attendance, leave or payroll.</span>
+                                @error('employment_type')
+                                    <span class="field-error" id="emp-type-error">{{ $message }}</span>
+                                @enderror
+                            @endif
                         </div>
 
                         <div class="form-field">

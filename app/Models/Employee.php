@@ -20,9 +20,41 @@ use Illuminate\Support\Carbon;
  */
 class Employee extends Model
 {
+    /*
+     * The kind of engagement, decided 2026-09-11.
+     *
+     * Named constants rather than loose strings because three separate rules
+     * turn on this value — the staff ID's type digit, whether attendance and
+     * leave apply at all, and which fields are required when somebody is added
+     * — and a typo in any one of them fails silently towards the wrong answer.
+     */
+    public const FULL_TIME = 'full_time';
+
+    public const INTERN = 'intern';
+
+    /** No attendance, no leave, no payroll: paid against work, not time. */
+    public const FREELANCE = 'freelance';
+
+    /** @var list<string> */
+    public const TYPES = [self::FULL_TIME, self::INTERN, self::FREELANCE];
+
+    /**
+     * Who the time-and-attendance rules apply to.
+     *
+     * Freelancers are out by decision, not by oversight — they have no clock,
+     * no leave balance and no comp-off.
+     *
+     * @var list<string>
+     */
+    public const ATTENDS = [self::FULL_TIME, self::INTERN];
+
     protected $fillable = [
         'user_id', 'department_id', 'designation_id', 'reports_to',
-        'joined_on', 'date_of_birth', 'announce_milestones',
+        'employment_type', 'joined_on', 'date_of_birth', 'announce_milestones',
+    ];
+
+    protected $attributes = [
+        'employment_type' => self::FULL_TIME,
     ];
 
     protected function casts(): array
@@ -32,6 +64,26 @@ class Employee extends Model
             'date_of_birth' => 'date',
             'announce_milestones' => 'boolean',
         ];
+    }
+
+    /**
+     * The people the clock and the leave balance apply to.
+     *
+     * @param  Builder<Employee>  $query
+     * @return Builder<Employee>
+     */
+    public function scopeAttends(Builder $query): Builder
+    {
+        return $query->whereIn('employment_type', self::ATTENDS);
+    }
+
+    /**
+     * @param  Builder<Employee>  $query
+     * @return Builder<Employee>
+     */
+    public function scopeOfType(Builder $query, string $type): Builder
+    {
+        return $query->where('employment_type', $type);
     }
 
     /**

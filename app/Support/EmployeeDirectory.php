@@ -96,6 +96,10 @@ class EmployeeDirectory
             'name' => $employee->user?->name,
             'email' => $employee->user?->email,
             'status' => $employee->user?->status,
+            // Full-time, intern or freelance. The staff ID carries it as a
+            // digit, but this column is the truth: a converted record is
+            // reissued, and no other route changes the digit.
+            'employment_type' => $employee->employment_type,
             'department' => $employee->department?->name,
             'designation' => $employee->designation?->name,
             'joined' => $employee->joined_on?->toDateString(),

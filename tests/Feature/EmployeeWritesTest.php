@@ -109,19 +109,72 @@ class EmployeeWritesTest extends TestCase
         });
     }
 
-    public function test_the_staff_id_is_derived_from_the_highest_and_never_reissued(): void
+    public function test_the_staff_id_follows_the_scheme_and_its_own_series(): void
     {
         /*
-         * From the highest existing number, not from a count. A count reissues
-         * an id the moment anybody is removed, and an id that has belonged to
-         * two people makes every audit entry about it ambiguous.
+         * `ZEPH` + the year + the engagement digit + a number that restarts
+         * each year (decided 2026-09-11). The demo fixtures are seeded first on
+         * purpose: they are `EMP0xx`, a different series, and must not push
+         * this year's first full-time number off 001. See App\Support\StaffId.
          */
         $this->seedDemoWorkforce();
         $this->signInAsStaff(['employee', 'hr']);
 
         $this->post('/employees', $this->validPayload());
 
-        $this->assertNotNull(User::where('user_id', 'EMP013')->first());
+        $expected = 'ZEPH'.Carbon::now()->format('y').'1001';
+
+        $this->assertNotNull(User::where('user_id', $expected)->first());
+    }
+
+    public function test_the_engagement_digit_matches_the_engagement_recorded(): void
+    {
+        // The digit and the column are written in the same act, and this is the
+        // only place they can disagree. An intern is 2.
+        $this->signInAsStaff(['employee', 'hr']);
+
+        $this->post('/employees', $this->validPayload([
+            'employment_type' => Employee::INTERN,
+        ]))->assertRedirect();
+
+        $user = User::where('email', 'new.person@example.test')->firstOrFail();
+        $employee = Employee::where('user_id', $user->id)->firstOrFail();
+
+        $this->assertSame('ZEPH'.Carbon::now()->format('y').'2001', $user->user_id);
+        $this->assertSame(Employee::INTERN, $employee->employment_type);
+    }
+
+    public function test_an_engagement_type_nobody_offers_is_refused(): void
+    {
+        $this->signInAsStaff(['employee', 'hr']);
+
+        $this->post('/employees', $this->validPayload(['employment_type' => 'contractor']))
+            ->assertSessionHasErrors('employment_type');
+
+        $this->assertSame(0, Employee::count());
+    }
+
+    public function test_the_engagement_type_cannot_be_changed_by_editing(): void
+    {
+        /*
+         * Converting an intern issues a new identifier, closes the old record
+         * and restarts the leave balance. Through the edit form none of that
+         * would happen: the column would say full-time behind a `ZEPH262001`,
+         * with a year of intern leave behind it and nothing recording when it
+         * changed.
+         */
+        $employee = $this->anEmployee();
+        $employee->update(['employment_type' => Employee::INTERN]);
+
+        $this->signInAsStaff(['employee', 'hr']);
+
+        $this->post('/employees/'.$employee->user->user_id, $this->validPayload([
+            'name' => $employee->user->name,
+            'email' => $employee->user->email,
+            'employment_type' => Employee::FULL_TIME,
+        ]))->assertRedirect();
+
+        $this->assertSame(Employee::INTERN, $employee->fresh()->employment_type);
     }
 
     public function test_an_email_already_in_use_is_refused(): void
@@ -298,6 +351,7 @@ class EmployeeWritesTest extends TestCase
             'email' => 'new.person@example.test',
             'department_id' => MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->value('id'),
             'designation_id' => MasterDataItem::inList(MasterDataItem::DESIGNATIONS)->value('id'),
+            'employment_type' => Employee::FULL_TIME,
             'joined_on' => Carbon::now()->subMonth()->toDateString(),
             'date_of_birth' => '1995-04-11',
             'announce_milestones' => '1',
