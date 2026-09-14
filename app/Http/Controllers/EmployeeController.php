@@ -41,6 +41,21 @@ class EmployeeController extends Controller
 {
     protected const PER_PAGE = 8;
 
+    /**
+     * The three things a reveal may ask for, and what each is called.
+     *
+     * A fixed list because the key arrives in the request and names a column.
+     * IFSC is absent on purpose: it is never masked, so there is nothing to
+     * reveal — and the bank name is not an identifier at all.
+     *
+     * @var array<string, string>
+     */
+    protected const REVEALABLE = [
+        'id_proof_number' => 'ID proof number',
+        'pan' => 'PAN',
+        'account_number' => 'Account number',
+    ];
+
     /** The donut's radius and the circumference derived from it. */
     protected const DONUT_RADIUS = 57;
 
@@ -102,7 +117,7 @@ class EmployeeController extends Controller
              * view never receives a full number to hide — markup the browser
              * was sent has already been read by whoever is sitting at it.
              */
-            'identity' => $this->maskedIdentity($request, $record),
+            'identity' => $this->withReveal($this->maskedIdentity($request, $record), $record),
             'maySeeIdentifiers' => $this->rbac->can($request->user(), 'employees.identifiers'),
             'mayEdit' => $this->rbac->can($request->user(), 'employees.edit'),
             'mayDeactivate' => $this->rbac->can($request->user(), 'employees.deactivate')
@@ -335,6 +350,102 @@ class EmployeeController extends Controller
     /* ══════════════════════════════════════════════════════════════════════
        THE PIECES
        ══════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * Show one identifier in full, once, and write down that it happened.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * THE FIELD NAME COMES FROM THE REQUEST AND READS A COLUMN
+     *
+     * So it is checked against a fixed list rather than trusted. Unchecked,
+     * `password` and `remember_token` would be exactly as valid a thing to ask
+     * for as `pan`, and the reveal would become a read-anything endpoint that
+     * happens to be called reveal.
+     *
+     * THE REASON IS REQUIRED BECAUSE THE ENTRY IS READ MONTHS LATER
+     *
+     * "HR viewed an account number on 14 September" answers nothing on its own.
+     * "…because a transfer bounced and the bank asked us to confirm it" is what
+     * makes the entry worth having, and nobody will remember it afterwards.
+     */
+    public function reveal(Request $request, string $employee): RedirectResponse
+    {
+        $record = $this->find($employee);
+
+        $data = $request->validate([
+            'field' => ['required', Rule::in(array_keys(self::REVEALABLE))],
+            'reason' => ['required', 'string', 'min:3', 'max:300'],
+        ]);
+
+        $banking = EmployeeBanking::where('employee_id', $record->id)->first();
+
+        // Nothing on file is not a reveal that failed — there was no look to
+        // record, so nothing is written either.
+        if ($banking === null) {
+            abort(404);
+        }
+
+        $field = $data['field'];
+        $label = self::REVEALABLE[$field];
+
+        $this->audit->record(
+            action: AuditLog::IDENTIFIER_REVEALED,
+            actor: $request->user(),
+            entityType: 'employee',
+            entityId: $record->user?->user_id ?? (string) $record->id,
+            // The field and the stated reason. Never the value — see the
+            // constant's own note in App\Support\Audit\AuditLog.
+            after: $label.' — '.$data['reason'],
+            request: $request,
+        );
+
+        return redirect()
+            ->route('employees.show', ['employee' => $record->user?->user_id])
+            /*
+             * Flashed, so it survives exactly one render. Anything longer-lived
+             * would be a page that shows a full identifier to whoever opens it
+             * next, which is the state this whole module is shaped to avoid.
+             */
+            ->with('revealed', [
+                'staff_id' => $record->user?->user_id,
+                'field' => $field,
+                'label' => $label,
+                'value' => (string) $banking->{$field},
+            ]);
+    }
+
+    /**
+     * Fold a just-revealed value into the masked card, for this render only.
+     *
+     * Done HERE and not in `maskedIdentity()`, which the edit form also calls:
+     * a reveal must never reach a page whose inputs post back what they are
+     * shown, or the next save would write the revealed value into a field the
+     * form is supposed to leave alone.
+     *
+     * @param  array<string, mixed>|null  $identity
+     * @return array<string, mixed>|null
+     */
+    protected function withReveal(?array $identity, Employee $record): ?array
+    {
+        $revealed = session('revealed');
+
+        if ($identity === null || ! is_array($revealed)) {
+            return $identity;
+        }
+
+        // The flash names whose record it belongs to. Without this check a
+        // reveal on one person would light up the same field on the next
+        // record the viewer opened.
+        if (($revealed['staff_id'] ?? null) !== $record->user?->user_id) {
+            return $identity;
+        }
+
+        return $identity + [
+            'revealed_field' => $revealed['field'],
+            'revealed_label' => $revealed['label'],
+            'revealed_value' => $revealed['value'],
+        ];
+    }
 
     /**
      * Somebody else's identifiers, masked — or nothing at all.

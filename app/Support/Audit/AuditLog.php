@@ -63,6 +63,21 @@ class AuditLog
     public const EMPLOYEE_CREATED = 'employee.created';
     public const EMPLOYEE_UPDATED = 'employee.updated';
     public const EMPLOYEE_STATUS_CHANGED = 'employee.status_changed';
+    /*
+     * Somebody looked at one full identifier — an ID proof number, a PAN, a
+     * bank account — and said why.
+     *
+     * A READ that is logged, which almost nothing else here is. It earns that
+     * because the looking is itself the act worth accounting for: the number
+     * does not change, the record does not change, and the only thing that
+     * happened is that a person now knows something they did not. Without an
+     * entry, "who has seen my Aadhaar" has no answer at all.
+     *
+     * The entry names the field and the reason. It never carries the value —
+     * that would copy a decrypted identifier into the one table nothing may
+     * edit, and the Admin Panel lists that table by the page.
+     */
+    public const IDENTIFIER_REVEALED = 'employee.identifier_revealed';
 
     public const CLIENT_CREATED = 'client.created';
     public const CLIENT_UPDATED = 'client.updated';

@@ -176,6 +176,19 @@ Route::post('/employees/{employee}/status', [EmployeeController::class, 'status'
     ->name('employees.status');
 
 /*
+ * One full identifier, for a stated reason, written to the audit log.
+ *
+ * POST and never GET, and that is not a formality. A GET would be a link:
+ * prefetched by the browser, kept in history, repeated by the back button —
+ * and every one of those writes an entry for a look nobody took, which makes
+ * the log worthless in precisely the situation it exists for.
+ */
+Route::post('/employees/{employee}/reveal', [EmployeeController::class, 'reveal'])
+    ->where('employee', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:employees.identifiers')
+    ->name('employees.reveal');
+
+/*
  * Teams (2026-09-09).
  *
  * ─────────────────────────────────────────────────────────────────────────────

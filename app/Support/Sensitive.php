@@ -212,19 +212,21 @@ class Sensitive
      * change is a swap of one step, not a rework of who can see what.
      * ─────────────────────────────────────────────────────────────────────────
      *
-     * @param  string  $purpose  why the reveal is being asked for — written to
-     *                           the audit entry alongside who asked
+     * ─────────────────────────────────────────────────────────────────────────
+     * PATH 2 EXISTS NOW, AND IT IS NOT IN THIS CLASS (2026-09-14)
+     *
+     * `revealFor()` stood here as a deliberate throw while the two things a
+     * reveal needs — a permission to check and a log to write to — did not yet
+     * exist. Both do, so it has been replaced rather than filled in:
+     * EmployeeController::reveal is the whole of it.
+     *
+     * It could not live here. A static masking helper has no audit log, no
+     * actor and no request, so any version of it would either have written
+     * nothing down or grown dependencies that have no business in a class whose
+     * entire job is turning a string into a shorter string.
+     *
+     * What this class still guarantees is the part that never changes: every
+     * value on every page has passed through one of the maskers above.
+     * ─────────────────────────────────────────────────────────────────────────
      */
-    public static function revealFor(?string $viewerId, string $subjectId, string $purpose): never
-    {
-        // Deliberately unimplemented rather than stubbed permissive. A reveal
-        // without a permission check and an audit entry is exactly the thing
-        // this class exists to prevent, and a version of it that "works for now"
-        // is the one that ships.
-        throw new \RuntimeException(
-            'Revealing another person’s identifiers requires the RBAC engine and the audit log '
-            .'(foundation spec §5, §6). Pay people with the bank transfer file instead — see the '
-            .'note above this method.'
-        );
-    }
 }

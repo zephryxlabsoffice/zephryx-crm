@@ -1,3 +1,35 @@
+/* ─────────────────────────  revealing one identifier  ─────────────────────────
+   A reason box and its button, one row per field, on the record page.
+
+   Deliberately plain and deliberately not a button on its own: the reason is
+   required, so putting the two side by side says that the sentence is part of
+   the act rather than a confirmation somebody dismisses. Three of these stack
+   under the masked card.
+
+   No JavaScript anywhere near it — the CSP forbids inline script, and a
+   privileged read that writes an audit entry must not need script to work. */
+.reveal-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.reveal-row input {
+  flex: 1;
+  min-width: 0;   /* Without this the input refuses to shrink and pushes the
+                     button off the card on a narrow rail. */
+}
+.reveal-row .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Side by side needs width the rail does not have on a phone. */
+@media (max-width: 560px) {
+  .reveal-row { flex-direction: column; align-items: stretch; }
+  .reveal-row .btn { width: 100%; }
+}
+
 /* ============================================================================
    Employees — GET /employees.
 
