@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\EmployeeBanking;
 use App\Models\Permission;
+use App\Support\IdProof;
 use Tests\TestCase;
 
 /**
@@ -78,7 +79,13 @@ class EmployeeIdentityTest extends TestCase
     {
         $this->signInAsStaff(['employee', 'hr']);
 
-        $banking = EmployeeBanking::firstOrFail();
+        /*
+         * An Aadhaar holder specifically, not merely the first row. The demo
+         * people carry all four document types since 2026-09-14, and pinning
+         * this to whichever row came back first would make the assertion below
+         * depend on fixture ordering rather than on the masking rule.
+         */
+        $banking = EmployeeBanking::where('id_proof_type', IdProof::AADHAAR)->firstOrFail();
         $subject = $banking->employee->user->user_id;
 
         $html = $this->get('/employees/'.$subject)->assertOk()->getContent();

@@ -55,20 +55,38 @@ class DemoSalaries
     protected static function banking(): array
     {
         return [
-            'EMP001' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0001234', 'account' => '50100234567890', 'pan' => 'ABCDE1234F', 'id_proof_number' => '123456781234'],
-            'EMP002' => ['bank' => 'ICICI Bank', 'ifsc' => 'ICIC0000456', 'account' => '004501556789',   'pan' => 'BCDEF2345G', 'id_proof_number' => '234567892345'],
-            'EMP003' => ['bank' => 'Axis Bank',  'ifsc' => 'UTIB0000789', 'account' => '917010045678',   'pan' => 'CDEFG3456H', 'id_proof_number' => '345678903456'],
-            'EMP004' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0000987', 'account' => '50100987654321', 'pan' => 'DEFGH4567I', 'id_proof_number' => '456789014567'],
-            'EMP005' => ['bank' => 'SBI',        'ifsc' => 'SBIN0011223', 'account' => '38291045612',    'pan' => 'EFGHI5678J', 'id_proof_number' => '567890125678'],
-            'EMP006' => ['bank' => 'ICICI Bank', 'ifsc' => 'ICIC0000456', 'account' => '004501778899',   'pan' => 'FGHIJ6789K', 'id_proof_number' => '678901236789'],
-            'EMP007' => ['bank' => 'Axis Bank',  'ifsc' => 'UTIB0000789', 'account' => '917010112233',   'pan' => 'GHIJK7890L', 'id_proof_number' => '789012347890'],
-            'EMP008' => ['bank' => 'SBI',        'ifsc' => 'SBIN0011223', 'account' => '38291099887',    'pan' => 'HIJKL8901M', 'id_proof_number' => '890123458901'],
-            'EMP009' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0001234', 'account' => '50100445566778', 'pan' => 'IJKLM9012N', 'id_proof_number' => '901234569012'],
-            'EMP010' => ['bank' => 'Kotak',      'ifsc' => 'KKBK0000321', 'account' => '7412583690',     'pan' => 'JKLMN0123O', 'id_proof_number' => '012345670123'],
+            /*
+             * ─────────────────────────────────────────────────────────────────
+             * FOUR DOCUMENT TYPES, BECAUSE ONE PROVES NOTHING
+             *
+             * These were all Aadhaar until 2026-09-14, which made every masked
+             * row on every page read "Aadhaar" — and a broken passport or
+             * driving-licence masking rule would have looked exactly like a
+             * working one.
+             *
+             * Each number matches the shape its own document actually has (see
+             * App\Support\IdProof::numberRules), so the demo data is also a
+             * standing check that those rules accept real formats.
+             *
+             * `copy_received` is deliberately missing for some people: the
+             * photocopy is submitted on paper, and "Not yet" is the state HR
+             * has to be able to see and chase.
+             * ─────────────────────────────────────────────────────────────────
+             */
+            'EMP001' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0001234', 'account' => '50100234567890', 'pan' => 'ABCDE1234F', 'id_proof_type' => 'aadhaar',         'id_proof_number' => '123456781234',   'copy_received' => '-6 months'],
+            'EMP002' => ['bank' => 'ICICI Bank', 'ifsc' => 'ICIC0000456', 'account' => '004501556789',   'pan' => 'BCDEF2345G', 'id_proof_type' => 'aadhaar',         'id_proof_number' => '234567892345',   'copy_received' => '-5 months'],
+            'EMP003' => ['bank' => 'Axis Bank',  'ifsc' => 'UTIB0000789', 'account' => '917010045678',   'pan' => 'CDEFG3456H', 'id_proof_type' => 'passport',        'id_proof_number' => 'M1234567',       'copy_received' => '-4 months'],
+            'EMP004' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0000987', 'account' => '50100987654321', 'pan' => 'DEFGH4567I', 'id_proof_type' => 'voter_id',        'id_proof_number' => 'WBX4567890',     'copy_received' => null],
+            'EMP005' => ['bank' => 'SBI',        'ifsc' => 'SBIN0011223', 'account' => '38291045612',    'pan' => 'EFGHI5678J', 'id_proof_type' => 'aadhaar',         'id_proof_number' => '567890125678',   'copy_received' => '-3 months'],
+            'EMP006' => ['bank' => 'ICICI Bank', 'ifsc' => 'ICIC0000456', 'account' => '004501778899',   'pan' => 'FGHIJ6789K', 'id_proof_type' => 'driving_licence', 'id_proof_number' => 'WB1420110054321', 'copy_received' => null],
+            'EMP007' => ['bank' => 'Axis Bank',  'ifsc' => 'UTIB0000789', 'account' => '917010112233',   'pan' => 'GHIJK7890L', 'id_proof_type' => 'aadhaar',         'id_proof_number' => '789012347890',   'copy_received' => '-2 months'],
+            'EMP008' => ['bank' => 'SBI',        'ifsc' => 'SBIN0011223', 'account' => '38291099887',    'pan' => 'HIJKL8901M', 'id_proof_type' => 'passport',        'id_proof_number' => 'K7654321',       'copy_received' => null],
+            'EMP009' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0001234', 'account' => '50100445566778', 'pan' => 'IJKLM9012N', 'id_proof_type' => 'voter_id',        'id_proof_number' => 'ABC1234567',     'copy_received' => '-1 month'],
+            'EMP010' => ['bank' => 'Kotak',      'ifsc' => 'KKBK0000321', 'account' => '7412583690',     'pan' => 'JKLMN0123O', 'id_proof_type' => 'aadhaar',         'id_proof_number' => '012345670123',   'copy_received' => null],
             // EMP011 deliberately has no banking details on file: a recent
             // joiner nobody has set up yet. That state has to be reviewable,
             // because it is the one where somebody quietly does not get paid.
-            'EMP012' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0000987', 'account' => '50100778899001', 'pan' => 'LMNOP2345Q', 'id_proof_number' => '234561092345'],
+            'EMP012' => ['bank' => 'HDFC Bank',  'ifsc' => 'HDFC0000987', 'account' => '50100778899001', 'pan' => 'LMNOP2345Q', 'id_proof_type' => 'driving_licence', 'id_proof_number' => 'MH1220119988776', 'copy_received' => '-2 years'],
         ];
     }
 

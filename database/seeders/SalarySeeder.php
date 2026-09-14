@@ -64,11 +64,24 @@ class SalarySeeder extends Seeder
                     'ifsc' => $details['ifsc'],
                     'account_number' => $details['account'],
                     'pan' => $details['pan'],
-                    // Every demo person produced an Aadhaar. The type is stated
-                    // rather than inferred from the number: a number with no
-                    // document name is withheld from every screen.
-                    'id_proof_type' => IdProof::AADHAAR,
+                    /*
+                     * The document each person actually produced, from the
+                     * fixture rather than assumed. It was hardcoded to Aadhaar
+                     * while the fixtures held nothing else, which made every
+                     * masked row on every page read the same and hid whether
+                     * the other three masking rules worked at all.
+                     *
+                     * Still stated rather than inferred from the number: a
+                     * number whose document cannot be named is withheld from
+                     * every screen.
+                     */
+                    'id_proof_type' => $details['id_proof_type'] ?? IdProof::AADHAAR,
                     'id_proof_number' => $details['id_proof_number'],
+                    // Null for some people on purpose — the photocopy arrives
+                    // on paper, and "Not yet" is a state HR has to chase.
+                    'id_proof_copy_received_on' => isset($details['copy_received'])
+                        ? Carbon::parse($details['copy_received'])
+                        : null,
                 ],
             );
         }
