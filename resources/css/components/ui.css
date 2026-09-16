@@ -1094,6 +1094,19 @@
 }
 .section-hd svg { width: 16px; height: 16px; color: var(--muted); }
 
+/* A heading BELOW a section heading, for a card that groups its fields — the
+   employee form's pay components, one group per engagement. Quieter and
+   lighter than the heading above it, so the grouping reads as a subdivision of
+   one card rather than as three cards that lost their borders. */
+.section-hd-sub {
+  padding-top: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
 /* ── running text inside a card (was tasks.css) ── */
 .prose {
   padding: 20px 22px;

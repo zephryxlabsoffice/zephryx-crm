@@ -11,7 +11,10 @@ use App\Support\Audit\AuditLog;
 use App\Support\Auth\PasswordResets;
 use App\Models\EmployeeBanking;
 use App\Models\EmployeeProfile;
+use App\Models\EmployeeSalaryStructure as SalaryStructureModel;
 use App\Support\EmployeeDirectory;
+use App\Support\Money;
+use App\Support\SalaryStructure;
 use App\Support\EmployeePresenter;
 use App\Support\IdProof;
 use App\Support\Rbac\Rbac;
@@ -127,6 +130,7 @@ class EmployeeController extends Controller
              * who merely holds `employees.view`.
              */
             'addresses' => $this->addresses($request, $record),
+            'salary' => $this->salaryCard($request, $record),
             'maySeeIdentifiers' => $this->rbac->can($request->user(), 'employees.identifiers'),
             'mayEdit' => $this->rbac->can($request->user(), 'employees.edit'),
             'mayDeactivate' => $this->rbac->can($request->user(), 'employees.deactivate')
@@ -152,6 +156,16 @@ class EmployeeController extends Controller
             // Nothing on file for somebody who does not exist yet.
             'identity' => null,
             'addresses' => null,
+            /*
+             * The form draws the pay boxes for whoever may write them, and the
+             * engagement decides WHICH boxes. On a create that is not known
+             * until the dropdown is chosen, so the form renders all three sets
+             * and the validator accepts only the set that matches — the same
+             * arrangement as the staff ID, which is also not knowable until the
+             * type is picked.
+             */
+            'salaryFields' => [],
+            'maySetSalary' => $this->rbac->can($request->user(), 'salary.manage'),
         ] + $this->formOptions());
     }
 
@@ -215,6 +229,7 @@ class EmployeeController extends Controller
             // when the form demanded one is a half-made hire.
             $this->writeIdentity($employee, $data, $request);
             $this->writeAddresses($employee, $data, $request);
+            $this->writeSalary($employee, $data, $request);
 
             return $employee;
         });
@@ -260,6 +275,8 @@ class EmployeeController extends Controller
              * empty box as "keep what is stored".
              */
             'addresses' => $this->addresses($request, $record),
+            'salaryFields' => $this->salaryFields($request, $record),
+            'maySetSalary' => $this->rbac->can($request->user(), 'salary.manage'),
         ] + $this->formOptions());
     }
 
@@ -278,6 +295,7 @@ class EmployeeController extends Controller
 
             $this->writeIdentity($record, $data, $request);
             $this->writeAddresses($record, $data, $request);
+            $this->writeSalary($record, $data, $request);
 
             $record->update([
                 'department_id' => $data['department_id'] ?? null,
@@ -590,7 +608,10 @@ class EmployeeController extends Controller
         }
 
         return $request->validate(
-            $rules + $this->identityRules($request, $existing) + $this->addressRules($request, $existing),
+            $rules
+                + $this->identityRules($request, $existing)
+                + $this->addressRules($request, $existing)
+                + $this->salaryRules($request, $existing),
             $this->identityMessages($request),
         );
     }
@@ -855,6 +876,236 @@ class EmployeeController extends Controller
             after: ($existing === null ? 'Recorded: ' : 'Changed: ').implode(', ', $changed),
             request: $request,
         );
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       WHAT SOMEBODY IS PAID
+       ══════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * The pay components, behind their own two permissions.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * `salary.manage` TO WRITE, AND NO RULES AT ALL WITHOUT IT
+     *
+     * Returning an empty rule set is the gate, not an afterthought. `validate()`
+     * returns only what it validated, so a key with no rule never reaches
+     * `$data` and `writeSalary()` finds nothing to write — the request is not
+     * refused, it simply carries no authority over pay. Somebody holding
+     * `employees.edit` and not `salary.manage` can correct a department all day
+     * and cannot touch a salary by posting extra fields at the same form.
+     *
+     * A REQUIRED FIELD NOBODY MAY FILL IN WOULD BE A LOCKED DOOR
+     *
+     * Which is why `required` depends on the permission as well as the
+     * engagement. Without it there would be nothing to require.
+     *
+     * ZERO IS AN ANSWER; EMPTY IS NOT AN ANSWER
+     *
+     * PF of 0 is a statement that none is deducted, and it is stored. An empty
+     * box is "not stated" — null on a create, and on an edit it means keep,
+     * like every other field on this form.
+     *
+     * @return array<string, list<mixed>>
+     */
+    protected function salaryRules(Request $request, ?Employee $existing): array
+    {
+        if (! $this->rbac->can($request->user(), 'salary.manage')) {
+            return [];
+        }
+
+        $kind = $this->salaryKind($request, $existing);
+
+        // Required when hiring, per the owner's list: full-time, everything.
+        // An intern's stipend and a freelancer's rate are asked for and not
+        // demanded — an intern may be added before the stipend is agreed, and a
+        // freelancer's rate lives outside this application anyway.
+        $required = $existing === null && $kind === SalaryStructureModel::BREAKDOWN
+            ? 'required'
+            : 'nullable';
+
+        $rules = [];
+
+        foreach (SalaryStructure::columns($kind) as $column) {
+            /*
+             * `decimal:0,2` rather than `numeric`: this is money, and a figure
+             * with three decimal places is somebody typing a thousands
+             * separator in the wrong place. Bounded above because a stray
+             * keystroke on a salary field is a number nobody notices until it
+             * is on a payslip.
+             */
+            $rules[self::input($column)] = [$required, 'decimal:0,2', 'min:0', 'max:99999999'];
+        }
+
+        if ($kind === SalaryStructureModel::RATE) {
+            // A rate with no basis is a number nobody can act on, so the basis
+            // is required exactly when a rate is given.
+            $rules['rate_basis'] = ['nullable', 'required_with:rate', Rule::in(SalaryStructureModel::BASES)];
+        }
+
+        return $rules;
+    }
+
+    /**
+     * Which shape this person's agreement has.
+     *
+     * From the engagement type — the column, not the digit in the staff ID —
+     * which on a create comes from the form and on an edit cannot change at
+     * all, because converting an intern is its own act.
+     */
+    protected function salaryKind(Request $request, ?Employee $existing): string
+    {
+        return SalaryStructure::kindFor(
+            $existing?->employment_type ?? (string) $request->input('employment_type')
+        );
+    }
+
+    /**
+     * The form field behind a column: `basic_minor` is typed into `basic`.
+     */
+    protected static function input(string $column): string
+    {
+        return str_replace('_minor', '', $column);
+    }
+
+    /**
+     * Record the agreement, and record THAT it changed.
+     *
+     * Blank keeps and the entry names fields rather than figures — the same two
+     * rules as `writeIdentity()`, for the same reasons.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function writeSalary(Employee $employee, array $data, Request $request): void
+    {
+        if (! $this->rbac->can($request->user(), 'salary.manage')) {
+            return;
+        }
+
+        $kind = SalaryStructure::kindFor($employee->employment_type);
+        $currency = (string) config('zephryx.currency.code', Money::DEFAULT_CURRENCY);
+
+        $supplied = [];
+
+        foreach (SalaryStructure::columns($kind) as $column) {
+            $typed = $data[self::input($column)] ?? null;
+
+            if ($typed === null || $typed === '') {
+                continue;
+            }
+
+            // Major units in the form, minor units in the column. The
+            // conversion happens once, here, and never in a view.
+            $supplied[$column] = Money::fromMajor($typed, $currency)->minor;
+        }
+
+        if ($kind === SalaryStructureModel::RATE && ! empty($data['rate_basis'])) {
+            $supplied['rate_basis'] = $data['rate_basis'];
+        }
+
+        if ($supplied === []) {
+            return;
+        }
+
+        $existing = SalaryStructureModel::where('employee_id', $employee->id)->first();
+
+        $changed = [];
+
+        foreach ($supplied as $column => $value) {
+            if ($existing === null || (string) $existing->{$column} !== (string) $value) {
+                $changed[] = $column === 'rate_basis' ? 'Rate basis' : SalaryStructure::label($column);
+            }
+        }
+
+        SalaryStructureModel::updateOrCreate(
+            ['employee_id' => $employee->id],
+            $supplied + [
+                'kind' => $kind,
+                'currency' => $currency,
+                'updated_by' => $request->user()->id,
+            ],
+        );
+
+        if ($changed === []) {
+            return;
+        }
+
+        $this->audit->record(
+            action: AuditLog::SALARY_STRUCTURE_CHANGED,
+            actor: $request->user(),
+            entityType: 'employee',
+            entityId: $employee->user?->user_id ?? (string) $employee->id,
+            after: ($existing === null ? 'Recorded: ' : 'Changed: ').implode(', ', $changed),
+            request: $request,
+        );
+    }
+
+    /**
+     * The pay card, or null for somebody who may not read it.
+     *
+     * `salary.view` is the sensitive read the module already defines — seeing
+     * what a colleague earns is itself the harm — so it is that key and not
+     * `employees.identifiers`, which is about documents. HR and the CEO hold
+     * both; nobody else holds either.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function salaryCard(Request $request, Employee $record): ?array
+    {
+        if (! $this->rbac->can($request->user(), 'salary.view')) {
+            return null;
+        }
+
+        $structure = SalaryStructureModel::where('employee_id', $record->id)->first();
+
+        return [
+            'kind' => SalaryStructure::kindFor($record->employment_type),
+            'card' => SalaryStructure::card($structure),
+        ];
+    }
+
+    /**
+     * What the edit form prefills its pay boxes with.
+     *
+     * Prefilled, like the addresses and unlike the identifiers. A salary is
+     * revised by changing one component, and a form that made HR retype all six
+     * from memory would produce a wrong figure eventually — which is a worse
+     * outcome than the figure being on a page only `salary.view` can open.
+     *
+     * Keyed by INPUT name and rendered with `plain()`, which does not group:
+     * a prefilled "1,20,000.00" is a value the server would refuse on the way
+     * back in.
+     *
+     * @return array<string, string>
+     */
+    protected function salaryFields(Request $request, ?Employee $record): array
+    {
+        if ($record === null || ! $this->rbac->can($request->user(), 'salary.view')) {
+            return [];
+        }
+
+        $structure = SalaryStructureModel::where('employee_id', $record->id)->first();
+
+        if ($structure === null) {
+            return [];
+        }
+
+        $fields = [];
+
+        foreach (SalaryStructure::columns($structure->kind) as $column) {
+            if ($structure->{$column} !== null) {
+                $fields[self::input($column)] = Money::of(
+                    (int) $structure->{$column},
+                    $structure->currency ?: Money::DEFAULT_CURRENCY,
+                )->plain();
+            }
+        }
+
+        if ($structure->rate_basis !== null) {
+            $fields['rate_basis'] = $structure->rate_basis;
+        }
+
+        return $fields;
     }
 
     /**

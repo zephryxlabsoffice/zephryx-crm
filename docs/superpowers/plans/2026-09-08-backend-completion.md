@@ -495,8 +495,18 @@ Step 1 is part done. What is committed, in order:
   that reason too — a correction is a line, not a re-entry. The audit entry
   names the field and never the address.
 
-Still to do in step 1: the salary structure (Basic / HRA / allowances / PF /
-PT / TDS), the profile change-request flow, and convert-intern-to-full-time.
+- **The salary structure** (2026-09-16) — `employee_salary_structures`, one row
+  per person, shaped by the engagement: six components for full-time, a single
+  stipend for an intern, a rate and a basis for a freelancer. Amounts are
+  integers of paise. Required of a full-time hire, read behind `salary.view`
+  and written behind `salary.manage` — so `employees.edit` alone cannot move a
+  salary by posting extra fields at the same form. **No total is computed and
+  the Salary page does not show it**: a breakdown printed beside an uploaded
+  payslip would argue with it in any month carrying a deduction. The audit
+  entry names the components that moved, never the figures.
+
+Still to do in step 1: the profile change-request flow, and
+convert-intern-to-full-time.
 Also still missing from the add form, noticed while doing the addresses:
 personal email alongside the work email, and a phone number — the latter is
 required of interns and freelancers by the decisions above, so it cannot wait

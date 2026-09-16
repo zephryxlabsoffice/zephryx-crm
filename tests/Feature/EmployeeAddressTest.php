@@ -238,6 +238,14 @@ class EmployeeAddressTest extends TestCase
             'current_address' => "1 Somewhere Road\nKolkata",
             'permanent_address' => "2 Elsewhere Lane\nHowrah",
 
+            // Required of a full-time hire too, and about nothing in this file.
+            'basic' => '60000',
+            'hra' => '24000',
+            'allowances' => '6000',
+            'pf' => '1800',
+            'pt' => '200',
+            'tds' => '5000',
+
             'id_proof_type' => IdProof::AADHAAR,
             'id_proof_number' => '123456781234',
             'pan' => 'ABCDE1234F',

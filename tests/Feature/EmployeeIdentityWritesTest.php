@@ -289,6 +289,12 @@ class EmployeeIdentityWritesTest extends TestCase
             // Required for a full-time hire, which is what this payload is.
             'current_address' => "1 Somewhere Road\nKolkata",
             'permanent_address' => "2 Elsewhere Lane\nHowrah",
+            'basic' => '60000',
+            'hra' => '24000',
+            'allowances' => '6000',
+            'pf' => '1800',
+            'pt' => '200',
+            'tds' => '5000',
 
             'id_proof_type' => IdProof::AADHAAR,
             'id_proof_number' => '123456781234',

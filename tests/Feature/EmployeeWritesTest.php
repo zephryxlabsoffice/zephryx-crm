@@ -375,6 +375,20 @@ class EmployeeWritesTest extends TestCase
             'ifsc' => 'HDFC0001234',
             'account_number' => '50100234567890',
             'announce_milestones' => '1',
+
+            /*
+             * The pay agreement, required of a full-time hire since 2026-09-16
+             * and carried here for the same reason as the identity fields: none
+             * of the cases in this file is about it.
+             *
+             * What these do on their own is EmployeeSalaryStructureTest.
+             */
+            'basic' => '60000',
+            'hra' => '24000',
+            'allowances' => '6000',
+            'pf' => '1800',
+            'pt' => '200',
+            'tds' => '5000',
         ];
     }
 

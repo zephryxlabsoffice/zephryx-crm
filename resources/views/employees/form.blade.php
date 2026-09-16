@@ -408,6 +408,9 @@
                         </div>
                     </div>
                 </div>
+                @if ($maySetSalary)
+                    @include('employees.partials.salary-fields')
+                @endif
             </div>
 
             <aside class="rail">

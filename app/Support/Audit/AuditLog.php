@@ -170,6 +170,17 @@ class AuditLog
     public const SALARY_PAID = 'salary.paid';
     public const SALARY_PAYSLIP_DOWNLOADED = 'salary.payslip_downloaded';
     public const SALARY_BANKING_CHANGED = 'salary.banking_changed';
+    /*
+     * The standing agreement about somebody's pay was recorded or revised.
+     *
+     * Names the components that moved and not the figures, which is the same
+     * rule the banking entry follows. What an audit trail has to answer is
+     * "who changed this person's salary, and when" — a question a field name
+     * answers completely. Carrying the amounts would make this table a
+     * permanent, unredactable history of everybody's pay, reachable by anybody
+     * who can open the audit screen, which is a wider set than `salary.view`.
+     */
+    public const SALARY_STRUCTURE_CHANGED = 'salary.structure_changed';
 
     public const TICKET_RAISED = 'ticket.raised';
     public const TICKET_COMMENTED = 'ticket.commented';

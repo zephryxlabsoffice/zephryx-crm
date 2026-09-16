@@ -104,6 +104,10 @@
                 @include('employees.partials.identity', ['identity' => $identity])
             @endif
 
+            @if ($salary !== null)
+                @include('employees.partials.salary', ['salary' => $salary])
+            @endif
+
             @if ($mayDeactivate)
                 <div class="card att-reject">
                     <div class="section-hd">
