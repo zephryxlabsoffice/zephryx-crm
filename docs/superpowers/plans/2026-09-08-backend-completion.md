@@ -505,8 +505,18 @@ Step 1 is part done. What is committed, in order:
   payslip would argue with it in any month carrying a deduction. The audit
   entry names the components that moved, never the figures.
 
-Still to do in step 1: the profile change-request flow, and
-convert-intern-to-full-time.
+- **The profile change-request flow** (2026-09-16) — My Profile stopped saving.
+  `profile_change_requests` holds a pending row shaped like `email_changes`:
+  only the fields that differ, the live record untouched, spent rows kept. A
+  new owner in `ProfilePolicy` — `REQUESTED` — carries the reversal, and
+  preferences deliberately stayed `SELF`. The photo is cleaned and stored on
+  upload but lands on the request, not the record; a declined or withdrawn one
+  deletes the candidate file. HR works a queue at `/employees/requests` behind
+  `employees.edit`, which names fields and never values, and **nobody decides
+  their own**. Declining requires a reason, and the person reads it on their
+  own page.
+
+Still to do in step 1: convert-intern-to-full-time.
 Also still missing from the add form, noticed while doing the addresses:
 personal email alongside the work email, and a phone number — the latter is
 required of interns and freelancers by the decisions above, so it cannot wait

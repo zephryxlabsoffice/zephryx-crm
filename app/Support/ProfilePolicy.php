@@ -36,8 +36,27 @@ namespace App\Support;
  * What IS the person's own is everything that describes them rather than
  * identifies them, plus everything about how they are contacted and how the
  * application behaves for them. That list is genuinely long, and it is what
- * makes the page worth having: nobody should raise a ticket to correct their
- * own phone number.
+ * makes the page worth having.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * AND THEN HALF OF THAT LIST MOVED (2026-09-14)
+ *
+ * The paragraph above ended "nobody should raise a ticket to correct their own
+ * phone number", and the owner has reversed it on purpose. The profile is the
+ * COMPANY'S record of a person. It is corrected against documents handed in at
+ * the office, not on the strength of a form.
+ *
+ * So the descriptive fields, the contact details, the emergency contact and the
+ * photo are now REQUESTED: the person fills the form in, a pending row is
+ * written, the live record does not move, and HR applies it when the paperwork
+ * arrives. What did NOT move is the preferences — theme, density, sidebar and
+ * the two notification toggles still save on the spot, because they are
+ * settings rather than a record of anything, and an approval queue full of
+ * dark-mode requests would bury the ones that matter.
+ *
+ * The reversal is not a loosening or a tightening of this class's rule; it is
+ * the same rule applied to a different answer about who owns a fact. Which is
+ * why it is a new owner constant and not a special case somewhere else.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * WHY THIS IS A TABLE AND NOT AN `@if` IN A BLADE
@@ -57,6 +76,16 @@ class ProfilePolicy
 {
     /** Type it, save it. */
     public const SELF = 'self';
+
+    /**
+     * Theirs to correct, but not on their own say-so (2026-09-14).
+     *
+     * They fill the field in, the request goes to HR, they bring the document
+     * to the office, and HR applies it. The live record does not move in the
+     * meantime. See App\Support\Profile\ProfileChanges and the head of this
+     * class for the reversal this represents.
+     */
+    public const REQUESTED = 'requested';
 
     /** Theirs to change, but only by proving it — never a text box. */
     public const VERIFIED = 'verified';
@@ -89,21 +118,39 @@ class ProfilePolicy
         'last_login' => [self::SYSTEM, 'Last sign-in', 'Recorded automatically. If it looks wrong, tell the owner.'],
         'email_verified' => [self::SYSTEM, 'Email verified', 'Set when you confirmed your address.'],
 
-        // ── the person's own ──
-        'phone' => [self::SELF, 'Phone number', ''],
-        'current_address' => [self::SELF, 'Current address', ''],
-        'permanent_address' => [self::SELF, 'Permanent address', ''],
-        'gender' => [self::SELF, 'Gender', ''],
-        'marital_status' => [self::SELF, 'Marital status', ''],
-        'nationality' => [self::SELF, 'Nationality', ''],
-        'languages' => [self::SELF, 'Languages known', ''],
-        'skills' => [self::SELF, 'Skills', ''],
-        'photo' => [self::SELF, 'Profile photo', ''],
-        'emergency_name' => [self::SELF, 'Emergency contact name', ''],
-        'emergency_relationship' => [self::SELF, 'Relationship', ''],
-        'emergency_phone' => [self::SELF, 'Emergency contact number', ''],
+        /*
+         * ── the person's, corrected against documents ──
+         *
+         * Reversed from SELF on 2026-09-14. Every one of these describes a fact
+         * about somebody that the company holds a paper record of, and the
+         * paper record is what settles it.
+         *
+         * The `why` line is empty on all of them because they are not LOCKED —
+         * the page renders them as ordinary inputs, and the explanation belongs
+         * once above the form rather than repeated twelve times beside fields
+         * the person is being invited to fill in.
+         */
+        'phone' => [self::REQUESTED, 'Phone number', ''],
+        'current_address' => [self::REQUESTED, 'Current address', ''],
+        'permanent_address' => [self::REQUESTED, 'Permanent address', ''],
+        'gender' => [self::REQUESTED, 'Gender', ''],
+        'marital_status' => [self::REQUESTED, 'Marital status', ''],
+        'nationality' => [self::REQUESTED, 'Nationality', ''],
+        'languages' => [self::REQUESTED, 'Languages known', ''],
+        'skills' => [self::REQUESTED, 'Skills', ''],
+        'photo' => [self::REQUESTED, 'Profile photo', ''],
+        'emergency_name' => [self::REQUESTED, 'Emergency contact name', ''],
+        'emergency_relationship' => [self::REQUESTED, 'Relationship', ''],
+        'emergency_phone' => [self::REQUESTED, 'Emergency contact number', ''],
 
-        // ── preferences ──
+        /*
+         * ── preferences, and they still save instantly ──
+         *
+         * Deliberately NOT moved with the rest (2026-09-14). These are settings,
+         * not a record of anything: nothing is checked against a document,
+         * nothing downstream depends on them being true, and an approval queue
+         * full of dark-mode requests would bury the ones that matter.
+         */
         'announce_milestones' => [self::SELF, 'Announce my birthday and work anniversary', ''],
         'theme' => [self::SELF, 'Appearance', ''],
         'density' => [self::SELF, 'Density', ''],
@@ -137,6 +184,36 @@ class ProfilePolicy
     public static function isSelfEditable(string $field): bool
     {
         return self::ownerOf($field) === self::SELF;
+    }
+
+    public static function isRequestable(string $field): bool
+    {
+        return self::ownerOf($field) === self::REQUESTED;
+    }
+
+    /**
+     * The allow-list a CHANGE REQUEST validates against.
+     *
+     * The counterpart of `selfEditable()`, and it does the same job for the
+     * other half of the form: the submission validates against this and ignores
+     * every other key, and applying a stored request checks the field against
+     * it a second time. Two checks because the value crosses a table boundary
+     * in between — a field name written into a JSON column and later used to
+     * name a column to write is only safe while both ends agree on the list.
+     *
+     * `photo` is in here and has no rule alongside the others: it is a file, it
+     * arrives on its own multipart form, and what validates it is
+     * App\Support\Images\PhotoIntake. It is listed so the policy remains the
+     * single statement of what may be requested.
+     *
+     * @return list<string>
+     */
+    public static function requestable(): array
+    {
+        return array_keys(array_filter(
+            self::FIELDS,
+            fn (array $field) => $field[0] === self::REQUESTED
+        ));
     }
 
     /**

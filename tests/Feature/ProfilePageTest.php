@@ -136,9 +136,10 @@ class ProfilePageTest extends TestCase
          * designation, a date of birth and a reporting line — alongside a
          * legitimate change.
          *
-         * The legitimate change lands. Nothing else moves, and nothing errors:
-         * a request that told somebody which fields exist by refusing the ones
-         * that do would be worse than one that quietly ignores them.
+         * The legitimate one becomes a REQUEST (2026-09-14) and nothing else
+         * moves at all, with nothing erroring: a request that told somebody
+         * which fields exist by refusing the ones that do would be worse than
+         * one that quietly ignores them.
          */
         $user = $this->viewer->user;
 
@@ -162,7 +163,21 @@ class ProfilePageTest extends TestCase
             'user_id' => 'EMP999',
         ])->assertRedirect('/profile');
 
-        $this->assertSame('+91 90000 12345', $this->viewer->fresh()->profile->phone);
+        // The phone is ASKED for, not written. That is the change of 2026-09-14
+        // and the rest of this test is unchanged by it: an HR field must not
+        // reach the record through either path.
+        $this->assertNotSame('+91 90000 12345', $this->viewer->fresh()->profile?->phone);
+
+        $changes = \App\Models\ProfileChangeRequest::query()->pending()->firstOrFail()->changes;
+
+        $this->assertSame('+91 90000 12345', $changes['phone']);
+
+        // And the point of the test: not one HR field reached the request
+        // either. Being queued rather than saved is not a reason to be relaxed
+        // about what may be queued.
+        foreach (['name', 'department', 'department_id', 'designation_id', 'dob', 'date_of_birth', 'reports_to', 'email', 'role', 'user_id'] as $field) {
+            $this->assertArrayNotHasKey($field, $changes);
+        }
 
         $user->refresh();
         $this->viewer->refresh();
@@ -199,21 +214,99 @@ class ProfilePageTest extends TestCase
         $this->assertStringContainsString(route(ProfilePolicy::correctionRoute()), $html);
     }
 
-    public function test_the_things_that_are_the_persons_own_really_are_editable(): void
+    public function test_the_things_that_are_the_persons_own_are_still_on_the_form(): void
     {
-        // The counterpart: locking everything would be safe and useless. Nobody
-        // should raise a ticket to correct their own phone number.
+        /*
+         * The counterpart to the locked fields: these are not read-only boxes
+         * with an explanation, they are inputs somebody fills in. What changed
+         * on 2026-09-14 is where the submission GOES, not whether the field is
+         * theirs to fill in — so the page must still offer every one of them.
+         */
         $html = $this->get('/profile')->getContent();
 
         foreach (['phone', 'current_address', 'permanent_address', 'emergency_name', 'emergency_phone', 'skills', 'languages'] as $field) {
-            $this->assertStringContainsString('name="'.$field.'"', $html, "{$field} should be the person's own");
-            $this->assertTrue(ProfilePolicy::isSelfEditable($field));
+            $this->assertStringContainsString('name="'.$field.'"', $html, "{$field} should be on the form");
+            $this->assertTrue(ProfilePolicy::isRequestable($field));
         }
     }
 
-    public function test_the_details_form_saves_and_the_page_shows_it_back(): void
+    public function test_the_details_form_asks_rather_than_saves(): void
     {
-        $this->post('/profile', [
+        /*
+         * The reversal, stated as a test. The form posts, the page says it went
+         * to HR, and the record is exactly where it was.
+         */
+        $wasPhone = $this->viewer->profile?->phone;
+
+        $this->post('/profile', $this->details())->assertRedirect('/profile');
+
+        $this->assertSame($wasPhone, $this->viewer->fresh()->profile?->phone);
+
+        $pending = \App\Models\ProfileChangeRequest::query()->pending()->firstOrFail();
+
+        // Empties dropped and duplicates removed BEFORE the comparison:
+        // "English, Hindi,  , English" is a typo, not four languages — and a
+        // list compared as a raw string would look like a change every time.
+        $this->assertSame(['English', 'Hindi'], $pending->changes['languages']);
+        $this->assertSame(['Laravel', 'Testing'], $pending->changes['skills']);
+        $this->assertSame("1 Somewhere Road\nKolkata", $pending->changes['current_address']);
+
+        $this->assertStringContainsString('Waiting with HR', $this->pageBody('/profile'));
+    }
+
+    public function test_a_second_request_is_refused_while_one_is_waiting(): void
+    {
+        // Silently replacing the first would throw away something HR may
+        // already have half-decided, and nobody would know.
+        $this->post('/profile', $this->details())->assertRedirect('/profile');
+
+        $this->post('/profile', $this->details(['phone' => '+91 90000 00000']))
+            ->assertSessionHasErrors('pending');
+
+        $this->assertSame(1, \App\Models\ProfileChangeRequest::query()->pending()->count());
+    }
+
+    public function test_a_submission_that_changes_nothing_asks_for_nothing(): void
+    {
+        /*
+         * Somebody opens the form, changes their mind, and presses the button.
+         * A pending row saying "no change" would sit in HR's queue forever, and
+         * the person would be told they are waiting on something.
+         */
+        $this->post('/profile', $this->details())->assertRedirect('/profile');
+        $this->post('/profile/requests/withdraw');
+
+        // Apply it for real first, so the second submission genuinely differs
+        // from nothing.
+        $this->post('/profile', $this->details())->assertRedirect('/profile');
+        $pending = \App\Models\ProfileChangeRequest::query()->pending()->firstOrFail();
+
+        app(\App\Support\Profile\ProfileChanges::class)->apply($pending, $this->viewer->user);
+
+        $this->post('/profile', $this->details())->assertRedirect('/profile');
+
+        $this->assertSame(0, \App\Models\ProfileChangeRequest::query()->pending()->count());
+    }
+
+    public function test_a_request_can_be_withdrawn(): void
+    {
+        $this->post('/profile', $this->details())->assertRedirect('/profile');
+
+        $this->post('/profile/requests/withdraw')->assertRedirect('/profile');
+
+        $this->assertSame(0, \App\Models\ProfileChangeRequest::query()->pending()->count());
+        // Kept, not deleted: "they asked and then changed their mind" is still
+        // the history an argument later turns on.
+        $this->assertSame(1, \App\Models\ProfileChangeRequest::query()->count());
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    protected function details(array $overrides = []): array
+    {
+        return $overrides + [
             'phone' => '+91 98111 22334',
             'nationality' => 'Indian',
             'gender' => 'Prefer not to say',
@@ -224,24 +317,7 @@ class ProfilePageTest extends TestCase
             'emergency_name' => 'A Person',
             'emergency_relationship' => 'Sibling',
             'emergency_phone' => '+91 98111 00000',
-        ])->assertRedirect('/profile');
-
-        $profile = $this->viewer->fresh()->profile;
-
-        // Empties dropped and duplicates removed: "English, Hindi,  , English"
-        // is a typo, not four languages.
-        $this->assertSame(['English', 'Hindi'], $profile->languages);
-        $this->assertSame(['Laravel', 'Testing'], $profile->skills);
-        $this->assertSame('Prefer not to say', $profile->gender);
-
-        // Two addresses, kept apart. One column would have let the second
-        // overwrite the first and nobody could tell afterwards which it was.
-        $this->assertSame("1 Somewhere Road\nKolkata", $profile->current_address);
-        $this->assertSame("2 Elsewhere Lane\nHowrah", $profile->permanent_address);
-
-        $body = $this->pageBody('/profile');
-        $this->assertStringContainsString('+91 98111 22334', $body);
-        $this->assertStringContainsString('Laravel, Testing', $body);
+        ];
     }
 
     public function test_a_field_the_policy_offers_no_option_for_is_refused(): void

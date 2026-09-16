@@ -81,15 +81,46 @@ class ProfilePolicyTest extends TestCase
         }
     }
 
-    public function test_the_person_still_owns_a_useful_amount(): void
+    public function test_the_person_may_still_ask_for_a_useful_amount(): void
     {
-        // Locking everything would be safe and useless. Nobody should raise a
-        // ticket to correct their own phone number.
+        /*
+         * Reversed on 2026-09-14: these are no longer saved on the strength of
+         * the form, they are REQUESTED and HR applies them against the document
+         * that was handed in. Locking them outright would have been the other
+         * failure — a record nobody can get corrected at all.
+         */
+        $requestable = ProfilePolicy::requestable();
+
+        foreach (['phone', 'current_address', 'permanent_address', 'emergency_phone', 'skills', 'photo'] as $field) {
+            $this->assertContains($field, $requestable);
+            $this->assertFalse(ProfilePolicy::isSelfEditable($field), "{$field} still saves without HR");
+        }
+    }
+
+    public function test_preferences_did_not_move_with_them(): void
+    {
+        /*
+         * Deliberately left as SELF. They are settings, not a record of
+         * anything — nothing is checked against a document and nothing
+         * downstream depends on them being true — and an approval queue full of
+         * dark-mode requests would bury the ones that matter.
+         */
         $editable = ProfilePolicy::selfEditable();
 
-        foreach (['phone', 'current_address', 'permanent_address', 'emergency_phone', 'skills', 'announce_milestones', 'theme'] as $field) {
+        foreach (['announce_milestones', 'theme', 'density', 'sidebar'] as $field) {
             $this->assertContains($field, $editable);
         }
+    }
+
+    public function test_nothing_is_both_self_editable_and_requestable(): void
+    {
+        // One owner per field is the whole rule this class exists to state. A
+        // field in both lists would be saved by one route and queued by
+        // another, and which happened would depend on where somebody clicked.
+        $this->assertSame(
+            [],
+            array_intersect(ProfilePolicy::selfEditable(), ProfilePolicy::requestable()),
+        );
     }
 
     public function test_prefer_not_to_say_is_a_real_answer_and_comes_first(): void

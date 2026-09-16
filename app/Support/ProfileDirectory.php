@@ -62,6 +62,16 @@ class ProfileDirectory
         Audit\AuditLog::PASSWORD_RESET => 'password_changed',
         Audit\AuditLog::PROFILE_PASSWORD_CHANGED => 'password_changed',
         Audit\AuditLog::PROFILE_UPDATED => 'profile_updated',
+        /*
+         * The change-request flow. All four appear, including the ones HR
+         * caused: "my address was changed and I did not ask for it" has to be
+         * answerable from this page, and it only is if the decision shows here
+         * rather than only in the Admin Panel's audit screen.
+         */
+        Audit\AuditLog::PROFILE_CHANGE_REQUESTED => 'profile_updated',
+        Audit\AuditLog::PROFILE_CHANGE_WITHDRAWN => 'profile_updated',
+        Audit\AuditLog::PROFILE_CHANGE_APPLIED => 'hr_updated',
+        Audit\AuditLog::PROFILE_CHANGE_REJECTED => 'hr_updated',
         Audit\AuditLog::PROFILE_PREFERENCES_UPDATED => 'preferences_updated',
         Audit\AuditLog::PROFILE_EMAIL_CHANGED => 'email_changed',
         Audit\AuditLog::PROFILE_EMAIL_CHANGE_REQUESTED => 'email_changed',

@@ -15,6 +15,7 @@ use App\Support\Auth\RememberMe;
 use App\Support\Auth\TrustedDevices;
 use App\Support\Documents\DocumentStore;
 use App\Support\Images\PhotoIntake;
+use App\Support\Profile\ProfileChanges;
 use App\Support\ProfileDirectory;
 use App\Support\ProfilePolicy;
 use App\Support\ProfilePresenter as P;
@@ -111,6 +112,7 @@ class ProfileController extends Controller
         protected RememberMe $remember,
         protected TrustedDevices $devices,
         protected PasswordResets $resets,
+        protected ProfileChanges $changes,
     ) {
     }
 
@@ -123,8 +125,22 @@ class ProfileController extends Controller
      */
     public function show(Request $request): Response
     {
+        $employee = $this->requireEmployee($request);
+        $pending = $this->changes->pendingFor($employee);
+
         return $this->page($request, 'profile.index', 'details', [
             'options' => ProfilePolicy::options(),
+            /*
+             * A request in flight, so the page SAYS SO rather than offering a
+             * form that would be refused. The same arrangement the password
+             * page uses for an email change already under way — and the same
+             * reason: a control that cannot succeed is worse than one that is
+             * not there.
+             */
+            'pending' => $pending,
+            'pendingRows' => $pending ? $this->changes->comparison($pending) : [],
+            'pendingPhoto' => $pending?->photo_path !== null,
+            'decided' => $this->changes->historyFor($employee, 5),
         ]);
     }
 
@@ -173,16 +189,31 @@ class ProfileController extends Controller
        ══════════════════════════════════════════════════════════════════════ */
 
     /**
-     * POST /profile
+     * POST /profile — ASK for a change. Nothing here saves a record.
      *
      * ─────────────────────────────────────────────────────────────────────────
+     * THE FORM STOPPED SAVING ON 2026-09-14
+     *
+     * It used to write straight to `employee_profiles`. The owner reversed
+     * that: the profile is the company's record of a person, and it is
+     * corrected against documents handed in at the office rather than on the
+     * strength of a form. So this writes a PENDING ROW, leaves the live record
+     * exactly where it was, and HR applies it when the paperwork arrives.
+     *
      * THE ALLOW-LIST IS BUILT FROM THE POLICY, NOT WRITTEN OUT AGAIN
      *
-     * `rulesFor()` walks ProfilePolicy::selfEditable() and refuses to validate
-     * a field the policy does not name. Written out by hand it would be a
-     * second copy of the rule, and the day somebody moves a field from SELF to
-     * HR the copy would keep accepting it — which is the failure that looks
-     * exactly like everything working.
+     * `detailRules()` walks ProfilePolicy::requestable() and refuses to
+     * validate a field the policy does not name. Written out by hand it would
+     * be a second copy of the rule, and the day a field moves out of that list
+     * the copy would keep accepting it — the failure that looks exactly like
+     * everything working.
+     *
+     * ONE REQUEST AT A TIME
+     *
+     * A second submission while one is pending is refused rather than silently
+     * replacing it. The page says a request is with HR and offers to withdraw
+     * it; quietly cancelling the first would throw away something HR may
+     * already have half-decided, and the person would never know it happened.
      * ─────────────────────────────────────────────────────────────────────────
      */
     public function update(Request $request): RedirectResponse
@@ -191,38 +222,84 @@ class ProfileController extends Controller
 
         $data = $request->validate($this->detailRules());
 
-        $profile = $this->profileFor($employee);
+        if ($this->changes->pendingFor($employee) !== null) {
+            throw ValidationException::withMessages([
+                'pending' => 'You already have a change waiting with HR. Withdraw it first if you want to ask for something different.',
+            ]);
+        }
 
-        $before = $this->describe($profile);
+        // Lists arrive as a comma-separated string and are stored as lists, so
+        // they are shaped BEFORE the comparison — otherwise "English, Hindi"
+        // never equals ['English', 'Hindi'] and every submission looks like a
+        // change to a field nobody touched.
+        $submitted = $data;
+        $submitted['languages'] = $this->list($data['languages'] ?? null);
+        $submitted['skills'] = $this->list($data['skills'] ?? null);
 
-        $profile->fill([
-            'phone' => $data['phone'] ?? null,
-            'current_address' => $data['current_address'] ?? null,
-            'permanent_address' => $data['permanent_address'] ?? null,
-            'gender' => $data['gender'] ?? null,
-            'marital_status' => $data['marital_status'] ?? null,
-            'nationality' => $data['nationality'] ?? null,
-            'languages' => $this->list($data['languages'] ?? null),
-            'skills' => $this->list($data['skills'] ?? null),
-            'emergency_name' => $data['emergency_name'] ?? null,
-            'emergency_relationship' => $data['emergency_relationship'] ?? null,
-            'emergency_phone' => $data['emergency_phone'] ?? null,
-        ])->save();
+        $diff = $this->changes->diff($employee, $submitted);
+
+        $proposed = $this->changes->propose($employee, $diff, $request->user());
+
+        if ($proposed === null) {
+            // Nothing differed. Not an error and not a request: saying "sent to
+            // HR" would put a person in a queue they are not in.
+            return redirect()
+                ->route('profile.show')
+                ->with('status', 'Nothing was different, so nothing was sent to HR.')
+                ->with('status_tone', 'info');
+        }
 
         $this->audit->record(
-            action: AuditLog::PROFILE_UPDATED,
+            action: AuditLog::PROFILE_CHANGE_REQUESTED,
             actor: $request->user(),
             entityType: 'user',
             entityId: $request->user()->user_id,
-            before: $before,
-            after: $this->describe($profile->refresh()),
+            // Fields, never values. See the constant's own note.
+            after: 'Requested: '.implode(', ', $this->changes->summarise($proposed)),
             request: $request,
         );
 
         return redirect()
             ->route('profile.show')
-            ->with('status', 'Your details are saved.')
+            ->with('status', 'Sent to HR. Nothing on your record has changed yet — bring the documents to the office and HR will apply it.')
             ->with('status_tone', 'success');
+    }
+
+    /**
+     * POST /profile/requests/withdraw — take back a request HR has not decided.
+     */
+    public function withdrawRequest(Request $request): RedirectResponse
+    {
+        $employee = $this->requireEmployee($request);
+
+        $pending = $this->changes->pendingFor($employee);
+
+        // Not an error: somebody pressing withdraw on a stale page, after HR
+        // has just applied it, has not done anything wrong.
+        if ($pending === null) {
+            return redirect()
+                ->route('profile.show')
+                ->with('status', 'There was nothing waiting to withdraw.')
+                ->with('status_tone', 'info');
+        }
+
+        $summary = $this->changes->summarise($pending);
+
+        $this->changes->withdraw($pending);
+
+        $this->audit->record(
+            action: AuditLog::PROFILE_CHANGE_WITHDRAWN,
+            actor: $request->user(),
+            entityType: 'user',
+            entityId: $request->user()->user_id,
+            after: 'Withdrawn: '.implode(', ', $summary),
+            request: $request,
+        );
+
+        return redirect()
+            ->route('profile.show')
+            ->with('status', 'Your request has been withdrawn.')
+            ->with('status_tone', 'info');
     }
 
     /**
@@ -563,36 +640,43 @@ class ProfileController extends Controller
             throw ValidationException::withMessages(['photo' => $e->getMessage()]);
         }
 
-        $profile = $this->profileFor($employee);
+        if ($this->changes->pendingFor($employee) !== null) {
+            throw ValidationException::withMessages([
+                'photo' => 'You already have a change waiting with HR. Withdraw it first if you want to send a different photo.',
+            ]);
+        }
 
-        $was = $profile->photo_path;
-
+        /*
+         * Stored straight away, and NOT onto the record.
+         *
+         * The cleaning has already happened — the bytes here are ones this
+         * application produced from the picture segments, with everything the
+         * camera recorded alongside them gone — so holding the file is safe.
+         * It goes to its own folder, and the live `photo_path` is untouched
+         * until HR applies the request. A candidate on a declined request is
+         * deleted; see App\Support\Profile\ProfileChanges.
+         */
         $stored = $this->documents->putBytes(
-            'employees/'.$employee->id.'/photo',
+            'employees/'.$employee->id.'/photo-requests',
             $clean['extension'],
             $clean['contents'],
         );
 
-        $profile->fill(['photo_path' => $stored['path']])->save();
-
-        // Only now. See the head of this method.
-        if ($was !== null && $was !== $stored['path']) {
-            $this->documents->forget($was);
-        }
+        $this->changes->propose($employee, [], $request->user(), $stored['path']);
 
         $this->audit->record(
-            action: AuditLog::PROFILE_UPDATED,
+            action: AuditLog::PROFILE_CHANGE_REQUESTED,
             actor: $request->user(),
             entityType: 'user',
             entityId: $request->user()->user_id,
-            before: $was === null ? 'no photo' : 'photo on record',
-            after: 'Photo replaced ('.$clean['width'].'×'.$clean['height'].', metadata stripped)',
+            after: 'Requested: '.ProfilePolicy::labelOf('photo')
+                .' ('.$clean['width'].'×'.$clean['height'].', metadata stripped)',
             request: $request,
         );
 
         return redirect()
             ->route('profile.show')
-            ->with('status', 'Your photo is saved. Anything the camera recorded with it was not.')
+            ->with('status', 'Sent to HR. Anything your camera recorded with the picture was removed before it was stored, and your current photo stays until HR applies the change.')
             ->with('status_tone', 'success');
     }
 
@@ -769,9 +853,9 @@ class ProfileController extends Controller
     /**
      * Validation for the details form, built from the policy.
      *
-     * Every key here is checked against ProfilePolicy::isSelfEditable() as the
-     * rules are assembled, so a field that stops being the person's own stops
-     * being validated — and therefore stops being accepted — without anybody
+     * Every key here is checked against ProfilePolicy::isRequestable() as the
+     * rules are assembled, so a field that stops being requestable stops being
+     * validated — and therefore stops being accepted — without anybody
      * remembering to come here.
      *
      * @return array<string, list<string>>
@@ -793,7 +877,7 @@ class ProfileController extends Controller
         ];
 
         foreach (array_keys($rules) as $field) {
-            if (! ProfilePolicy::isSelfEditable($field)) {
+            if (! ProfilePolicy::isRequestable($field)) {
                 // Not an exception: a field the policy has taken away simply
                 // stops being accepted, quietly, which is the behaviour that
                 // does not teach anybody which fields exist.

@@ -245,6 +245,28 @@ class AuditLog
     public const PROFILE_PASSWORD_CHANGED = 'profile.password_changed';
     public const PROFILE_EMAIL_CHANGE_REQUESTED = 'profile.email_change_requested';
     public const PROFILE_EMAIL_CHANGED = 'profile.email_changed';
+    /*
+     * Correcting one's own details is a request now, not a save (2026-09-14),
+     * so there are four entries where there used to be one `profile.updated`.
+     *
+     * All four name the FIELDS and never the values. The whole point of the
+     * flow is that a home address is checked against a document rather than
+     * kept in a list; copying the proposed one into the table nobody may edit
+     * would undo that on the way past.
+     *
+     * The requested entry is written against the PERSON, and the decision
+     * entries against them too rather than against HR — the question somebody
+     * asks months later is "what happened to my record", and an entry filed
+     * under the approver answers a different one.
+     */
+    public const PROFILE_CHANGE_REQUESTED = 'profile.change_requested';
+
+    public const PROFILE_CHANGE_APPLIED = 'profile.change_applied';
+
+    public const PROFILE_CHANGE_REJECTED = 'profile.change_rejected';
+
+    public const PROFILE_CHANGE_WITHDRAWN = 'profile.change_withdrawn';
+
     public const PROFILE_DOCUMENT_UPLOADED = 'profile.document_uploaded';
     public const PROFILE_DOCUMENT_DOWNLOADED = 'profile.document_downloaded';
 

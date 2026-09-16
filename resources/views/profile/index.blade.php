@@ -5,6 +5,8 @@
 @section('title', 'My Profile')
 
 @section('panel')
+    @include('profile.partials.change-request')
+
     {{--
         The photo is its own form, and it has to be: it is multipart, and a file
         input inside the details form would make every save of a phone number a
@@ -193,7 +195,13 @@
         </div>
 
         <div class="form-actions form-actions-padded">
-            <button class="btn btn-primary" type="submit">Save changes</button>
+            {{-- Says what the button does. "Save changes" on a form that saves
+                 nothing is the single most misleading word this page could
+                 carry: somebody would press it, see a success message and
+                 believe their address had moved. --}}
+            <button class="btn btn-primary" type="submit" @disabled($pending !== null)>
+                Send to HR
+            </button>
             {{-- Cancel is a link back to the page, not a button that clears the
                  form. A reset button next to a save button is a mis-click that
                  throws away everything somebody just typed. --}}

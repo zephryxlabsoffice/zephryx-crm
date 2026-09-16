@@ -12,6 +12,7 @@ use App\Support\Auth\PasswordResets;
 use App\Models\EmployeeBanking;
 use App\Models\EmployeeProfile;
 use App\Models\EmployeeSalaryStructure as SalaryStructureModel;
+use App\Models\ProfileChangeRequest;
 use App\Support\EmployeeDirectory;
 use App\Support\Money;
 use App\Support\SalaryStructure;
@@ -104,6 +105,14 @@ class EmployeeController extends Controller
             // is the same answer computed twelve times.
             'mayEdit' => $this->rbac->can($request->user(), 'employees.edit'),
             'mayCreate' => $this->rbac->can($request->user(), 'employees.create'),
+            /*
+             * The change-request queue's size, for the button in the header.
+             * Counted only for somebody who may open it — a number nobody can
+             * act on is a number that should not have been queried.
+             */
+            'pendingRequests' => $this->rbac->can($request->user(), 'employees.edit')
+                ? ProfileChangeRequest::query()->pending()->count()
+                : 0,
         ]);
     }
 

@@ -10,6 +10,24 @@
         </div>
 
         <div class="hd-actions">
+            {{-- The change-request queue, with its count, for whoever may edit
+                 a record. Here because this is where HR already is: a queue
+                 reachable only by typing the URL is a queue nobody works. The
+                 count is drawn even at zero so its absence never reads as "no
+                 requests" when it actually means "you cannot see this". --}}
+            @if ($mayEdit)
+                <a class="btn btn-outline" href="{{ route('employees.requests.index') }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <path d="M14 2v6h6M9 15l2 2 4-4"/>
+                    </svg>
+                    Change requests
+                    @if ($pendingRequests > 0)
+                        <span class="pill warning">{{ $pendingRequests }}</span>
+                    @endif
+                </a>
+            @endif
+
             {{-- Hidden rather than disabled for somebody who cannot create.
                  A disabled button says "you may do this, later"; the honest
                  answer for a permission is that the action is not theirs. --}}

@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Models\User;
 use App\Support\Documents\DocumentStore;
 use App\Support\Images\PhotoIntake;
+use App\Support\Profile\ProfileChanges;
 use App\Support\Rbac\Rbac;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
@@ -158,6 +159,7 @@ class ProfilePhotoTest extends TestCase
     public function test_the_photo_is_not_reachable_without_the_route(): void
     {
         $this->upload($this->pngWithText('x'))->assertRedirect();
+        $this->applyPending();
 
         $path = $this->viewer->fresh()->profile->photo_path;
 
@@ -181,19 +183,68 @@ class ProfilePhotoTest extends TestCase
         $this->assertSame([], $route->parameterNames());
     }
 
+    public function test_an_upload_does_not_touch_the_record_until_hr_applies_it(): void
+    {
+        /*
+         * The reversal, at its narrowest. The file is cleaned and stored the
+         * moment it arrives — holding it is safe, because what is held is bytes
+         * this application produced — but the photograph on the record is the
+         * one HR last accepted.
+         */
+        $this->upload($this->pngWithText('x'))->assertRedirect();
+
+        $this->assertNull($this->viewer->fresh()->profile?->photo_path);
+
+        $candidate = app(ProfileChanges::class)->pendingFor($this->viewer)?->photo_path;
+
+        $this->assertNotNull($candidate);
+        $this->assertTrue(app(DocumentStore::class)->exists($candidate));
+
+        $this->applyPending();
+
+        $this->assertSame($candidate, $this->viewer->fresh()->profile->photo_path);
+    }
+
+    public function test_a_second_upload_is_refused_while_one_is_waiting(): void
+    {
+        // Quietly replacing the first would throw away something HR may already
+        // have half-decided, and nobody would know it had happened.
+        $this->upload($this->pngWithText('first'))->assertRedirect();
+
+        $this->upload($this->pngWithText('second'))->assertSessionHasErrors('photo');
+    }
+
     public function test_replacing_a_photo_removes_the_old_file(): void
     {
         $this->upload($this->pngWithText('first'))->assertRedirect();
+        $this->applyPending();
 
         $first = $this->viewer->fresh()->profile->photo_path;
 
         $this->upload($this->pngWithText('second'))->assertRedirect();
+        $this->applyPending();
 
         $second = $this->viewer->fresh()->profile->photo_path;
 
         $this->assertNotSame($first, $second);
         $this->assertFalse(app(DocumentStore::class)->exists($first), 'the replaced photo is still on disk');
         $this->assertTrue(app(DocumentStore::class)->exists($second));
+    }
+
+    public function test_withdrawing_a_request_deletes_the_photo_nobody_accepted(): void
+    {
+        /*
+         * The one part of a spent request that is not kept. A photograph nobody
+         * accepted is not a record of anything, and keeping every one of them
+         * grows the disk forever.
+         */
+        $this->upload($this->pngWithText('x'))->assertRedirect();
+
+        $candidate = app(ProfileChanges::class)->pendingFor($this->viewer)?->photo_path;
+
+        $this->post('/profile/requests/withdraw')->assertRedirect('/profile');
+
+        $this->assertFalse(app(DocumentStore::class)->exists($candidate));
     }
 
     public function test_no_photo_is_a_404_and_the_page_falls_back_to_initials(): void
@@ -213,13 +264,43 @@ class ProfilePhotoTest extends TestCase
         return $this->post('/profile/photo', ['photo' => $file]);
     }
 
+    /**
+     * The bytes of the CANDIDATE photo — the one sitting on the request.
+     *
+     * Since 2026-09-14 an upload does not touch the record: it stores the
+     * cleaned file and asks HR. The stripping happens before it is written
+     * either way, which is what every test above is actually about, so they
+     * read the candidate rather than the live photo.
+     */
     protected function storedPhoto(): string
     {
-        $path = $this->viewer->fresh()->profile?->photo_path;
+        $path = app(ProfileChanges::class)->pendingFor($this->viewer)?->photo_path;
 
         $this->assertNotNull($path, 'nothing was stored');
 
         return \Illuminate\Support\Facades\Storage::disk('local')->get($path);
+    }
+
+    /**
+     * HR applies whatever is pending, so the photo reaches the record.
+     *
+     * Applied by somebody else, because nobody decides their own — the rule
+     * lives in the controller, and this goes through the service directly.
+     */
+    protected function applyPending(): void
+    {
+        $pending = app(ProfileChanges::class)->pendingFor($this->viewer);
+
+        $this->assertNotNull($pending, 'nothing was waiting to apply');
+
+        $hr = User::factory()->create([
+            'user_id' => 'HR-T'.fake()->unique()->numberBetween(100, 999),
+            'account_type' => \App\Support\Realm::STAFF,
+            'staff_kind' => 'employee',
+            'status' => 'active',
+        ]);
+
+        app(ProfileChanges::class)->apply($pending, $hr);
     }
 
     /**

@@ -11,6 +11,7 @@ use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\ModulePlaceholderController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProfileRequestController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\ShellPreferenceController;
@@ -155,6 +156,36 @@ Route::get('/employees/create', [EmployeeController::class, 'create'])
 Route::post('/employees', [EmployeeController::class, 'store'])
     ->middleware('permission:employees.create')
     ->name('employees.store');
+
+/*
+ * HR's queue of change requests (2026-09-14).
+ *
+ * Declared BEFORE `/employees/{employee}`, exactly like `create` above, or
+ * "requests" is read as a staff ID and 404s.
+ *
+ * `employees.edit`, not a key of its own: applying one of these is editing an
+ * employment record, arrived at from the other side. The person's own half of
+ * the flow is on /profile and carries no permission at all, like everything
+ * else about their own record.
+ */
+Route::get('/employees/requests', [ProfileRequestController::class, 'index'])
+    ->middleware('permission:employees.edit')
+    ->name('employees.requests.index');
+
+Route::get('/employees/requests/{profileRequest}', [ProfileRequestController::class, 'show'])
+    ->whereNumber('profileRequest')
+    ->middleware('permission:employees.edit')
+    ->name('employees.requests.show');
+
+Route::post('/employees/requests/{profileRequest}/apply', [ProfileRequestController::class, 'apply'])
+    ->whereNumber('profileRequest')
+    ->middleware('permission:employees.edit')
+    ->name('employees.requests.apply');
+
+Route::post('/employees/requests/{profileRequest}/reject', [ProfileRequestController::class, 'reject'])
+    ->whereNumber('profileRequest')
+    ->middleware('permission:employees.edit')
+    ->name('employees.requests.reject');
 
 Route::get('/employees/{employee}', [EmployeeController::class, 'show'])
     ->where('employee', '[A-Za-z0-9-]{1,32}')
@@ -736,8 +767,10 @@ Route::get('/profile/activity', [ProfileController::class, 'activity'])->name('p
  * The writes the backend phase implements — see App\Http\Controllers\
  * ProfileController for what each owes.
  *
- * `profile.update` validates against ProfilePolicy::selfEditable() and DROPS
- * every other key. A field rendered disabled is not protected; the browser is
+ * `profile.update` no longer updates anything (2026-09-14). It validates
+ * against ProfilePolicy::requestable(), DROPS every other key, and writes a
+ * request HR applies — the live record does not move on the strength of this
+ * form. A field rendered disabled is not protected either way; the browser is
  * not where that rule lives.
  *
  * Email and password are separate routes from the details form on purpose.
@@ -755,6 +788,14 @@ Route::post('/profile/preferences', [ProfileController::class, 'updatePreference
 Route::post('/profile/password', [ProfileController::class, 'updatePassword'])
     ->name('profile.password.update');
 Route::post('/profile/email', [ProfileController::class, 'changeEmail'])->name('profile.email.change');
+
+/*
+ * Taking back a request HR has not decided yet. No identifier: it is whatever
+ * is pending for the signed-in person, so there is nothing in the URL to change
+ * to somebody else's.
+ */
+Route::post('/profile/requests/withdraw', [ProfileController::class, 'withdrawRequest'])
+    ->name('profile.requests.withdraw');
 
 /*
  * The photo. Stored on the private disk with the documents, so it needs a route
