@@ -64,6 +64,17 @@ class AuditLog
     public const EMPLOYEE_UPDATED = 'employee.updated';
     public const EMPLOYEE_STATUS_CHANGED = 'employee.status_changed';
     /*
+     * Where somebody lives, or the address on the document they were checked
+     * against, was recorded or corrected.
+     *
+     * Its own action rather than folded into `employee.updated`, because the
+     * entry has to name the field and NOT the value. `employee.updated` writes
+     * a before and an after made of the values that changed, which is right for
+     * a department and wrong for a home address — an audit log nobody may edit
+     * is the last place to keep a permanent copy of one.
+     */
+    public const EMPLOYEE_ADDRESS_CHANGED = 'employee.address_changed';
+    /*
      * Somebody looked at one full identifier — an ID proof number, a PAN, a
      * bank account — and said why.
      *

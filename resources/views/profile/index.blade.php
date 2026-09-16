@@ -110,11 +110,20 @@
                 </div>
 
                 <div class="form-field pf-form-wide">
-                    <label class="form-field-lbl" for="pf-address">{{ ProfilePolicy::labelOf('address') }}</label>
-                    <textarea id="pf-address" name="address" rows="3">{{ old('address', $profile['address']) }}</textarea>
+                    <label class="form-field-lbl" for="pf-current-address">{{ ProfilePolicy::labelOf('current_address') }}</label>
+                    <textarea id="pf-current-address" name="current_address" rows="3">{{ old('current_address', $profile['current_address']) }}</textarea>
                     {{-- Says who reads it, before somebody types their home
                          address into it. Same rule as the leave reason. --}}
-                    <span class="pay-hint">Held for your employment record. Seen by HR and the owner, and on no list of people.</span>
+                    <span class="pay-hint">Where you actually live. Held for your employment record, seen by HR and the owner, and on no list of people.</span>
+                </div>
+
+                <div class="form-field pf-form-wide">
+                    <label class="form-field-lbl" for="pf-permanent-address">{{ ProfilePolicy::labelOf('permanent_address') }}</label>
+                    <textarea id="pf-permanent-address" name="permanent_address" rows="3">{{ old('permanent_address', $profile['permanent_address']) }}</textarea>
+                    {{-- Why it is asked for twice. Without this the second box
+                         reads as the same question again, and people copy the
+                         first answer into it. --}}
+                    <span class="pay-hint">The address on your ID proof. It is checked against the document, so it is worth it matching.</span>
                 </div>
             </div>
         </div>

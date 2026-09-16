@@ -104,7 +104,11 @@ class ProfileSeeder extends Seeder
             ['employee_id' => $employee->id],
             [
                 'phone' => '+91 98200 55667',
-                'address' => "14B Southern Avenue\nKolkata, West Bengal 700029\nIndia",
+                'current_address' => "14B Southern Avenue\nKolkata, West Bengal 700029\nIndia",
+                // Deliberately a different place from the current one: the two
+                // columns exist because they differ, and a demo that repeats
+                // the same lines twice would show nothing about why.
+                'permanent_address' => "Village Sonarpur, PO Rajpur\nSouth 24 Parganas, West Bengal 700149\nIndia",
                 'gender' => 'Male',
                 'marital_status' => 'Single',
                 'nationality' => 'Indian',

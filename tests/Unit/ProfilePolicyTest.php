@@ -87,7 +87,7 @@ class ProfilePolicyTest extends TestCase
         // ticket to correct their own phone number.
         $editable = ProfilePolicy::selfEditable();
 
-        foreach (['phone', 'address', 'emergency_phone', 'skills', 'announce_milestones', 'theme'] as $field) {
+        foreach (['phone', 'current_address', 'permanent_address', 'emergency_phone', 'skills', 'announce_milestones', 'theme'] as $field) {
             $this->assertContains($field, $editable);
         }
     }

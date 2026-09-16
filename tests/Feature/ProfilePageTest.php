@@ -205,7 +205,7 @@ class ProfilePageTest extends TestCase
         // should raise a ticket to correct their own phone number.
         $html = $this->get('/profile')->getContent();
 
-        foreach (['phone', 'address', 'emergency_name', 'emergency_phone', 'skills', 'languages'] as $field) {
+        foreach (['phone', 'current_address', 'permanent_address', 'emergency_name', 'emergency_phone', 'skills', 'languages'] as $field) {
             $this->assertStringContainsString('name="'.$field.'"', $html, "{$field} should be the person's own");
             $this->assertTrue(ProfilePolicy::isSelfEditable($field));
         }
@@ -219,7 +219,8 @@ class ProfilePageTest extends TestCase
             'gender' => 'Prefer not to say',
             'languages' => 'English, Hindi,  , English',
             'skills' => 'Laravel, Testing',
-            'address' => "1 Somewhere Road\nKolkata",
+            'current_address' => "1 Somewhere Road\nKolkata",
+            'permanent_address' => "2 Elsewhere Lane\nHowrah",
             'emergency_name' => 'A Person',
             'emergency_relationship' => 'Sibling',
             'emergency_phone' => '+91 98111 00000',
@@ -232,6 +233,11 @@ class ProfilePageTest extends TestCase
         $this->assertSame(['English', 'Hindi'], $profile->languages);
         $this->assertSame(['Laravel', 'Testing'], $profile->skills);
         $this->assertSame('Prefer not to say', $profile->gender);
+
+        // Two addresses, kept apart. One column would have let the second
+        // overwrite the first and nobody could tell afterwards which it was.
+        $this->assertSame("1 Somewhere Road\nKolkata", $profile->current_address);
+        $this->assertSame("2 Elsewhere Lane\nHowrah", $profile->permanent_address);
 
         $body = $this->pageBody('/profile');
         $this->assertStringContainsString('+91 98111 22334', $body);

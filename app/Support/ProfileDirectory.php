@@ -68,6 +68,9 @@ class ProfileDirectory
         Audit\AuditLog::PROFILE_DOCUMENT_UPLOADED => 'document_uploaded',
         Audit\AuditLog::EMPLOYEE_UPDATED => 'hr_updated',
         Audit\AuditLog::EMPLOYEE_STATUS_CHANGED => 'hr_updated',
+        // Somebody else changed where you live. Exactly the entry a person
+        // should not first learn about from a letter that never arrived.
+        Audit\AuditLog::EMPLOYEE_ADDRESS_CHANGED => 'hr_updated',
     ];
 
     /** How far back the activity page reads. */

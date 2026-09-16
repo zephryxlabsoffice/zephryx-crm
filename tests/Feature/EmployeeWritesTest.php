@@ -362,8 +362,12 @@ class EmployeeWritesTest extends TestCase
              * account, the audit entry and the staff ID — and a payload missing
              * a required field would fail all of them for the wrong reason.
              *
-             * What these fields do on their own is EmployeeIdentityWritesTest.
+             * What these fields do on their own is EmployeeIdentityWritesTest,
+             * and the two addresses EmployeeAddressTest.
              */
+            'current_address' => "1 Somewhere Road\nKolkata",
+            'permanent_address' => "2 Elsewhere Lane\nHowrah",
+
             'id_proof_type' => \App\Support\IdProof::AADHAAR,
             'id_proof_number' => '123456781234',
             'pan' => 'ABCDE1234F',

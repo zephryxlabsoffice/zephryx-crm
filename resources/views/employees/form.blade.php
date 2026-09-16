@@ -213,6 +213,71 @@
                 <div class="card">
                     <div class="section-hd">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-7h6v7"/>
+                        </svg>
+                        Where they live
+                    </div>
+
+                    @php
+                        // Null for somebody without `employees.identifiers`, and
+                        // the boxes are then empty rather than absent: they may
+                        // still type a correction, they simply are not shown what
+                        // is already on file.
+                        $mayReadAddresses = $addresses !== null;
+                    @endphp
+
+                    <div class="prose">
+                        @if ($editing && ! $mayReadAddresses)
+                            <p>
+                                What is on file is not shown to you.
+                                <strong>Leave these empty to keep it</strong>, or type a new
+                                address to replace it.
+                            </p>
+                        @else
+                            <p>
+                                Seen by HR and the owner, and on no list of people. The
+                                permanent address is the one printed on the ID proof, so it is
+                                what the photocopy in the file is checked against.
+                            </p>
+                        @endif
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-field an-form-wide">
+                            <label class="form-field-lbl" for="emp-current-address">
+                                Current address
+                                @if (! $editing)
+                                    <span class="an-optional">(required for a full-time hire)</span>
+                                @endif
+                            </label>
+                            <textarea id="emp-current-address" name="current_address" rows="3" maxlength="500"
+                                      placeholder="Where they actually live"
+                                      @if ($errors->has('current_address')) aria-invalid="true" aria-describedby="emp-current-address-error" @endif>{{ old('current_address', $addresses['current'] ?? '') }}</textarea>
+                            @error('current_address')
+                                <span class="field-error" id="emp-current-address-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field an-form-wide">
+                            <label class="form-field-lbl" for="emp-permanent-address">
+                                Permanent address
+                                @if (! $editing)
+                                    <span class="an-optional">(required for a full-time hire)</span>
+                                @endif
+                            </label>
+                            <textarea id="emp-permanent-address" name="permanent_address" rows="3" maxlength="500"
+                                      placeholder="As printed on the ID proof"
+                                      @if ($errors->has('permanent_address')) aria-invalid="true" aria-describedby="emp-permanent-address-error" @endif>{{ old('permanent_address', $addresses['permanent'] ?? '') }}</textarea>
+                            @error('permanent_address')
+                                <span class="field-error" id="emp-permanent-address-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="section-hd">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>
                         </svg>
                         Identity and payment

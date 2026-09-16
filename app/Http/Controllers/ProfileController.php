@@ -197,7 +197,8 @@ class ProfileController extends Controller
 
         $profile->fill([
             'phone' => $data['phone'] ?? null,
-            'address' => $data['address'] ?? null,
+            'current_address' => $data['current_address'] ?? null,
+            'permanent_address' => $data['permanent_address'] ?? null,
             'gender' => $data['gender'] ?? null,
             'marital_status' => $data['marital_status'] ?? null,
             'nationality' => $data['nationality'] ?? null,
@@ -779,7 +780,8 @@ class ProfileController extends Controller
     {
         $rules = [
             'phone' => ['nullable', 'string', 'max:32'],
-            'address' => ['nullable', 'string', 'max:500'],
+            'current_address' => ['nullable', 'string', 'max:500'],
+            'permanent_address' => ['nullable', 'string', 'max:500'],
             'gender' => ['nullable', Rule::in(ProfilePolicy::options()['gender'])],
             'marital_status' => ['nullable', Rule::in(ProfilePolicy::options()['marital_status'])],
             'nationality' => ['nullable', 'string', 'max:60'],

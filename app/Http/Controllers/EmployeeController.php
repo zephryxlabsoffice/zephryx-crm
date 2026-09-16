@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Support\Audit\AuditLog;
 use App\Support\Auth\PasswordResets;
 use App\Models\EmployeeBanking;
+use App\Models\EmployeeProfile;
 use App\Support\EmployeeDirectory;
 use App\Support\EmployeePresenter;
 use App\Support\IdProof;
@@ -118,6 +119,14 @@ class EmployeeController extends Controller
              * was sent has already been read by whoever is sitting at it.
              */
             'identity' => $this->withReveal($this->maskedIdentity($request, $record), $record),
+            /*
+             * Behind the same permission as the identity card and, unlike it,
+             * shown in full. An address is not a credential — masking it would
+             * protect nothing and stop HR spotting the typo that sends a
+             * courier to the wrong street — but it is still nobody's business
+             * who merely holds `employees.view`.
+             */
+            'addresses' => $this->addresses($request, $record),
             'maySeeIdentifiers' => $this->rbac->can($request->user(), 'employees.identifiers'),
             'mayEdit' => $this->rbac->can($request->user(), 'employees.edit'),
             'mayDeactivate' => $this->rbac->can($request->user(), 'employees.deactivate')
@@ -142,6 +151,7 @@ class EmployeeController extends Controller
             'staffId' => null,
             // Nothing on file for somebody who does not exist yet.
             'identity' => null,
+            'addresses' => null,
         ] + $this->formOptions());
     }
 
@@ -204,6 +214,7 @@ class EmployeeController extends Controller
             // Inside the same transaction: an account with no identity record
             // when the form demanded one is a half-made hire.
             $this->writeIdentity($employee, $data, $request);
+            $this->writeAddresses($employee, $data, $request);
 
             return $employee;
         });
@@ -241,6 +252,14 @@ class EmployeeController extends Controller
              * with `XXXX XXXX 1234`.
              */
             'identity' => $this->maskedIdentity($request, $record),
+            /*
+             * Prefilled, unlike the identity fields beside them: there is
+             * nothing to hide from somebody who may already read the card, and
+             * an address is corrected a line at a time rather than retyped. It
+             * is still null without the permission, and the form then treats an
+             * empty box as "keep what is stored".
+             */
+            'addresses' => $this->addresses($request, $record),
         ] + $this->formOptions());
     }
 
@@ -258,6 +277,7 @@ class EmployeeController extends Controller
             ]);
 
             $this->writeIdentity($record, $data, $request);
+            $this->writeAddresses($record, $data, $request);
 
             $record->update([
                 'department_id' => $data['department_id'] ?? null,
@@ -570,7 +590,7 @@ class EmployeeController extends Controller
         }
 
         return $request->validate(
-            $rules + $this->identityRules($request, $existing),
+            $rules + $this->identityRules($request, $existing) + $this->addressRules($request, $existing),
             $this->identityMessages($request),
         );
     }
@@ -708,6 +728,127 @@ class EmployeeController extends Controller
 
         $this->audit->record(
             action: AuditLog::SALARY_BANKING_CHANGED,
+            actor: $request->user(),
+            entityType: 'employee',
+            entityId: $employee->user?->user_id ?? (string) $employee->id,
+            after: ($existing === null ? 'Recorded: ' : 'Changed: ').implode(', ', $changed),
+            request: $request,
+        );
+    }
+
+    /**
+     * Where somebody lives, and the address on the document they were checked
+     * against.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * REQUIRED FOR A FULL-TIME HIRE, OPTIONAL FOR EVERYBODY ELSE
+     *
+     * The owner's list (2026-09-12) is: full-time everything; an intern ID
+     * proof, phone and bank; a freelancer those plus a PAN. An address is in
+     * nobody's list but the first, so it is demanded there and offered
+     * everywhere else. A freelancer we pay against an invoice does not need to
+     * tell us which flat they work from.
+     *
+     * On an EDIT both are optional, and empty means keep — the same rule the
+     * identity fields follow, so one form has one behaviour rather than two.
+     * The boxes ARE prefilled here (see `addresses()`), so an empty one is
+     * either a deliberate clear-out by somebody who can see what they cleared,
+     * or an editor without the permission who was shown nothing to begin with.
+     * Keeping is the safe reading of both.
+     *
+     * @return array<string, list<string>>
+     */
+    protected function addressRules(Request $request, ?Employee $existing): array
+    {
+        $required = $existing === null
+            && $request->input('employment_type') === Employee::FULL_TIME
+            ? 'required'
+            : 'nullable';
+
+        return [
+            'current_address' => [$required, 'string', 'max:500'],
+            'permanent_address' => [$required, 'string', 'max:500'],
+        ];
+    }
+
+    /**
+     * The two addresses on file, or null for somebody who may not read them.
+     *
+     * Behind `employees.identifiers` — the permission the directory does not
+     * carry — and, unlike the identifiers themselves, returned in full. Masking
+     * an address would protect nothing a mask can protect and would stop HR
+     * seeing the typo that sends a courier to the wrong street.
+     *
+     * @return array{current: ?string, permanent: ?string}|null
+     */
+    protected function addresses(Request $request, Employee $record): ?array
+    {
+        if (! $this->rbac->can($request->user(), 'employees.identifiers')) {
+            return null;
+        }
+
+        $profile = $record->profile;
+
+        return [
+            'current' => $profile?->current_address,
+            'permanent' => $profile?->permanent_address,
+        ];
+    }
+
+    /**
+     * Write the addresses, and record THAT they changed.
+     *
+     * Blank keeps, exactly as `writeIdentity()` does, and for the same reason:
+     * one form, one rule about what an empty box means. The audit entry names
+     * the fields and never the values — see the constant's own note.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function writeAddresses(Employee $employee, array $data, Request $request): void
+    {
+        $columns = [
+            'current_address' => 'Current address',
+            'permanent_address' => 'Permanent address',
+        ];
+
+        $supplied = [];
+
+        foreach (array_keys($columns) as $column) {
+            $value = $data[$column] ?? null;
+
+            if ($value !== null && trim($value) !== '') {
+                $supplied[$column] = trim($value);
+            }
+        }
+
+        if ($supplied === []) {
+            return;
+        }
+
+        $existing = EmployeeProfile::where('employee_id', $employee->id)->first();
+
+        $changed = [];
+
+        foreach ($supplied as $column => $value) {
+            if ($existing === null || (string) $existing->{$column} !== $value) {
+                $changed[] = $columns[$column];
+            }
+        }
+
+        /*
+         * The profile row is created here if the person has never opened their
+         * own profile page. That is not the same as the page creating one: the
+         * distinction the table draws is "not stated" versus "stated as
+         * nothing", and HR typing an address is a statement.
+         */
+        EmployeeProfile::updateOrCreate(['employee_id' => $employee->id], $supplied);
+
+        if ($changed === []) {
+            return;
+        }
+
+        $this->audit->record(
+            action: AuditLog::EMPLOYEE_ADDRESS_CHANGED,
             actor: $request->user(),
             entityType: 'employee',
             entityId: $employee->user?->user_id ?? (string) $employee->id,

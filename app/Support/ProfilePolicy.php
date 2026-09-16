@@ -91,7 +91,8 @@ class ProfilePolicy
 
         // ── the person's own ──
         'phone' => [self::SELF, 'Phone number', ''],
-        'address' => [self::SELF, 'Address', ''],
+        'current_address' => [self::SELF, 'Current address', ''],
+        'permanent_address' => [self::SELF, 'Permanent address', ''],
         'gender' => [self::SELF, 'Gender', ''],
         'marital_status' => [self::SELF, 'Marital status', ''],
         'nationality' => [self::SELF, 'Nationality', ''],

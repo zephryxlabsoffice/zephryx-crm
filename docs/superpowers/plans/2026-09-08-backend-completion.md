@@ -127,8 +127,9 @@ follow-up answer. Nothing here is built yet.
   and number.
 - **Salary details**: Basic, HRA, other allowances, PF, PT, TDS. Stored for
   payslip preparation, NOT shown on the Salary page. Visible to HR, CEO and
-  the employee — who sees them only on their payslip. Payslips stay an HR
-  upload for now (CRM-generated payslips: owner to decide later). Interns: monthly stipend. Freelancers: a per-project
+  the employee — who sees them only on their payslip. **Payslips are an HR
+  upload, full stop** (settled 2026-09-16): the CRM never generates one, and
+  the uploaded file lives on Drive. Interns: monthly stipend. Freelancers: a per-project
   or hourly rate only; their payments are tracked outside the CRM.
 - **No delete.** Records are closed, never removed.
 - **Milestone announcements** on by default.
@@ -203,13 +204,58 @@ follow-up answer. Nothing here is built yet.
 
 - **All uploaded files live on Google Drive, reached through an index**, not on
   the server disk. Website assets (logos and the like) are the exception.
-  *(open: mechanism, and what happens to the payslip / photo / attachment
-  storage already built on a private local disk. Owner will explain.)*
+
+**Answered 2026-09-16.**
+
+- **Shared web hosting only.** No VPS, no background worker, no object store to
+  pay for. Everything runs inside ordinary PHP request handling — which is
+  workable because the files are small: a payslip is tens of kilobytes and an
+  invoice PDF not much more.
+- **Photos stay on the local disk.** They are small and there are few of them.
+  Cloudflare R2 was considered and set aside to keep the bill at zero. *Files*
+  — payslips, invoices, ticket and task attachments — always go to Drive.
+- **PDFs open IN THE BROWSER**, not as a download. Clicking a payslip lands on
+  the document itself, the way every site backed by an object store behaves.
+  We have to produce that without the object store.
+- **Payslips are an HR upload and the file lives on Drive.** The CRM does not
+  generate them (this closes the "owner to decide later" line under Employees).
+
+**How, concretely.** The previous index (BhadooIndex) reads only; this has to
+write as well, so it is the Drive API directly:
+
+1. **One Google account holds the files**, in a folder per module. The
+   application authenticates as that account and nothing is ever shared
+   publicly — no "anyone with the link", because a Drive link that works
+   without a session is exactly the forwardable URL §6 exists to prevent.
+2. **`DocumentStore` grows a second driver.** The class is already the only
+   seam the application has for a stored file: it takes an upload, composes the
+   path, and hands bytes back through a controller that has checked the person
+   and written an audit entry. Drive changes what `path` means — a file ID
+   rather than a disk key — and nothing above it moves.
+3. **Nothing is migrated.** What is on the private disk today is demo content;
+   the production seeder ships no files at all. So the driver lands and the
+   first real payslip goes straight to Drive.
+4. **In-browser viewing is ours, not Drive's.** The existing route already
+   streams a file after the permission check. It gains a viewer sibling that
+   sends `Content-Type: application/pdf` with `Content-Disposition: inline`,
+   `X-Content-Type-Options: nosniff` and a CSP that allows the document
+   nothing — no scripts, no network — so an uploaded PDF renders in the
+   browser's own viewer without being able to act inside our origin. That last
+   part is why `DocumentStore::stream()` refuses uploaded files today, and it
+   is the condition on which the refusal is lifted.
+
+*(open — the only thing still unanswered: is the Drive account a Google
+Workspace one on the company domain, or a plain Gmail? Workspace means a Shared
+Drive and a service account, which is the tidier arrangement. Plain Gmail means
+a service account cannot own files at all — it has no storage quota of its own
+— so it has to be a one-time OAuth consent whose refresh token the application
+stores. Both are free and both work on shared hosting; the answer decides which
+one gets built.)*
 
 ### Attendance
 
-- Clock in from anywhere for now. Office-IP vs other-IP handling comes later —
-  the owner has a logic for it and will explain.
+- Clock in from anywhere. **The office-IP idea is dropped** (2026-09-16): it
+  stays simple, and there is no location check of any kind.
 - **No WFH marking. No "late" status.**
 - A day left open stays **rejected**; there is no correction request.
 - **No attendance export here** — it belongs to a Reports module shipped as
@@ -323,7 +369,7 @@ record moves. Nothing changes on the strength of the form alone.
 - The sidebar "Support" link opens a page with two buttons: raise a ticket
   (goes to the ticket form) and email us (opens mail).
 
-## Built so far (2026-09-14)
+## Built so far (2026-09-16)
 
 Step 1 is part done. What is committed, in order:
 
@@ -345,9 +391,20 @@ Step 1 is part done. What is committed, in order:
 - **The audited reveal** (`c709002`) — POST only, one field, a required reason,
   flashed for a single render, logged by field and reason and never by value.
 
-Still to do in step 1: current and permanent address, the salary structure
-(Basic / HRA / allowances / PF / PT / TDS), the profile change-request flow,
-and convert-intern-to-full-time.
+- **Two addresses** (2026-09-16) — the profile's single `address` column splits
+  into `current_address` and `permanent_address`, typed on the add form and
+  required of a full-time hire. Read behind `employees.identifiers` like the
+  identity card, and shown in FULL: an address is not a credential, and half of
+  one cannot be checked against the photocopy in the file. Prefilled on edit for
+  that reason too — a correction is a line, not a re-entry. The audit entry
+  names the field and never the address.
+
+Still to do in step 1: the salary structure (Basic / HRA / allowances / PF /
+PT / TDS), the profile change-request flow, and convert-intern-to-full-time.
+Also still missing from the add form, noticed while doing the addresses:
+personal email alongside the work email, and a phone number — the latter is
+required of interns and freelancers by the decisions above, so it cannot wait
+for the profile page.
 
 Also done, outside step 1: the donut restyle (`055cbb9`) across the five
 modules that share it.

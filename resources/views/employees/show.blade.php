@@ -96,6 +96,10 @@
                 </dl>
             </div>
 
+            @if ($addresses !== null)
+                @include('employees.partials.addresses', ['addresses' => $addresses])
+            @endif
+
             @if ($identity !== null)
                 @include('employees.partials.identity', ['identity' => $identity])
             @endif

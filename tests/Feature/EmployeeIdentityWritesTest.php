@@ -286,6 +286,10 @@ class EmployeeIdentityWritesTest extends TestCase
             'date_of_birth' => '1995-04-11',
             'announce_milestones' => '1',
 
+            // Required for a full-time hire, which is what this payload is.
+            'current_address' => "1 Somewhere Road\nKolkata",
+            'permanent_address' => "2 Elsewhere Lane\nHowrah",
+
             'id_proof_type' => IdProof::AADHAAR,
             'id_proof_number' => '123456781234',
             'id_proof_copy_received_on' => Carbon::now()->subWeek()->toDateString(),
@@ -312,6 +316,11 @@ class EmployeeIdentityWritesTest extends TestCase
             'joined_on' => Carbon::now()->subMonth()->toDateString(),
             'date_of_birth' => '1995-04-11',
             'announce_milestones' => '1',
+
+            // Prefilled by the real form for anybody who may read them; empty
+            // here, which keeps what is stored.
+            'current_address' => '',
+            'permanent_address' => '',
 
             'id_proof_type' => IdProof::AADHAAR,
             'id_proof_number' => '',
