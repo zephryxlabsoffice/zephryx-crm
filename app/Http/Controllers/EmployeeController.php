@@ -9,7 +9,10 @@ use App\Models\Role;
 use App\Models\User;
 use App\Support\Audit\AuditLog;
 use App\Support\Auth\PasswordResets;
+use App\Support\Documents\DocumentStore;
+use App\Support\ProfileDirectory;
 use App\Models\EmployeeBanking;
+use App\Models\EmployeeDocument;
 use App\Models\EmployeeProfile;
 use App\Models\EmployeeSalaryStructure as SalaryStructureModel;
 use App\Models\ProfileChangeRequest;
@@ -64,8 +67,11 @@ class EmployeeController extends Controller
     /** The donut's radius and the circumference derived from it. */
     protected const DONUT_RADIUS = 57;
 
-    public function __construct(protected Rbac $rbac, protected AuditLog $audit)
-    {
+    public function __construct(
+        protected Rbac $rbac,
+        protected AuditLog $audit,
+        protected DocumentStore $documents,
+    ) {
     }
 
     public function index(Request $request): Response
@@ -142,6 +148,19 @@ class EmployeeController extends Controller
             'salary' => $this->salaryCard($request, $record),
             'maySeeIdentifiers' => $this->rbac->can($request->user(), 'employees.identifiers'),
             'mayEdit' => $this->rbac->can($request->user(), 'employees.edit'),
+            /*
+             * The two ends of a conversion, so either record can find the
+             * other. Loaded here rather than reached for in the template: the
+             * view then has a record or a null, and no query in a blade.
+             */
+            'convertedFrom' => $record->convertedFrom?->load('user'),
+            'convertedTo' => $record->convertedTo?->load('user'),
+            'mayConvert' => $record->employment_type === Employee::INTERN
+                && $record->user->status === 'active'
+                && $record->convertedTo === null
+                && $record->user_id !== $request->user()->id
+                && $this->rbac->can($request->user(), 'employees.create')
+                && $this->rbac->outranks($request->user(), $record->user, 'people'),
             'mayDeactivate' => $this->rbac->can($request->user(), 'employees.deactivate')
                 // Nobody closes their own record. The same rule as nobody
                 // approving their own leave, for the same reason: a control
@@ -885,6 +904,281 @@ class EmployeeController extends Controller
             after: ($existing === null ? 'Recorded: ' : 'Changed: ').implode(', ', $changed),
             request: $request,
         );
+    }
+
+    /**
+     * Take somebody on permanently.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * A CONVERSION IS A NEW RECORD, NOT AN EDITED ONE (decided 2026-09-11)
+     *
+     * The tempting version changes `employment_type` on the row that exists and
+     * is finished in a line. It is also wrong in four ways at once: the staff ID
+     * would still carry the intern digit, a year of intern leave would carry
+     * forward into a full-time balance, the attendance already recorded would
+     * silently become full-time attendance, and there would be no date anywhere
+     * saying when any of it happened.
+     *
+     * So: a new identifier, a new employment record, a new account — and the old
+     * one CLOSED rather than deleted, keeping every hour, leave day and payslip
+     * filed under the identifier it was recorded against. `converted_from_id`
+     * threads the two together so the history is still findable.
+     *
+     * WHAT MOVES AND WHAT DOES NOT
+     *
+     * Moves: the work email, the identity and bank details, the profile fields,
+     * the photo, the documents, the roles, the reporting line and the
+     * department. None of it is re-typed — the owner asked for a button, not a
+     * second pass at the form.
+     *
+     * Does not: leave, attendance, payslips, tasks and team membership. The
+     * first three are history and belong to the record that earned them. The
+     * last two are the owner's decision, on the reasoning that a conversion
+     * follows an accepted offer and nothing is left open at that point.
+     *
+     * Salary is deliberately not carried either: a stipend and a full-time
+     * breakdown are not the same shape, and a conversion comes with a new
+     * number. The new record shows "nothing on file" until HR sets it, which is
+     * a chaseable absence rather than a silent zero.
+     *
+     * FILES ARE COPIED, NOT SHARED
+     *
+     * Two rows pointing at one file is a photo that vanishes from the closed
+     * record the first time somebody replaces it. See DocumentStore::copy().
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function convert(Request $request, string $employee): RedirectResponse
+    {
+        $record = $this->find($employee);
+
+        if ($record->employment_type !== Employee::INTERN) {
+            // Freelancers are not converted (2026-09-11) and a full-time record
+            // has nowhere to go. Belt and braces: the button is not rendered.
+            throw ValidationException::withMessages([
+                'convert' => 'Only an intern can be converted to full-time.',
+            ]);
+        }
+
+        if ($record->user->status !== 'active') {
+            throw ValidationException::withMessages([
+                'convert' => 'This record is closed. Reopen it before converting.',
+            ]);
+        }
+
+        if ($record->convertedTo !== null) {
+            // Idempotence, and the reason it matters: a double-submitted form
+            // would otherwise issue a second identifier and a second account
+            // for one person.
+            throw ValidationException::withMessages([
+                'convert' => 'This record has already been converted.',
+            ]);
+        }
+
+        if ($record->user_id === $request->user()->id) {
+            throw ValidationException::withMessages([
+                'convert' => 'You cannot convert your own record.',
+            ]);
+        }
+
+        /*
+         * Rank, not role (§2.5) — the same check closing a record makes, because
+         * this closes one. Somebody who may not close this person's record must
+         * not be able to close it by converting them instead.
+         */
+        if (! $this->rbac->outranks($request->user(), $record->user, 'people')) {
+            abort(403);
+        }
+
+        $fresh = DB::transaction(fn () => $this->performConversion($record, $request));
+
+        $this->invite($fresh, $request);
+
+        foreach ([$record, $fresh] as $side) {
+            $this->audit->record(
+                action: AuditLog::EMPLOYEE_CONVERTED,
+                actor: $request->user(),
+                entityType: 'employee',
+                // Written against BOTH identifiers. Somebody looking at either
+                // record has to be able to see that this happened; an entry on
+                // one of them is half a trail.
+                entityId: $side->user->user_id,
+                before: $record->user->user_id.' (intern)',
+                after: $fresh->user->user_id.' (full-time), from '.now()->format('d M Y'),
+                request: $request,
+            );
+        }
+
+        return redirect()
+            ->route('employees.show', ['employee' => $fresh->user->user_id])
+            ->with('status', $fresh->user->name.' is now '.$fresh->user->user_id.'. Their old record is closed and kept. '
+                .'They have been emailed a link to set a password, and their salary still needs recording.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * The conversion itself. Called inside a transaction and nowhere else.
+     */
+    protected function performConversion(Employee $record, Request $request): Employee
+    {
+        $oldUser = $record->user;
+        $oldStaffId = $oldUser->user_id;
+        $workEmail = $oldUser->email;
+
+        /*
+         * The old address is freed BEFORE the new account claims it. `email` is
+         * unique across every account and it is the sign-in identifier, so two
+         * rows cannot hold it even for the length of a transaction.
+         *
+         * What the closed record keeps is a tombstone built from the address it
+         * had — `someone+ZEPH262004@…` — rather than a null or a blank. It says
+         * which address this record signed in with, it cannot collide with
+         * anything, and it is a valid address shape so nothing downstream that
+         * expects one chokes on it. The account is inactive, so it is not a way
+         * in either.
+         */
+        $oldUser->forceFill([
+            'email' => $this->tombstoneEmail($workEmail, $oldStaffId),
+            'status' => 'inactive',
+        ])->save();
+
+        $this->rbac->forget($oldUser);
+
+        $newUser = User::create([
+            'user_id' => StaffId::forEmployee(Employee::FULL_TIME),
+            'name' => $oldUser->name,
+            'email' => $workEmail,
+            // Never used: they set their own through the invite link.
+            'password' => Str::random(64),
+            'account_type' => Realm::STAFF,
+            'staff_kind' => 'employee',
+            'status' => 'active',
+        ]);
+
+        /*
+         * The roles they already held, not just Employee. A converted intern
+         * who was leading a team and quietly stops leading it on Monday is a
+         * worse outcome than one who keeps a role HR can take away in the Admin
+         * Panel.
+         */
+        $newUser->roles()->sync($oldUser->roles()->pluck('roles.id'));
+
+        $fresh = Employee::create([
+            'user_id' => $newUser->id,
+            'employment_type' => Employee::FULL_TIME,
+            'converted_from_id' => $record->id,
+            'department_id' => $record->department_id,
+            'designation_id' => $record->designation_id,
+            'reports_to' => $record->reports_to,
+            /*
+             * TODAY, not the day they started as an intern. The leave year runs
+             * from each person's own joining month and the balance starts
+             * fresh (2026-09-11), and both read this column — carrying the
+             * intern date over would hand them a year of accrual they have not
+             * earned under this engagement.
+             */
+            'joined_on' => now()->toDateString(),
+            'date_of_birth' => $record->date_of_birth,
+            'announce_milestones' => $record->announce_milestones,
+        ]);
+
+        $this->carryIdentity($record, $fresh);
+        $this->carryProfile($record, $fresh);
+        $this->carryDocuments($record, $fresh);
+
+        return $fresh->load(['user', 'department', 'designation']);
+    }
+
+    /**
+     * `someone@zephryx.test` becomes `someone+ZEPH262004@zephryx.test`.
+     */
+    protected function tombstoneEmail(string $email, string $staffId): string
+    {
+        [$local, $domain] = array_pad(explode('@', $email, 2), 2, 'invalid.local');
+
+        return $local.'+'.$staffId.'@'.$domain;
+    }
+
+    /**
+     * ID proof, PAN and bank details, copied rather than re-typed.
+     *
+     * Read through the model so the `encrypted` cast decrypts on the way out
+     * and re-encrypts on the way in. Copying the raw columns would move
+     * ciphertext, which happens to work today and stops working the moment the
+     * application key is rotated for one of them.
+     */
+    protected function carryIdentity(Employee $from, Employee $to): void
+    {
+        $banking = EmployeeBanking::where('employee_id', $from->id)->first();
+
+        if ($banking === null) {
+            return;
+        }
+
+        EmployeeBanking::create([
+            'employee_id' => $to->id,
+            'bank_name' => $banking->bank_name,
+            'ifsc' => $banking->ifsc,
+            'account_number' => $banking->account_number,
+            'pan' => $banking->pan,
+            'id_proof_type' => $banking->id_proof_type,
+            'id_proof_number' => $banking->id_proof_number,
+            'id_proof_copy_received_on' => $banking->id_proof_copy_received_on,
+        ]);
+    }
+
+    /**
+     * The person's own fields, and their photograph as its own file.
+     */
+    protected function carryProfile(Employee $from, Employee $to): void
+    {
+        $profile = $from->profile;
+
+        if ($profile === null) {
+            return;
+        }
+
+        $fields = $profile->toRecordArray();
+
+        // A copy, so replacing it later on one record cannot delete it from
+        // under the other. A source that has gone missing is not worth failing
+        // a conversion over — they simply start without a photo.
+        if (($fields['photo_path'] ?? null) !== null) {
+            $fields['photo_path'] = $this->documents->exists($fields['photo_path'])
+                ? $this->documents->copy($fields['photo_path'], 'employees/'.$to->id.'/photo')['path']
+                : null;
+        }
+
+        EmployeeProfile::create(['employee_id' => $to->id] + $fields);
+    }
+
+    /**
+     * Their documents, files and all.
+     *
+     * Not strictly asked for, and left out it would mean somebody's resume and
+     * offer letter becoming unreachable to them the day they are made
+     * permanent — the old account cannot sign in, and this module's document
+     * routes serve the signed-in person's own.
+     */
+    protected function carryDocuments(Employee $from, Employee $to): void
+    {
+        foreach ($from->documents as $document) {
+            if (! $this->documents->exists($document->path)) {
+                continue;
+            }
+
+            $copied = $this->documents->copy($document->path, 'employees/'.$to->id.'/documents');
+
+            EmployeeDocument::create([
+                'reference' => ProfileDirectory::nextDocumentReference(),
+                'employee_id' => $to->id,
+                'name' => $document->name,
+                'kind' => $document->kind,
+                'path' => $copied['path'],
+                'bytes' => $copied['bytes'],
+                'mime' => $document->mime,
+                'uploaded_by' => $document->uploaded_by,
+            ]);
+        }
     }
 
     /* ══════════════════════════════════════════════════════════════════════

@@ -50,7 +50,8 @@ class Employee extends Model
 
     protected $fillable = [
         'user_id', 'department_id', 'designation_id', 'reports_to',
-        'employment_type', 'joined_on', 'date_of_birth', 'announce_milestones',
+        'employment_type', 'converted_from_id',
+        'joined_on', 'date_of_birth', 'announce_milestones',
     ];
 
     protected $attributes = [
@@ -153,6 +154,29 @@ class Employee extends Model
     public function manager(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'reports_to');
+    }
+
+    /**
+     * The intern record this full-time one was converted from.
+     *
+     * Null for almost everybody. Set once, at conversion, and never edited —
+     * see the migration for why the two records are separate at all.
+     *
+     * @return BelongsTo<Employee, $this>
+     */
+    public function convertedFrom(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'converted_from_id');
+    }
+
+    /**
+     * The full-time record this intern one became, if it became one.
+     *
+     * @return HasOne<Employee, $this>
+     */
+    public function convertedTo(): HasOne
+    {
+        return $this->hasOne(Employee::class, 'converted_from_id');
     }
 
     /**

@@ -201,6 +201,20 @@ Route::post('/employees/{employee}', [EmployeeController::class, 'update'])
     ->middleware('permission:employees.edit')
     ->name('employees.update');
 
+/*
+ * Taking an intern on permanently (2026-09-11).
+ *
+ * `employees.create` and not `employees.edit`, because that is what it does:
+ * it issues a new staff ID and CREATES AN ACCOUNT. §1 says every account is
+ * made by an administrator, and this is one of the two places that happens.
+ * The controller adds the rank check that closing a record makes, since this
+ * closes one.
+ */
+Route::post('/employees/{employee}/convert', [EmployeeController::class, 'convert'])
+    ->where('employee', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:employees.create')
+    ->name('employees.convert');
+
 Route::post('/employees/{employee}/status', [EmployeeController::class, 'status'])
     ->where('employee', '[A-Za-z0-9-]{1,32}')
     ->middleware('permission:employees.deactivate')

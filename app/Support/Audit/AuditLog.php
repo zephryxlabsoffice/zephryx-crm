@@ -64,6 +64,16 @@ class AuditLog
     public const EMPLOYEE_UPDATED = 'employee.updated';
     public const EMPLOYEE_STATUS_CHANGED = 'employee.status_changed';
     /*
+     * An intern was taken on permanently.
+     *
+     * Its own action rather than a `created` plus a `status_changed`, because
+     * those two entries side by side describe a person leaving and an unrelated
+     * person being hired on the same afternoon. One entry, written against BOTH
+     * identifiers, naming the old and the new: somebody reading either record
+     * has to be able to see that the other one exists.
+     */
+    public const EMPLOYEE_CONVERTED = 'employee.converted';
+    /*
      * Where somebody lives, or the address on the document they were checked
      * against, was recorded or corrected.
      *

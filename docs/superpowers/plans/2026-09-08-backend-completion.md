@@ -516,7 +516,20 @@ Step 1 is part done. What is committed, in order:
   their own**. Declining requires a reason, and the person reads it on their
   own page.
 
-Still to do in step 1: convert-intern-to-full-time.
+- **Convert intern to full-time** (2026-09-16) — a button, not a second pass at
+  the form. New ZEPH ID, new account, new employment record with today as
+  `joined_on` so the leave year starts again; the old record closed and kept,
+  threaded by `converted_from_id`. The work email moves and the closed account
+  keeps a tombstone address built from it, since the sign-in identifier is
+  unique and both rows cannot hold it. Identity, bank, profile, photo,
+  documents and roles come across — files COPIED, never shared, or replacing
+  one later deletes it from under the closed record. Attendance, leave,
+  payslips, tasks and team membership stay put, and the salary is deliberately
+  not carried: a stipend and a breakdown are not the same shape.
+  `employees.create`, because it creates an account, plus the rank check that
+  closing a record makes.
+
+**Step 1 is finished.**
 Also still missing from the add form, noticed while doing the addresses:
 personal email alongside the work email, and a phone number — the latter is
 required of interns and freelancers by the decisions above, so it cannot wait

@@ -117,6 +117,45 @@ class DocumentStore
     }
 
     /**
+     * Duplicate a stored file into another folder, under a fresh name.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * A COPY, NOT A SECOND ROW POINTING AT ONE FILE
+     *
+     * Added for converting an intern (2026-09-16), where a photo and a set of
+     * documents move from a closed record to a new one. The cheap version is to
+     * write the same `path` onto both rows — and the cost lands later, when the
+     * person replaces their photo and `forget()` deletes the file out from
+     * under the record that is supposed to be history. One row, one file.
+     *
+     * The extension comes from the stored path, which is safe precisely because
+     * `put()` composed it from the whitelist rather than from anything anybody
+     * typed. It is checked again anyway: this returns a path a database column
+     * will hold, and re-checking costs nothing.
+     *
+     * @return array{path: string, bytes: int}
+     */
+    public function copy(string $from, string $folder): array
+    {
+        $extension = mb_strtolower(pathinfo($from, PATHINFO_EXTENSION));
+
+        if (! in_array($extension, self::ALLOWED, true)) {
+            throw new \InvalidArgumentException('That file type cannot be stored.');
+        }
+
+        $contents = $this->disk()->get($from);
+
+        if ($contents === null) {
+            // The caller decides what a missing source means. For a conversion
+            // it means that record simply has no photo, which is survivable —
+            // and far better than half a conversion.
+            throw new \RuntimeException('There is no file at '.$from.' to copy.');
+        }
+
+        return $this->putBytes($folder, $extension, $contents);
+    }
+
+    /**
      * Hand a stored file back, under the name it was uploaded with.
      */
     public function download(string $path, string $name): StreamedResponse

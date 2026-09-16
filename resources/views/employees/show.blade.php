@@ -30,6 +30,25 @@
         @endif
     </div>
 
+    @if ($convertedTo)
+        @include('partials.notice', [
+            'tone' => 'info',
+            'title' => 'This record was converted to full-time',
+            'message' => 'It is kept because the attendance, leave and payslips recorded against it '
+                .'belong to it. Their current record is '.$convertedTo->user->user_id.'.',
+        ])
+    @endif
+
+    @if ($convertedFrom)
+        @include('partials.notice', [
+            'tone' => 'info',
+            'title' => 'Converted from an internship',
+            'message' => 'They were '.$convertedFrom->user->user_id.' until '
+                .($record->joined_on?->format('d M Y') ?? 'the conversion')
+                .'. That record is closed and holds everything from before.',
+        ])
+    @endif
+
     @if ($user->status !== 'active')
         @include('partials.notice', [
             'tone' => $user->status === 'suspended' ? 'danger' : 'warning',
@@ -106,6 +125,44 @@
 
             @if ($salary !== null)
                 @include('employees.partials.salary', ['salary' => $salary])
+            @endif
+
+            @if ($mayConvert)
+                <div class="card">
+                    <div class="section-hd">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 8h13l-3-3M20 16H7l3 3"/>
+                        </svg>
+                        Convert to full-time
+                    </div>
+
+                    <div class="prose">
+                        <p>
+                            {{-- Says exactly what will happen before the button
+                                 is pressed. This issues an account and closes
+                                 one, and neither is undoable from a screen. --}}
+                            This issues a new staff ID and a new record, and closes this one. Their
+                            work email, identity and bank details, profile, photo and documents all
+                            move across without being retyped, and they are emailed a link to set a
+                            password for the new account.
+                        </p>
+                        <p>
+                            <strong>Their leave balance starts again</strong> and the attendance,
+                            leave and payslips already recorded stay here, under
+                            {{ $employee['user_id'] }}. Tasks and team membership do not move.
+                            You will need to record their salary afterwards.
+                        </p>
+                    </div>
+
+                    @error('convert')
+                        <div class="prose"><span class="field-error">{{ $message }}</span></div>
+                    @enderror
+
+                    <form method="POST" action="{{ route('employees.convert', ['employee' => $employee['user_id']]) }}">
+                        @csrf
+                        <button class="btn btn-primary" type="submit">Convert to full-time</button>
+                    </form>
+                </div>
             @endif
 
             @if ($mayDeactivate)
