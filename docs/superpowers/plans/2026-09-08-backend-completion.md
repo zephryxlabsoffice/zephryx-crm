@@ -244,13 +244,87 @@ write as well, so it is the Drive API directly:
    part is why `DocumentStore::stream()` refuses uploaded files today, and it
    is the condition on which the refusal is lifted.
 
-*(open — the only thing still unanswered: is the Drive account a Google
-Workspace one on the company domain, or a plain Gmail? Workspace means a Shared
-Drive and a service account, which is the tidier arrangement. Plain Gmail means
-a service account cannot own files at all — it has no storage quota of its own
-— so it has to be a one-time OAuth consent whose refresh token the application
-stores. Both are free and both work on shared hosting; the answer decides which
-one gets built.)*
+**Workspace Shared Drive, not the Gmail folder** (settled 2026-09-16 — the
+owner offered either).
+
+Three reasons, and the third is the one that decides it:
+
+- **A service account can own files on a Shared Drive and cannot on a personal
+  Drive.** A service account has no storage quota of its own, so an upload into
+  a folder a Gmail account merely shared with it fails outright. The Gmail route
+  would have to be a one-time OAuth consent whose refresh token we store — a
+  credential that can be revoked by anybody clicking through their Google
+  security page, and which then breaks uploads with nothing in the application
+  to explain why.
+- **The files belong to the company, not to a person.** A Shared Drive survives
+  whoever set it up leaving. A folder in somebody's Gmail leaves with them.
+- **The Calendar integration already assumes exactly this credential.**
+  `App\Support\Meetings\GoogleMeetProvider` is written against a Workspace
+  service account, and Meetings is still waiting on it. One key, connected once,
+  serves Drive and Calendar both. Building the Gmail route would mean two
+  credentials, two failure modes and two screens.
+
+Note the asymmetry between the two Google jobs, because it is a security
+property rather than a detail: **Drive needs no domain-wide delegation** — the
+service account is added as a member of the Shared Drive like any other member
+— while Calendar does, in order to impersonate the meeting host. So the key is
+granted delegation scoped to Calendar only, and Drive access is a membership
+that can be removed from the Drive's own sharing panel without touching
+anything else.
+
+### Connecting it: Admin Panel, and what a credential is NOT
+
+Required by the owner (2026-09-16): every connection detail is entered in the
+**Admin Panel**, not in a file on the server. Nothing about this arrangement
+should need a deploy, an SSH session or a developer.
+
+That much the settings machinery already does — `company_settings` overrides
+`config/`, so a value entered in the panel survives the next deploy. **A
+credential must not go through it**, and the reason is worth writing down
+before the security audit finds it:
+
+- `CompanySettings::apply()` pushes every stored row into the config repository
+  at boot. A service-account private key in `config()` is a key in reach of any
+  stack trace, any `config:show`, any debug page, and any future `dd(config())`
+  in a hurry.
+- `company_settings.value` is plain JSON in a column. A database dump, a
+  backup on somebody's laptop, a read-only replica — none of them has a
+  permission layer, which is the same argument that put the identity columns
+  behind the `encrypted` cast.
+
+So credentials get their own home, and it is shaped by the rules the rest of
+this application already follows:
+
+1. **Its own table, encrypted at rest.** The key material carries the
+   `encrypted` cast, exactly as `employee_banking` does. Never pushed into
+   config; read at the point of use by the Drive client and nowhere else.
+2. **Write-only in the panel.** The key is pasted in and never rendered back —
+   not masked, not partially, not in a `value` attribute. What the screen shows
+   afterwards is the service account's **email address, the key fingerprint and
+   the date it was connected**, which is everything needed to tell one key from
+   another and nothing that could be stolen from the markup. This is the same
+   rule as the identity card, and for the same reason: markup the browser was
+   sent has already been read by whoever is sitting at it.
+3. **CEO and System Administrator only**, behind its own sensitive permission
+   — not folded into the existing settings permission. Master data may be
+   edited by HR (see Admin panel above); a Drive key must not be reachable by
+   the same grant that lets somebody add a department.
+4. **Connecting, changing and disconnecting are audited**, by fingerprint and
+   never by value. So is a failed connection test, which is the entry that
+   explains an outage afterwards.
+5. **A "Test connection" button that actually writes.** It creates and deletes
+   a small file in the Shared Drive, because a credential that can list a folder
+   and cannot write to it is the failure this whole exercise is about — and it
+   would otherwise be discovered by the first person trying to upload a payslip.
+
+**What exists today, honestly.** The settings half is built and is the right
+shape: `company_settings` overrides `config/`, with the catalogue deciding what
+may be a setting at all and retroactive changes shown before they are saved.
+The credential half is not built, and what stands in for it is `config/meetings.php`
+reading `GOOGLE_SERVICE_ACCOUNT_KEY` out of `.env` — a file on the server, which
+is exactly what the owner has now said they do not want to depend on. So the
+credential store above supersedes those three env values, Calendar included, and
+the panel screen configures one Google connection rather than two.
 
 ### Attendance
 
@@ -344,6 +418,28 @@ record moves. Nothing changes on the strength of the form alone.
 - **Audit entries are kept forever.** Backups are handled on cPanel, not by
   the CRM.
 
+**The standing rule (stated 2026-09-16).** There will be a security audit before
+go-live, and nothing is to be built that a reasonable auditor would flag. The
+working test for any new surface is the one this application has used since §6:
+*a person with no grant must not be able to reach it, and a person with a grant
+must leave a trace.* Which in practice means, every time:
+
+- **The query is the gate, not the template.** If somebody may not see a thing,
+  the row is never loaded — an `@if` around data the controller fetched anyway
+  is one refactor away from a leak.
+- **Nothing sensitive is rendered to be hidden.** No masked value that carries
+  the real one in a data attribute, no secret in a `value` attribute, no
+  full identifier "hidden" by CSS.
+- **No file is reachable by URL alone.** Every document goes through a route
+  that checks who is asking and writes an entry, whether the bytes live on the
+  local disk or on Drive. No public link, no signed link that outlives the
+  session, no guessable path.
+- **Secrets are encrypted in the column** and never in config, never in a log,
+  never in the audit log. The log names the field and the actor; the value is
+  what it exists to protect.
+- **Rank as well as permission** on anything done TO another person, and nobody
+  applies a control to themselves.
+
 ### Client portal
 
 - Clients may raise tickets, reply to them and request meetings — no comments
@@ -430,5 +526,11 @@ change modules that are already committed.
 5. **Tickets, Meetings, Announcements, Notifications, Profile.**
 6. **2FA on new devices, the Support page, Admin tidy-up.**
 
-Storage moves to Google Drive as one job, once the owner explains the "index"
-mechanism. The office-IP attendance logic also waits on their explanation.
+Storage moves to Google Drive as one job — decided in full above, and no longer
+waiting on anything. It lands with the **Admin Panel connection screen** and the
+**inline PDF viewer** in the same piece of work, because a Drive driver with no
+way to connect it and no way to read a payslip back is three-quarters of a
+feature. Sequenced before step 4, since the Invoices rewrite is an uploaded PDF
+and has nowhere to put one until this exists.
+
+The office-IP attendance logic is dropped, not deferred.
