@@ -1,0 +1,60 @@
+/* Client My Projects page styles */
+
+.cmp-kpi-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--density-gap); margin-bottom: var(--density-gap); }
+.cmp-kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 22px 24px; display: flex; align-items: center; gap: 16px; }
+.cmp-kpi-ic { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; flex-shrink: 0; }
+.cmp-kpi-ic svg { width: 24px; height: 24px; }
+.cmp-kpi.t-active .cmp-kpi-ic { background: var(--green-soft); color: var(--green); }
+.cmp-kpi.t-done   .cmp-kpi-ic { background: var(--green-soft); color: var(--green); }
+.cmp-kpi.t-review .cmp-kpi-ic { background: var(--amber-soft); color: var(--amber); }
+.cmp-kpi.t-ticket .cmp-kpi-ic { background: var(--purple-soft); color: var(--purple); }
+.cmp-kpi-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cmp-kpi-lbl { font-size: 13px; color: var(--ink-2); font-weight: 600; }
+.cmp-kpi-val { font-size: 28px; font-weight: 800; letter-spacing: -0.025em; color: var(--ink); line-height: 1; }
+.cmp-kpi-sub { font-size: 11.5px; color: var(--muted); }
+
+@media (max-width: 1280px) { .cmp-kpi-row { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px)  { .cmp-kpi-row { grid-template-columns: 1fr; } }
+
+/* Table card */
+.cmp-card-hd { padding: 22px 24px 4px; }
+.cmp-card-hd strong { font-size: 18px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
+.cmp-tools { display: flex; align-items: center; gap: 10px; padding: 16px 24px; flex-wrap: wrap; }
+.cmp-sel { display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; height: 40px; min-width: 130px; padding: 0 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; font: 500 13px/1 'Plus Jakarta Sans', sans-serif; color: var(--ink-2); cursor: pointer; }
+.cmp-sel svg { width: 14px; height: 14px; color: var(--muted); }
+.cmp-search { flex: 1; min-width: 200px; height: 40px; }
+
+.cmp-table { width: 100%; border-collapse: collapse; }
+.cmp-table thead th { text-align: left; font-size: 12.5px; font-weight: 600; color: var(--muted); padding: 12px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.cmp-table thead th:first-child { padding-left: 24px; }
+.cmp-table thead th:last-child  { padding-right: 24px; text-align: center; }
+.cmp-table tbody td { padding: 16px 8px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--ink-2); white-space: nowrap; }
+.cmp-table tbody td:first-child { padding-left: 24px; }
+.cmp-table tbody td:last-child  { padding-right: 24px; text-align: center; }
+.cmp-table tbody tr:last-child td { border-bottom: 0; }
+.cmp-table tbody tr:hover { background: var(--green-tint); }
+
+.cmp-proj { display: inline-flex; align-items: center; gap: 14px; }
+.cmp-proj-ic { width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; flex-shrink: 0; }
+.cmp-proj-ic svg { width: 20px; height: 20px; }
+.cmp-proj-ic.t-green  { background: var(--green-soft);  color: var(--green); }
+.cmp-proj-ic.t-pink   { background: #FCE7F3; color: #DB2777; }
+.cmp-proj-ic.t-blue   { background: var(--blue-soft);   color: var(--blue); }
+[data-theme="dark"] .cmp-proj-ic.t-pink { background: #2A1226; color: #F472B6; }
+.cmp-proj-body strong { display: block; font-size: 13.5px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+.cmp-proj-body span { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.cmp-dl { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); }
+.cmp-dl svg { width: 15px; height: 15px; color: var(--muted); }
+
+.cmp-pm { display: inline-flex; align-items: center; gap: 10px; }
+.cmp-pm .cl-avatar { width: 34px; height: 34px; font-size: 12px; }
+.cmp-pm strong { font-size: 13px; font-weight: 600; color: var(--ink); }
+
+.cmp-updated { color: var(--muted); }
+.cmp-menu { appearance: none; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); display: inline-grid; place-items: center; color: var(--muted); cursor: pointer; transition: border-color 0.14s, background 0.14s; }
+.cmp-menu:hover { border-color: var(--line-strong); background: var(--surface-2); color: var(--ink); }
+.cmp-menu svg { width: 16px; height: 16px; }
+
+/* status pill variant for planning (purple) */
+.pill-purple-soft { background: var(--purple-soft); color: var(--purple); }

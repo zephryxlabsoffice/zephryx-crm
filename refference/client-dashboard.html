@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-density="comfortable">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard · ZephryxLabs CRM (Client)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shell.css" />
+  <link rel="stylesheet" href="client-dashboard.css" />
+</head>
+<body data-active="dashboard">
+
+  <div class="app">
+    <div class="main">
+
+      <main class="page" data-screen-label="C01 Client · Dashboard">
+
+        <div class="cl-greet">
+          <h1>Welcome back, DGL International School <span aria-hidden="true">👋</span></h1>
+          <p>Here's the latest update on your projects with Zephryx.</p>
+        </div>
+
+        <!-- Row 1: 4 nav action cards -->
+        <section class="cd-nav-row">
+          <a class="cd-nav" href="#">
+            <div class="cd-nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+            <div class="cd-nav-body"><strong>My Projects</strong><span>View your active and completed projects</span></div>
+            <div class="cd-nav-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+          </a>
+          <a class="cd-nav" href="#">
+            <div class="cd-nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg></div>
+            <div class="cd-nav-body"><strong>Project Progress</strong><span>Track current work and milestones</span></div>
+            <div class="cd-nav-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+          </a>
+          <a class="cd-nav" href="#">
+            <div class="cd-nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="2" y="14" width="5" height="7" rx="2"/><rect x="17" y="14" width="5" height="7" rx="2"/></svg></div>
+            <div class="cd-nav-body"><strong>Support Tickets</strong><span>Raise and monitor support requests</span></div>
+            <div class="cd-nav-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+          </a>
+          <a class="cd-nav" href="#">
+            <div class="cd-nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></div>
+            <div class="cd-nav-body"><strong>Invoices</strong><span>View payment status and invoices</span></div>
+            <div class="cd-nav-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+          </a>
+        </section>
+
+        <!-- Row 2: 5 stat cards -->
+        <section class="cd-stat-row">
+          <div class="cd-stat t-active">
+            <div class="cd-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+            <div class="cd-stat-body"><div class="cd-stat-lbl">Active Projects</div><div class="cd-stat-val">3</div><div class="cd-stat-sub">Currently active</div></div>
+          </div>
+          <div class="cd-stat t-tasks">
+            <div class="cd-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg></div>
+            <div class="cd-stat-body"><div class="cd-stat-lbl">Completed Tasks</div><div class="cd-stat-val">18</div><div class="cd-stat-sub">Tasks completed</div></div>
+          </div>
+          <div class="cd-stat t-tickets">
+            <div class="cd-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6z"/></svg></div>
+            <div class="cd-stat-body"><div class="cd-stat-lbl">Open Tickets</div><div class="cd-stat-val">1</div><div class="cd-stat-sub">Needs attention</div></div>
+          </div>
+          <div class="cd-stat t-meet">
+            <div class="cd-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <div class="cd-stat-body"><div class="cd-stat-lbl">Upcoming Meetings</div><div class="cd-stat-val">2</div><div class="cd-stat-sub">Scheduled meetings</div></div>
+          </div>
+          <div class="cd-stat t-pay">
+            <div class="cd-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2V18a2 2 0 0 0 2 2h14v-4"/><path d="M20 12a2 2 0 0 0-2 2v0a2 2 0 0 0 2 2h2v-4z"/></svg></div>
+            <div class="cd-stat-body"><div class="cd-stat-lbl">Pending Payment</div><div class="cd-stat-val">₹25,000</div><div class="cd-stat-sub">Payment due</div></div>
+          </div>
+        </section>
+
+        <!-- Row 3: 3 panels -->
+        <section class="cd-panel-row">
+
+          <!-- My Projects -->
+          <div class="cd-panel">
+            <div class="cd-panel-hd"><strong>My Projects</strong><a href="#">View All</a></div>
+            <table class="cd-mini-table">
+              <thead><tr><th>Project Name</th><th>Deadline</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span class="cd-item"><span class="cd-item-ic t-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span><strong>Website Redesign</strong></span></td>
+                  <td><span class="cd-dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>25 May</span></td>
+                  <td><span class="pill pill-blue">Work in Progress</span></td>
+                </tr>
+                <tr>
+                  <td><span class="cd-item"><span class="cd-item-ic t-pink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8v18l-18-8z"/></svg></span><strong>Social Media Kit</strong></span></td>
+                  <td><span class="cd-dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>28 May</span></td>
+                  <td><span class="pill pill-blue">Work in Progress</span></td>
+                </tr>
+                <tr>
+                  <td><span class="cd-item"><span class="cd-item-ic t-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.04 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.04H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.65 8.6a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.56 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.56 1z"/></svg></span><strong>CRM Setup</strong></span></td>
+                  <td><span class="cd-dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>5 June</span></td>
+                  <td><span class="pill pill-green">Done</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Support Tickets -->
+          <div class="cd-panel">
+            <div class="cd-panel-hd"><strong>Support Tickets</strong><a href="#">View All</a></div>
+            <table class="cd-mini-table">
+              <thead><tr><th>Ticket</th><th>Priority</th><th>Status</th><th>Last Updated</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span class="cd-item"><span class="cd-item-ic t-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="2" y="14" width="5" height="7" rx="2"/><rect x="17" y="14" width="5" height="7" rx="2"/></svg></span><strong>Website text correction</strong></span></td>
+                  <td><span class="pill pill-amber">Medium</span></td>
+                  <td><span class="pill pill-blue">In Progress</span></td>
+                  <td>20 May, 02:30 PM</td>
+                </tr>
+                <tr>
+                  <td><span class="cd-item"><span class="cd-item-ic t-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span><strong>Logo file request</strong></span></td>
+                  <td><span class="pill pill-green">Low</span></td>
+                  <td><span class="pill pill-green">Resolved</span></td>
+                  <td>19 May, 11:20 AM</td>
+                </tr>
+                <tr>
+                  <td><span class="cd-item"><span class="cd-item-ic t-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6z"/></svg></span><strong>Hosting query</strong></span></td>
+                  <td><span class="pill pill-red">High</span></td>
+                  <td><span class="pill pill-red">Open</span></td>
+                  <td>20 May, 09:45 AM</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Upcoming Meetings -->
+          <div class="cd-panel">
+            <div class="cd-panel-hd"><strong>Upcoming Meetings</strong><a href="#">View All</a></div>
+            <table class="cd-mini-table">
+              <thead><tr><th>Meeting</th><th>Date &amp; Time</th><th>Platform</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span class="cd-item"><span class="cd-item-ic t-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="cd-meet-name"><strong>Website</strong><span>Review Meeting</span></span></span></td>
+                  <td><span class="cd-meet-when"><strong>24 May, 2024</strong><span>4:00 PM</span></span></td>
+                  <td><span class="cd-platform"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2" y="6" width="13" height="12" rx="2" fill="#00832D"/><path d="M15 10l5-3v10l-5-3z" fill="#FBBC04"/><path d="M2 6h7v6H2z" fill="#34A853"/></svg>Google Meet</span></td>
+                </tr>
+                <tr>
+                  <td><span class="cd-item"><span class="cd-item-ic t-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="cd-meet-name"><strong>Monthly</strong><span>Progress Discussion</span></span></span></td>
+                  <td><span class="cd-meet-when"><strong>28 May, 2024</strong><span>12:00 PM</span></span></td>
+                  <td><span class="cd-platform"><svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Online</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <div id="tweaks-root"></div>
+
+  <script src="client-shell.js"></script>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel">
+    const CD_TWEAKS = /*EDITMODE-BEGIN*/{
+      "dark": false,
+      "sidebarCollapsed": false,
+      "density": "comfortable"
+    }/*EDITMODE-END*/;
+    function applyTweaks(t) {
+      const html = document.documentElement;
+      html.setAttribute('data-theme', t.dark ? 'dark' : 'light');
+      html.setAttribute('data-density', t.density);
+      document.body.dataset.sidebar = t.sidebarCollapsed ? 'collapsed' : 'expanded';
+    }
+    function CdTweaks() {
+      const [t, setTweak] = useTweaks(CD_TWEAKS);
+      React.useEffect(() => { applyTweaks(t); }, [t]);
+      return (
+        <TweaksPanel title="Tweaks">
+          <TweakSection label="Theme" />
+          <TweakToggle label="Dark mode" value={t.dark} onChange={(v) => setTweak('dark', v)} />
+          <TweakSection label="Layout" />
+          <TweakToggle label="Sidebar collapsed" value={t.sidebarCollapsed} onChange={(v) => setTweak('sidebarCollapsed', v)} />
+          <TweakRadio label="Density" value={t.density}
+            options={[{ value: 'compact', label: 'Compact' }, { value: 'comfortable', label: 'Comfy' }]}
+            onChange={(v) => setTweak('density', v)} />
+        </TweaksPanel>
+      );
+    }
+    applyTweaks(CD_TWEAKS);
+    const root = ReactDOM.createRoot(document.getElementById('tweaks-root'));
+    root.render(<CdTweaks />);
+  </script>
+</body>
+</html>

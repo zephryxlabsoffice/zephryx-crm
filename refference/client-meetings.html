@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-density="comfortable">
+<head>
+  <meta charset="UTF-8" />
+  <title>Meetings · ZephryxLabs CRM (Client)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shell.css" />
+  <link rel="stylesheet" href="clients.css" />
+  <link rel="stylesheet" href="employees.css" />
+  <link rel="stylesheet" href="projects.css" />
+  <link rel="stylesheet" href="attendance.css" />
+  <link rel="stylesheet" href="meetings.css" />
+</head>
+<body data-active="meetings">
+
+  <div class="app">
+    <div class="main">
+
+      <main class="page" data-screen-label="C07 Client · Meetings">
+
+        <div class="page-hd-row">
+          <div class="page-hd">
+            <h1>Meetings</h1>
+            <p>Schedule and manage meetings with your project team.</p>
+          </div>
+          <div class="hd-actions">
+            <a class="mt-cta" href="#">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Request Meeting
+            </a>
+          </div>
+        </div>
+
+        <!-- 4 stat cards -->
+        <section class="mt-stat-row">
+          <div class="mt-stat t-pending">
+            <div class="mt-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="mt-stat-body"><div class="mt-stat-lbl">Pending</div><div class="mt-stat-val">3</div><div class="mt-stat-sub">Awaiting confirmation</div></div>
+          </div>
+          <div class="mt-stat t-upcoming">
+            <div class="mt-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <div class="mt-stat-body"><div class="mt-stat-lbl">Upcoming</div><div class="mt-stat-val">5</div><div class="mt-stat-sub">Scheduled meetings</div></div>
+          </div>
+          <div class="mt-stat t-completed">
+            <div class="mt-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg></div>
+            <div class="mt-stat-body"><div class="mt-stat-lbl">Completed</div><div class="mt-stat-val">14</div><div class="mt-stat-sub">Meetings completed</div></div>
+          </div>
+          <div class="mt-stat t-cancelled">
+            <div class="mt-stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+            <div class="mt-stat-body"><div class="mt-stat-lbl">Cancelled</div><div class="mt-stat-val">2</div><div class="mt-stat-sub">Meetings cancelled</div></div>
+          </div>
+        </section>
+
+        <section class="mt-grid">
+
+          <!-- Meetings table -->
+          <div class="card clients-card">
+            <div class="mt-toolbar">
+              <div class="search-input">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="search" placeholder="Search meetings..." />
+              </div>
+              <button class="mt-tool-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Select Date Range</button>
+              <button class="mt-tool-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Filter<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+            </div>
+            <div class="card-body-table">
+              <table class="mt-table">
+                <thead>
+                  <tr>
+                    <th>Meeting Title</th>
+                    <th>Project</th>
+                    <th>Date and Time</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="mt-title">Project Discussion</span></td>
+                    <td>Website Redesign</td>
+                    <td><span class="mt-when"><strong>25 May 2024</strong><span>11:00 AM</span></span></td>
+                    <td><span class="mt-status upcoming">Upcoming</span></td>
+                    <td><a class="mt-act-text approved" href="#" target="_blank" rel="noopener" style="text-decoration:none;">Join Meeting</a></td>
+                  </tr>
+                  <tr>
+                    <td><span class="mt-title">Monthly Progress Review</span></td>
+                    <td>CRM Setup</td>
+                    <td><span class="mt-when"><strong>28 May 2024</strong><span>12:00 PM</span></span></td>
+                    <td><span class="mt-status pending">Pending</span></td>
+                    <td><span class="mt-act-text" style="color:var(--amber);">Awaiting Confirmation</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="mt-title">Design Feedback Session</span></td>
+                    <td>Social Media Kit</td>
+                    <td><span class="mt-when"><strong>23 May 2024</strong><span>02:00 PM</span></span></td>
+                    <td><span class="mt-status upcoming">Upcoming</span></td>
+                    <td><a class="mt-act-text approved" href="#" target="_blank" rel="noopener" style="text-decoration:none;">Join Meeting</a></td>
+                  </tr>
+                  <tr>
+                    <td><span class="mt-title">Requirement Discussion</span></td>
+                    <td>Website Redesign</td>
+                    <td><span class="mt-when"><strong>22 May 2024</strong><span>10:30 AM</span></span></td>
+                    <td><span class="mt-status pending">Pending</span></td>
+                    <td><span class="mt-act-text" style="color:var(--amber);">Awaiting Confirmation</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="mt-title">Project Kickoff</span></td>
+                    <td>CRM Setup</td>
+                    <td><span class="mt-when"><strong>20 May 2024</strong><span>11:00 AM</span></span></td>
+                    <td><span class="mt-status cancelled">Cancelled</span></td>
+                    <td><span class="mt-act-text declined">Cancelled</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="mt-title">Weekly Review</span></td>
+                    <td>Website Redesign</td>
+                    <td><span class="mt-when"><strong>18 May 2024</strong><span>04:30 PM</span></span></td>
+                    <td><span class="mt-status completed">Completed</span></td>
+                    <td><span class="mt-act-text completed">Completed</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="mt-title">Demo Meeting</span></td>
+                    <td>Social Media Kit</td>
+                    <td><span class="mt-when"><strong>17 May 2024</strong><span>01:00 PM</span></span></td>
+                    <td><span class="mt-status completed">Completed</span></td>
+                    <td><span class="mt-act-text completed">Completed</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="cl-pagination-trio">
+              <span class="cl-pagination-meta">Showing 1 to 7 of 24 meetings</span>
+              <div class="cl-pagination-pages">
+                <button class="pg-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+                <button class="pg-btn active">1</button>
+                <button class="pg-btn">2</button>
+                <button class="pg-btn">3</button>
+                <button class="pg-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+              </div>
+              <button class="per-page-select">10 / page<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+            </div>
+          </div>
+
+          <!-- Right rail -->
+          <aside class="right-rail">
+
+            <section class="nm-card">
+              <h3>Next Meeting</h3>
+              <div class="nm-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+              <div class="nm-title">Project Discussion</div>
+              <div class="nm-meta">
+                With: <b>Riya Sharma (Project Manager)</b><br/>
+                Project: <b>Website Redesign</b>
+              </div>
+              <div class="nm-rows">
+                <div class="nm-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>25 May 2024 (Saturday)</div>
+                <div class="nm-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>11:00 AM - 12:00 PM</div>
+              </div>
+              <span class="nm-badge" style="background:var(--blue-soft);color:var(--blue);">Confirmed</span>
+              <a class="nm-join" href="#" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                Join Meeting
+              </a>
+            </section>
+
+            <section class="help-card">
+              <div class="help-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></div>
+              <h4>Need Immediate Help?</h4>
+              <p>For urgent issues, contact us directly.</p>
+              <div class="help-list">
+                <div class="help-row">
+                  <span class="help-row-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg></span>
+                  <div class="help-row-body"><strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9eedebeeeef1eceadee4fbeef6ece7e6b0fdf1f3">[email&#160;protected]</a></strong></div>
+                </div>
+                <div class="help-row">
+                  <span class="help-row-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>
+                  <div class="help-row-body"><strong>+91 80 1234 5678</strong><span>Mon - Sat: 9:00 AM to 7:00 PM</span></div>
+                </div>
+                <div class="help-row">
+                  <span class="help-row-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+                  <div class="help-row-body"><strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6e071a060b021e0a0b1d052e140b1e061c1716400d0103">[email&#160;protected]</a></strong></div>
+                </div>
+              </div>
+            </section>
+
+          </aside>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <div id="tweaks-root"></div>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="client-shell.js"></script>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel">
+    const CMT_TWEAKS = /*EDITMODE-BEGIN*/{
+      "dark": false,
+      "sidebarCollapsed": false,
+      "density": "comfortable"
+    }/*EDITMODE-END*/;
+    function applyTweaks(t) {
+      const html = document.documentElement;
+      html.setAttribute('data-theme', t.dark ? 'dark' : 'light');
+      html.setAttribute('data-density', t.density);
+      document.body.dataset.sidebar = t.sidebarCollapsed ? 'collapsed' : 'expanded';
+    }
+    function CmtTweaks() {
+      const [t, setTweak] = useTweaks(CMT_TWEAKS);
+      React.useEffect(() => { applyTweaks(t); }, [t]);
+      return (
+        <TweaksPanel title="Tweaks">
+          <TweakSection label="Theme" />
+          <TweakToggle label="Dark mode" value={t.dark} onChange={(v) => setTweak('dark', v)} />
+          <TweakSection label="Layout" />
+          <TweakToggle label="Sidebar collapsed" value={t.sidebarCollapsed} onChange={(v) => setTweak('sidebarCollapsed', v)} />
+          <TweakRadio label="Density" value={t.density}
+            options={[{ value: 'compact', label: 'Compact' }, { value: 'comfortable', label: 'Comfy' }]}
+            onChange={(v) => setTweak('density', v)} />
+        </TweaksPanel>
+      );
+    }
+    applyTweaks(CMT_TWEAKS);
+    const root = ReactDOM.createRoot(document.getElementById('tweaks-root'));
+    root.render(<CmtTweaks />);
+  </script>
+</body>
+</html>

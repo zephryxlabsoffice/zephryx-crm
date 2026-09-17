@@ -1,0 +1,87 @@
+/* Client Support Tickets page styles */
+
+.ct-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 44px; padding: 0 22px;
+  background: var(--green); color: #fff; border: 0; border-radius: 10px;
+  font: 700 14px/1 'Plus Jakarta Sans', sans-serif; cursor: pointer; text-decoration: none;
+  box-shadow: 0 8px 18px -8px color-mix(in oklab, var(--green) 70%, transparent);
+  transition: background 0.14s, transform 0.14s;
+}
+.ct-cta:hover { background: var(--green-2); transform: translateY(-1px); }
+.ct-cta svg { width: 16px; height: 16px; }
+
+/* 5 KPI cards */
+.ct-kpi-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--density-gap); margin-bottom: var(--density-gap); }
+.ct-kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 22px 24px; display: flex; align-items: center; gap: 16px; }
+.ct-kpi-ic { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; }
+.ct-kpi-ic svg { width: 26px; height: 26px; }
+.ct-kpi.t-total .ct-kpi-ic { background: var(--green-soft); color: var(--green); }
+.ct-kpi.t-open  .ct-kpi-ic { background: var(--blue-soft);  color: var(--blue); }
+.ct-kpi.t-prog  .ct-kpi-ic { background: var(--amber-soft); color: var(--amber); }
+.ct-kpi.t-resv  .ct-kpi-ic { background: var(--green-soft); color: var(--green); }
+.ct-kpi.t-closed .ct-kpi-ic { background: var(--purple-soft); color: var(--purple); }
+.ct-kpi-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ct-kpi-lbl { font-size: 13px; color: var(--ink-2); font-weight: 600; }
+.ct-kpi-val { font-size: 26px; font-weight: 800; letter-spacing: -0.025em; color: var(--ink); line-height: 1; }
+.ct-kpi-sub { font-size: 11.5px; color: var(--muted); }
+
+@media (max-width: 1280px) { .ct-kpi-row { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 760px)  { .ct-kpi-row { grid-template-columns: 1fr 1fr; } }
+
+/* Main grid */
+.ct-grid { display: grid; grid-template-columns: minmax(0, 2.7fr) minmax(300px, 1fr); gap: var(--density-gap); align-items: flex-start; }
+
+/* Toolbar */
+.ct-tools { display: flex; align-items: center; gap: 10px; padding: 18px 22px; flex-wrap: wrap; }
+.ct-sel { display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; height: 40px; min-width: 130px; padding: 0 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; font: 500 13px/1 'Plus Jakarta Sans', sans-serif; color: var(--ink-2); cursor: pointer; }
+.ct-sel svg { width: 14px; height: 14px; color: var(--muted); }
+.ct-search { flex: 1; min-width: 200px; height: 40px; }
+
+/* Ticket table */
+.ct-table { width: 100%; border-collapse: collapse; }
+.ct-table thead th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); padding: 12px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.ct-table thead th:first-child { padding-left: 22px; }
+.ct-table thead th:last-child  { padding-right: 22px; }
+.ct-table tbody td { padding: 14px 8px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--ink-2); vertical-align: top; }
+.ct-table tbody td:first-child { padding-left: 22px; }
+.ct-table tbody td:last-child  { padding-right: 22px; }
+.ct-table tbody tr:last-child td { border-bottom: 0; }
+.ct-table tbody tr:hover { background: var(--green-tint); }
+.ct-id { font-size: 13px; font-weight: 700; color: var(--green); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ct-subj strong { display: block; font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.4; }
+.ct-subj span { display: block; font-size: 11.5px; color: var(--muted); line-height: 1.4; margin-top: 2px; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ct-updated { color: var(--muted); white-space: nowrap; }
+.ct-menu { appearance: none; width: 32px; height: 32px; border-radius: 8px; border: 0; background: transparent; display: grid; place-items: center; color: var(--muted); cursor: pointer; transition: background 0.14s; }
+.ct-menu:hover { background: var(--surface-2); color: var(--ink); }
+.ct-menu svg { width: 16px; height: 16px; }
+
+/* Right rail: overview donut */
+.cir-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 22px; }
+.cir-card + .cir-help { margin-top: var(--density-gap); }
+.cir-hd { margin-bottom: 16px; }
+.cir-hd strong { font-size: 16px; font-weight: 700; color: var(--ink); }
+.cir-sum { display: grid; grid-template-columns: 120px minmax(0,1fr); gap: 18px; align-items: center; }
+.cir-sum .donut { width: 120px; height: 120px; }
+.cir-sum .center b { font-size: 24px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+.cir-sum .center span { font-size: 11px; color: var(--muted); }
+.cir-legend { display: flex; flex-direction: column; gap: 9px; }
+.cir-leg { display: grid; grid-template-columns: 10px minmax(0,1fr) auto; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-2); }
+.cir-leg::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--dot); }
+.cir-leg em { font-style: normal; font-weight: 600; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Need help card (reused look) */
+.cir-help { background: var(--green-tint); border: 1px solid var(--green-soft); border-radius: var(--r-card); padding: 22px; }
+.cir-help-hd { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+.cir-help-ic { width: 48px; height: 48px; border-radius: 50%; background: var(--green-soft); color: var(--green); display: grid; place-items: center; flex-shrink: 0; }
+.cir-help-ic svg { width: 24px; height: 24px; }
+.cir-help-hd strong { display: block; font-size: 14.5px; font-weight: 700; color: var(--ink); }
+.cir-help-hd p { margin: 4px 0 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
+.cir-contact { display: flex; flex-direction: column; gap: 16px; }
+.cir-crow { display: flex; align-items: flex-start; gap: 12px; }
+.cir-crow-ic { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); color: var(--green); display: grid; place-items: center; flex-shrink: 0; border: 1px solid var(--green-soft); }
+.cir-crow-ic svg { width: 16px; height: 16px; }
+.cir-crow strong { display: block; font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.cir-crow span { font-size: 11.5px; color: var(--muted); }
+
+@media (max-width: 1280px) { .ct-grid { grid-template-columns: 1fr; } }

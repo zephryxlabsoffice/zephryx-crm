@@ -1,0 +1,76 @@
+/* Client Project Overview (details) page styles */
+
+.po-back-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+.po-crumb { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.po-crumb a { color: var(--green); font-weight: 600; }
+.po-crumb a:hover { text-decoration: underline; }
+.po-crumb svg { width: 12px; height: 12px; color: var(--muted-2); }
+.po-crumb span { color: var(--ink); font-weight: 700; }
+.po-back-btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 18px; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 10px; font: 600 13.5px/1 'Plus Jakarta Sans', sans-serif; color: var(--ink-2); cursor: pointer; text-decoration: none; transition: border-color 0.14s, color 0.14s, background 0.14s; }
+.po-back-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-tint); }
+.po-back-btn svg { width: 16px; height: 16px; }
+
+/* Hero card */
+.po-hero { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 26px; display: grid; grid-template-columns: auto 1fr auto auto; gap: 28px; align-items: center; margin-bottom: var(--density-gap); }
+.po-hero-ic { width: 76px; height: 76px; border-radius: 16px; background: var(--green-soft); color: var(--green); display: grid; place-items: center; flex-shrink: 0; }
+.po-hero-ic svg { width: 36px; height: 36px; }
+.po-hero-body h2 { margin: 0 0 6px; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+.po-hero-id { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.po-hero-client { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.po-hero-date { display: flex; flex-direction: column; gap: 6px; }
+.po-hero-date-lbl { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
+.po-hero-date-lbl svg { width: 15px; height: 15px; color: var(--green); }
+.po-hero-date strong { font-size: 16px; font-weight: 700; color: var(--ink); }
+
+@media (max-width: 1100px) { .po-hero { grid-template-columns: auto 1fr; } .po-hero-date { grid-column: span 1; } }
+@media (max-width: 600px)  { .po-hero { grid-template-columns: 1fr; } }
+
+/* Project Information card */
+.po-info { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 24px; margin-bottom: var(--density-gap); }
+.po-info h3 { margin: 0 0 6px; font-size: 18px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.po-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 48px; padding-top: 8px; }
+.po-info-row { display: grid; grid-template-columns: 26px 150px 1fr; gap: 10px; align-items: center; padding: 12px 0; }
+.po-info-row > svg { width: 17px; height: 17px; color: var(--muted); }
+.po-info-row b { font-size: 13.5px; color: var(--ink-2); font-weight: 500; }
+.po-info-row span { font-size: 13.5px; color: var(--ink); font-weight: 600; }
+.po-info-pm { display: inline-flex; align-items: center; gap: 10px; }
+.po-info-pm .cl-avatar { width: 30px; height: 30px; font-size: 11px; }
+
+@media (max-width: 900px) { .po-info-grid { grid-template-columns: 1fr; } }
+
+/* Daily Project Updates timeline */
+.po-updates { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 24px; }
+.po-updates > h3 { margin: 0 0 22px; font-size: 18px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
+.po-timeline { position: relative; padding-left: 26px; }
+.po-timeline::before { content: ""; position: absolute; left: 5px; top: 8px; bottom: 40px; width: 2px; background: var(--green-soft); }
+.po-tl-item { position: relative; margin-bottom: 18px; }
+.po-tl-item::before { content: ""; position: absolute; left: -26px; top: 28px; width: 12px; height: 12px; border-radius: 50%; background: var(--green); border: 2px solid var(--surface); box-shadow: 0 0 0 2px var(--green-soft); }
+.po-tl-card { display: grid; grid-template-columns: 72px 1fr auto; gap: 18px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; align-items: start; }
+.po-tl-date { text-align: center; }
+.po-tl-date strong { display: block; font-size: 22px; font-weight: 800; color: var(--green); line-height: 1; }
+.po-tl-date span { font-size: 11px; color: var(--muted); }
+.po-tl-body { min-width: 0; }
+.po-tl-author { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.po-tl-author .cl-avatar { width: 32px; height: 32px; font-size: 11px; }
+.po-tl-author strong { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.po-tl-author span { font-size: 11.5px; color: var(--muted); }
+.po-tl-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.po-tl-list li { font-size: 13px; color: var(--ink-2); line-height: 1.4; }
+.po-tl-attach { min-width: 200px; }
+.po-tl-attach-lbl { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 8px; }
+.po-attach { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; text-decoration: none; transition: border-color 0.14s; }
+.po-attach:hover { border-color: var(--green); }
+.po-attach:last-child { margin-bottom: 0; }
+.po-attach-ic { width: 22px; height: 22px; flex-shrink: 0; display: grid; place-items: center; }
+.po-attach-ic svg { width: 18px; height: 18px; }
+.po-attach-ic.pdf { color: #E5484D; }
+.po-attach-ic.img { color: #3B82F6; }
+.po-attach-name { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.po-attach-dl { width: 15px; height: 15px; color: var(--muted); flex-shrink: 0; }
+
+.po-viewall { display: flex; align-items: center; justify-content: space-between; padding-top: 8px; }
+.po-viewall a { font-size: 13.5px; font-weight: 600; color: var(--green); }
+.po-viewall a:hover { text-decoration: underline; }
+.po-viewall svg { width: 18px; height: 18px; color: var(--green); }
+
+@media (max-width: 900px) { .po-tl-card { grid-template-columns: 56px 1fr; } .po-tl-attach { grid-column: 1 / -1; } }
