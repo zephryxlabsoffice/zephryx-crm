@@ -529,7 +529,88 @@ Step 1 is part done. What is committed, in order:
   `employees.create`, because it creates an account, plus the rank check that
   closing a record makes.
 
+- **The client's own picture** (`9394ac1`, 2026-09-17) — the last `abort(501)`
+  in the application. It was refused because a client account is an
+  organisation, so the upload was a company LOGO, and whether a client may set
+  the image on their own invoice was undecided. The invoices reversal removed
+  the question: an invoice is an uploaded PDF, so nothing generated here
+  carries a client logo. What remains is an avatar, which saves immediately —
+  unlike the staff photo, it is a record of nothing and there is no document to
+  check it against. **There are now no unimplemented write routes anywhere.**
+
+- **Phone and personal email** (`9394ac1`, 2026-09-17) — the two fields the
+  owner's add-form list has always named and the form never had. The phone is
+  required of EVERY engagement, the only field on that form that is. The
+  personal email is optional and deliberately not on `users`: that table's
+  `email` is the sign-in identifier, and a second address beside it would have
+  become a second credential the first time somebody wrote
+  `orWhere('personal_email', …)` into a sign-in path.
+
 **Step 1 is finished.**
+
+## Where to pick up (paused 2026-09-17)
+
+Ordering settled with the owner: **Google Drive + the Admin Panel connection
+screen FIRST**, then steps 2 → 5 of the rework order below. Drive is what
+unblocks the Invoices rewrite, and the connection screen is Admin Panel work,
+so the question round below feeds straight into it.
+
+State verified in code on 2026-09-17, not assumed:
+
+- Every one of the 43 `abort(501)` write routes is implemented. None remain.
+- No controller reads a `Demo*` source. Only comments mention them.
+- 2FA by email OTP with trusted devices is wired into sign-in.
+- 1228 tests pass. `pint --test` fails across ~150 pre-existing files; style
+  has never been enforced here, and a formatting pass is its own job.
+- `php artisan migrate` has NOT been run against the owner's MySQL — it was not
+  running locally. The tests use SQLite. Six migrations are waiting:
+  `000017` through `000022`.
+
+## Open questions — Client portal and Admin panel (asked 2026-09-17)
+
+Put to the owner and not yet answered. They asked for these two areas
+specifically.
+
+**Client portal**
+
+1. Several contacts, one login: may the client add and remove contacts, or only
+   edit the main one?
+2. Currency: keep all seven the CRM supports, or cut to the ones actually
+   billed in?
+3. Country: free text or a fixed dropdown?
+4. An Inactive client — does their login stop at once, or keep read-only access
+   to old invoices?
+5. Does "email OTP for every account" include client logins, or staff only?
+6. Do clients get an in-app notification bell, or nothing?
+7. May a client see WHICH employee is on their project or ticket, or only the
+   company?
+8. May a client cancel a meeting after it is scheduled, or must they ask?
+9. What should the client dashboard lead with — top three, ranked?
+
+**Admin panel**
+
+10. Who connects Google Drive: CEO only, or CEO and System Administrator?
+    Company settings are CEO-only, but a service-account key is a technical
+    setup job.
+11. May an admin force a password reset, sign somebody out everywhere, or
+    untrust their devices — which of the three?
+12. May an admin CREATE a role, or only assign existing ones and change their
+    permissions?
+13. Master data: ticket categories and announcement categories are decided.
+    Anything else — ticket departments?
+14. Audit screen: any export, or read-on-screen only? An export carries
+    personal data and would need its own permission and its own entry.
+15. Attendance and leave settings silently re-judge months of past records when
+    changed (see SettingsCatalogue). Now the rules are firm, should they become
+    fixed in code rather than editable settings?
+
+**A gap nobody has decided**
+
+16. **HR cannot see anybody's documents.** `employee_documents` is only
+    readable by the person who uploaded them — there is no HR view. So HR
+    cannot check a submitted offer letter or ID photocopy against the record,
+    which is the whole point of the "photocopy received" date. Should the
+    employee record page show documents to `employees.identifiers` holders?
 Also still missing from the add form, noticed while doing the addresses:
 personal email alongside the work email, and a phone number — the latter is
 required of interns and freelancers by the decisions above, so it cannot wait
