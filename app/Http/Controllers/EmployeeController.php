@@ -809,14 +809,34 @@ class EmployeeController extends Controller
      */
     protected function addressRules(Request $request, ?Employee $existing): array
     {
-        $required = $existing === null
-            && $request->input('employment_type') === Employee::FULL_TIME
+        $creating = $existing === null;
+
+        $required = $creating && $request->input('employment_type') === Employee::FULL_TIME
             ? 'required'
             : 'nullable';
 
         return [
             'current_address' => [$required, 'string', 'max:500'],
             'permanent_address' => [$required, 'string', 'max:500'],
+
+            /*
+             * A PHONE NUMBER IS REQUIRED OF EVERYBODY, NOT JUST FULL-TIME
+             *
+             * The only field on this form that is. The owner's list names it
+             * for all three engagements — full-time everything, interns ID
+             * proof/phone/bank, freelancers those plus a PAN — and the reason
+             * is obvious the first time somebody has to be reached and the CRM
+             * has no way to do it.
+             */
+            'phone' => [$creating ? 'required' : 'nullable', 'string', 'max:32'],
+
+            /*
+             * The personal address is optional on purpose. It is how somebody
+             * is reached AFTER they leave, which is worth having and is not
+             * worth refusing a hire over — and a required field somebody does
+             * not have is a field that gets filled with the work address.
+             */
+            'personal_email' => ['nullable', 'string', 'email', 'max:190'],
         ];
     }
 
@@ -828,7 +848,7 @@ class EmployeeController extends Controller
      * an address would protect nothing a mask can protect and would stop HR
      * seeing the typo that sends a courier to the wrong street.
      *
-     * @return array{current: ?string, permanent: ?string}|null
+     * @return array{current: ?string, permanent: ?string, phone: ?string, personal_email: ?string}|null
      */
     protected function addresses(Request $request, Employee $record): ?array
     {
@@ -841,6 +861,8 @@ class EmployeeController extends Controller
         return [
             'current' => $profile?->current_address,
             'permanent' => $profile?->permanent_address,
+            'phone' => $profile?->phone,
+            'personal_email' => $profile?->personal_email,
         ];
     }
 
@@ -858,6 +880,8 @@ class EmployeeController extends Controller
         $columns = [
             'current_address' => 'Current address',
             'permanent_address' => 'Permanent address',
+            'phone' => 'Phone number',
+            'personal_email' => 'Personal email',
         ];
 
         $supplied = [];

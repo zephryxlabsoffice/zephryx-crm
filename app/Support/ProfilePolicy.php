@@ -131,6 +131,13 @@ class ProfilePolicy
          * the person is being invited to fill in.
          */
         'phone' => [self::REQUESTED, 'Phone number', ''],
+        /*
+         * Not `email`, which is two entries above as VERIFIED. That one is the
+         * sign-in identifier and moves only through the two-token flow; this
+         * one signs in to nothing and is a way to reach somebody after they
+         * leave, so it is corrected like an address.
+         */
+        'personal_email' => [self::REQUESTED, 'Personal email', ''],
         'current_address' => [self::REQUESTED, 'Current address', ''],
         'permanent_address' => [self::REQUESTED, 'Permanent address', ''],
         'gender' => [self::REQUESTED, 'Gender', ''],

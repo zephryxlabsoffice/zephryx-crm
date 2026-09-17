@@ -20,9 +20,19 @@
         <div class="dash-main">
             <section class="card">
                 <div class="card-body cl-profile-hd">
-                    <span class="avatar cl-profile-avatar {{ Avatar::tint($profile->name) }}" aria-hidden="true">
-                        {{ Avatar::initials($profile->name) }}
-                    </span>
+                    @if ($profile->photo_path)
+                        {{-- Served through a route, never from the webroot. The
+                             file is on the private disk like every other one
+                             here. --}}
+                        <img class="avatar cl-profile-avatar" src="{{ route('client.profile.photo.show') }}"
+                             alt="" width="72" height="72">
+                    @else
+                        {{-- Initials, not a placeholder image: a grey silhouette
+                             says "broken", and initials say "nobody has set one". --}}
+                        <span class="avatar cl-profile-avatar {{ Avatar::tint($profile->name) }}" aria-hidden="true">
+                            {{ Avatar::initials($profile->name) }}
+                        </span>
+                    @endif
 
                     <div class="cl-profile-id">
                         <h2>{{ $profile->name }}</h2>
@@ -31,6 +41,39 @@
                     </div>
                 </div>
             </section>
+
+            {{--
+                Its own form, and it has to be: it is multipart, and a file input
+                inside the details form below would make every correction of a
+                phone number an upload.
+            --}}
+            <form class="card" method="POST" action="{{ route('client.profile.photo') }}" enctype="multipart/form-data">
+                @csrf
+
+                <div class="card-hd">
+                    <span class="card-title">Your picture</span>
+                </div>
+
+                <div class="card-body">
+                    <div class="form-field">
+                        <label class="form-field-lbl" for="cp-photo">Upload a picture</label>
+                        <input id="cp-photo" name="photo" type="file" accept="image/jpeg,image/png" required
+                               @if ($errors->has('photo')) aria-invalid="true" aria-describedby="cp-photo-error" @endif>
+                        <span class="pay-hint">
+                            {{-- Said before the upload, not after. --}}
+                            JPEG or PNG, up to 2 MB and {{ \App\Support\Images\PhotoIntake::MAX_SIDE }} pixels a side.
+                            Anything recorded alongside the picture — where it was taken, when, and on
+                            what — is removed before the file is stored. It appears on this portal and
+                            on nothing we send you.
+                        </span>
+                        @error('photo')
+                            <span class="field-error" id="cp-photo-error">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <button class="btn btn-outline" type="submit">Save picture</button>
+                </div>
+            </form>
 
             {{--
                 Two groups, and the split is the point of the page.

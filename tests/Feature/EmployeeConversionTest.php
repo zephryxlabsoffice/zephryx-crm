@@ -170,6 +170,9 @@ class EmployeeConversionTest extends TestCase
 
         $this->assertSame('+91 90000 33333', $profile->phone);
         $this->assertSame("1 Somewhere Road\nKolkata", $profile->current_address);
+        // The personal address especially: it is how somebody is reached after
+        // they leave, and a conversion is the moment it would be lost.
+        $this->assertSame('the.intern@personal.test', $profile->personal_email);
 
         $this->assertNotSame($stored['path'], $profile->photo_path);
         $this->assertTrue(app(DocumentStore::class)->exists($profile->photo_path));
@@ -294,6 +297,11 @@ class EmployeeConversionTest extends TestCase
             'designation_id' => MasterDataItem::inList(MasterDataItem::DESIGNATIONS)->value('id'),
             'joined_on' => Carbon::now()->subMonths(6)->toDateString(),
             'announce_milestones' => '1',
+
+            // Required of every engagement since 2026-09-17, and it comes
+            // across with the rest when they are converted.
+            'phone' => '+91 98100 00000',
+            'personal_email' => 'the.intern@personal.test',
 
             'current_address' => "1 Somewhere Road\nKolkata",
             'permanent_address' => "2 Elsewhere Lane\nHowrah",

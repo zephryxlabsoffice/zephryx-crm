@@ -91,9 +91,18 @@ class EmployeeAddressTest extends TestCase
 
         $this->assertSame(1, Employee::count());
 
-        // No row rather than a row of nulls: "not stated" and "stated as
-        // nothing" are different facts, and only one of them is chaseable.
-        $this->assertSame(0, EmployeeProfile::count());
+        /*
+         * There IS a profile row — the phone number is required of everybody
+         * and lives on it — and both address columns are null. Which is the
+         * distinction that matters: "not stated" is a chaseable gap, and it is
+         * not the same as a row of empty strings saying somebody was asked and
+         * answered nothing.
+         */
+        $profile = EmployeeProfile::firstOrFail();
+
+        $this->assertSame('+91 98100 00000', $profile->phone);
+        $this->assertNull($profile->current_address);
+        $this->assertNull($profile->permanent_address);
     }
 
     /* ══════════════════════════════════════════════════════════════════════
@@ -177,8 +186,11 @@ class EmployeeAddressTest extends TestCase
 
         $this->get('/employees/'.$staffId)
             ->assertOk()
-            ->assertSee('Where they live')
-            ->assertSee('1 Somewhere Road', false);
+            ->assertSee('where they live')
+            ->assertSee('1 Somewhere Road', false)
+            // The phone and the personal address sit on the same card, behind
+            // the same permission.
+            ->assertSee('+91 98100 00000');
     }
 
     public function test_the_directory_permission_does_not_carry_them(): void
@@ -194,8 +206,9 @@ class EmployeeAddressTest extends TestCase
 
         $html = $this->get('/employees/'.$staffId)->assertOk()->getContent();
 
-        $this->assertStringNotContainsString('Where they live', $html);
+        $this->assertStringNotContainsString('where they live', $html);
         $this->assertStringNotContainsString('Somewhere Road', $html);
+        $this->assertStringNotContainsString('+91 98100 00000', $html);
     }
 
     public function test_the_edit_form_prefills_them_for_whoever_may_read_them(): void
@@ -234,6 +247,9 @@ class EmployeeAddressTest extends TestCase
             'designation_id' => MasterDataItem::inList(MasterDataItem::DESIGNATIONS)->value('id'),
             'joined_on' => Carbon::now()->subMonth()->toDateString(),
             'announce_milestones' => '1',
+
+            // Required of every engagement since 2026-09-17.
+            'phone' => '+91 98100 00000',
 
             'current_address' => "1 Somewhere Road\nKolkata",
             'permanent_address' => "2 Elsewhere Lane\nHowrah",

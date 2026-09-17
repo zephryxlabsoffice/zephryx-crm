@@ -73,6 +73,20 @@
                 </div>
 
                 <div class="form-field">
+                    <label class="form-field-lbl" for="pf-personal-email">{{ ProfilePolicy::labelOf('personal_email') }}</label>
+                    <input id="pf-personal-email" name="personal_email" type="email"
+                           autocapitalize="none" spellcheck="false"
+                           value="{{ old('personal_email', $profile['personal_email']) }}">
+                    {{-- Says what it is not. A second email box on a page that
+                         also shows the sign-in address reads as a second way
+                         in, and it is not one. --}}
+                    <span class="pay-hint">
+                        A record only — you do not sign in with it. It is how we reach you if
+                        your work account is the thing that is broken.
+                    </span>
+                </div>
+
+                <div class="form-field">
                     <label class="form-field-lbl" for="pf-nationality">{{ ProfilePolicy::labelOf('nationality') }}</label>
                     <input id="pf-nationality" name="nationality" type="text" value="{{ old('nationality', $profile['nationality']) }}">
                 </div>

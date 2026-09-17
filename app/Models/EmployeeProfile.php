@@ -16,7 +16,7 @@ class EmployeeProfile extends Model
 {
     protected $fillable = [
         'employee_id',
-        'phone', 'current_address', 'permanent_address',
+        'phone', 'personal_email', 'current_address', 'permanent_address',
         'gender', 'marital_status', 'nationality',
         'languages', 'skills',
         'emergency_name', 'emergency_relationship', 'emergency_phone',
@@ -54,6 +54,7 @@ class EmployeeProfile extends Model
     {
         return [
             'phone' => null,
+            'personal_email' => null,
             'current_address' => null,
             'permanent_address' => null,
             'gender' => null,
@@ -77,6 +78,7 @@ class EmployeeProfile extends Model
     {
         return [
             'phone' => $this->phone,
+            'personal_email' => $this->personal_email,
             'current_address' => $this->current_address,
             'permanent_address' => $this->permanent_address,
             'gender' => $this->gender,

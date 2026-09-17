@@ -355,6 +355,10 @@ class EmployeeWritesTest extends TestCase
             'joined_on' => Carbon::now()->subMonth()->toDateString(),
             'date_of_birth' => '1995-04-11',
 
+            // Required of every engagement since 2026-09-17 — the only field on
+            // the form that is.
+            'phone' => '+91 98100 00000',
+
             /*
              * Identity and bank details, required of a full-time hire since
              * 2026-09-14. Carried here rather than in every test because none

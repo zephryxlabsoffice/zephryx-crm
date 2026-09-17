@@ -319,6 +319,9 @@ class EmployeeSalaryStructureTest extends TestCase
             'joined_on' => Carbon::now()->subMonth()->toDateString(),
             'announce_milestones' => '1',
 
+            // Required of every engagement since 2026-09-17.
+            'phone' => '+91 98100 00000',
+
             'current_address' => "1 Somewhere Road\nKolkata",
             'permanent_address' => "2 Elsewhere Lane\nHowrah",
 

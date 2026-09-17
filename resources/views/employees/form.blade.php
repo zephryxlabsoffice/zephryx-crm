@@ -215,7 +215,7 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-7h6v7"/>
                         </svg>
-                        Where they live
+                        How to reach them, and where they live
                     </div>
 
                     @php
@@ -243,6 +243,41 @@
                     </div>
 
                     <div class="form-grid">
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-phone">Phone number</label>
+                            {{-- The one field on this form required of every
+                                 engagement. A record with no way to reach the
+                                 person is discovered at the worst moment. --}}
+                            <input id="emp-phone" name="phone" type="tel"
+                                   value="{{ old('phone', $addresses['phone'] ?? '') }}"
+                                   placeholder="+91 …"
+                                   @if ($errors->has('phone')) aria-invalid="true" aria-describedby="emp-phone-error" @endif>
+                            @error('phone')
+                                <span class="field-error" id="emp-phone-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-personal-email">
+                                Personal email <span class="an-optional">(optional)</span>
+                            </label>
+                            <input id="emp-personal-email" name="personal_email" type="email"
+                                   autocapitalize="none" spellcheck="false"
+                                   value="{{ old('personal_email', $addresses['personal_email'] ?? '') }}"
+                                   @if ($errors->has('personal_email')) aria-invalid="true" aria-describedby="emp-personal-email-error" @endif>
+                            {{-- Says what it is NOT, because the obvious reading
+                                 of a second email box is a second way to sign
+                                 in. --}}
+                            <span class="pay-hint">
+                                A record only — it signs in to nothing. It is how we reach them
+                                after they leave, or when the work account is the thing that
+                                is broken.
+                            </span>
+                            @error('personal_email')
+                                <span class="field-error" id="emp-personal-email-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
                         <div class="form-field an-form-wide">
                             <label class="form-field-lbl" for="emp-current-address">
                                 Current address

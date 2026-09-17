@@ -112,11 +112,18 @@ Route::get('/profile', [ClientProfileController::class, 'show'])->name('profile.
 Route::post('/profile', [ClientProfileController::class, 'update'])->name('profile.update');
 
 /*
- * Still 501, and deliberately. A client account is an ORGANISATION, not a
- * person, so what this would upload is a company LOGO — which appears on
- * invoices, belongs in the client record we keep, and raises a question
- * nobody has answered: whether a client may set the image that appears on
- * their own invoice. The staff photo landed because a person's own
- * photograph is unambiguously theirs. This one waits for a decision.
+ * Refused as a 501 until 2026-09-17, on the grounds that a client account is an
+ * ORGANISATION and what it uploads is a company LOGO — which appears on
+ * invoices, and whether a client may set the image on their own invoice was a
+ * question nobody had answered.
+ *
+ * The invoices reversal removed the question: an invoice is an uploaded PDF
+ * now, so nothing this application generates carries a client logo anywhere.
+ * What is left is an avatar on their own portal, which the owner has said they
+ * may change like anybody else.
+ *
+ * Neither route takes an identifier. The record is the session's client, so
+ * there is nothing in a URL to point at somebody else's.
  */
 Route::post('/profile/photo', [ClientProfileController::class, 'photo'])->name('profile.photo');
+Route::get('/profile/photo', [ClientProfileController::class, 'showPhoto'])->name('profile.photo.show');

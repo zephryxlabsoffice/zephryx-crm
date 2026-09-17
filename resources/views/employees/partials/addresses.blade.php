@@ -16,10 +16,22 @@
             <path d="M3 10.5 12 3l9 7.5V21H3z"/>
             <path d="M9 21v-7h6v7"/>
         </svg>
-        Where they live
+        How to reach them, and where they live
     </div>
 
     <dl class="field-grid att-record-grid">
+        <div class="lv-field">
+            <dt class="lv-field-lbl">Phone</dt>
+            <dd>{{ $addresses['phone'] ?: 'Not recorded' }}</dd>
+        </div>
+
+        <div class="lv-field">
+            <dt class="lv-field-lbl">Personal email</dt>
+            {{-- Labelled as personal so nobody mistakes it for the sign-in
+                 address, which is on the card above this one. --}}
+            <dd>{{ $addresses['personal_email'] ?: 'Not recorded' }}</dd>
+        </div>
+
         <div class="lv-field">
             <dt class="lv-field-lbl">Current address</dt>
             <dd>

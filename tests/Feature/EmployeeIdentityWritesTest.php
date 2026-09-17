@@ -286,6 +286,9 @@ class EmployeeIdentityWritesTest extends TestCase
             'date_of_birth' => '1995-04-11',
             'announce_milestones' => '1',
 
+            // Required of every engagement since 2026-09-17.
+            'phone' => '+91 98100 00000',
+
             // Required for a full-time hire, which is what this payload is.
             'current_address' => "1 Somewhere Road\nKolkata",
             'permanent_address' => "2 Elsewhere Lane\nHowrah",

@@ -864,6 +864,9 @@ class ProfileController extends Controller
     {
         $rules = [
             'phone' => ['nullable', 'string', 'max:32'],
+            // Not unique, unlike the sign-in address: it is a way to reach
+            // somebody, not a credential. See the migration.
+            'personal_email' => ['nullable', 'string', 'email', 'max:190'],
             'current_address' => ['nullable', 'string', 'max:500'],
             'permanent_address' => ['nullable', 'string', 'max:500'],
             'gender' => ['nullable', Rule::in(ProfilePolicy::options()['gender'])],

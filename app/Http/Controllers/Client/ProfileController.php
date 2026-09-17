@@ -4,10 +4,15 @@ namespace App\Http\Controllers\Client;
 
 use App\Support\Audit\AuditLog;
 use App\Support\ClientPortal;
+use App\Support\Documents\DocumentStore;
+use App\Support\Images\PhotoIntake;
 use App\Support\SupportContact;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
+use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * The client's own record.
@@ -45,8 +50,11 @@ class ProfileController extends PortalController
      */
     public const EDITABLE = ['contact_name', 'contact_email', 'contact_phone', 'billing_address'];
 
-    public function __construct(protected AuditLog $audit)
-    {
+    public function __construct(
+        protected AuditLog $audit,
+        protected DocumentStore $documents,
+        protected PhotoIntake $photos,
+    ) {
     }
 
     public function show(Request $request): Response
@@ -120,22 +128,100 @@ class ProfileController extends PortalController
     }
 
     /**
-     * POST /client/profile/photo — not built, and not a stub.
+     * POST /client/profile/photo
      *
-     * A client account is an ORGANISATION, not a person: several people at the
-     * client share it, and the portal greets the company rather than a name.
-     * What this route would upload is a company logo, which is a different
-     * thing from a profile photo — it appears on invoices, it belongs in the
-     * client record HR keeps, and whether a client may set the logo that
-     * appears on their own invoice is a question nobody has answered.
+     * ─────────────────────────────────────────────────────────────────────────
+     * REFUSED UNTIL 2026-09-17, AND THE REASON IT STOPPED BEING REFUSED
      *
-     * The staff photo landed because a person's own photograph is
-     * unambiguously theirs. This one is left refusing until somebody decides
-     * what it is for.
+     * This route threw a 501 and said why: a client account is an ORGANISATION,
+     * so what it uploads is a company logo — and a logo appears on invoices,
+     * which made "may a client set the logo on their own invoice" a question
+     * nobody had answered.
+     *
+     * The invoices reversal removed the question rather than answering it.
+     * Invoices are an uploaded PDF now, so nothing this application generates
+     * carries a client logo anywhere. What is left is an avatar on their own
+     * portal, and the owner has said they may change it like anybody else.
+     *
+     * IT SAVES IMMEDIATELY, UNLIKE THE STAFF PHOTO
+     *
+     * A staff photograph became a request to HR on 2026-09-14 because the
+     * profile is the company's record of a person, checked against documents.
+     * A client's avatar is a record of nothing: there is no document to check it
+     * against and no HR relationship to check it. Queueing it would put a
+     * picture in front of somebody whose only possible answer is "fine".
+     *
+     * The cleaning is identical either way — parsed and rebuilt from its picture
+     * segments, so nothing the camera recorded alongside it survives. See
+     * App\Support\Images\PhotoIntake.
+     * ─────────────────────────────────────────────────────────────────────────
      */
     public function photo(Request $request): RedirectResponse
     {
-        abort(501);
+        $client = $this->client($request);
+
+        $request->validate([
+            'photo' => [
+                'required', 'file',
+                'max:'.(int) (PhotoIntake::MAX_BYTES / 1024),
+                // Checked by content through finfo, then again by the parser.
+                // The extension is whatever somebody typed.
+                'mimes:'.implode(',', PhotoIntake::ALLOWED),
+            ],
+        ]);
+
+        try {
+            $clean = $this->photos->clean($request->file('photo'));
+        } catch (RuntimeException $e) {
+            throw ValidationException::withMessages(['photo' => $e->getMessage()]);
+        }
+
+        $was = $client->photo_path;
+
+        $stored = $this->documents->putBytes(
+            'clients/'.$client->id.'/photo',
+            $clean['extension'],
+            $clean['contents'],
+        );
+
+        $client->update(['photo_path' => $stored['path']]);
+
+        // Only after the new path is saved. The other order leaves them with no
+        // picture at all if the write fails.
+        if ($was !== null && $was !== $stored['path']) {
+            $this->documents->forget($was);
+        }
+
+        $this->audit->record(
+            action: AuditLog::CLIENT_UPDATED,
+            actor: $request->user(),
+            entityType: 'client',
+            entityId: $client->reference,
+            before: $was === null ? 'no picture' : 'picture on record',
+            after: 'Picture replaced ('.$clean['width'].'×'.$clean['height'].', metadata stripped) — changed by the client',
+            request: $request,
+        );
+
+        return redirect()
+            ->route('client.profile.show')
+            ->with('status', 'Your picture is saved. Anything the camera recorded with it was not.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * GET /client/profile/photo — the signed-in client's own.
+     *
+     * On the private disk with everything else, so it needs a route to be seen
+     * at all — and this one takes no identifier. The record is the SESSION'S
+     * client, so there is nothing in the URL to change to somebody else's.
+     */
+    public function showPhoto(Request $request): StreamedResponse
+    {
+        $path = $this->client($request)->photo_path;
+
+        abort_if($path === null || ! $this->documents->exists($path), 404);
+
+        return $this->documents->stream($path);
     }
 
     /**

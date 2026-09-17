@@ -30,6 +30,8 @@ class Client extends Model
     protected $fillable = [
         'reference', 'name', 'industry', 'status',
         'contact_name', 'contact_email', 'contact_phone', 'billing_address',
+        // A key into the private disk, never a URL. See the migration.
+        'photo_path',
         'account_manager_id', 'signed_on', 'notes',
     ];
 
