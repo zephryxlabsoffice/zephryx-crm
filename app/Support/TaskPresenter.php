@@ -111,4 +111,31 @@ class TaskPresenter
     {
         return Avatar::tint($reference);
     }
+
+    /**
+     * A human label for an attachment's kind, from its file name.
+     *
+     * Only ever one of DocumentStore::ALLOWED — the upload is validated
+     * against that same list — so this is exhaustive rather than a fallback
+     * for a type nothing here accepts.
+     */
+    public static function fileKind(string $filename): string
+    {
+        return match (mb_strtolower(pathinfo($filename, PATHINFO_EXTENSION))) {
+            'pdf' => 'PDF document',
+            'png', 'jpg', 'jpeg' => 'Image',
+            default => 'File',
+        };
+    }
+
+    /**
+     * Bytes, as somebody reads them — one decimal place above a megabyte,
+     * whole kilobytes below it.
+     */
+    public static function fileSize(int $bytes): string
+    {
+        return $bytes >= 1024 * 1024
+            ? round($bytes / (1024 * 1024), 1).' MB'
+            : round($bytes / 1024).' KB';
+    }
 }

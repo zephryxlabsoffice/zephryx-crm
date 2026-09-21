@@ -45,12 +45,21 @@
     <div>
         <div class="field-lbl">Assigned to</div>
         <div class="field-val">
-            @if ($task['assignee_record'])
-                <span class="avatar {{ Avatar::tint($task['assignee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($task['assignee_record']['name']) }}</span>
-                <span class="field-stack">
-                    <a href="{{ route('employees.show', ['employee' => $task['assignee_record']['user_id']]) }}">{{ $task['assignee_record']['name'] }}</a>
-                    <span class="sub">{{ $task['assignee_record']['designation'] }}</span>
-                </span>
+            @if (! empty($task['assignee_records']))
+                {{-- Several assignees per task (decided) — one row per
+                     person, stacked, rather than the single icon+name pair
+                     this field used to be the whole of. --}}
+                <div class="task-assignees">
+                    @foreach ($task['assignee_records'] as $person)
+                        <div class="task-assignee-row">
+                            <span class="avatar {{ Avatar::tint($person['name']) }}" aria-hidden="true">{{ Avatar::initials($person['name']) }}</span>
+                            <span class="field-stack">
+                                <a href="{{ route('employees.show', ['employee' => $person['user_id']]) }}">{{ $person['name'] }}</a>
+                                <span class="sub">{{ $person['designation'] }}</span>
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
             @else
                 <span class="field-ic tone-warn" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Client;
 use App\Models\Employee;
 use App\Models\Role;
+use App\Models\Task;
 use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\User;
@@ -255,6 +256,66 @@ class TicketWritesTest extends TestCase
         $this->signInAsEmployee(['employee', 'support'], 'EMP896');
 
         $this->delete('/tickets/'.$ticket->reference)->assertStatus(405);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       CONVERTING TO A TASK
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_converting_needs_the_task_creation_permission(): void
+    {
+        $ticket = $this->aTicket();
+        $this->signInAsEmployee(['employee', 'support']);
+
+        $this->post('/tickets/'.$ticket->reference.'/convert-to-task', [
+            'due_on' => Carbon::now()->addWeek()->toDateString(),
+        ])->assertForbidden();
+    }
+
+    public function test_converting_creates_a_task_and_links_it(): void
+    {
+        $ticket = $this->aTicket(['subject' => 'Fix the broken footer link', 'priority' => 'high']);
+        $this->signInAsEmployee(['employee', 'manager']);
+
+        $this->post('/tickets/'.$ticket->reference.'/convert-to-task', [
+            'due_on' => Carbon::now()->addWeek()->toDateString(),
+        ])->assertRedirect();
+
+        $ticket->refresh();
+
+        $this->assertNotNull($ticket->converted_task_id);
+
+        $task = Task::find($ticket->converted_task_id);
+
+        $this->assertNotNull($task);
+        $this->assertSame('Fix the broken footer link', $task->name);
+        $this->assertSame('high', $task->priority);
+        $this->assertSame('pending', $task->status);
+
+        $this->assertSame(
+            1,
+            DB::table('audit_log')->where('action', AuditLog::TICKET_CONVERTED_TO_TASK)->count(),
+        );
+        $this->assertSame(
+            1,
+            DB::table('audit_log')->where('action', AuditLog::TASK_CREATED_FROM_TICKET)->count(),
+        );
+    }
+
+    public function test_a_ticket_cannot_be_converted_twice(): void
+    {
+        $ticket = $this->aTicket();
+        $this->signInAsEmployee(['employee', 'manager']);
+
+        $this->post('/tickets/'.$ticket->reference.'/convert-to-task', [
+            'due_on' => Carbon::now()->addWeek()->toDateString(),
+        ]);
+
+        $this->post('/tickets/'.$ticket->reference.'/convert-to-task', [
+            'due_on' => Carbon::now()->addWeek()->toDateString(),
+        ])->assertSessionHasErrors('convert');
+
+        $this->assertSame(1, Task::count());
     }
 
     /* ══════════════════════════════════════════════════════════════════════

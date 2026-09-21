@@ -87,8 +87,8 @@ class NotificationSeeder extends Seeder
     protected function tasks(): void
     {
         $tasks = Task::query()
-            ->whereNotNull('assignee_id')
-            ->with(['assignee.user', 'team.lead.user', 'project.manager.user'])
+            ->has('assignees')
+            ->with(['assignees.user', 'team.lead.user', 'project.manager.user'])
             ->get();
 
         foreach ($tasks as $task) {
@@ -98,7 +98,7 @@ class NotificationSeeder extends Seeder
 
             $this->at(
                 $task->updated_at ?? $task->created_at,
-                fn () => $this->notify->taskAssigned($task, $actor),
+                fn () => $this->notify->taskAssigned($task, $task->assignees->pluck('user')->filter(), $actor),
             );
         }
     }

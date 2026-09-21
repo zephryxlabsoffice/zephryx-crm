@@ -43,7 +43,6 @@ class TaskSeeder extends Seeder
                     'description' => null,
                     'project_id' => $projects[$row['project']] ?? null,
                     'team_id' => $row['team'] ? ($teams[$row['team']] ?? null) : null,
-                    'assignee_id' => $row['assignee'] ? $employees->get($row['assignee'])?->id : null,
                     'status' => $row['status'],
                     'priority' => $row['priority'],
                     'due_on' => $row['due'],
@@ -52,6 +51,9 @@ class TaskSeeder extends Seeder
                         : null,
                 ],
             );
+
+            $assigneeId = $row['assignee'] ? $employees->get($row['assignee'])?->id : null;
+            $task->assignees()->sync($assigneeId ? [$assigneeId] : []);
 
             /*
              * The task's own age, not the seeder's. `created_at` is what the

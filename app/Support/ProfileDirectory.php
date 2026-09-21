@@ -148,7 +148,7 @@ class ProfileDirectory
                  */
                 'label' => 'Tasks on your plate',
                 'value' => (string) Task::query()
-                    ->where('assignee_id', $employee->id)
+                    ->whereHas('assignees', fn ($q) => $q->where('employees.id', $employee->id))
                     ->whereNot('status', 'completed')
                     ->count(),
                 'tone' => 'tone-soft',

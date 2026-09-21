@@ -148,22 +148,29 @@ class Notifier
     /**
      * Somebody was put on a task.
      *
-     * Sent on every assignment, including a reassignment away from somebody
-     * else — the person picking the work up is told; the person losing it is
-     * not, because "no longer yours" is a thing they find out by looking at
-     * their own list and is not something they have to act on.
+     * `$newlyAssigned` is the delta, not the full roster — several assignees
+     * per task (decided 2026-09-21) means a sync can add one person to a task
+     * two others are already on, and re-notifying the two who were already
+     * there about work they have had for a week is the same mistake
+     * Ticket::assigned's own guard exists to avoid. The person losing the
+     * task is not told either, for the same reason as before: "no longer
+     * yours" is a thing they find out by looking at their own list.
+     *
+     * @param  iterable<User>  $newlyAssigned
      */
-    public function taskAssigned(Task $task, ?User $actor = null): void
+    public function taskAssigned(Task $task, iterable $newlyAssigned, ?User $actor = null): void
     {
-        $this->send(
-            reader: $task->assignee?->user,
-            kind: 'task',
-            title: ($actor?->name ?? 'Somebody').' assigned you a task',
-            body: $task->name.' — due '.$task->due_on->format('D j M').'.',
-            route: 'tasks.show',
-            params: ['task' => $task->reference],
-            actor: $actor,
-        );
+        foreach ($newlyAssigned as $user) {
+            $this->send(
+                reader: $user,
+                kind: 'task',
+                title: ($actor?->name ?? 'Somebody').' assigned you a task',
+                body: $task->name.' — due '.$task->due_on->format('D j M').'.',
+                route: 'tasks.show',
+                params: ['task' => $task->reference],
+                actor: $actor,
+            );
+        }
     }
 
     /**

@@ -207,7 +207,7 @@ class NotificationsTest extends TestCase
 
         $task = $this->makeTask();
 
-        $this->post('/tasks/'.$task->reference.'/assign', ['assignee_id' => $worker->id])
+        $this->post('/tasks/'.$task->reference.'/assign', ['assignee_ids' => [$worker->id]])
             ->assertRedirect();
 
         $notification = Notification::where('user_id', $worker->user_id)->firstOrFail();
@@ -232,7 +232,7 @@ class NotificationsTest extends TestCase
 
         $task = $this->makeTask();
 
-        $this->post('/tasks/'.$task->reference.'/assign', ['assignee_id' => $me->id])
+        $this->post('/tasks/'.$task->reference.'/assign', ['assignee_ids' => [$me->id]])
             ->assertRedirect();
 
         $this->assertSame(0, Notification::count());
@@ -243,9 +243,9 @@ class NotificationsTest extends TestCase
         $this->signInWith(['employee', 'manager'], 'EMP963');
         $worker = $this->makeEmployee('EMP964');
 
-        $task = $this->makeTask(['assignee_id' => $worker->id]);
+        $task = $this->makeTask(['assignees' => [$worker->id]]);
 
-        $this->post('/tasks/'.$task->reference.'/assign', ['assignee_id' => null])
+        $this->post('/tasks/'.$task->reference.'/assign', ['assignee_ids' => []])
             ->assertRedirect();
 
         // Audited, because the plan changed. Not notified, because there is no
@@ -320,7 +320,7 @@ class NotificationsTest extends TestCase
 
         $task = $this->makeTask();
 
-        $this->post('/tasks/'.$task->reference.'/assign', ['assignee_id' => $worker->id])
+        $this->post('/tasks/'.$task->reference.'/assign', ['assignee_ids' => [$worker->id]])
             ->assertRedirect();
 
         $this->assertSame(0, Notification::where('user_id', $worker->user_id)->count());
@@ -373,7 +373,7 @@ class NotificationsTest extends TestCase
 
         $task = $this->makeTask();
 
-        $this->post('/tasks/'.$task->reference.'/assign', ['assignee_id' => $worker->id])
+        $this->post('/tasks/'.$task->reference.'/assign', ['assignee_ids' => [$worker->id]])
             ->assertRedirect();
 
         $this->assertSame(1, Notification::where('user_id', $worker->user_id)->count());
@@ -582,15 +582,29 @@ class NotificationsTest extends TestCase
        THE PIECES
        ══════════════════════════════════════════════════════════════════════ */
 
+    /**
+     * @param  array<string, mixed>  $overrides  an 'assignees' key (a list of
+     *                                           employee ids) is synced onto the pivot rather than passed to
+     *                                           Task::create — assignee_id is not a column any more.
+     */
     protected function makeTask(array $overrides = []): Task
     {
-        return Task::create($overrides + [
+        $assignees = $overrides['assignees'] ?? null;
+        unset($overrides['assignees']);
+
+        $task = Task::create($overrides + [
             'reference' => 'TSK-9'.fake()->unique()->numberBetween(10, 99),
             'name' => 'Wire the checkout error states',
             'status' => 'pending',
             'priority' => 'medium',
             'due_on' => Carbon::today()->addWeek()->toDateString(),
         ]);
+
+        if ($assignees !== null) {
+            $task->assignees()->sync($assignees);
+        }
+
+        return $task;
     }
 
     protected function makeEmployee(string $staffId): Employee

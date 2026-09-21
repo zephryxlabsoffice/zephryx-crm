@@ -116,17 +116,24 @@
                         </div>
 
                         <div class="form-field">
-                            <label class="form-field-lbl" for="task-assignee">Assigned to <span class="an-optional">(optional)</span></label>
-                            <select id="task-assignee" name="assignee_id">
-                                <option value="">Nobody yet</option>
+                            @php
+                                $selectedAssignees = old('assignee_ids', $task?->assignees->pluck('id')->all() ?? []);
+                            @endphp
+                            <label class="form-field-lbl" for="task-assignees">Assigned to <span class="an-optional">(optional)</span></label>
+                            {{-- A multiple select, not checkboxes or a script: it
+                                 works with no JavaScript and submits an array the
+                                 controller validates and syncs onto the pivot —
+                                 see App\Models\Task::assignees(). --}}
+                            <select id="task-assignees" name="assignee_ids[]" multiple size="6">
                                 @foreach ($employeeChoices as $employee)
                                     <option value="{{ $employee->id }}"
-                                        @selected((int) old('assignee_id', $task?->assignee_id) === $employee->id)>
+                                        @selected(in_array($employee->id, $selectedAssignees, true))>
                                         {{ $employee->user?->name }} ({{ $employee->user?->user_id }})
                                     </option>
                                 @endforeach
                             </select>
-                            @error('assignee_id')
+                            <span class="pay-hint">Several people can be on one task. Ctrl or Cmd to pick more than one; left empty, it waits in the team's queue.</span>
+                            @error('assignee_ids')
                                 <span class="field-error">{{ $message }}</span>
                             @enderror
                         </div>

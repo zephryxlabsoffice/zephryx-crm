@@ -85,6 +85,10 @@ class TicketDirectory
             'assignee_record' => $ticket->assignee ? EmployeeDirectory::row($ticket->assignee) : null,
             'escalator_record' => $ticket->escalator ? EmployeeDirectory::row($ticket->escalator) : null,
             'project_record' => $ticket->project ? ProjectDirectory::row($ticket->project) : null,
+            // Set once a ticket becomes a task — see
+            // TicketController::convertToTask. Read from the relation rather
+            // than the raw column so the page can link straight to it.
+            'converted_task' => $ticket->convertedTask?->reference,
         ];
     }
 
@@ -94,7 +98,7 @@ class TicketDirectory
     public static function find(string $reference): ?array
     {
         $ticket = Ticket::query()
-            ->with(['raiser.user', 'assignee.user', 'assignee.designation', 'escalator.user', 'client', 'project.client'])
+            ->with(['raiser.user', 'assignee.user', 'assignee.designation', 'escalator.user', 'client', 'project.client', 'convertedTask'])
             ->where('reference', $reference)
             ->first();
 

@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Employee;
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -11,9 +12,14 @@ use Illuminate\Support\Facades\DB;
  * Tasks, read from the database.
  *
  * The row shape the four task pages already read: id (the reference), name,
- * project, team, assignee, status, priority, due — plus the `*_record` values
- * the templates draw and the `due_meta` reading. The controller used to attach
- * those in a decorate() step; they belong with the rest of the shape.
+ * project, team, assignees, status, priority, due — plus the `*_record`
+ * values the templates draw and the `due_meta` reading. The controller used
+ * to attach those in a decorate() step; they belong with the rest of the
+ * shape.
+ *
+ * `assignees`/`assignee_records` are lists, not a single value — several
+ * assignees per task (decided) replaced the single `assignee_id` foreign key
+ * with the `task_assignees` pivot; see the head of App\Models\Task.
  */
 class TaskDirectory
 {
@@ -28,7 +34,7 @@ class TaskDirectory
         $search = ($filters['search'] ?? '') !== '' ? $filters['search'] : null;
 
         return Task::query()
-            ->with(['project.client', 'team.lead.user', 'assignee.user', 'assignee.designation'])
+            ->with(['project.client', 'team.lead.user', 'assignees.user', 'assignees.designation'])
             ->when($search, fn (Builder $q, string $term) => $q->where(function (Builder $q) use ($term) {
                 $like = '%'.str_replace(['%', '_'], ['\%', '\_'], $term).'%';
 
@@ -67,7 +73,7 @@ class TaskDirectory
             'description' => $task->description,
             'project' => $task->project?->reference,
             'team' => $task->team?->reference,
-            'assignee' => $task->assignee?->user?->user_id,
+            'assignees' => $task->assignees->map(fn (Employee $e) => $e->user?->user_id)->filter()->values()->all(),
             'status' => $task->status,
             'priority' => $task->priority,
             'due' => $due,
@@ -76,7 +82,7 @@ class TaskDirectory
 
             'project_record' => $task->project ? ProjectDirectory::row($task->project) : null,
             'team_record' => $task->team ? TeamDirectory::row($task->team) : null,
-            'assignee_record' => $task->assignee ? EmployeeDirectory::row($task->assignee) : null,
+            'assignee_records' => $task->assignees->map(fn (Employee $e) => EmployeeDirectory::row($e))->all(),
             'due_meta' => TaskPresenter::due($due, $task->status),
         ];
     }
@@ -109,7 +115,7 @@ class TaskDirectory
     public static function upcoming(int $limit = 5): array
     {
         return Task::query()
-            ->with(['project.client', 'team', 'assignee.user'])
+            ->with(['project.client', 'team', 'assignees.user'])
             ->open()
             ->whereDate('due_on', '>=', now()->toDateString())
             ->orderBy('due_on')
@@ -168,6 +174,22 @@ class TaskDirectory
                 },
             ])
             ->all();
+    }
+
+    /**
+     * The next task reference — from the highest existing one, never a
+     * count. Owned here rather than by TaskController alone because
+     * TicketController::convertToTask needs to mint one too, and two copies
+     * of the same numbering logic is the version that drifts.
+     */
+    public static function nextReference(): string
+    {
+        $highest = Task::query()
+            ->where('reference', 'like', 'TSK-%')
+            ->selectRaw('max(cast(substr(reference, 5) as integer)) as n')
+            ->value('n');
+
+        return 'TSK-'.str_pad((string) (((int) $highest) + 1), 3, '0', STR_PAD_LEFT);
     }
 
     protected static function summaryOf(object $row): ?string

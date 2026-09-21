@@ -24,7 +24,7 @@ class Ticket extends Model
     protected $fillable = [
         'reference', 'type', 'subject', 'description', 'raised_by', 'client_id',
         'project_id', 'assignee_id', 'status', 'priority', 'category', 'department',
-        'escalated_by', 'escalated_at', 'resolved_at',
+        'escalated_by', 'escalated_at', 'resolved_at', 'converted_task_id',
     ];
 
     protected function casts(): array
@@ -73,6 +73,16 @@ class Ticket extends Model
     public function escalator(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'escalated_by');
+    }
+
+    /**
+     * The task this ticket became, if it has been converted.
+     *
+     * @return BelongsTo<Task, $this>
+     */
+    public function convertedTask(): BelongsTo
+    {
+        return $this->belongsTo(Task::class, 'converted_task_id');
     }
 
     /**

@@ -445,16 +445,17 @@ class DashboardData
      * the three uses add a scope to it and a shared builder is how a count ends
      * up filtered by whatever the previous caller wanted.
      *
-     * `assignee_id` of 0 for somebody with no employment record: an impossible
-     * id rather than a skipped `where`, so the query returns nothing instead of
-     * everything. The same shape TaskController::mine uses.
+     * An employee id of 0 for somebody with no employment record: an
+     * impossible id rather than a skipped `where`, so the query returns
+     * nothing instead of everything. The same shape TaskController::mine
+     * uses.
      *
      * @return Builder<Task>
      */
     protected static function myTaskQuery(?Employee $viewer)
     {
         return TaskDirectory::query()
-            ->where('assignee_id', $viewer?->id ?? 0)
+            ->whereHas('assignees', fn (Builder $q) => $q->where('employees.id', $viewer?->id ?? 0))
             ->whereNot('status', 'completed');
     }
 

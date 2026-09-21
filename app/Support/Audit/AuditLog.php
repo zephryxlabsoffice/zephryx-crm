@@ -173,6 +173,18 @@ class AuditLog
 
     public const TASK_REOPENED = 'task.reopened';
 
+    public const TASK_COMMENTED = 'task.commented';
+
+    public const TASK_ATTACHMENT_ADDED = 'task.attachment_added';
+
+    /*
+     * The task's own record of where it came from — a ticket, converted
+     * rather than typed from scratch. See TicketController::convertToTask.
+     */
+    public const TASK_CREATED_FROM_TICKET = 'task.created_from_ticket';
+
+    public const TICKET_CONVERTED_TO_TASK = 'ticket.converted_to_task';
+
     /*
      * Attendance. The clock entries are here because §6 asks for them and
      * because a check-in somebody disputes is answered by the log rather than

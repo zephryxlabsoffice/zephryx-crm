@@ -5,19 +5,26 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\TaskAttachment;
+use App\Models\TaskComment;
 use App\Models\Team;
 use App\Support\Audit\AuditLog;
+use App\Support\Documents\DocumentStore;
 use App\Support\Notifier;
 use App\Support\Rbac\Rbac;
 use App\Support\TaskDirectory;
+use App\Support\TaskPresenter;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 /**
  * Tasks — the managing face (`/tasks`), the personal face (`/tasks/mine`), the
@@ -45,6 +52,7 @@ class TaskController extends Controller
         protected Rbac $rbac,
         protected AuditLog $audit,
         protected Notifier $notify,
+        protected DocumentStore $documents,
     ) {
     }
 
@@ -78,7 +86,7 @@ class TaskController extends Controller
         $employee = $this->employeeFor($request);
 
         $query = TaskDirectory::query($filters)
-            ->where('assignee_id', $employee?->id ?? 0);
+            ->whereHas('assignees', fn (Builder $q) => $q->where('employees.id', $employee?->id ?? 0));
 
         return response()->view('tasks.mine', [
             'activeNav' => 'tasks',
@@ -123,9 +131,13 @@ class TaskController extends Controller
             'task' => TaskDirectory::row($record),
             'record' => $record,
             'timeline' => TaskDirectory::timeline($record->reference),
-            // Files wait on the same answer as project attachments and profile
-            // documents: one audited download route, built once.
-            'attachments' => [],
+            'comments' => $record->comments->map(fn (TaskComment $c) => $c->toRecordArray())->all(),
+            'attachments' => $record->attachments->map(fn (TaskAttachment $a) => [
+                'id' => $a->id,
+                'name' => $a->document_name,
+                'kind' => TaskPresenter::fileKind($a->document_name),
+                'size' => TaskPresenter::fileSize($a->document_bytes),
+            ])->all(),
             'mayEdit' => $this->rbac->can($request->user(), 'tasks.edit'),
             'mayAssign' => $this->canAssign($request, $record),
             'mayComplete' => $this->canComplete($request, $record),
@@ -150,8 +162,15 @@ class TaskController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validated($request);
+        $assignees = $data['assignee_ids'] ?? [];
+        unset($data['assignee_ids']);
 
-        $task = Task::create($data + ['reference' => $this->nextReference()]);
+        $task = DB::transaction(function () use ($data, $assignees) {
+            $task = Task::create($data + ['reference' => $this->nextReference()]);
+            $task->assignees()->sync($assignees);
+
+            return $task;
+        });
 
         $this->audit->record(
             action: AuditLog::TASK_CREATED,
@@ -162,7 +181,7 @@ class TaskController extends Controller
             request: $request,
         );
 
-        if ($task->assignee_id !== null) {
+        if ($assignees !== []) {
             // Its own entry as well, so "who put this person on it" is a
             // question the timeline answers without reading a payload.
             $this->recordAssignment($request, $task);
@@ -189,19 +208,25 @@ class TaskController extends Controller
     {
         $record = $this->find($task);
         $data = $this->validated($request, $record);
+        $assignees = $data['assignee_ids'] ?? [];
+        unset($data['assignee_ids']);
 
         $before = $this->describe($record);
-        $assigneeBefore = $record->assignee_id;
+        $assigneesBefore = $record->assignees->pluck('id')->sort()->values()->all();
 
-        $record->update($data + [
-            // Completing through the edit form still stamps the date, so the
-            // two routes cannot leave the record in different shapes.
-            'completed_at' => $data['status'] === 'completed'
-                ? ($record->completed_at ?? now())
-                : $record->completed_at,
-        ]);
+        DB::transaction(function () use ($record, $data, $assignees) {
+            $record->update($data + [
+                // Completing through the edit form still stamps the date, so the
+                // two routes cannot leave the record in different shapes.
+                'completed_at' => $data['status'] === 'completed'
+                    ? ($record->completed_at ?? now())
+                    : $record->completed_at,
+            ]);
 
-        $record->refresh()->load(['project', 'team', 'assignee.user']);
+            $record->assignees()->sync($assignees);
+        });
+
+        $record->refresh()->load(['project', 'team', 'assignees.user']);
 
         $this->audit->record(
             action: AuditLog::TASK_UPDATED,
@@ -213,8 +238,10 @@ class TaskController extends Controller
             request: $request,
         );
 
-        if ($assigneeBefore !== $record->assignee_id) {
-            $this->recordAssignment($request, $record);
+        $assigneesAfter = $record->assignees->pluck('id')->sort()->values()->all();
+
+        if ($assigneesBefore !== $assigneesAfter) {
+            $this->recordAssignment($request, $record, $assigneesBefore);
         }
 
         return redirect()
@@ -238,29 +265,32 @@ class TaskController extends Controller
         abort_unless($this->canAssign($request, $record), 403);
 
         $data = $request->validate([
-            'assignee_id' => ['nullable', Rule::exists('employees', 'id')],
+            'assignee_ids' => ['nullable', 'array'],
+            'assignee_ids.*' => [Rule::exists('employees', 'id')],
         ]);
 
-        $employee = $data['assignee_id'] === null
-            ? null
-            : Employee::with('user')->findOrFail($data['assignee_id']);
+        $ids = collect($data['assignee_ids'] ?? [])->map(fn ($id) => (int) $id)->unique()->values();
 
-        if ($employee !== null && ! $employee->user?->isActive()) {
+        $employees = Employee::with('user')->whereIn('id', $ids)->get();
+
+        if ($employees->contains(fn (Employee $e) => ! $e->user?->isActive())) {
             throw ValidationException::withMessages([
-                'assignee_id' => 'That record is closed. They cannot be given work.',
+                'assignee_ids' => 'One of those records is closed. They cannot be given work.',
             ]);
         }
 
-        $record->update(['assignee_id' => $employee?->id]);
-        $record->refresh()->load('assignee.user');
+        $before = $record->assignees->pluck('id')->sort()->values()->all();
 
-        $this->recordAssignment($request, $record);
+        $record->assignees()->sync($ids);
+        $record->refresh()->load('assignees.user');
+
+        $this->recordAssignment($request, $record, $before);
 
         return redirect()
             ->route('tasks.show', ['task' => $record->reference])
-            ->with('status', $employee === null
+            ->with('status', $record->assignees->isEmpty()
                 ? 'Taken off '.($record->team?->name ?? 'the task').'.'
-                : $employee->user?->name.' is now on this task.')
+                : 'Assignees updated.')
             ->with('status_tone', 'success');
     }
 
@@ -319,6 +349,117 @@ class TaskController extends Controller
             ->with('status_tone', $data['status'] === 'completed' ? 'success' : 'info');
     }
 
+    /**
+     * Leave a note on a task.
+     *
+     * No visibility split, unlike a ticket comment — a task has one
+     * readership, so there is nothing to choose. The author's name is copied
+     * at write time, same as a ticket thread, so it survives the removal of
+     * an account.
+     */
+    public function comment(Request $request, string $task): RedirectResponse
+    {
+        $record = $this->find($task);
+
+        $data = $request->validate([
+            'body' => ['required', 'string', 'max:5000'],
+        ]);
+
+        TaskComment::create([
+            'task_id' => $record->id,
+            'author_id' => $request->user()->id,
+            'author_label' => $request->user()->name,
+            'body' => $data['body'],
+        ]);
+
+        $this->audit->record(
+            action: AuditLog::TASK_COMMENTED,
+            actor: $request->user(),
+            entityType: 'task',
+            entityId: $record->reference,
+            after: 'Comment added',
+            request: $request,
+        );
+
+        return redirect()
+            ->route('tasks.show', ['task' => $record->reference])
+            ->with('status', 'Comment added.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * Attach a file to a task.
+     *
+     * Add-only, like every other write this module makes: there is no route
+     * that removes one, matching the "no delete anywhere" rule the rest of
+     * this module (and Clients, Teams, Projects) already follows. Always
+     * Google Drive — DocumentStore::put() is the only method that ever writes
+     * an uploaded file, and it never writes to the local disk.
+     */
+    public function storeAttachment(Request $request, string $task): RedirectResponse
+    {
+        $record = $this->find($task);
+
+        $data = $request->validate([
+            'document' => [
+                'required', 'file',
+                'mimes:'.implode(',', DocumentStore::ALLOWED),
+                'max:'.(int) (DocumentStore::MAX_BYTES / 1024),
+            ],
+        ]);
+
+        try {
+            $stored = $this->documents->put('tasks/'.$record->reference, $data['document']);
+        } catch (Throwable $e) {
+            throw ValidationException::withMessages([
+                'document' => 'Could not store the file: '.$e->getMessage(),
+            ]);
+        }
+
+        TaskAttachment::create([
+            'task_id' => $record->id,
+            'uploaded_by' => $request->user()->id,
+            'uploaded_by_label' => $request->user()->name,
+            'document_path' => $stored['path'],
+            'document_name' => $stored['name'],
+            'document_bytes' => $stored['bytes'],
+        ]);
+
+        $this->audit->record(
+            action: AuditLog::TASK_ATTACHMENT_ADDED,
+            actor: $request->user(),
+            entityType: 'task',
+            entityId: $record->reference,
+            after: $stored['name'].' attached',
+            request: $request,
+        );
+
+        return redirect()
+            ->route('tasks.show', ['task' => $record->reference])
+            ->with('status', 'File attached.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * GET /tasks/{task}/attachments/{attachment}/view
+     */
+    public function viewAttachment(Request $request, string $task, int $attachment): StreamedResponse
+    {
+        $file = $this->attachmentFor($task, $attachment);
+
+        return $this->documents->viewInline($file->document_path, $file->document_name);
+    }
+
+    /**
+     * GET /tasks/{task}/attachments/{attachment}/download
+     */
+    public function downloadAttachment(Request $request, string $task, int $attachment): StreamedResponse
+    {
+        $file = $this->attachmentFor($task, $attachment);
+
+        return $this->documents->download($file->document_path, $file->document_name);
+    }
+
     /* ══════════════════════════════════════════════════════════════════════
        THE PIECES
        ══════════════════════════════════════════════════════════════════════ */
@@ -326,8 +467,26 @@ class TaskController extends Controller
     protected function find(string $reference): Task
     {
         return Task::query()
-            ->with(['project.client', 'team.lead.user', 'assignee.user', 'assignee.designation'])
+            ->with([
+                'project.client', 'team.lead.user', 'assignees.user', 'assignees.designation',
+                'comments', 'attachments',
+            ])
             ->where('reference', $reference)
+            ->firstOrFail();
+    }
+
+    /**
+     * A task's attachment, scoped to that task rather than fetched by id
+     * alone — the same reason every ownership check in this application runs
+     * inside the query: an attachment id from a different task's page must
+     * 404 rather than resolve to a file that is not this task's to show.
+     */
+    protected function attachmentFor(string $task, int $attachment): TaskAttachment
+    {
+        $record = $this->find($task);
+
+        return TaskAttachment::where('task_id', $record->id)
+            ->where('id', $attachment)
             ->firstOrFail();
     }
 
@@ -404,7 +563,8 @@ class TaskController extends Controller
             'description' => ['nullable', 'string', 'max:5000'],
             'project_id' => ['nullable', Rule::exists('projects', 'id')],
             'team_id' => ['nullable', Rule::exists('teams', 'id')],
-            'assignee_id' => ['nullable', Rule::exists('employees', 'id')],
+            'assignee_ids' => ['nullable', 'array'],
+            'assignee_ids.*' => [Rule::exists('employees', 'id')],
             'status' => ['required', Rule::in(Task::STATUSES)],
             'priority' => ['required', Rule::in(Task::PRIORITIES)],
             'due_on' => ['required', 'date'],
@@ -451,16 +611,12 @@ class TaskController extends Controller
     }
 
     /**
-     * The next task reference — from the highest existing one, never a count.
+     * The next task reference. Owned by TaskDirectory now — see the note
+     * there — so TicketController::convertToTask mints from the same place.
      */
     protected function nextReference(): string
     {
-        $highest = Task::query()
-            ->where('reference', 'like', 'TSK-%')
-            ->selectRaw('max(cast(substr(reference, 5) as integer)) as n')
-            ->value('n');
-
-        return 'TSK-'.str_pad((string) (((int) $highest) + 1), 3, '0', STR_PAD_LEFT);
+        return TaskDirectory::nextReference();
     }
 
     /**
@@ -469,35 +625,52 @@ class TaskController extends Controller
      *
      * All three routes that can move a task onto somebody — create, edit and
      * assign — come through this method, and each of them already knows to call
-     * it only when the assignee actually changed. Notifying from the call sites
+     * it only when the roster actually changed. Notifying from the call sites
      * instead would mean three chances to forget, and the one that forgot would
      * be silent.
+     *
+     * `$beforeIds` is the roster before the write, so only the people newly
+     * added are notified — a sync that adds one person to a task two others
+     * are already on must not re-notify the two who were already there.
+     *
+     * @param  list<int>  $beforeIds
      */
-    protected function recordAssignment(Request $request, Task $task): void
+    protected function recordAssignment(Request $request, Task $task, array $beforeIds = []): void
     {
+        $task->loadMissing('assignees.user');
+
+        $names = $task->assignees->pluck('user.name')->filter()->implode(', ');
+
         $this->audit->record(
             action: AuditLog::TASK_ASSIGNED,
             actor: $request->user(),
             entityType: 'task',
             entityId: $task->reference,
-            after: $task->assignee?->user?->name
-                ? $task->name.' assigned to '.$task->assignee->user->name
+            after: $names !== ''
+                ? $task->name.' assigned to '.$names
                 : $task->name.' has nobody on it',
             request: $request,
         );
 
         // Unassigning is audited but notifies nobody: there is no reader, and
         // the person losing the task finds out by looking at their own list.
-        $this->notify->taskAssigned($task, $request->user());
+        $newlyAssigned = $task->assignees
+            ->whereNotIn('id', $beforeIds)
+            ->pluck('user')
+            ->filter();
+
+        $this->notify->taskAssigned($task, $newlyAssigned, $request->user());
     }
 
     protected function describe(Task $task): string
     {
+        $names = $task->assignees->pluck('user.name')->filter()->implode(', ');
+
         return implode(' · ', array_filter([
             $task->name,
             $task->project?->name,
             $task->team?->name,
-            $task->assignee?->user?->name ?? 'unassigned',
+            $names !== '' ? $names : 'unassigned',
             str_replace('_', ' ', $task->status),
             'due '.$task->due_on->format('d M Y'),
         ]));

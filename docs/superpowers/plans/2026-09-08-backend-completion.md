@@ -867,12 +867,12 @@ change modules that are already committed.
 1. **Employee record and the ZEPH ID scheme** — everything hangs off it: type
    (full-time / intern / freelance), ID proof, PAN, addresses, bank, salary
    breakdown, masking rules, convert-to-full-time.
-2. **Clients** ✅ **Done, 2026-09-21** — client statuses, country and currency,
-   self-serve contacts. **Teams** ✅ **Done, 2026-09-21** — "Archived"
-   dropped. **Projects** ✅ **Done, 2026-09-21** — progress derived from
-   tasks (`PRJ-YYYY-NNN` was already in place from when the module was first
-   built). **→ Tasks**, still to do: comments, attachments and several
-   assignees.
+2. **Clients → Teams → Projects → Tasks: all done, 2026-09-21.** ✅ Clients:
+   client statuses, country and currency, self-serve contacts. ✅ Teams:
+   "Archived" dropped. ✅ Projects: progress derived from tasks
+   (`PRJ-YYYY-NNN` was already in place from when the module was first
+   built). ✅ Tasks: several assignees, comments, attachments, created by
+   Manager and Team Lead, ticket-to-task conversion. Step 2 is closed.
 3. **Attendance roster and comp-off → Leave year rules** — Sunday roster,
    comp-off earning and expiry; the per-employee leave year, monthly casual
    accrual, privilege and sick granted in full.
@@ -959,12 +959,66 @@ sections for Ex-Client gating, self-serve contacts and meeting self-cancel.
 Full suite green (1294 passing) on both SQLite (test runner) and against
 real MySQL (migration re-verified after the index fix).
 
-**Left for later, if this is where work stops**: Tasks (multiple assignees,
-comments, attachments) — the last piece of step 2. Then step 3 (attendance
+**Left for later, if this is where work stops**: step 3 (attendance
 roster/comp-off, leave year rules), step 5 (Tickets/Announcements/
 Notifications polish — Meetings and Profile already done), step 6 (2FA
 device management, Support page, admin role creation and other tidy-up). See
 the "RESUME HERE" section above for the full order.
+
+## Step 2's Tasks half is done, and step 2 is closed (2026-09-21)
+
+The largest single piece of step 2 — a real schema change (`assignee_id` →
+a pivot), two new tables, a cross-module write (Tickets → Tasks), and a
+permission change.
+
+**Several assignees.** `task_assignees` replaces the single `assignee_id`
+foreign key, shaped exactly like `team_members` for the same reasons: a
+list of ids in a column cannot be joined against, cannot carry its own
+foreign key, and would keep pointing at somebody after their employment
+record closed. Migration `2026_09_21_000028` backfills every existing
+`assignee_id` into one pivot row before dropping the column, and drops the
+column's foreign key and its explicit index in that order first — the same
+SQLite index-drop trap the Clients and Teams status migrations hit, plus a
+foreign key this time, both handled from the start. `Task::assignees()` is
+a `BelongsToMany`, `TaskDirectory::row()` now carries `assignees`/
+`assignee_records` as lists, and every place that filtered or displayed by
+a single assignee — `TaskController`, `TaskDirectory`, `DashboardData::
+myTaskQuery()`, `ProfileDirectory`'s "Tasks on your plate" tile,
+`NotificationSeeder`, the four task views — was updated in the same
+commit. `Notifier::taskAssigned()` now takes the roster **delta**, not the
+whole list, so a sync that adds one person to a task two others are
+already on does not re-notify the two who were already there.
+
+**Comments and attachments.** `task_comments` (no visibility column, unlike
+a ticket comment — a task has one readership) and `task_attachments`
+(`document_path`/`document_name`/`document_bytes` per row, several files
+per task, always through `DocumentStore::put()` → Google Drive). Both
+add-only: no delete route, matching every other module built this round.
+
+**Created by Manager and Team Lead.** `tasks.create` was manager/CEO only;
+added to `team_lead`'s permissions in `RbacSeeder` to match the decision.
+
+**"A ticket can be turned into a task."** `TicketController::convertToTask()`
+creates a task from a ticket's subject/description/project/priority and
+points the ticket at it via a new `tickets.converted_task_id` column
+(migration `2026_09_21_000029`) — a link, not a lifecycle decision: it does
+not close, escalate or otherwise touch the ticket's own status, since
+"closed is final" and the rest of the Tickets module's own decisions belong
+to step 5, not this one. Idempotent, mirroring `EmployeeController::convert`
+— a ticket already converted refuses a second conversion. Gated on
+`tasks.create`, since converting is still creating.
+
+**Tests**: 8 new (`TaskWritesTest` gained sections for several assignees,
+comments and attachments including an ownership-scoping test for a
+cross-task attachment id; `TicketWritesTest` gained a conversion section;
+`ProjectsPageTest`/`NotificationsTest`/`AnnouncementsPageTest` fixed where
+`NotificationSeeder` — the actual crash source when this work started,
+`Task::query()->whereNotNull('assignee_id')->with('assignee...')` no longer
+resolving — broke `seedDemoWorkforce()` for every test file that calls it,
+not only Tasks' own). Full suite green — 1304 passing — on both SQLite and
+real MySQL.
+
+**Step 2 (Clients → Teams → Projects → Tasks) is now fully closed.**
 
 ## Step 2's Projects half is done (2026-09-21)
 

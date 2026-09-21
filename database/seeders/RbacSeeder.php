@@ -412,6 +412,10 @@ class RbacSeeder extends Seeder
                     // and nothing wider. The key opens the route; Team::isLedBy
                     // decides which team (§2.6).
                     'teams.members', 'tasks.assign',
+                    // Tasks are created by Manager and Team Lead (review round
+                    // decision, 2026-09-21) — a lead can put new work straight
+                    // into their own team's queue without waiting on a manager.
+                    'tasks.create',
                 ],
                 'ranks' => ['people' => 30, 'work' => 50, 'support' => 30, 'system' => 10],
             ],

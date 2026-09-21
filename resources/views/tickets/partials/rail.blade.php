@@ -74,3 +74,38 @@
         ])
     </section>
 @endif
+
+@if ($mayConvertToTask ?? false)
+    <section class="rail-card">
+        <div class="rail-hd">
+            <strong>Turn into a task</strong>
+        </div>
+
+        @if ($ticket['converted_task'])
+            <p class="dash-note">
+                Already converted — see
+                <a class="dash-link" href="{{ route('tasks.show', ['task' => $ticket['converted_task']]) }}">{{ $ticket['converted_task'] }}</a>.
+            </p>
+        @else
+            {{-- A link, not a lifecycle decision: this creates a task and
+                 points the ticket at it. It does not close, escalate or
+                 otherwise decide this ticket's own status — see
+                 TicketController::convertToTask. --}}
+            <form method="POST" action="{{ route('tickets.convertToTask', ['ticket' => $ticket['id']]) }}">
+                @csrf
+
+                <div class="form-field">
+                    <label class="form-field-lbl" for="tkt-convert-due">Due</label>
+                    <input id="tkt-convert-due" name="due_on" type="date" required
+                           min="{{ now()->toDateString() }}"
+                           value="{{ old('due_on', now()->addWeek()->toDateString()) }}">
+                    @error('due_on')
+                        <span class="field-error">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <button class="btn btn-outline" type="submit">Convert to task</button>
+            </form>
+        @endif
+    </section>
+@endif

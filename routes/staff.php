@@ -415,6 +415,31 @@ Route::post('/tasks/{task}/complete', [TaskController::class, 'complete'])
     ->where('task', '[A-Za-z0-9-]{1,32}')
     ->name('tasks.complete');
 
+/*
+ * Comments and attachments — no permission beyond `tasks.view`, since being
+ * signed in and able to read the task is the whole of what either act
+ * requires. Neither has a delete: matches the rest of this module.
+ */
+Route::post('/tasks/{task}/comment', [TaskController::class, 'comment'])
+    ->where('task', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:tasks.view')
+    ->name('tasks.comment');
+
+Route::post('/tasks/{task}/attachments', [TaskController::class, 'storeAttachment'])
+    ->where('task', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:tasks.view')
+    ->name('tasks.attachments.store');
+
+Route::get('/tasks/{task}/attachments/{attachment}/view', [TaskController::class, 'viewAttachment'])
+    ->where(['task' => '[A-Za-z0-9-]{1,32}', 'attachment' => '[0-9]+'])
+    ->middleware('permission:tasks.view')
+    ->name('tasks.attachments.view');
+
+Route::get('/tasks/{task}/attachments/{attachment}/download', [TaskController::class, 'downloadAttachment'])
+    ->where(['task' => '[A-Za-z0-9-]{1,32}', 'attachment' => '[0-9]+'])
+    ->middleware('permission:tasks.view')
+    ->name('tasks.attachments.download');
+
 Route::get('/tickets', [TicketController::class, 'index'])
     ->middleware('permission:tickets.view')
     ->name('tickets.index');
@@ -455,6 +480,16 @@ Route::post('/tickets/{ticket}/triage', [TicketController::class, 'triage'])
     ->where('ticket', '[A-Za-z0-9-]{1,32}')
     ->middleware('permission:tickets.triage')
     ->name('tickets.triage');
+
+/*
+ * "A ticket can be turned into a task" (Tasks decision). `tasks.create`, not
+ * `tickets.triage` — this creates a task, so the permission that opens the
+ * rest of task creation is the one that gates this too.
+ */
+Route::post('/tickets/{ticket}/convert-to-task', [TicketController::class, 'convertToTask'])
+    ->where('ticket', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:tasks.create')
+    ->name('tickets.convertToTask');
 
 Route::get('/invoices', [InvoiceController::class, 'index'])
     ->middleware('permission:invoices.view')

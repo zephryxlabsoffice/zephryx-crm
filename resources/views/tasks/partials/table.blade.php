@@ -101,12 +101,18 @@
 
                         <td role="cell" data-label="Assigned to">
                             {{-- A round avatar for a person, a square chip for a
-                                 team: a glance down the column says which. --}}
-                            @if ($item['assignee_record'])
+                                 team: a glance down the column says which. A
+                                 second (or third) assignee is named as "+N" —
+                                 the full roster is on the task's own page. --}}
+                            @if (! empty($item['assignee_records']))
+                                @php
+                                    $first = $item['assignee_records'][0];
+                                    $extra = count($item['assignee_records']) - 1;
+                                @endphp
                                 <span class="assignee-cell">
-                                    <span class="avatar {{ Avatar::tint($item['assignee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($item['assignee_record']['name']) }}</span>
+                                    <span class="avatar {{ Avatar::tint($first['name']) }}" aria-hidden="true">{{ Avatar::initials($first['name']) }}</span>
                                     <span class="stack-cell">
-                                        <strong>{{ $item['assignee_record']['name'] }}</strong>
+                                        <strong>{{ $first['name'] }}{{ $extra > 0 ? ' +'.$extra : '' }}</strong>
                                         <span>{{ $item['team_record']['name'] ?? 'No team' }}</span>
                                     </span>
                                 </span>

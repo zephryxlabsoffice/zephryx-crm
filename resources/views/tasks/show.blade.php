@@ -76,7 +76,7 @@
         <div class="task-detail-main">
             {{-- A team task with nobody on it is the state this page exists to
                  resolve, so it leads. --}}
-            @if (! $task['assignee_record'] && $task['team_record'])
+            @if (empty($task['assignee_records']) && $task['team_record'])
                 <div class="notice notice-info" role="status">
                     <span class="notice-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -135,27 +135,49 @@
                         <p class="rail-empty">No files on this task.</p>
                     @else
                         <div class="attachment-grid">
+                            {{-- Served through an authorising controller — see
+                                 TaskController::viewAttachment/downloadAttachment
+                                 — never from a public path (§6). --}}
                             @foreach ($attachments as $file)
                                 @php $type = P::fileType($file['name']); @endphp
-                                {{-- TODO (backend phase): §6 requires uploads to be
-                                     served through an authorising controller, never
-                                     from a public path. --}}
                                 <span class="attachment">
-                                    <span class="attachment-ic {{ $type['class'] }}" aria-hidden="true">{{ $type['label'] }}</span>
-                                    <span class="attachment-body">
-                                        <strong>{{ $file['name'] }}</strong>
-                                        <span>{{ $file['kind'] }} · {{ $file['size'] }}</span>
-                                    </span>
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                        <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                                    </svg>
+                                    <a class="attachment-open" href="{{ route('tasks.attachments.view', ['task' => $task['id'], 'attachment' => $file['id']]) }}" target="_blank" rel="noopener noreferrer">
+                                        <span class="attachment-ic {{ $type['class'] }}" aria-hidden="true">{{ $type['label'] }}</span>
+                                        <span class="attachment-body">
+                                            <strong>{{ $file['name'] }}</strong>
+                                            <span>{{ $file['kind'] }} · {{ $file['size'] }}</span>
+                                        </span>
+                                    </a>
+                                    <a href="{{ route('tasks.attachments.download', ['task' => $task['id'], 'attachment' => $file['id']]) }}"
+                                       aria-label="Download {{ $file['name'] }}">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                            <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                                        </svg>
+                                    </a>
                                 </span>
                             @endforeach
                         </div>
                     @endif
+
+                    <form class="pay-form" method="POST" action="{{ route('tasks.attachments.store', ['task' => $task['id']]) }}" enctype="multipart/form-data">
+                        @csrf
+
+                        <div class="pay-field">
+                            <label class="form-field-lbl sr-only" for="task-attachment">Add a file</label>
+                            <input id="task-attachment" name="document" type="file" accept="application/pdf,image/png,image/jpeg" required>
+                            @error('document')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <button class="btn btn-outline" type="submit">Attach file</button>
+                    </form>
+                    <p class="pay-hint">PDF, PNG or JPEG, up to 8 MB.</p>
                 </div>
             </div>
+
+            @include('tasks.partials.comments')
         </div>
 
         <aside class="rail">
@@ -168,7 +190,7 @@
                 <div>
                     <div class="stat-row">
                         <span class="stat-label">Visibility</span>
-                        <span class="stat-value">{{ $task['assignee_record'] ? 'Personal task' : 'Team task' }}</span>
+                        <span class="stat-value">{{ count($task['assignee_records']) === 1 ? 'Personal task' : (count($task['assignee_records']) > 1 ? 'Shared task' : 'Team task') }}</span>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">Created</span>
@@ -190,21 +212,26 @@
                     {{-- The Team Lead's daily act, on the page rather than
                          behind the edit form: the rest of that form is the
                          plan — the project, the deadline, the priority — and
-                         changing who picks a task up is not changing the plan. --}}
+                         changing who picks a task up is not changing the plan.
+
+                         A multiple select, not checkboxes or a script: it
+                         works with no JavaScript and submits an array the
+                         controller syncs onto the pivot. --}}
                     <form method="POST" action="{{ route('tasks.assign', ['task' => $task['id']]) }}">
                         @csrf
 
                         <div class="form-field">
-                            <label class="form-field-lbl" for="task-assignee">Assign to</label>
-                            <select id="task-assignee" name="assignee_id">
-                                <option value="">Nobody — leave it in the team's queue</option>
+                            <label class="form-field-lbl" for="task-assignees">Assign to</label>
+                            <select id="task-assignees" name="assignee_ids[]" multiple size="6">
                                 @foreach ($employeeChoices as $employee)
-                                    <option value="{{ $employee->id }}" @selected($record->assignee_id === $employee->id)>
+                                    <option value="{{ $employee->id }}"
+                                        @selected($record->assignees->contains('id', $employee->id))>
                                         {{ $employee->user?->name }} ({{ $employee->user?->user_id }})
                                     </option>
                                 @endforeach
                             </select>
-                            @error('assignee_id')
+                            <span class="pay-hint">Ctrl or Cmd to pick more than one. Leave nothing selected to put it back in the team's queue.</span>
+                            @error('assignee_ids')
                                 <span class="field-error">{{ $message }}</span>
                             @enderror
                         </div>

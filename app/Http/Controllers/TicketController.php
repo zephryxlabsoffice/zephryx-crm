@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Employee;
 use App\Models\Project;
+use App\Models\Task;
 use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Support\Audit\AuditLog;
 use App\Support\EmployeeDirectory;
 use App\Support\Notifier;
 use App\Support\Rbac\Rbac;
+use App\Support\TaskDirectory;
 use App\Support\TicketDirectory;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,7 +20,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Tickets — internal operations and client support.
@@ -174,6 +178,7 @@ class TicketController extends Controller
             // escalated back for someone else to route.
             'needsTriage' => in_array($record['status'], ['unassigned', 'escalated'], true),
             'mayTriage' => $this->rbac->can($request->user(), 'tickets.triage'),
+            'mayConvertToTask' => $this->rbac->can($request->user(), 'tasks.create'),
         ] + $this->options());
     }
 
@@ -371,6 +376,81 @@ class TicketController extends Controller
         return redirect()
             ->route('tickets.show', ['ticket' => $model->reference])
             ->with('status', 'Ticket updated.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * Turn a ticket into a task.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * A LINK, NOT A LIFECYCLE DECISION
+     *
+     * This creates a task and points the ticket at it — nothing else. It does
+     * not close the ticket, does not touch its status or its priority, and
+     * does not decide what "closed is final" means for a converted one; those
+     * are the Tickets module's own decisions, for the step that builds it.
+     * What this method answers is only "may this become a task", which is
+     * `tasks.create` — creating one from a ticket is still creating one.
+     *
+     * IDEMPOTENT, LIKE EmployeeController::convert
+     *
+     * A ticket already carrying `converted_task_id` refuses a second
+     * conversion rather than quietly creating a duplicate task — the same
+     * reason a double-submitted form must not issue somebody two staff ids.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function convertToTask(Request $request, string $ticket): RedirectResponse
+    {
+        $record = $this->find($ticket);
+        $model = $record['model'];
+
+        if ($model->converted_task_id !== null) {
+            throw ValidationException::withMessages([
+                'convert' => 'This ticket has already been converted to a task.',
+            ]);
+        }
+
+        $data = $request->validate([
+            'due_on' => ['required', 'date', 'after_or_equal:today'],
+        ]);
+
+        $task = DB::transaction(function () use ($model, $data) {
+            $task = Task::create([
+                'reference' => TaskDirectory::nextReference(),
+                'name' => $model->subject,
+                'description' => $model->description,
+                'project_id' => $model->project_id,
+                'status' => 'pending',
+                'priority' => $model->priority ?? 'medium',
+                'due_on' => $data['due_on'],
+            ]);
+
+            $model->update(['converted_task_id' => $task->id]);
+
+            return $task;
+        });
+
+        $this->audit->record(
+            action: AuditLog::TICKET_CONVERTED_TO_TASK,
+            actor: $request->user(),
+            entityType: 'ticket',
+            entityId: $model->reference,
+            after: 'Converted to task '.$task->reference,
+            request: $request,
+        );
+
+        $this->audit->record(
+            action: AuditLog::TASK_CREATED_FROM_TICKET,
+            actor: $request->user(),
+            entityType: 'task',
+            entityId: $task->reference,
+            after: $task->name.' — created from ticket '.$model->reference,
+            request: $request,
+        );
+
+        return redirect()
+            ->route('tasks.show', ['task' => $task->reference])
+            ->with('status', 'Ticket converted. Assign it like any other task.')
             ->with('status_tone', 'success');
     }
 

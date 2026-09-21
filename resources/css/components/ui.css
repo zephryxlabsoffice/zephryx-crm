@@ -776,6 +776,21 @@
   min-width: 0;
 }
 .field-val .field-stack { min-width: 0; }
+/* Several assignees on one task's fields — a row per person, stacked, inside
+   the single .field-val slot "Assigned to" used to hold one icon+name pair
+   for. See resources/views/tasks/partials/fields.blade.php. */
+.task-assignees {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.task-assignee-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
 .field-val .sub {
   display: block;
   font-size: 11.5px;
@@ -847,11 +862,24 @@
   font-size: 11.5px;
   color: var(--muted);
 }
-.attachment > svg {
+.attachment > svg,
+.attachment > a:not(.attachment-open) svg {
   width: 16px;
   height: 16px;
   color: var(--muted);
   flex-shrink: 0;
+}
+/* The name and icon are a link (view inline); the download icon beside it is
+   a second, separate one — see resources/views/tasks/show.blade.php. Neither
+   looks like ordinary link text: the row itself is what reads as clickable. */
+.attachment-open {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
 }
 
 /* An inline count with a leading icon — "6 members". */
