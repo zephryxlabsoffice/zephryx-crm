@@ -673,6 +673,31 @@ had never been installed. Both are fixed now (see commit `8588c99`'s message).
 Neither is a fact about the codebase — flagged here only because it blocked
 every command in this session before it was found.
 
+## Step 4's Invoices half is done (2026-09-21, commit `3b69637`)
+
+A pre-deployment audit on 2026-09-21 found the line-item, GST-shaped invoice
+builder still live in the routes — not merely unfinished, but reachable and
+working three weeks after the owner explicitly reversed it ("invoices are
+uploaded like payslips, not generated"). That has been fixed on its own,
+ahead of the rest of step 4, because it was the one gap where deploying as-is
+would have put real client billing on a shape already decided against.
+
+What changed: `invoice_lines` and `InvoiceLine` are gone; `amount_minor` is
+typed once, the same way `SalaryRecord::net_minor` is; `total()` stays a
+method, not a column. Four `document_*` columns mirror `salary_records`'
+`payslip_*` columns, and the upload goes through the same Drive-backed
+`DocumentStore`. Every invoice route now has a `/document` counterpart
+(store/download/view) on both the staff and client sides — the client
+download used to render a printable HTML page for want of a PDF library;
+now that an invoice IS an uploaded PDF, it serves the real file instead.
+`invoice_payments` — the bit of the old shape the decision keeps — is
+untouched.
+
+**What step 4 still owes, unchanged by this:** "Salary → the Invoices
+rewrite" in the rework order below also covers Salary itself, which was
+already done as part of step 1's Drive work. The Invoices half above is now
+done too. Nothing else in step 4 remains — it was Invoices, in full.
+
 State verified in code on 2026-09-17, not assumed:
 
 - Every one of the 43 `abort(501)` write routes is implemented. None remain.
@@ -791,9 +816,10 @@ change modules that are already committed.
 3. **Attendance roster and comp-off → Leave year rules** — Sunday roster,
    comp-off earning and expiry; the per-employee leave year, monthly casual
    accrual, privilege and sick granted in full.
-4. **Salary → the Invoices rewrite** — the line-item builder is replaced by an
-   uploaded PDF with amount, due date and hand-recorded bank payments. This is
-   the largest single change.
+4. **Salary → the Invoices rewrite.** ✅ **Done, 2026-09-21 (commit `3b69637`)** —
+   the line-item builder is replaced by an uploaded PDF with amount, due date
+   and hand-recorded bank payments. Salary's own half landed earlier, inside
+   step 1's Drive work.
 5. **Tickets, Meetings, Announcements, Notifications, Profile.**
 6. **2FA on new devices, the Support page, Admin tidy-up.**
 
