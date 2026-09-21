@@ -587,24 +587,64 @@ landed:
   rest, the key never rendering back, connect/reconnect/disconnect audit
   entries (by fingerprint, never by value), a real success and a real failure
   path for "Test connection" (via `Http::fake()`), and the permission not
-  being offered to any staff role. Full suite: 1239 passing.
+  being offered to any staff role.
+
+**The Drive upload driver is built too (2026-09-21, commit `24a68bb`).**
+`DocumentStore` now has two drivers, and nothing above it had to change to
+get them:
+
+- **`putBytes()` (bytes this application composed — every photo) is always
+  local. `put()` (a file somebody uploaded) is always Drive.** No flag,
+  anywhere: the method called already says which driver, because every
+  existing call site is already one or the other. See the class header on
+  `DocumentStore` for the full reasoning.
+- **A stored `path` sometimes means a Drive file id now**, marked with a
+  `drive:` prefix so `exists()` / `copy()` / `download()` / `forget()` can
+  route correctly without being told which driver wrote it. Nothing already
+  on the local disk was touched — a local path can never collide with the
+  prefix, so old and new storage coexist.
+- **`DriveClient` gained real file operations** — `upload()`, `download()`,
+  `copyFile()` (Drive's own `files.copy`, not a download-and-reupload),
+  `delete()` — and the per-module folder lookup the plan doc's "How,
+  concretely" section calls for ("a folder per module"), found by name or
+  created the first time, cached per client instance.
+- **Payslips (`SalaryController`) and employee documents (`ProfileController`)
+  are wired to it** — the two upload routes that already existed. Every
+  `copy()` call during an intern-to-full-time conversion
+  (`EmployeeController::carryDocuments`) also routes correctly, whichever
+  driver the source document happens to be on.
+- **A failed upload is a validation error, not a 500.** Nothing is saved on
+  the way to `put()`, so there is no partial state to protect — `Could not
+  store the file: …` on the same field, same shape as this controller's other
+  refusals.
+- **17 more tests**: `tests/Unit/DocumentStoreTest.php` (both drivers,
+  routing on `exists()`/`copy()`/`download()`/`forget()`, the not-connected
+  failure), plus one in `EmployeeConversionTest` and two in `ProfilePageTest`
+  for the real call sites. `connectGoogleDrive()` and `fakeDriveUpload()`
+  moved onto the base `Tests\TestCase` alongside the two fixture keys, so this
+  suite and `GoogleIntegrationTest` share them. **1256 tests pass.**
 
 **Still to build, not this pass:**
 
-- **`config/filesystems.php` has no `google`/`drive` disk**, and `DocumentStore`
-  has no Drive driver yet. Nothing uploads to Drive because of this work —
-  only the connection exists. That is the next piece, and it is what the
-  Invoices rewrite (step 4 below) is waiting on.
+- **Tickets and tasks have no attachment feature at all yet** — not a Drive
+  gap, the upload UI and columns for either don't exist. The driver is ready
+  for whenever that module lands.
 - **The inline PDF viewer** (plan doc, "In-browser viewing is ours, not
-  Drive's") is not built.
+  Drive's") is not built. `DocumentStore::stream()` still refuses everything
+  but a local PNG/JPEG — a downloaded payslip works today; opening one in the
+  browser does not yet.
 - **`GoogleMeetProvider` still throws** on every method, deliberately, per its
   own header comment. It does not yet read `GoogleConnection` — when it is
   built, it should, not `config('meetings.google.*')`, which is what it
   supersedes.
 - **`config/meetings.php`'s `google.*` keys are now stale** (superseded by
   `google_connection`, per the plan doc's "Connecting it" section) but were
-  not touched or removed this pass — nothing reads them yet either way, so
-  there was nothing to migrate off.
+  not touched or removed — nothing reads them yet either way, so there was
+  nothing to migrate off.
+- **Q16 (HR viewing employee documents) is answered but not built.** There is
+  still no HR-facing route to see another employee's documents —
+  `EmployeeController` has no such method. Unrelated to Drive; it is its own
+  small piece of Employees work.
 
 **Environment note, not a code decision:** this machine's PHP CLI had
 `openssl`, `mbstring`, `pdo_mysql`, `pdo_sqlite`, `fileinfo`, `gd`, `intl`,
