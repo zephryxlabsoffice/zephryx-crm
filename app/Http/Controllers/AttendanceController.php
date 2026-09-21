@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\AttendanceRecord;
+use App\Models\CompOff;
 use App\Models\Employee;
+use App\Models\SundayRoster;
+use App\Models\Team;
 use App\Support\AttendanceDirectory;
 use App\Support\AttendancePolicy;
 use App\Support\AttendancePresenter as P;
 use App\Support\Audit\AuditLog;
+use App\Support\CompOffPolicy;
 use App\Support\Holidays;
 use App\Support\Rbac\Rbac;
 use Illuminate\Http\RedirectResponse;
@@ -120,6 +124,7 @@ class AttendanceController extends Controller
             // admire the dedication. See AttendancePresenter::holidayLooksWrong.
             'holidayWorked' => $roll->whereNotNull('id')->count(),
             'holidayAnnouncement' => Holidays::announcementOn($date),
+            'mayRoster' => $this->rbac->can($request->user(), 'attendance.roster'),
         ] + $filters);
     }
 
@@ -141,9 +146,10 @@ class AttendanceController extends Controller
 
         $records = AttendanceDirectory::forEmployee($viewer);
         $leaveDates = $viewer ? AttendanceDirectory::leaveDates($viewer->id) : [];
+        $rosteredDates = $viewer ? AttendanceDirectory::rosteredDates($viewer->id) : [];
 
         $today = AttendanceDirectory::today($viewer);
-        $summary = AttendancePolicy::monthSummary($month, $records, $leaveDates);
+        $summary = AttendancePolicy::monthSummary($month, $records, $leaveDates, $rosteredDates);
 
         return response()->view('attendance.mine', [
             'activeNav' => 'attendance',
@@ -154,18 +160,19 @@ class AttendanceController extends Controller
             'nextMonth' => $month->copy()->addMonth()->startOfMonth()->isAfter(Carbon::today()->startOfMonth())
                 ? null
                 : $month->copy()->addMonth()->format('Y-m'),
-            'calendar' => P::calendar($month, $records, $leaveDates),
+            'calendar' => P::calendar($month, $records, $leaveDates, $rosteredDates),
             'summary' => $summary,
             'breakdown' => P::breakdown($summary, (int) $summary['days_counted']),
             // The month before, so the KPI tiles can say "3 fewer than last
             // month" instead of the handover's hardcoded "12% vs last month".
-            'previousSummary' => AttendancePolicy::monthSummary($month->copy()->subMonth(), $records, $leaveDates),
+            'previousSummary' => AttendancePolicy::monthSummary($month->copy()->subMonth(), $records, $leaveDates, $rosteredDates),
             'history' => $this->paginate($records->values(), $request),
             'today' => $today,
             'todayState' => AttendancePolicy::evaluate(
                 Carbon::today(),
                 $today,
                 in_array(Carbon::today()->toDateString(), $leaveDates, true),
+                in_array(Carbon::today()->toDateString(), $rosteredDates, true),
             ),
             // The way back to the roll, for the people who could have come from
             // it. Everybody else has no roll to return to.
@@ -280,10 +287,225 @@ class AttendanceController extends Controller
             request: $request,
         );
 
+        $earned = $this->earnCompOffIfDue($request, $employee, $record->fresh());
+
         return redirect()
             ->route('attendance.mine')
-            ->with('status', 'Checked out at '.Carbon::now()->format('g:i A').'.')
+            ->with('status', 'Checked out at '.Carbon::now()->format('g:i A').'.'
+                .($earned ? ' A rostered day, worked in full — one comp-off added.' : ''))
             ->with('status_tone', 'success');
+    }
+
+    /**
+     * Write the comp-off a full rostered day just earned, if it has not
+     * already been.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * WHY THIS RUNS AT CHECK-OUT AND NOWHERE ELSE
+     *
+     * There is no midnight job anywhere in this module (§ the head of this
+     * class), and a comp-off is the one fact here that has to survive past
+     * the day it was earned — unlike a day's STATE, which AttendancePolicy can
+     * always recompute later, a comp-off is a ledger row that gets spent or
+     * left to lapse. Check-out is the one moment a person's own action
+     * settles whether the day was a full one, so it is the one place this
+     * gets written, exactly as check-in and check-out are the only writes
+     * anywhere else in this controller.
+     *
+     * "Half a Sunday earns nothing" — only PRESENT earns one, never HALF_DAY.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    protected function earnCompOffIfDue(Request $request, Employee $employee, AttendanceRecord $record): bool
+    {
+        $date = $record->date->toDateString();
+
+        if (! in_array($date, AttendanceDirectory::rosteredDates($employee->id), true)) {
+            return false;
+        }
+
+        $evaluated = AttendancePolicy::evaluate($record->date, $record->toRecordArray(), false, true);
+
+        if ($evaluated['state'] !== P::PRESENT) {
+            return false;
+        }
+
+        $compOff = CompOff::firstOrCreate(
+            ['employee_id' => $employee->id, 'earned_on' => $date],
+            ['expires_on' => CompOffPolicy::expiresOn($date), 'status' => CompOff::AVAILABLE],
+        );
+
+        if (! $compOff->wasRecentlyCreated) {
+            return false;
+        }
+
+        $this->audit->record(
+            action: AuditLog::COMPOFF_EARNED,
+            actor: $request->user(),
+            entityType: 'compoff',
+            entityId: (string) $compOff->id,
+            after: 'Earned for '.Carbon::parse($date)->format('d M Y').', expires '.$compOff->expires_on->format('d M Y'),
+            request: $request,
+        );
+
+        return true;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       THE ROSTER
+       ══════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * GET /attendance/roster
+     *
+     * Sunday work is rostered, not requested — there is no approval step, so
+     * this page is the whole of the act: pick a person, pick an upcoming
+     * Sunday or holiday, and the row exists.
+     */
+    public function roster(Request $request): Response
+    {
+        $rosterer = $this->employeeFor($request);
+
+        return response()->view('attendance.roster', [
+            'activeNav' => 'attendance',
+            'employeeChoices' => $this->rosterableEmployees($rosterer, $request),
+            'upcoming' => $this->upcomingRosterableDates(),
+            'roster' => SundayRoster::query()
+                ->with(['employee.user', 'rosterer.user'])
+                ->whereDate('date', '>=', Carbon::today())
+                ->orderBy('date')
+                ->get(),
+        ]);
+    }
+
+    /**
+     * POST /attendance/roster
+     */
+    public function storeRoster(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'employee_id' => ['required', Rule::exists('employees', 'id')],
+            'date' => ['required', 'date', 'after_or_equal:today'],
+        ]);
+
+        if (AttendancePolicy::isWorkingDay($data['date'])) {
+            throw ValidationException::withMessages([
+                'date' => 'That is already a working day — there is nothing to roster it for.',
+            ]);
+        }
+
+        $target = Employee::with('user')->findOrFail($data['employee_id']);
+
+        abort_unless($this->canRoster($request, $target), 403);
+
+        if (! $target->attendsWork()) {
+            throw ValidationException::withMessages([
+                'employee_id' => 'Freelancers have no attendance to roster.',
+            ]);
+        }
+
+        $rosterer = $this->employeeFor($request);
+
+        $roster = SundayRoster::firstOrCreate(
+            ['employee_id' => $target->id, 'date' => $data['date']],
+            ['rostered_by' => $rosterer?->id],
+        );
+
+        if ($roster->wasRecentlyCreated) {
+            $this->audit->record(
+                action: AuditLog::ATTENDANCE_ROSTERED,
+                actor: $request->user(),
+                entityType: 'attendance',
+                entityId: $target->user?->user_id.'-'.$data['date'],
+                after: $target->user?->name.' rostered for '.Carbon::parse($data['date'])->format('d M Y'),
+                request: $request,
+            );
+        }
+
+        return redirect()
+            ->route('attendance.roster')
+            ->with('status', $roster->wasRecentlyCreated
+                ? $target->user?->name.' is rostered for '.Carbon::parse($data['date'])->format('d M Y').'.'
+                : $target->user?->name.' was already rostered for that date.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * Whether this person may roster THAT employee.
+     *
+     * The same shape as TeamController::canManageMembers: `teams.edit` is the
+     * wide answer — a Manager's authority over the whole Teams module — and
+     * otherwise `attendance.roster` plus actually leading a team the target
+     * belongs to (§2.6). The key opens the route; team leadership decides
+     * whose roster.
+     */
+    protected function canRoster(Request $request, Employee $target): bool
+    {
+        if ($this->rbac->can($request->user(), 'teams.edit')) {
+            return true;
+        }
+
+        $rosterer = $this->employeeFor($request);
+
+        return $this->rbac->can($request->user(), 'attendance.roster')
+            && $rosterer !== null
+            && Team::where('lead_id', $rosterer->id)
+                ->whereHas('members', fn ($q) => $q->where('employees.id', $target->id))
+                ->exists();
+    }
+
+    /**
+     * The people this rosterer may put on a Sunday: everyone, for a Manager;
+     * their own teams' members, for a Team Lead.
+     *
+     * @return Collection<int, Employee>
+     */
+    protected function rosterableEmployees(?Employee $rosterer, Request $request): Collection
+    {
+        if ($this->rbac->can($request->user(), 'teams.edit')) {
+            return Employee::query()->with('user')->attends()->get()
+                ->sortBy(fn (Employee $e) => $e->user?->name)->values();
+        }
+
+        if ($rosterer === null) {
+            return collect();
+        }
+
+        return Employee::query()
+            ->with('user')
+            ->attends()
+            ->whereHas('teams', fn ($q) => $q->where('teams.lead_id', $rosterer->id))
+            ->get()
+            ->sortBy(fn (Employee $e) => $e->user?->name)
+            ->values();
+    }
+
+    /**
+     * The next several Sundays, and any holiday among them — the only dates
+     * worth offering the roster form, since a working day needs no roster at
+     * all (the check-in route already covers it).
+     *
+     * @return list<array{date: string, label: string}>
+     */
+    protected function upcomingRosterableDates(int $weeks = 8): array
+    {
+        $dates = [];
+        $cursor = Carbon::today();
+        $end = Carbon::today()->addWeeks($weeks);
+
+        while ($cursor->lessThanOrEqualTo($end)) {
+            if (! AttendancePolicy::isWorkingDay($cursor)) {
+                $holiday = AttendancePolicy::holidayOn($cursor);
+
+                $dates[] = [
+                    'date' => $cursor->toDateString(),
+                    'label' => $cursor->format('D, d M Y').($holiday !== null ? ' — '.$holiday : ''),
+                ];
+            }
+
+            $cursor->addDay();
+        }
+
+        return $dates;
     }
 
     /**

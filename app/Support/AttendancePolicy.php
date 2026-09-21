@@ -223,13 +223,18 @@ class AttendancePolicy
      * somebody is not here, and a day the company already granted must never
      * be drawn as an absence. Attendance does not store it; it asks.
      *
+     * `$rostered` comes from the roster (decided 2026-09-11): a Sunday or
+     * holiday a Manager or Team Lead put this specific person on is a working
+     * day FOR THEM, whatever the company calendar says about everyone else.
+     * Rostered and absent reads as absent, not as a week off — see `state()`.
+     *
      * @param  array<string, mixed>|null  $record
      * @return array{
      *     state: string, worked_minutes: int|null, open: bool, open_minutes: int|null,
      *     rejected: bool, auto_rejected: bool, working_day: bool, holiday: string|null
      * }
      */
-    public static function evaluate(Carbon|string $date, ?array $record, bool $onLeave = false): array
+    public static function evaluate(Carbon|string $date, ?array $record, bool $onLeave = false, bool $rostered = false): array
     {
         $day = Carbon::parse($date);
         $dateString = $day->toDateString();
@@ -246,7 +251,7 @@ class AttendancePolicy
         $autoRejected = $record !== null && self::autoRejected($record);
 
         return [
-            'state' => self::state($day, $checkIn, $worked, $open, $rejectedByPerson || $autoRejected, $onLeave, $workingDay, $holiday),
+            'state' => self::state($day, $checkIn, $worked, $open, $rejectedByPerson || $autoRejected, $onLeave, $workingDay, $holiday, $rostered),
             'worked_minutes' => $worked,
             'open' => $open,
             'open_minutes' => self::openMinutes($dateString, $checkIn, $checkOut),
@@ -272,9 +277,13 @@ class AttendancePolicy
      *     depends on whether anybody checked in. Somebody who did work a
      *     Saturday still shows as present, because the record exists and
      *     hiding it would erase work that was done.
-     *  3. Approved leave beats absence. The company granted the day.
-     *  4. No check-in on a working day is an absence.
-     *  5. A day shorter than the threshold is a half day. Above it, present.
+     *  3. A ROSTERED day is a working day for that person, whatever the
+     *     calendar says about everyone else — checked before the week-off and
+     *     holiday branches below, because rostering exists precisely to
+     *     override them for one person on one date.
+     *  4. Approved leave beats absence. The company granted the day.
+     *  5. No check-in on a working day is an absence.
+     *  6. A day shorter than the threshold is a half day. Above it, present.
      *     That is the whole judgement.
      */
     protected static function state(
@@ -286,18 +295,21 @@ class AttendancePolicy
         bool $onLeave,
         bool $workingDay,
         ?string $holiday,
+        bool $rostered = false,
     ): string {
         if ($rejected) {
             return AttendancePresenter::REJECTED;
         }
 
         if ($checkIn === null) {
-            if ($holiday !== null) {
-                return AttendancePresenter::HOLIDAY;
-            }
+            if (! $rostered) {
+                if ($holiday !== null) {
+                    return AttendancePresenter::HOLIDAY;
+                }
 
-            if (! $workingDay) {
-                return AttendancePresenter::WEEK_OFF;
+                if (! $workingDay) {
+                    return AttendancePresenter::WEEK_OFF;
+                }
             }
 
             if ($onLeave) {
@@ -407,9 +419,10 @@ class AttendancePolicy
      *
      * @param  iterable<int, array<string, mixed>>  $records  that person's records
      * @param  array<int, string>  $leaveDates  dates covered by approved leave
+     * @param  array<int, string>  $rosteredDates  Sundays/holidays this person is rostered for
      * @return array<string, int|float>
      */
-    public static function monthSummary(Carbon $month, iterable $records, array $leaveDates = []): array
+    public static function monthSummary(Carbon $month, iterable $records, array $leaveDates = [], array $rosteredDates = []): array
     {
         $byDate = collect($records)->keyBy('date');
 
@@ -427,7 +440,12 @@ class AttendancePolicy
             $date = $cursor->toDateString();
             $record = $byDate->get($date);
 
-            $evaluated = self::evaluate($cursor, $record, in_array($date, $leaveDates, true));
+            $evaluated = self::evaluate(
+                $cursor,
+                $record,
+                in_array($date, $leaveDates, true),
+                in_array($date, $rosteredDates, true),
+            );
 
             $counts[$evaluated['state']] = ($counts[$evaluated['state']] ?? 0) + 1;
 

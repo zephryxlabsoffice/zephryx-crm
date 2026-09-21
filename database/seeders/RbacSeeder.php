@@ -219,6 +219,16 @@ class RbacSeeder extends Seeder
          * sequence.
          */
         'invoices.manage',
+        /*
+         * Attendance. `attendance.roster` is the Manager-or-Team-Lead act of
+         * putting somebody on a Sunday or holiday (decided 2026-09-11) — the
+         * same shape as `tasks.assign`: the key opens the route, and
+         * Team::isLedBy narrows a Team Lead to their own team. It also gates
+         * deciding a comp-off "take" request and a Sunday-against-leave
+         * request, since both are the same act of judgement over the same
+         * roster.
+         */
+        'attendance.roster',
     ];
 
     /**
@@ -416,6 +426,10 @@ class RbacSeeder extends Seeder
                     // decision, 2026-09-21) — a lead can put new work straight
                     // into their own team's queue without waiting on a manager.
                     'tasks.create',
+                    // Rostering a Sunday or holiday, and deciding the comp-off
+                    // and Sunday-against-leave requests that follow from it —
+                    // their own team only, same as teams.members above.
+                    'attendance.roster',
                 ],
                 'ranks' => ['people' => 30, 'work' => 50, 'support' => 30, 'system' => 10],
             ],
@@ -446,6 +460,9 @@ class RbacSeeder extends Seeder
                     // The project manager, in the literal sense.
                     'projects.create', 'projects.edit', 'projects.publish',
                     'tasks.create', 'tasks.edit', 'tasks.assign',
+                    // Rostering Sunday/holiday work and deciding the comp-off
+                    // and Sunday-against-leave requests it produces.
+                    'attendance.roster',
                 ],
                 'ranks' => ['people' => 50, 'finance' => 30, 'work' => 70, 'support' => 40, 'system' => 10],
             ],
@@ -504,6 +521,7 @@ class RbacSeeder extends Seeder
                     'projects.create', 'projects.edit', 'projects.publish',
                     'tasks.create', 'tasks.edit', 'tasks.assign',
                     'salary.manage', 'invoices.manage',
+                    'attendance.roster',
                 ],
                 'ranks' => ['people' => 90, 'finance' => 90, 'work' => 90, 'support' => 80, 'system' => 40],
             ],

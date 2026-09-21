@@ -997,7 +997,7 @@ class AttendancePageTest extends TestCase
         // none of it would have worked.
         $this->withDemoData();
 
-        foreach (['/attendance', '/attendance/mine', '/attendance/'.$this->viewerRecord()['id']] as $url) {
+        foreach (['/attendance', '/attendance/mine', '/attendance/'.$this->viewerRecord()['id'], '/comp-offs'] as $url) {
             $html = $this->get($url)->getContent();
 
             $this->assertSame(0, preg_match_all('/<style[\s>]/i', $html), "inline <style> in {$url}");
@@ -1005,6 +1005,66 @@ class AttendancePageTest extends TestCase
             $this->assertSame(0, preg_match_all('/\son[a-z]+="/i', $html), "inline event handler in {$url}");
             $this->assertSame(0, preg_match_all('/<script(?![^>]*\ssrc=)/i', $html), "inline <script> in {$url}");
         }
+
+        // Rostering and the requests queue need a session withDemoData()'s
+        // HR does not hold ("not HR", decided 2026-09-11) — checked with
+        // their own session so this is the real page, not a 403.
+        $this->signInAsStaff(['employee', 'manager']);
+
+        foreach (['/attendance/roster', '/comp-offs/requests'] as $url) {
+            $html = $this->get($url)->getContent();
+
+            $this->assertSame(0, preg_match_all('/<style[\s>]/i', $html), "inline <style> in {$url}");
+            $this->assertSame(0, preg_match_all('/\sstyle="/i', $html), "inline style attribute in {$url}");
+            $this->assertSame(0, preg_match_all('/\son[a-z]+="/i', $html), "inline event handler in {$url}");
+            $this->assertSame(0, preg_match_all('/<script(?![^>]*\ssrc=)/i', $html), "inline <script> in {$url}");
+        }
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       THE ROSTER AND COMP-OFF PAGES
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_the_roster_page_renders(): void
+    {
+        // HR does not roster people (decided 2026-09-11: "not HR") — a
+        // Manager or Team Lead does, so this needs its own session rather
+        // than withDemoData()'s HR one.
+        $this->withDemoData();
+        $this->signInAsStaff(['employee', 'manager']);
+
+        $this->get('/attendance/roster')
+            ->assertOk()
+            ->assertSee('Sunday roster', false);
+    }
+
+    public function test_my_comp_offs_renders(): void
+    {
+        $this->withDemoData();
+
+        $this->get('/comp-offs')
+            ->assertOk()
+            ->assertSee('My Comp-offs', false);
+    }
+
+    public function test_the_comp_off_requests_queue_renders(): void
+    {
+        $this->withDemoData();
+        $this->signInAsStaff(['employee', 'manager']);
+
+        $this->get('/comp-offs/requests')
+            ->assertOk()
+            ->assertSee('Comp-off requests', false);
+    }
+
+    public function test_the_roster_page_needs_the_permission(): void
+    {
+        // HR is deliberately excluded — "rostered by a Manager or Team
+        // Lead (not HR)".
+        $this->withDemoData();
+
+        $this->get('/attendance/roster')->assertForbidden();
+        $this->get('/comp-offs/requests')->assertForbidden();
     }
 
     public function test_the_sidebar_marks_attendance_as_current(): void

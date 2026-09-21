@@ -20,10 +20,20 @@
             <p>Your days, your hours, and what the record says about them.</p>
         </div>
 
-        {{-- No CTA here. Checking in and out is one button, it lives in one
-             place — the card at the top of the rail — and duplicating it in the
-             header would mean two controls for one act, one of which is always
-             the wrong one to press. --}}
+        @if ($attends ?? true)
+            <div class="hd-actions">
+                <a class="btn btn-outline" href="{{ route('compoffs.mine') }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    My comp-offs
+                </a>
+            </div>
+        @endif
+        {{-- No check-in/out CTA here. Checking in and out is one button, it
+             lives in one place — the card at the top of the rail — and
+             duplicating it in the header would mean two controls for one
+             act, one of which is always the wrong one to press. --}}
     </div>
 
     @include('attendance.partials.mine-kpis')

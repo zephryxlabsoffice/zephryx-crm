@@ -3,6 +3,7 @@
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\CompOffController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\InvoiceController;
@@ -828,6 +829,56 @@ Route::post('/attendance/{record}/restore', [AttendanceController::class, 'resto
     ->where('record', 'ATT-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Za-z0-9-]{1,16}')
     ->middleware('permission:attendance.reject')
     ->name('attendance.restore');
+
+/*
+ * The Sunday/holiday roster (decided 2026-09-11). No approval step — a row
+ * existing IS the roster — so this is a plain read-then-write pair behind
+ * `attendance.roster`, the same permission Manager and Team Lead both hold;
+ * AttendanceController::canRoster is what tells them apart (§2.6).
+ */
+Route::get('/attendance/roster', [AttendanceController::class, 'roster'])
+    ->middleware('permission:attendance.roster')
+    ->name('attendance.roster');
+Route::post('/attendance/roster', [AttendanceController::class, 'storeRoster'])
+    ->middleware('permission:attendance.roster')
+    ->name('attendance.roster.store');
+
+/*
+ * Comp-offs — earned automatically at check-out on a rostered day, spent
+ * through this request-and-approve pair. `attendance.roster` gates deciding
+ * one, same reasoning as the roster routes above.
+ */
+Route::get('/comp-offs', [CompOffController::class, 'mine'])->name('compoffs.mine');
+Route::get('/comp-offs/requests', [CompOffController::class, 'index'])
+    ->middleware('permission:attendance.roster')
+    ->name('compoffs.index');
+Route::post('/comp-offs/{compOff}/take', [CompOffController::class, 'requestTake'])
+    ->where('compOff', '[0-9]+')
+    ->name('compoffs.take');
+Route::post('/comp-offs/{compOff}/approve', [CompOffController::class, 'approve'])
+    ->where('compOff', '[0-9]+')
+    ->middleware('permission:attendance.roster')
+    ->name('compoffs.approve');
+Route::post('/comp-offs/{compOff}/reject', [CompOffController::class, 'reject'])
+    ->where('compOff', '[0-9]+')
+    ->middleware('permission:attendance.roster')
+    ->name('compoffs.reject');
+
+/*
+ * Sunday-against-leave. Asked from the leave request itself, before working
+ * the day — see CompOffController::requestSundayAgainstLeave.
+ */
+Route::post('/leave/{leaveRequest}/sunday-against-leave', [CompOffController::class, 'requestSundayAgainstLeave'])
+    ->where('leaveRequest', '[A-Za-z0-9-]{1,32}')
+    ->name('leave.sundayAgainstLeave.request');
+Route::post('/sunday-against-leave/{sundayRequest}/approve', [CompOffController::class, 'approveSundayAgainstLeave'])
+    ->where('sundayRequest', '[0-9]+')
+    ->middleware('permission:attendance.roster')
+    ->name('sundayAgainstLeave.approve');
+Route::post('/sunday-against-leave/{sundayRequest}/reject', [CompOffController::class, 'rejectSundayAgainstLeave'])
+    ->where('sundayRequest', '[0-9]+')
+    ->middleware('permission:attendance.roster')
+    ->name('sundayAgainstLeave.reject');
 
 /*
  * My Profile. Four pages, because the four "tabs" are four different things —

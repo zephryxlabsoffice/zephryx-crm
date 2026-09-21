@@ -873,12 +873,14 @@ change modules that are already committed.
    (`PRJ-YYYY-NNN` was already in place from when the module was first
    built). ✅ Tasks: several assignees, comments, attachments, created by
    Manager and Team Lead, ticket-to-task conversion. Step 2 is closed.
-3. **Attendance roster and comp-off → Leave year rules.** ✅ **Leave year
-   rules done, 2026-09-21** — the per-employee leave year, monthly casual
-   accrual, privilege and sick granted in full; freelancers gained no
-   attendance/leave at all, closing a gap the decision had already settled
-   but nothing enforced. **Still open:** Sunday roster, comp-off earning and
-   expiry.
+3. **Attendance roster and comp-off → Leave year rules: all done, 2026-09-21.**
+   ✅ Leave year rules — the per-employee leave year, monthly casual accrual,
+   privilege and sick granted in full; freelancers gained no attendance/leave
+   at all, closing a gap the decision had already settled but nothing
+   enforced. ✅ Sunday/holiday roster, comp-off earning/expiry/taking, and
+   Sunday-against-leave — a Manager or Team Lead rosters (not HR), a full day
+   worked earns one comp-off, taken through a request the same permission
+   approves. Step 3 is closed.
 4. **Salary → the Invoices rewrite.** ✅ **Done, 2026-09-21 (commit `3b69637`)** —
    the line-item builder is replaced by an uploaded PDF with amount, due date
    and hand-recorded bank payments. Salary's own half landed earlier, inside
@@ -1118,14 +1120,80 @@ Two new tests confirming the gate (`AttendanceWritesTest`,
 anniversary math, monthly accrual, and the leave-year filter on `balance()`.
 Full suite green — 1313 passing — on both SQLite and real MySQL.
 
-**Left for later, if this is where work stops**: the Sunday/holiday roster
-(Manager/Team Lead rosters who works, no approval step), comp-off earning
-(a full day present on a rostered Sunday/holiday earns one; half a day
-earns nothing — the later decision overriding the earlier "half a day
-earns half" answer), comp-off expiry (before the next Sunday or it lapses),
-taking a comp-off (a request the manager approves), and Sunday-against-leave
-(working a rostered Sunday against already-approved leave needs manager
-approval BEFORE working it, asked in the same month, and the leave day
-returns to the balance on approval) — the rest of step 3. Then step 5
-(Tickets/Announcements/Notifications polish), step 6 (2FA device
-management, Support page, admin tidy-up).
+**Left for later, if this is where work stops**: nothing — step 3 is fully
+closed. See below. Next is step 5 (Tickets/Announcements/Notifications
+polish), then step 6 (2FA device management, Support page, admin tidy-up).
+
+## Step 3's roster and comp-off are done, and step 3 is closed (2026-09-21)
+
+The larger half of step 3: two new schema pieces (a pivot-shaped roster
+table and a comp-off ledger), a change to AttendancePolicy's one stable
+state function, a new controller, and a cross-module write into Leave.
+
+**The roster.** `sunday_rosters` — one row per (employee, date), no status
+column, because rostering has no approval step at all: "a row existing IS
+the roster" (decided 2026-09-11). `AttendanceController::roster()`/
+`storeRoster()` are a Manager-or-Team-Lead act behind a new
+`attendance.roster` permission, held by `manager`, `team_lead` and `ceo` —
+explicitly NOT `hr` ("rostered by a Manager or Team Lead (not HR)"), which
+is also why `attendance.roster`'s ownership check
+(`AttendanceController::canRoster`) mirrors `TeamController::
+canManageMembers` exactly: `teams.edit` is the wide answer (Manager), and
+otherwise the permission plus actually leading a team the target belongs to
+(§2.6, Team Lead). The same `canDecide` check governs approving a comp-off
+take-request and a Sunday-against-leave request in `CompOffController`,
+since both are the same judgement over the same roster.
+
+**`AttendancePolicy::evaluate()`/`state()` gained a fourth, optional,
+backward-compatible parameter**, `$rostered = false`. A rostered day with no
+check-in reads as ABSENT rather than WEEK_OFF/HOLIDAY for that one person —
+checked before those branches in `state()`'s ordering, which is now
+documented as rule 3 of 6. Every existing call site untouched; every real
+one (`AttendanceDirectory`'s three read methods, `AttendancePolicy::
+monthSummary`, `AttendancePresenter::calendar`) now threads
+`AttendanceDirectory::rosteredDates()` through, the same shape `leaveDates()`
+already established.
+
+**Comp-off earning has no midnight job**, matching the rest of this module's
+"no job runs at midnight" rule (AttendancePolicy's own head comment, re:
+auto-rejection). It is written once, at check-out —
+`AttendanceController::earnCompOffIfDue()` — the one moment a person's own
+action settles whether a rostered day was a full one. Half a day earns
+nothing (the later decision explicitly overriding an earlier "half a day
+earns half" answer); the row is `firstOrCreate`d on `(employee_id,
+earned_on)`, so a duplicate check-out call cannot mint two.
+
+**"Lapsed" is derived, never stamped** — the same reasoning as
+`AttendancePolicy::autoRejected`, applied by `CompOffPolicy::isLapsed()`: a
+comp-off past `expires_on` (the Sunday after `earned_on`, via
+`Carbon::next(SUNDAY)`) reads as lapsed because the clock passed it. The
+`comp_offs.status` enum therefore has no `lapsed` value, only `available` /
+`pending` / `taken` / `rejected` — and a rejected take-request goes back to
+`available` rather than being a dead end, so it can still be asked for again
+before it actually lapses.
+
+**Sunday-against-leave** doesn't fragment an approved multi-day leave
+request into two ranges — this module counts what is recorded rather than
+deciding new calendar arithmetic, the same rule LeavePolicy has followed
+throughout. Approval just decrements the linked `leave_requests.days` by
+one and creates a `sunday_rosters` row for the date, which is the whole of
+what "the leave day returns to the balance" and "may now work it" mean in
+this schema. Asked BEFORE working the day and in the same month, both
+validated in `CompOffController::requestSundayAgainstLeave()` — there is no
+route that creates one after the fact.
+
+**Freelancer gating already covered this**: `Employee::attendsWork()`
+(built for the leave-year-rules half of this step) already refuses a
+freelancer from the roster form's employee list and from
+`AttendanceController::requireEmployee()`, so nothing new was needed there.
+
+Tests: a new `AttendancePolicyTest` section for the `$rostered` parameter
+(pure function, five cases), a new `CompOffWritesTest` (15 tests: rostering
+ownership, earning on full/half/unrostered days, idempotent check-out,
+taking, rejecting-returns-to-available, a lapsed one refused, ownership on
+taking, and the full Sunday-against-leave approve/range/same-month set),
+and roster/comp-off pages added to `AttendancePageTest`'s render and CSP
+checks. Full suite green — 1337 passing — on both SQLite and real MySQL.
+
+**Step 3 (Attendance roster/comp-off, Leave year rules) is now fully
+closed.**

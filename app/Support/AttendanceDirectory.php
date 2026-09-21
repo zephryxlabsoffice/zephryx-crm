@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\AttendanceRecord;
 use App\Models\Employee;
+use App\Models\SundayRoster;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -40,6 +41,22 @@ class AttendanceDirectory
     public static function leaveDates(int $employeeId): array
     {
         return LeaveDirectory::datesFor($employeeId);
+    }
+
+    /**
+     * The Sundays and holidays one person is rostered for.
+     *
+     * Asked of `sunday_rosters` the same way `leaveDates` asks LeaveDirectory
+     * — a fact this module reads rather than a second copy of it.
+     *
+     * @return list<string>
+     */
+    public static function rosteredDates(int $employeeId): array
+    {
+        return SundayRoster::where('employee_id', $employeeId)
+            ->pluck('date')
+            ->map(fn (Carbon $date) => $date->toDateString())
+            ->all();
     }
 
     /**
@@ -88,18 +105,20 @@ class AttendanceDirectory
             ->get()
             ->map(function (Employee $employee) use ($day, $records) {
                 $record = $records->get($employee->id)?->toRecordArray();
-                $onLeave = in_array($day->toDateString(), self::leaveDates($employee->id), true);
+                $dateString = $day->toDateString();
+                $onLeave = in_array($dateString, self::leaveDates($employee->id), true);
+                $rostered = in_array($dateString, self::rosteredDates($employee->id), true);
 
                 return [
                     'employee' => $employee->user?->user_id,
                     'employee_record' => EmployeeDirectory::row($employee),
-                    'date' => $day->toDateString(),
+                    'date' => $dateString,
                     'record' => $record,
                     'id' => $record['id'] ?? null,
                     'check_in' => $record['check_in'] ?? null,
                     'check_out' => $record['check_out'] ?? null,
                     'rejection_reason' => $record['rejection_reason'] ?? null,
-                ] + AttendancePolicy::evaluate($day, $record, $onLeave);
+                ] + AttendancePolicy::evaluate($day, $record, $onLeave, $rostered);
             })
             ->values();
     }
@@ -135,7 +154,12 @@ class AttendanceDirectory
             'model' => $record,
             'employee_record' => EmployeeDirectory::row($record->employee),
             'rejecter_record' => $record->rejecter ? EmployeeDirectory::row($record->rejecter) : null,
-        ] + AttendancePolicy::evaluate($date, $row, in_array($date, self::leaveDates($record->employee_id), true));
+        ] + AttendancePolicy::evaluate(
+            $date,
+            $row,
+            in_array($date, self::leaveDates($record->employee_id), true),
+            in_array($date, self::rosteredDates($record->employee_id), true),
+        );
     }
 
     /**

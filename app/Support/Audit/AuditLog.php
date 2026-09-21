@@ -200,6 +200,29 @@ class AuditLog
     public const ATTENDANCE_RESTORED = 'attendance.restored';
 
     /*
+     * Sunday/holiday rostering and comp-off (review round, 2026-09-11).
+     * Rostering has no approval step, so this is the only trace of who put
+     * somebody on a date — the roster row itself carries `rostered_by`, but
+     * the log is what survives it being corrected or the row being read
+     * later without that join.
+     */
+    public const ATTENDANCE_ROSTERED = 'attendance.rostered';
+
+    public const COMPOFF_EARNED = 'compoff.earned';
+
+    public const COMPOFF_TAKE_REQUESTED = 'compoff.take_requested';
+
+    public const COMPOFF_TAKEN = 'compoff.taken';
+
+    public const COMPOFF_TAKE_REJECTED = 'compoff.take_rejected';
+
+    public const SUNDAY_AGAINST_LEAVE_REQUESTED = 'sunday_against_leave.requested';
+
+    public const SUNDAY_AGAINST_LEAVE_APPROVED = 'sunday_against_leave.approved';
+
+    public const SUNDAY_AGAINST_LEAVE_REJECTED = 'sunday_against_leave.rejected';
+
+    /*
      * Leave. Approving and rejecting are separate actions and not one
      * "decided", because "who approved this, and who refused that" is the whole
      * question the log gets asked about leave.

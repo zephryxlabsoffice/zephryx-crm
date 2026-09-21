@@ -267,7 +267,7 @@ class AttendancePresenter
      * @param  array<int, string>  $leaveDates
      * @return list<list<array<string, mixed>>>
      */
-    public static function calendar(Carbon $month, Collection $records, array $leaveDates = []): array
+    public static function calendar(Carbon $month, Collection $records, array $leaveDates = [], array $rosteredDates = []): array
     {
         $byDate = $records->keyBy('date');
 
@@ -281,7 +281,12 @@ class AttendancePresenter
             $date = $cursor->toDateString();
             $record = $byDate->get($date);
 
-            $evaluated = AttendancePolicy::evaluate($cursor, $record, in_array($date, $leaveDates, true));
+            $evaluated = AttendancePolicy::evaluate(
+                $cursor,
+                $record,
+                in_array($date, $leaveDates, true),
+                in_array($date, $rosteredDates, true),
+            );
 
             $week[] = [
                 'date' => $date,

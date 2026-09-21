@@ -340,6 +340,65 @@ class AttendancePolicyTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
+       THE ROSTER (decided 2026-09-11)
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_a_rostered_sunday_with_no_check_in_is_absent_not_a_week_off(): void
+    {
+        // A Sunday that fell in the past, so ABSENT rather than NOT_MARKED.
+        $sunday = Carbon::parse('2026-08-23'); // a Sunday
+        $this->assertSame(0, $sunday->dayOfWeek);
+
+        $this->assertSame(P::WEEK_OFF, AttendancePolicy::evaluate($sunday, null)['state']);
+        $this->assertSame(P::ABSENT, AttendancePolicy::evaluate($sunday, null, false, true)['state']);
+    }
+
+    public function test_a_rostered_sunday_worked_in_full_is_present(): void
+    {
+        $sunday = '2026-08-23';
+
+        $record = ['date' => $sunday, 'check_in' => '09:30', 'check_out' => '18:30', 'rejected_at' => null];
+
+        $this->assertSame(P::PRESENT, AttendancePolicy::evaluate($sunday, $record, false, true)['state']);
+    }
+
+    public function test_a_rostered_sunday_worked_half_a_day_is_still_a_half_day(): void
+    {
+        // The state itself does not change because of rostering — only what
+        // COMP-OFF earning does with the state does (see
+        // AttendanceController::earnCompOffIfDue). Half a day is still half a
+        // day, whatever the calendar says about the date.
+        $sunday = '2026-08-23';
+
+        $record = ['date' => $sunday, 'check_in' => '09:30', 'check_out' => '11:00', 'rejected_at' => null];
+
+        $this->assertSame(P::HALF_DAY, AttendancePolicy::evaluate($sunday, $record, false, true)['state']);
+    }
+
+    public function test_approved_leave_still_outranks_a_rostered_absence(): void
+    {
+        $sunday = '2026-08-23';
+
+        $this->assertSame(P::LEAVE, AttendancePolicy::evaluate($sunday, null, true, true)['state']);
+    }
+
+    public function test_an_unrostered_sunday_check_in_is_recorded_but_the_day_reads_as_an_ordinary_present(): void
+    {
+        // "An unrostered Sunday clock-in is recorded but earns nothing" — the
+        // STATE is identical whether rostered or not once somebody has
+        // actually checked in; only the comp-off write cares about the
+        // roster. This is the existing "worked a weekly off" behaviour,
+        // unchanged by rostering.
+        $sunday = '2026-08-23';
+        $record = ['date' => $sunday, 'check_in' => '09:30', 'check_out' => '18:30', 'rejected_at' => null];
+
+        $this->assertSame(
+            AttendancePolicy::evaluate($sunday, $record, false, false)['state'],
+            AttendancePolicy::evaluate($sunday, $record, false, true)['state'],
+        );
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
        THE FORGOTTEN CHECK-OUT
        ══════════════════════════════════════════════════════════════════════ */
 
