@@ -42,17 +42,21 @@ class AppServiceProvider extends ServiceProvider
 
         /*
          * ─────────────────────────────────────────────────────────────────────
-         * THE CONFERENCING SERVICE, BOUND TO ONE THAT THROWS
+         * THE CONFERENCING SERVICE
          *
-         * GoogleMeetProvider is not implemented and every method on it raises.
-         * That is the binding on purpose: a stub returning a plausible event id
-         * and a fabricated meet.google.com link would make the pages look
-         * finished and put somebody in a room that does not exist.
+         * GoogleMeetProvider (built 2026-09-21) calls the real Calendar API,
+         * reading the credential from App\Models\GoogleConnection at the
+         * point of use rather than from this binding or from config — see
+         * its own header comment. Before it was built, this bound to a
+         * version where every method raised, on purpose: a stub returning a
+         * plausible event id and a fabricated meet.google.com link would
+         * have made the pages look finished and put somebody in a room that
+         * does not exist.
          *
-         * MeetingController treats a throw the way it will treat a Google
-         * outage — the meeting stays requested and the page says the invite did
-         * not go out — so wiring the real provider in later is this line and
-         * nothing else.
+         * That is still exactly how an unconnected Google, or a real Google
+         * outage, behaves now — MeetingController treats any throw from this
+         * binding the same way regardless of cause: the meeting stays
+         * requested and the page says the invite did not go out.
          * ─────────────────────────────────────────────────────────────────────
          */
         $this->app->bind(MeetingProvider::class, GoogleMeetProvider::class);

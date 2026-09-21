@@ -191,11 +191,17 @@ class MeetingsPageTest extends TestCase
        THE CRM ORGANISES; GOOGLE HOSTS
        ══════════════════════════════════════════════════════════════════════ */
 
-    public function test_the_google_provider_is_not_stubbed_to_look_like_it_works(): void
+    public function test_an_unconnected_google_is_not_stubbed_to_look_like_it_works(): void
     {
-        // Returning a plausible event id and a fabricated meet.google.com link
-        // would make the pages look finished and put somebody in a room that
-        // does not exist, waiting for a client.
+        /*
+         * GoogleMeetProvider calls the real Calendar API now (built
+         * 2026-09-21) — see GoogleMeetProviderTest for the connected cases.
+         * This proves the one property that mattered when it was a
+         * deliberate stub and still matters now it is real: with nothing
+         * connected, it refuses rather than returning a plausible event id
+         * and a fabricated meet.google.com link, which would make the page
+         * look finished and put somebody in a room that does not exist.
+         */
         $provider = new GoogleMeetProvider;
 
         $this->expectException(RuntimeException::class);

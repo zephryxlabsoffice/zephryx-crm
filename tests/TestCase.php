@@ -394,6 +394,25 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
+     * Connect Google with the two fields Calendar specifically needs on top
+     * of what `connectGoogleDrive()` already sets — one connection row
+     * serves both jobs, the same way it does in the Admin Panel.
+     */
+    protected function connectGoogleCalendar(
+        string $calendarId = 'company-calendar@group.calendar.google.com',
+        string $impersonateEmail = 'meetings@test-project.example',
+    ): GoogleConnection {
+        $connection = $this->connectGoogleDrive();
+
+        $connection->fill([
+            'calendar_id' => $calendarId,
+            'impersonate_email' => $impersonateEmail,
+        ])->save();
+
+        return $connection;
+    }
+
+    /**
      * Fake the whole HTTP round trip a `DocumentStore::put()` makes once
      * Google is connected: the token exchange, the module-folder lookup
      * (assumed not to exist yet, so it is created), the file metadata create,

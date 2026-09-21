@@ -73,8 +73,8 @@
                             <input id="ig-cal" name="calendar_id" type="text"
                                    value="{{ old('calendar_id', $connection->calendar_id) }}">
                             <p class="ad-setting-note">
-                                Optional for now — Meetings does not read this yet. Stored here so it is entered
-                                once, not twice.
+                                The Google Calendar every meeting is created on. Required before "Schedule" on a
+                                meeting can actually put an invite in front of anybody.
                             </p>
                             @error('calendar_id')
                                 <span class="field-error">{{ $message }}</span>
@@ -86,8 +86,8 @@
                             <input id="ig-imp" name="impersonate_email" type="email"
                                    value="{{ old('impersonate_email', $connection->impersonate_email) }}">
                             <p class="ad-setting-note">
-                                The Workspace mailbox every meeting is created under, once Meetings is built. This
-                                key needs domain-wide delegation to use it — Drive does not need any.
+                                The Workspace mailbox every meeting is created under. This key needs domain-wide
+                                delegation to use it — Drive does not need any.
                             </p>
                             @error('impersonate_email')
                                 <span class="field-error">{{ $message }}</span>

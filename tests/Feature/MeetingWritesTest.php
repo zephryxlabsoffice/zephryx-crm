@@ -23,10 +23,15 @@ use Tests\TestCase;
  * ─────────────────────────────────────────────────────────────────────────────
  * THE PROVIDER IS THE THING BEING TESTED AROUND
  *
- * GoogleMeetProvider throws on every method and is bound that way on purpose.
- * These tests bind fakes in its place — one that answers, one that fails — and
- * assert the two behaviours that matter: a failure leaves the meeting visibly
- * unscheduled, and a cancellation that Google refuses does NOT cancel it here.
+ * GoogleMeetProvider calls the real Google Calendar API now (built
+ * 2026-09-21) — see GoogleMeetProviderTest for that half. This file is not
+ * about Google at all: it is about MeetingController's own handling of
+ * "the provider answered" versus "the provider threw", which is exactly as
+ * true whether the throw comes from a deliberate stub or a real outage. So
+ * these tests bind fakes in the provider's place — one that answers, one
+ * that fails — and assert the two behaviours that matter regardless of
+ * cause: a failure leaves the meeting visibly unscheduled, and a
+ * cancellation that Google refuses does NOT cancel it here.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 class MeetingWritesTest extends TestCase
