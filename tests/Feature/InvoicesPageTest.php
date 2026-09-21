@@ -2,14 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\Invoice;
 use App\Support\InvoiceDirectory;
 use App\Support\InvoicePresenter;
 use App\Support\Money;
+use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 class InvoicesPageTest extends TestCase
 {
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -22,6 +23,7 @@ class InvoicesPageTest extends TestCase
          */
         $this->signInAsStaff();
     }
+
     /**
      * The demo invoices, their lines and their payments, as real rows.
      *
@@ -37,9 +39,9 @@ class InvoicesPageTest extends TestCase
     /**
      * Every invoice, as rows.
      *
-     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     * @return Collection<int, array<string, mixed>>
      */
-    protected function allInvoices(): \Illuminate\Support\Collection
+    protected function allInvoices(): Collection
     {
         return InvoiceDirectory::rows(InvoiceDirectory::query());
     }
@@ -50,7 +52,7 @@ class InvoicesPageTest extends TestCase
 
         $this->get('/invoices')->assertOk()->assertSee('Invoice Management', false);
         $this->get('/invoices/create')->assertOk()->assertSee('Create Invoice', false);
-        $this->get('/invoices/INV-2026-012')->assertOk()->assertSee('Learning platform', false);
+        $this->get('/invoices/INV-2026-012')->assertOk()->assertSee('Bright Future Academy', false);
     }
 
     public function test_create_is_not_read_as_an_invoice_number(): void
@@ -60,21 +62,19 @@ class InvoicesPageTest extends TestCase
 
     /* ────────────────  totals reconcile  ──────────────── */
 
-    public function test_a_total_is_the_sum_of_its_lines(): void
+    public function test_the_total_is_the_amount_typed_in_not_a_separately_stored_figure(): void
     {
-        // Not a stored column that could drift away from the rows above it.
+        // Decided 2026-09-11: an invoice's amount is typed once, the way a
+        // payslip's net figure is — not summed from line items that no
+        // longer exist. total() still has to agree with the column it reads.
         $this->withDemoData();
 
         foreach ($this->allInvoices() as $invoice) {
-            $sum = Money::zero($invoice['currency']);
-
-            foreach ($invoice['lines'] as $line) {
-                $sum = $sum->plus($line['unit_price']->times($line['qty']));
-            }
+            $model = Invoice::where('number', $invoice['id'])->firstOrFail();
 
             $this->assertTrue(
-                $sum->equals($invoice['total']),
-                "{$invoice['id']}: total {$invoice['total']} does not match its lines ({$sum})"
+                Money::of($model->amount_minor, $invoice['currency'])->equals($invoice['total']),
+                "{$invoice['id']}: total {$invoice['total']} does not match its stored amount"
             );
         }
     }
@@ -110,16 +110,13 @@ class InvoicesPageTest extends TestCase
         }
     }
 
-    public function test_every_line_and_payment_is_in_the_invoices_own_currency(): void
+    public function test_every_payment_is_in_the_invoices_own_currency(): void
     {
-        // Per-line currency is not a feature; it is a total that cannot be
-        // computed.
+        // Per-payment currency is not a feature; it is a balance that cannot
+        // be computed.
         $this->withDemoData();
 
         foreach ($this->allInvoices() as $invoice) {
-            foreach ($invoice['lines'] as $line) {
-                $this->assertSame($invoice['currency'], $line['amount']->currency);
-            }
             foreach ($invoice['payments'] as $payment) {
                 $this->assertSame($invoice['currency'], $payment['amount_money']->currency);
             }
@@ -376,6 +373,9 @@ class InvoicesPageTest extends TestCase
         $this->assertTrue(app('router')->has('invoices.payments.store'));
         $this->assertTrue(app('router')->has('invoices.send'));
         $this->assertTrue(app('router')->has('invoices.cancel'));
+        $this->assertTrue(app('router')->has('invoices.document.store'));
+        $this->assertTrue(app('router')->has('invoices.document.download'));
+        $this->assertTrue(app('router')->has('invoices.document.view'));
     }
 
     public function test_the_pages_render_nothing_the_content_security_policy_would_block(): void

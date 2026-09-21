@@ -34,19 +34,21 @@
             <p>@if ($invoice['project_record']){{ $invoice['project_record']['name'] }}@else Invoice @endif</p>
         </div>
 
-        <div class="hd-actions">
-            {{-- The printable copy. Not a PDF file — this host has no PDF
-                 library, so the route returns a page built for printing and
-                 says so, rather than shipping a file that claims to be a PDF
-                 and is not. Ownership is re-checked and the download is
-                 audited. See Client\InvoiceController::download. --}}
-            <a class="btn btn-outline" href="{{ route('client.invoices.download', $invoice['id']) }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Printable copy
-            </a>
-        </div>
+        @if ($invoice['has_document'])
+            <div class="hd-actions">
+                {{-- The real uploaded PDF, opened in the browser rather than
+                     downloaded by default — see invoices.partials.document
+                     for the same choice made in the body of the page.
+                     Ownership is re-checked and the access is audited. See
+                     Client\InvoiceController. --}}
+                <a class="btn btn-outline" href="{{ route('client.invoices.document.download', $invoice['id']) }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Download
+                </a>
+            </div>
+        @endif
     </div>
 
     @if ($invoice['status'] === P::CANCELLED)
@@ -65,7 +67,7 @@
 
     <section class="inv-doc-grid">
         <div class="inv-doc-main">
-            @include('invoices.partials.document')
+            @include('invoices.partials.document', ['isClient' => true])
             @include('invoices.partials.payment-history')
         </div>
 

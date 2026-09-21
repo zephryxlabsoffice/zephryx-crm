@@ -250,9 +250,22 @@ class AuditLog
     public const INVOICE_CANCELLED = 'invoice.cancelled';
 
     /*
+     * The PDF itself was attached or replaced — its own action, not folded
+     * into `INVOICE_CREATED`, because raising an invoice and putting the
+     * actual document behind it are two acts now that invoices are uploaded
+     * rather than generated (decided 2026-09-11). A replacement is the
+     * interesting case: this entry is what answers "when did the document
+     * we sent change" months later.
+     */
+    public const INVOICE_DOCUMENT_ADDED = 'invoice.document_added';
+
+    /*
      * Who took a copy of the document, and when. Its own action rather than a
      * read nobody records, because an invoice is the page that gets argued
      * about on a call — "we never received it" is answered by this entry.
+     * Viewing it inline and downloading it are both this action — the fact
+     * that matters is that somebody obtained the bytes, not which button
+     * they pressed to do it (same rule as SALARY_PAYSLIP_DOWNLOADED).
      */
     public const INVOICE_DOWNLOADED = 'invoice.downloaded';
 

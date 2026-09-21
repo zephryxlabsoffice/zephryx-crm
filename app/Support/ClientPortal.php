@@ -8,6 +8,7 @@ use App\Models\Meeting;
 use App\Models\Project;
 use App\Models\ProjectUpdate;
 use App\Models\Ticket;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -134,7 +135,7 @@ class ClientPortal
     public static function invoices(Client $client): Collection
     {
         return Invoice::query()
-            ->with(['client', 'project', 'lines', 'payments'])
+            ->with(['client', 'project', 'payments'])
             ->where('client_id', $client->id)
             /*
              * A draft invoice is not the client's to see. It is a document
@@ -156,7 +157,7 @@ class ClientPortal
     public static function invoice(Client $client, string $number): ?array
     {
         $invoice = Invoice::query()
-            ->with(['client', 'project', 'lines', 'payments'])
+            ->with(['client', 'project', 'payments'])
             ->where('client_id', $client->id)
             ->whereNotNull('sent_at')
             ->where('number', $number)
@@ -219,7 +220,7 @@ class ClientPortal
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder<Ticket>
+     * @return Builder<Ticket>
      */
     protected static function ticketQuery(Client $client)
     {

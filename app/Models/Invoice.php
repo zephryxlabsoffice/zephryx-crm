@@ -13,31 +13,38 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * An invoice.
  *
  * ═════════════════════════════════════════════════════════════════════════════
- * THE TOTAL AND THE STATUS ARE METHODS, NOT COLUMNS
+ * THE AMOUNT IS TYPED, LIKE A PAYSLIP'S NET FIGURE — NOT SUMMED FROM LINES
  *
- * `total()` sums the lines and `paid()` sums the payments, every time they are
- * asked. That is deliberately not cached anywhere: a stored total is a number
- * that can disagree with the lines that produced it, and the first time it does
- * the argument is with a client about money.
+ * Decided 2026-09-11, built 2026-09-21: "invoices are uploaded like payslips,
+ * not generated." `amount_minor` is a column now, the same way
+ * `SalaryRecord::net_minor` always was — HR types a figure once, and nothing
+ * above it treats that as less trustworthy than three fields multiplied
+ * together would have been.
  *
- * `status()` is derived from the dates, the lines and the payments. Nobody sets
- * an invoice to paid — they record the payment that makes it paid.
+ * `status()` is still derived from the dates, the amount and the payments —
+ * that part of the original design was never about where the total came
+ * from. Nobody sets an invoice to paid; they record the payment that makes
+ * it paid.
  * ═════════════════════════════════════════════════════════════════════════════
  */
 class Invoice extends Model
 {
     protected $fillable = [
-        'number', 'client_id', 'project_id', 'currency',
+        'number', 'client_id', 'project_id', 'currency', 'amount_minor',
         'invoice_date', 'due_date', 'sent_at', 'cancelled_at', 'cancellation_reason', 'notes',
+        'document_path', 'document_name', 'document_bytes', 'document_added_at', 'document_added_by',
     ];
 
     protected function casts(): array
     {
         return [
+            'amount_minor' => 'integer',
             'invoice_date' => 'date',
             'due_date' => 'date',
             'sent_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'document_bytes' => 'integer',
+            'document_added_at' => 'datetime',
         ];
     }
 
@@ -58,14 +65,6 @@ class Invoice extends Model
     }
 
     /**
-     * @return HasMany<InvoiceLine, $this>
-     */
-    public function lines(): HasMany
-    {
-        return $this->hasMany(InvoiceLine::class)->orderBy('position')->orderBy('id');
-    }
-
-    /**
      * @return HasMany<InvoicePayment, $this>
      */
     public function payments(): HasMany
@@ -73,20 +72,22 @@ class Invoice extends Model
         return $this->hasMany(InvoicePayment::class)->orderBy('received_on');
     }
 
+    /**
+     * @return BelongsTo<Employee, $this>
+     */
+    public function documentAddedBy(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'document_added_by');
+    }
+
     public function getRouteKeyName(): string
     {
         return 'number';
     }
 
-    /**
-     * The sum of the lines.
-     */
     public function total(): Money
     {
-        return $this->lines->reduce(
-            fn (Money $carry, InvoiceLine $line) => $carry->plus($line->amount($this->currency)),
-            Money::zero($this->currency),
-        );
+        return Money::of($this->amount_minor, $this->currency);
     }
 
     /**
@@ -115,6 +116,11 @@ class Invoice extends Model
         return $this->cancelled_at !== null;
     }
 
+    public function hasDocument(): bool
+    {
+        return $this->document_path !== null;
+    }
+
     /**
      * Where this invoice stands, through the one place that decides.
      */
@@ -130,7 +136,6 @@ class Invoice extends Model
      */
     public function toRecordArray(): array
     {
-        $lines = $this->lines->map(fn (InvoiceLine $l) => $l->toRecordArray($this->currency))->all();
         $payments = $this->payments->map(fn (InvoicePayment $p) => $p->toRecordArray($this->currency))->all();
 
         $total = $this->total();
@@ -142,7 +147,6 @@ class Invoice extends Model
             'client_reference' => $this->client?->reference,
             'project' => $this->project?->reference,
             'currency' => $this->currency,
-            'lines' => $lines,
             'payments' => $payments,
             'total' => $total,
             'paid' => $paid,
@@ -154,6 +158,11 @@ class Invoice extends Model
             'cancelled' => $this->isCancelled(),
             'cancellation_reason' => $this->cancellation_reason,
             'notes' => $this->notes,
+            'has_document' => $this->hasDocument(),
+            'document_path' => $this->document_path,
+            'document_name' => $this->document_name,
+            'document_bytes' => $this->document_bytes,
+            'document_added_at' => $this->document_added_at?->toDateString(),
         ];
 
         $invoice['status'] = InvoicePresenter::statusOf($invoice);

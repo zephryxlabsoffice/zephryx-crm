@@ -38,7 +38,7 @@ class InvoiceDirectory
         $search = ($filters['search'] ?? '') !== '' ? $filters['search'] : null;
 
         return Invoice::query()
-            ->with(['client', 'project.client', 'lines', 'payments'])
+            ->with(['client', 'project.client', 'payments'])
             ->when($search, fn (Builder $q, string $term) => $q->where(function (Builder $q) use ($term) {
                 $like = '%'.str_replace(['%', '_'], ['\%', '\_'], $term).'%';
 
@@ -73,7 +73,7 @@ class InvoiceDirectory
     public static function find(string $number): ?array
     {
         $invoice = Invoice::query()
-            ->with(['client', 'project.client', 'lines', 'payments.recorder.user'])
+            ->with(['client', 'project.client', 'payments.recorder.user'])
             ->where('number', $number)
             ->first();
 

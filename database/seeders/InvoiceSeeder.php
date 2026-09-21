@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Client;
 use App\Models\Employee;
 use App\Models\Invoice;
-use App\Models\InvoiceLine;
 use App\Models\InvoicePayment;
 use App\Models\Project;
 use App\Support\Demo\DemoInvoices;
@@ -13,7 +12,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
 /**
- * The demo invoices, their lines and their payments. Local + debug only.
+ * The demo invoices and their payments. Local + debug only.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * THE CANCELLED ONE KEEPS ITS NUMBER, AND THAT IS THE POINT OF SEEDING IT
@@ -21,6 +20,12 @@ use Illuminate\Support\Carbon;
  * INV-2026-004 is cancelled in the fixture and stays in the sequence here. A
  * seed with a tidy, gapless run of live invoices would demonstrate nothing; the
  * gap that is not a gap is the thing worth having on screen.
+ *
+ * NO DOCUMENT IS SEEDED, for the same reason SalarySeeder does not seed a
+ * payslip file: there is no PDF to invent, and a row whose `document_path`
+ * pointed at nothing would break the download route rather than demonstrate
+ * it. The demo records carry the figure and the metadata; a real file arrives
+ * when somebody uploads one from the invoice page.
  *
  * The mixed currencies are deliberate too: one invoice in USD is what makes the
  * KPI tiles bags rather than numbers, and a seed in one currency would let that
@@ -54,10 +59,11 @@ class InvoiceSeeder extends Seeder
                     'client_id' => $clientId,
                     'project_id' => $row['project'] ? ($projects[$row['project']] ?? null) : null,
                     'currency' => $row['currency'],
+                    'amount_minor' => $row['amount'],
                     'invoice_date' => $row['invoice_date'],
                     'due_date' => $row['due_date'],
                     // The two stored facts. Everything else about where the
-                    // invoice stands is derived from the lines and payments.
+                    // invoice stands is derived from the amount and payments.
                     'sent_at' => $row['issued'] ? Carbon::parse($row['invoice_date'])->setTime(10, 0) : null,
                     'cancelled_at' => $row['cancelled'] ? Carbon::parse($row['invoice_date'])->addDay() : null,
                     'cancellation_reason' => $row['cancelled']
@@ -68,19 +74,8 @@ class InvoiceSeeder extends Seeder
             );
 
             // Re-seeded whole: the fixture is the invoice, and a second run
-            // must not double its lines.
-            $invoice->lines()->delete();
+            // must not double its payments.
             $invoice->payments()->delete();
-
-            foreach (array_values($row['lines']) as $position => $line) {
-                InvoiceLine::create([
-                    'invoice_id' => $invoice->id,
-                    'description' => $line['description'],
-                    'quantity' => $line['qty'],
-                    'unit_price_minor' => $line['unit'],
-                    'position' => $position,
-                ]);
-            }
 
             foreach ($row['payments'] as $payment) {
                 InvoicePayment::create([

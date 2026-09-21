@@ -5,31 +5,47 @@ namespace Tests\Feature;
 use App\Models\Client;
 use App\Models\Employee;
 use App\Models\Invoice;
-use App\Models\InvoiceLine;
 use App\Models\InvoicePayment;
+use App\Models\Permission;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Audit\AuditLog;
 use App\Support\InvoicePresenter as P;
 use App\Support\Rbac\Rbac;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
  * Invoices — raising one, sending it, recording money, and cancelling it.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * FOUR RULES, AND EVERY TEST BELOW IS ONE OF THEM
+ * FIVE RULES, AND EVERY TEST BELOW IS ONE OF THEM
  *
- * Amounts stay integer minor units. Totals and status are derived, never set.
- * Numbers are gapless and issued inside the transaction. Nothing is ever
- * deleted — a cancelled invoice keeps its number.
+ * Amounts stay integer minor units. The total is typed once, like a payslip's
+ * net figure, and it is still a method rather than a column. Numbers are
+ * gapless and issued inside the transaction. Nothing is ever deleted — a
+ * cancelled invoice keeps its number. And an invoice is an uploaded document
+ * (decided 2026-09-11): it cannot be sent without one, and the upload goes
+ * through the same Drive-backed DocumentStore payslips and profile documents
+ * use.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 class InvoiceWritesTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // The local-fake-file fixtures (anInvoice()'s document) go here;
+        // nothing here writes to the real storage directory.
+        Storage::fake('local');
+    }
+
     /* ══════════════════════════════════════════════════════════════════════
        THE GUARDS
        ══════════════════════════════════════════════════════════════════════ */
@@ -57,10 +73,12 @@ class InvoiceWritesTest extends TestCase
         // An invoice that reaches a client the instant somebody finishes typing
         // is one nobody can check first.
         $this->signInAsFinance();
+        $this->connectGoogleDrive();
+        $this->fakeDriveUpload();
 
         $this->post('/invoices', $this->validPayload())->assertRedirect();
 
-        $invoice = Invoice::with(['lines', 'payments'])->firstOrFail();
+        $invoice = Invoice::with('payments')->firstOrFail();
 
         $this->assertNull($invoice->sent_at);
         $this->assertSame(P::DRAFT, $invoice->status());
@@ -69,6 +87,8 @@ class InvoiceWritesTest extends TestCase
     public function test_the_number_is_allocated_by_the_server_and_is_gapless(): void
     {
         $this->signInAsFinance();
+        $this->connectGoogleDrive();
+        $this->fakeDriveUpload();
 
         $this->post('/invoices', $this->validPayload(['number' => 'INV-9999-999']));
         $this->post('/invoices', $this->validPayload(['number' => 'INV-9999-998']));
@@ -82,53 +102,43 @@ class InvoiceWritesTest extends TestCase
         );
     }
 
-    public function test_the_total_is_the_sum_of_the_lines_and_is_not_stored(): void
+    public function test_the_amount_is_typed_once_and_is_not_a_separate_total_column(): void
     {
-        /*
-         * 2 × 1,500.50 plus 1 × 45,000 — chosen so a float would round it
-         * wrong. Everything stays in integer paise.
-         */
+        // 45,678.90 — chosen so a float would round it wrong. It stays in
+        // integer paise the whole way through.
         $this->signInAsFinance();
+        $this->connectGoogleDrive();
+        $this->fakeDriveUpload();
 
-        $this->post('/invoices', $this->validPayload([
-            'lines' => [
-                ['description' => 'Training sessions', 'qty' => 2, 'unit' => '1500.50'],
-                ['description' => 'Design phase', 'qty' => 1, 'unit' => '45000'],
-            ],
-        ]))->assertRedirect();
+        $this->post('/invoices', $this->validPayload(['amount' => '45678.90']))
+            ->assertRedirect();
 
-        $invoice = Invoice::with(['lines', 'payments'])->firstOrFail();
+        $invoice = Invoice::with('payments')->firstOrFail();
 
-        $this->assertSame(4800100, $invoice->total()->minor);
-        // No column holds it. If one ever appears, this fails.
+        $this->assertSame(4567890, $invoice->amount_minor);
+        $this->assertSame(4567890, $invoice->total()->minor);
+        // No column holds a separately-computed total. If one ever appears,
+        // this fails.
         $this->assertArrayNotHasKey('total', $invoice->getAttributes());
         $this->assertArrayNotHasKey('status', $invoice->getAttributes());
     }
 
-    public function test_blank_lines_are_dropped_rather_than_refused(): void
+    public function test_an_invoice_with_no_amount_is_refused(): void
     {
-        // The form offers three rows and most invoices use one. Refusing the
-        // empty ones would make somebody delete placeholder text to save.
         $this->signInAsFinance();
 
-        $this->post('/invoices', $this->validPayload([
-            'lines' => [
-                ['description' => 'The only line', 'qty' => 1, 'unit' => '1000'],
-                ['description' => '', 'qty' => 1, 'unit' => ''],
-                ['description' => '', 'qty' => 1, 'unit' => ''],
-            ],
-        ]))->assertRedirect();
+        $this->post('/invoices', $this->validPayload(['amount' => '']))
+            ->assertSessionHasErrors('amount');
 
-        $this->assertSame(1, InvoiceLine::count());
+        $this->assertSame(0, Invoice::count());
     }
 
-    public function test_an_invoice_with_no_lines_at_all_is_refused(): void
+    public function test_an_invoice_with_no_document_is_refused(): void
     {
         $this->signInAsFinance();
 
-        $this->post('/invoices', $this->validPayload([
-            'lines' => [['description' => '', 'qty' => 1, 'unit' => '']],
-        ]))->assertSessionHasErrors('lines');
+        $this->post('/invoices', $this->validPayload(['document' => null]))
+            ->assertSessionHasErrors('document');
 
         $this->assertSame(0, Invoice::count());
     }
@@ -147,6 +157,127 @@ class InvoiceWritesTest extends TestCase
 
         $this->post('/invoices', $this->validPayload(['project_id' => $project->id]))
             ->assertSessionHasErrors('project_id');
+    }
+
+    public function test_a_drive_failure_creating_the_invoice_leaves_a_draft_with_no_document_rather_than_nothing(): void
+    {
+        /*
+         * The number allocation is a short, DB-only transaction; the upload
+         * happens after it commits (see InvoiceController::store). If Drive
+         * refuses, the invoice the person just typed up must not vanish —
+         * only `send()` has to notice the document is missing.
+         */
+        $this->signInAsFinance();
+        // Deliberately no connectGoogleDrive() — the upload fails.
+
+        $this->post('/invoices', $this->validPayload())->assertRedirect();
+
+        $invoice = Invoice::firstOrFail();
+
+        $this->assertFalse($invoice->hasDocument());
+        $this->assertNull($invoice->sent_at);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       THE DOCUMENT
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_the_document_can_be_attached_after_the_invoice_is_created(): void
+    {
+        // Recovers exactly the state the Drive-failure test above leaves.
+        $invoice = $this->anInvoice(document: false);
+        $this->signInAsFinance();
+        $this->connectGoogleDrive();
+        $this->fakeDriveUpload();
+
+        $this->post('/invoices/'.$invoice->number.'/document', [
+            'document' => UploadedFile::fake()->create('invoice.pdf', 20, 'application/pdf'),
+        ])->assertRedirect();
+
+        $this->assertTrue($invoice->fresh()->hasDocument());
+    }
+
+    public function test_replacing_the_document_forgets_the_old_one_and_is_audited(): void
+    {
+        $invoice = $this->anInvoice();
+        $old = $invoice->document_path;
+        $this->signInAsFinance();
+        $this->connectGoogleDrive();
+        $this->fakeDriveUpload();
+
+        $this->post('/invoices/'.$invoice->number.'/document', [
+            'document' => UploadedFile::fake()->create('corrected.pdf', 20, 'application/pdf'),
+        ])->assertRedirect();
+
+        $fresh = $invoice->fresh();
+
+        $this->assertNotSame($old, $fresh->document_path);
+        $this->assertFalse(Storage::disk('local')->exists($old), 'the superseded document was not forgotten');
+
+        $entry = DB::table('audit_log')->where('action', AuditLog::INVOICE_DOCUMENT_ADDED)->latest('id')->first();
+        $this->assertNotNull($entry);
+        $this->assertStringContainsString('replaced', $entry->after_json);
+    }
+
+    public function test_nothing_can_be_attached_to_a_cancelled_invoice(): void
+    {
+        $invoice = $this->anInvoice(sent: true);
+        $invoice->update(['cancelled_at' => now(), 'cancellation_reason' => 'Test.']);
+        $this->signInAsFinance();
+
+        $this->post('/invoices/'.$invoice->number.'/document', [
+            'document' => UploadedFile::fake()->create('invoice.pdf', 20, 'application/pdf'),
+        ])->assertSessionHasErrors('document');
+    }
+
+    public function test_a_document_upload_that_cannot_reach_drive_is_a_validation_error_not_a_500(): void
+    {
+        $invoice = $this->anInvoice(document: false);
+        $this->signInAsFinance();
+        // No connectGoogleDrive() — Drive is not connected.
+
+        $this->post('/invoices/'.$invoice->number.'/document', [
+            'document' => UploadedFile::fake()->create('invoice.pdf', 20, 'application/pdf'),
+        ])->assertSessionHasErrors('document');
+    }
+
+    public function test_somebody_with_only_invoices_view_cannot_attach_a_document(): void
+    {
+        $invoice = $this->anInvoice();
+        $this->signInAsStaff(['employee', 'mentor']);
+        $this->grant('invoices.view');
+
+        $this->post('/invoices/'.$invoice->number.'/document', [
+            'document' => UploadedFile::fake()->create('invoice.pdf', 20, 'application/pdf'),
+        ])->assertForbidden();
+    }
+
+    public function test_the_document_can_be_downloaded_and_viewed_inline(): void
+    {
+        $invoice = $this->anInvoice();
+        $this->signInAsFinance();
+
+        $download = $this->get('/invoices/'.$invoice->number.'/document/download');
+        $download->assertOk();
+        $this->assertStringContainsString('attachment', $download->headers->get('content-disposition'));
+
+        $view = $this->get('/invoices/'.$invoice->number.'/document/view');
+        $view->assertOk();
+        $this->assertStringContainsString('inline', $view->headers->get('content-disposition'));
+
+        $this->assertSame(
+            2,
+            DB::table('audit_log')->where('action', AuditLog::INVOICE_DOWNLOADED)->count(),
+        );
+    }
+
+    public function test_an_invoice_with_no_document_404s_on_both_routes(): void
+    {
+        $invoice = $this->anInvoice(document: false);
+        $this->signInAsFinance();
+
+        $this->get('/invoices/'.$invoice->number.'/document/download')->assertNotFound();
+        $this->get('/invoices/'.$invoice->number.'/document/view')->assertNotFound();
     }
 
     /* ══════════════════════════════════════════════════════════════════════
@@ -171,10 +302,11 @@ class InvoiceWritesTest extends TestCase
         $this->assertSame(1, DB::table('audit_log')->where('action', AuditLog::INVOICE_SENT)->count());
     }
 
-    public function test_an_invoice_with_no_lines_cannot_be_sent(): void
+    public function test_an_invoice_with_no_document_cannot_be_sent(): void
     {
-        // An invoice for nothing is not a document to put in front of a client.
-        $invoice = $this->anInvoice(lines: false);
+        // An invoice with nothing behind it is not a document to put in
+        // front of a client — the same rule "no lines" used to express.
+        $invoice = $this->anInvoice(document: false);
         $this->signInAsFinance();
 
         $this->post('/invoices/'.$invoice->number.'/send')->assertSessionHasErrors('send');
@@ -201,7 +333,7 @@ class InvoiceWritesTest extends TestCase
             'reference' => 'NEFT-1',
         ])->assertRedirect();
 
-        $invoice = $invoice->fresh(['lines', 'payments']);
+        $invoice = $invoice->fresh('payments');
 
         $this->assertSame(1000000, $invoice->paid()->minor);
         $this->assertSame(P::PAID, $invoice->status());
@@ -219,7 +351,7 @@ class InvoiceWritesTest extends TestCase
             'method' => 'UPI',
         ])->assertRedirect();
 
-        $invoice = $invoice->fresh(['lines', 'payments']);
+        $invoice = $invoice->fresh('payments');
 
         $this->assertSame(P::PARTIAL, $invoice->status());
         $this->assertSame(600000, $invoice->balance()->minor);
@@ -291,7 +423,7 @@ class InvoiceWritesTest extends TestCase
             'reason' => 'Raised against the wrong project and reissued.',
         ])->assertRedirect();
 
-        $invoice = $invoice->fresh(['lines', 'payments']);
+        $invoice = $invoice->fresh('payments');
 
         $this->assertNotNull($invoice->cancelled_at);
         $this->assertSame(P::CANCELLED, $invoice->status());
@@ -342,7 +474,7 @@ class InvoiceWritesTest extends TestCase
 
         $this->post('/invoices/'.$invoice->number.'/cancel', ['reason' => 'Duplicate of INV-TEST-002.']);
 
-        $row = $invoice->fresh(['lines', 'payments'])->toRecordArray();
+        $row = $invoice->fresh('payments')->toRecordArray();
 
         $this->assertSame(P::CANCELLED, $row['status']);
         $this->assertFalse(P::isOutstanding($row));
@@ -375,9 +507,8 @@ class InvoiceWritesTest extends TestCase
             'currency' => 'INR',
             'invoice_date' => Carbon::today()->toDateString(),
             'due_date' => Carbon::today()->addDays(30)->toDateString(),
-            'lines' => [
-                ['description' => 'Website redesign — design phase', 'qty' => 1, 'unit' => '45000'],
-            ],
+            'amount' => '45000',
+            'document' => UploadedFile::fake()->create('invoice.pdf', 20, 'application/pdf'),
         ];
     }
 
@@ -389,28 +520,29 @@ class InvoiceWritesTest extends TestCase
         );
     }
 
-    protected function anInvoice(bool $sent = false, bool $lines = true, ?Carbon $due = null): Invoice
+    protected function anInvoice(bool $sent = false, bool $document = true, ?Carbon $due = null): Invoice
     {
+        $documentPath = null;
+
+        if ($document) {
+            $documentPath = 'invoices/'.Str::random(8).'/stored.pdf';
+            Storage::disk('local')->put($documentPath, 'not a real pdf');
+        }
+
         $invoice = Invoice::create([
             'number' => 'INV-TEST-001',
             'client_id' => $this->aClient()->id,
             'currency' => 'INR',
+            'amount_minor' => 1000000,
             'invoice_date' => Carbon::today()->subDays(3),
             'due_date' => $due ?? Carbon::today()->addDays(27),
             'sent_at' => $sent ? Carbon::now()->subDay() : null,
+            'document_path' => $documentPath,
+            'document_name' => $documentPath ? 'invoice.pdf' : null,
+            'document_bytes' => $documentPath ? 14 : null,
         ]);
 
-        if ($lines) {
-            InvoiceLine::create([
-                'invoice_id' => $invoice->id,
-                'description' => 'One thing',
-                'quantity' => 1,
-                'unit_price_minor' => 1000000,
-                'position' => 0,
-            ]);
-        }
-
-        return $invoice->fresh(['lines', 'payments']);
+        return $invoice->fresh('payments');
     }
 
     protected function signInAsFinance(): Employee
@@ -441,7 +573,7 @@ class InvoiceWritesTest extends TestCase
         );
 
         $role->permissions()->syncWithoutDetaching(
-            \App\Models\Permission::whereIn('permission_key', $permissions)->pluck('id')
+            Permission::whereIn('permission_key', $permissions)->pluck('id')
         );
 
         auth()->user()->roles()->syncWithoutDetaching([$role->id]);

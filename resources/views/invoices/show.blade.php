@@ -47,12 +47,13 @@
 
     <section class="inv-doc-grid">
         <div class="inv-doc-main">
-            @include('invoices.partials.document')
+            @include('invoices.partials.document', ['isClient' => false])
             @include('invoices.partials.payment-history')
         </div>
 
         <aside class="rail">
             @include('invoices.partials.summary', ['pill' => $pill, 'due' => $due])
+            @include('invoices.partials.upload-document')
             @include('invoices.partials.record-payment')
         </aside>
     </section>

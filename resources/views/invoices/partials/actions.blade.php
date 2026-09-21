@@ -53,20 +53,24 @@
     @endif
 
     {{--
-        Still not built, and still saying so rather than pretending.
-
-        A PDF is a rendering problem with its own dependency and its own
-        decisions about layout and letterhead; a reminder is an email with a
-        schedule behind it. Neither is a data problem, and neither belongs in
-        the commit that gave this module its tables.
+        Real now: an invoice is an uploaded PDF (decided 2026-09-11), so this
+        is the same file `invoices.partials.document` links to, offered again
+        here beside Send and Cancel. Absent when nothing has been attached —
+        a download button that 404s is worse than no button.
     --}}
-    <button class="btn btn-outline" type="button" disabled title="PDF generation is not built yet">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        Download PDF
-    </button>
+    @if ($invoice['has_document'])
+        <a class="btn btn-outline" href="{{ route('invoices.document.download', ['invoice' => $invoice['id']]) }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download
+        </a>
+    @endif
 
+    {{--
+        A reminder is an email with a schedule behind it — not a data
+        problem, and not one this commit takes on.
+    --}}
     @if (P::isOutstanding($invoice))
         <button class="btn btn-outline" type="button" disabled title="Reminders are not built yet">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

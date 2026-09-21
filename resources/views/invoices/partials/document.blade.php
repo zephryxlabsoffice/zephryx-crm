@@ -1,17 +1,18 @@
 @php use App\Support\InvoicePresenter as P; @endphp
 
 {{--
-    The document — what the client receives.
+    The invoice summary — what it is for, and where the actual document is.
 
-    Laid out as the printed invoice rather than as another dashboard panel,
-    because this is the one screen where the staff view and the client view
-    should show the same thing. If they diverge, the divergence is what gets
-    argued about on a call.
+    Decided 2026-09-11, built 2026-09-21: an invoice is an uploaded PDF, not
+    something this application renders to look like one. So this partial does
+    not reproduce a letterhead or a line-item table any more — that would be a
+    second copy of a document that already exists, and the two would drift the
+    first time somebody corrected one and not the other. It states the amount
+    that was typed in, and links to the one real file.
 
-    No tax block: the company is not GST-registered today (decided 2026-08-27).
-    When that changes, the totals block below gains the tax rows and the line
-    items gain a rate — the layout has room for both, which is why the totals
-    are a definition list rather than three hard-coded rows.
+    Shared by the staff invoice page, the client invoice page, and nothing
+    else — no print view exists any more, because there is nothing left to
+    render for printing that the PDF itself does not already do better.
 --}}
 <div class="card inv-doc">
 
@@ -60,39 +61,15 @@
         </dl>
     </div>
 
-    <div class="card-body-table">
-        <table class="data-table inv-lines" role="table">
-            <thead>
-                <tr role="row">
-                    <th role="columnheader" scope="col">Description</th>
-                    <th role="columnheader" scope="col" class="col-num">Qty</th>
-                    <th role="columnheader" scope="col" class="col-money">Unit price</th>
-                    <th role="columnheader" scope="col" class="col-money">Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($invoice['lines'] as $line)
-                    <tr role="row">
-                        <td role="cell">{{ $line['description'] }}</td>
-                        <td role="cell" class="col-num">{{ $line['qty'] }}</td>
-                        <td role="cell" class="col-money money">{{ $line['unit_price']->format() }}</td>
-                        <td role="cell" class="col-money money">{{ $line['amount']->format() }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-
     {{--
-        The totals.
-
-        Total is the sum of the lines above it — not a stored figure that could
-        disagree with them. Balance is total minus everything received. Both are
-        computed on every render, so there is no state to drift.
+        The amount. Typed once, the same way a payslip's net figure is — not
+        a sum of rows that no longer exist. No tax block: the company is not
+        GST-registered (decided 2026-08-27), and there is nothing generated
+        here that would need one.
     --}}
     <dl class="inv-totals">
         <div class="inv-total-row">
-            <dt>Total</dt>
+            <dt>Amount</dt>
             <dd class="money">{{ $invoice['total']->format() }}</dd>
         </div>
 
@@ -108,6 +85,26 @@
             <dd class="money">{{ $invoice['balance']->format() }}</dd>
         </div>
     </dl>
+
+    {{--
+        The document itself. `target="_blank"` opens it in the browser's own
+        viewer rather than navigating away from this page — the same choice
+        Salary and Profile documents made (see App\Support\Documents\
+        DocumentStore::viewInline() for what makes that safe for an upload).
+    --}}
+    <div class="inv-doc-file">
+        @if ($invoice['has_document'])
+            <a class="btn btn-primary" href="{{ route(($isClient ?? false) ? 'client.invoices.document.view' : 'invoices.document.view', ['invoice' => $invoice['id']]) }}" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>
+                </svg>
+                Open invoice document
+            </a>
+            <span class="inv-doc-file-note">{{ $invoice['document_name'] }}</span>
+        @else
+            <p class="rail-empty">No document has been attached to this invoice yet.</p>
+        @endif
+    </div>
 
     @if ($invoice['notes'])
         <div class="inv-doc-notes">

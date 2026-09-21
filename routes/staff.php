@@ -495,6 +495,27 @@ Route::post('/invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])
     ->name('invoices.cancel');
 
 /*
+ * The document itself. An invoice is an uploaded PDF now (decided
+ * 2026-09-11), not a page this application generates — attaching or
+ * replacing one is `invoices.manage`, same as every other write here;
+ * reading it back is `invoices.view`, same as the invoice page it lives on.
+ * `view` opens it in the browser, `download` saves it — see
+ * App\Support\Documents\DocumentStore::viewInline() for why both are safe.
+ */
+Route::post('/invoices/{invoice}/document', [InvoiceController::class, 'storeDocument'])
+    ->where('invoice', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:invoices.manage')
+    ->name('invoices.document.store');
+Route::get('/invoices/{invoice}/document/download', [InvoiceController::class, 'downloadDocument'])
+    ->where('invoice', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:invoices.view')
+    ->name('invoices.document.download');
+Route::get('/invoices/{invoice}/document/view', [InvoiceController::class, 'viewDocument'])
+    ->where('invoice', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:invoices.view')
+    ->name('invoices.document.view');
+
+/*
  * Salary. The most sensitive routes in the application — see
  * App\Http\Controllers\SalaryController for what the backend owes them.
  *

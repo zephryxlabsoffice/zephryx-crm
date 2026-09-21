@@ -30,7 +30,9 @@ use App\Support\SalaryPresenter;
 use App\Support\TaskDirectory;
 use App\Support\TeamDirectory;
 use App\Support\TicketDirectory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * What each dashboard widget shows.
@@ -447,7 +449,7 @@ class DashboardData
      * id rather than a skipped `where`, so the query returns nothing instead of
      * everything. The same shape TaskController::mine uses.
      *
-     * @return \Illuminate\Database\Eloquent\Builder<Task>
+     * @return Builder<Task>
      */
     protected static function myTaskQuery(?Employee $viewer)
     {
@@ -595,12 +597,12 @@ class DashboardData
      * decide whether a total exists at all — a `SUM()` over mixed currencies is
      * exactly the invented conversion §9 refuses.
      *
-     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     * @return Collection<int, array<string, mixed>>
      */
     protected static function invoices()
     {
         return Invoice::query()
-            ->with(['client', 'project', 'lines', 'payments'])
+            ->with(['client', 'project', 'payments'])
             ->get()
             ->map(fn (Invoice $i) => $i->toRecordArray());
     }

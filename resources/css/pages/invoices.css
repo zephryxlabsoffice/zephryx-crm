@@ -227,8 +227,6 @@
   white-space: nowrap;
 }
 
-.inv-lines tbody td { font-size: 13px; }
-
 /* ── totals ──
    A definition list rather than three fixed rows: when GST is added, the tax
    rows drop in here without the block being rebuilt. */
@@ -268,7 +266,17 @@
 }
 .inv-total-due dd { font-size: 17px; font-weight: 800; }
 
-.inv-totals-quiet .inv-total-due { border-top-color: var(--line); }
+/* ── the document itself ── */
+.inv-doc-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 26px 22px;
+}
+.inv-doc-file-note {
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
 
 .inv-doc-notes {
   padding: 0 26px 24px;
@@ -376,22 +384,6 @@
 }
 .inv-form .card-body textarea[disabled] { opacity: 0.75; cursor: not-allowed; }
 
-.inv-line-form input {
-  width: 100%;
-  height: 36px;
-  padding: 0 10px;
-  border-radius: var(--r-btn);
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--ink);
-  font: 500 13px/1 var(--font-sans);
-}
-.inv-line-form input[disabled] { opacity: 0.75; cursor: not-allowed; }
-.inv-line-form .col-num input,
-.inv-line-form .col-money input { text-align: right; font-variant-numeric: tabular-nums; }
-.inv-line-form .col-num { width: 86px; }
-.inv-line-form .col-money { width: 150px; }
-
 /* ─────────────────────────  responsive  ───────────────────────── */
 
 @media (max-width: 1280px) {
@@ -410,9 +402,5 @@
   .inv-doc-meta { text-align: left; }
   .inv-totals { width: 100%; padding-left: 18px; padding-right: 18px; }
   .inv-doc-notes { padding-left: 18px; padding-right: 18px; }
-
-  /* The line-item form is four columns of inputs; below this it stops being a
-     table and each line becomes its own stack of labelled fields. */
-  .inv-line-form .col-num,
-  .inv-line-form .col-money { width: auto; }
+  .inv-doc-file { padding-left: 18px; padding-right: 18px; }
 }

@@ -16,7 +16,7 @@
         </div>
     </div>
 
-    <form class="inv-form" method="POST" action="{{ route('invoices.store') }}">
+    <form class="inv-form" method="POST" action="{{ route('invoices.store') }}" enctype="multipart/form-data">
         @csrf
 
         <section class="inv-form-grid">
@@ -67,7 +67,7 @@
                                     <option value="{{ $code }}" @selected(old('currency', \App\Support\Money::DEFAULT_CURRENCY) === $code)>{{ $label }}</option>
                                 @endforeach
                             </select>
-                            <span class="pay-hint">Every line on this invoice is in the currency you pick here.</span>
+                            <span class="pay-hint">The amount below is in the currency you pick here.</span>
                         </div>
 
                         <div class="form-field">
@@ -99,69 +99,39 @@
                 <div class="card">
                     <div class="section-hd">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
-                            <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                         </svg>
                         What is being billed
                     </div>
 
-                    <div class="card-body-table">
-                        <table class="data-table inv-line-form" role="table">
-                            <thead>
-                                <tr role="row">
-                                    <th role="columnheader" scope="col">Description</th>
-                                    <th role="columnheader" scope="col" class="col-num">Qty</th>
-                                    <th role="columnheader" scope="col" class="col-money">Unit price</th>
-                                    <th role="columnheader" scope="col" class="col-money">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {{--
-                                    Three empty rows rather than a JavaScript
-                                    "add row" button. The row count is a server
-                                    concern once this saves — the backend
-                                    validates an array of lines and adds rows on
-                                    submit, so the form works with JavaScript
-                                    off, which is also how it stays testable.
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="inv-amount">Amount ({{ old('currency', \App\Support\Money::DEFAULT_CURRENCY) }})</label>
+                            {{-- inputmode="decimal" rather than type="number":
+                                 a spinner on a money field invites somebody to
+                                 nudge an amount with an arrow key. The server
+                                 parses this into integer minor units — see
+                                 App\Support\Money. Typed once, the way a
+                                 payslip's net figure is; there is no GST here
+                                 to compute from a rate and a quantity. --}}
+                            <input id="inv-amount" name="amount" type="text" inputmode="decimal" placeholder="0.00" required value="{{ old('amount') }}">
+                            @error('amount')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
 
-                                    The Amount column is deliberately not an
-                                    input. It is qty × unit price, computed
-                                    server-side on save; letting somebody type
-                                    an amount that disagrees with the two
-                                    figures beside it is how an invoice ends up
-                                    self-contradicting.
-                                --}}
-                                @for ($i = 0; $i < 3; $i++)
-                                    <tr role="row">
-                                        <td role="cell">
-                                            <label class="sr-only" for="line-{{ $i }}-desc">Line {{ $i + 1 }} description</label>
-                                            <input id="line-{{ $i }}-desc" name="lines[{{ $i }}][description]" type="text" placeholder="What was delivered" value="{{ old('lines.'.$i.'.description') }}">
-                                        </td>
-                                        <td role="cell" class="col-num">
-                                            <label class="sr-only" for="line-{{ $i }}-qty">Line {{ $i + 1 }} quantity</label>
-                                            <input id="line-{{ $i }}-qty" name="lines[{{ $i }}][qty]" type="text" inputmode="numeric" value="{{ old('lines.'.$i.'.qty', 1) }}">
-                                        </td>
-                                        <td role="cell" class="col-money">
-                                            <label class="sr-only" for="line-{{ $i }}-unit">Line {{ $i + 1 }} unit price</label>
-                                            <input id="line-{{ $i }}-unit" name="lines[{{ $i }}][unit]" type="text" inputmode="decimal" placeholder="0.00" value="{{ old('lines.'.$i.'.unit') }}">
-                                        </td>
-                                        <td role="cell" class="col-money money money-quiet">—</td>
-                                    </tr>
-                                @endfor
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="card-body">
-                        {{-- Blank rows are dropped on save rather than saved as
-                             empty lines, so three fields are up to three lines
-                             and one of them is enough. The "add row" button was
-                             a script that had to load before the form worked;
-                             a longer invoice is a line that says "and four
-                             others, itemised in the attached". --}}
-                        <p class="pay-hint pay-hint-block">
-                            Rows left blank are ignored. At least one line is needed.
-                        </p>
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="inv-document">Invoice document</label>
+                            {{-- `accept` narrows the file picker and protects
+                                 nothing. The write checks the CONTENT through
+                                 finfo, because an extension is whatever
+                                 somebody typed. --}}
+                            <input id="inv-document" name="document" type="file" accept="application/pdf,image/png,image/jpeg" required>
+                            @error('document')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                            <span class="pay-hint">This is the document the client sees and downloads. It can be replaced later, from the invoice page.</span>
+                        </div>
                     </div>
                 </div>
 
@@ -182,24 +152,14 @@
             <aside class="rail">
                 <section class="rail-card">
                     <div class="rail-hd">
-                        <strong>Totals</strong>
+                        <strong>About the amount</strong>
                     </div>
 
-                    <dl class="inv-totals inv-totals-quiet">
-                        <div class="inv-total-row">
-                            <dt>Total</dt>
-                            <dd class="money money-quiet">—</dd>
-                        </div>
-                        <div class="inv-total-row inv-total-due">
-                            <dt>Balance due</dt>
-                            <dd class="money money-quiet">—</dd>
-                        </div>
-                    </dl>
-
                     <p class="pay-hint pay-hint-block">
-                        Totals are computed from the lines when the invoice is
-                        saved, never typed. No tax is applied — ZephryxLabs is
-                        not GST-registered.
+                        Typed once, in the field on the left — not itemised, and
+                        not taxed. ZephryxLabs is not GST-registered, and this
+                        module records what was agreed rather than generating an
+                        invoice from a rate card.
                     </p>
                 </section>
 

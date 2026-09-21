@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Client;
 
 use App\Models\Client;
+use App\Models\Invoice;
 use App\Support\Audit\AuditLog;
 use App\Support\ClientPortal;
+use App\Support\Documents\DocumentStore;
 use App\Support\InvoicePresenter;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * The client's invoices.
@@ -20,12 +23,11 @@ use Illuminate\Validation\Rule;
  *
  * §9 makes this the one screen where the staff view and the client view must
  * show the same thing, and the reason is practical: this is the page that gets
- * argued about on a call. If our copy and their copy differ by a line, a date
- * or a total, the call is about the difference rather than the payment.
- *
- * So the detail page renders the same invoice partials the staff module built,
- * against the same records, with the same presenter. Nothing here re-derives a
- * figure and nothing re-words a status.
+ * argued about on a call. Since an invoice is an uploaded PDF now (decided
+ * 2026-09-11), that requirement is met by construction — there is exactly one
+ * file, wherever it lives, and both realms stream the same bytes back through
+ * App\Support\Documents\DocumentStore. Nothing here re-derives a figure and
+ * nothing re-renders the document as a second copy of itself.
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * Drafts never appear. An unsent invoice is a document somebody here is still
@@ -37,9 +39,7 @@ class InvoiceController extends PortalController
 {
     protected const PER_PAGE = 10;
 
-    public function __construct(protected AuditLog $audit)
-    {
-    }
+    public function __construct(protected AuditLog $audit, protected DocumentStore $documents) {}
 
     public function index(Request $request): Response
     {
@@ -91,29 +91,48 @@ class InvoiceController extends PortalController
     }
 
     /**
-     * GET /client/invoices/{invoice}/download
+     * GET /client/invoices/{invoice}/document/view — the uploaded PDF, opened
+     * rather than saved.
+     */
+    public function viewDocument(Request $request, string $invoice): StreamedResponse
+    {
+        $model = $this->documentFor($request, $invoice);
+
+        $this->auditDocumentAccess($request, $model, 'Viewed');
+
+        return $this->documents->viewInline($model->document_path, $model->document_name ?? $model->number.'.pdf');
+    }
+
+    /**
+     * GET /client/invoices/{invoice}/document/download
      *
      * ─────────────────────────────────────────────────────────────────────────
-     * IT IS A PRINTABLE PAGE, NOT A PDF, AND THAT IS A DECISION
+     * THE REAL FILE, THROUGH A ROUTE THAT CHECKS OWNERSHIP AND AUDITS IT
      *
-     * §6 asked for a generated PDF streamed through an authorising route. This
-     * host has no PDF library — no dompdf, no wkhtmltopdf, no imagick — and
-     * adding one is a deployment decision rather than a code change, the same
-     * wall the profile photo hit.
+     * Never a static path — the same rule as profile documents, for the same
+     * reason: an invoice names what a company pays and for what. Ownership is
+     * the query — `ClientPortal::invoice` cannot fetch somebody else's — and
+     * the access is audited before anything is streamed, because an entry
+     * written after a `return` is an entry that does not exist.
      *
-     * So the route returns the invoice as a page built for printing, which
-     * every browser turns into a PDF with one keystroke and which is generated
-     * from the same figures as the screen. What it does NOT do is pretend: the
-     * page says it is the printable version, and there is no file that claims
-     * to be a PDF and is not.
-     *
-     * The two properties §6 actually cares about hold either way. The ownership
-     * check is the query — `ClientPortal::invoice` cannot fetch somebody else's
-     * — and the download is audited before anything is rendered, because an
-     * entry written after a `return` is an entry that does not exist.
+     * Until 2026-09-21 this route generated a printable HTML page instead: the
+     * host had no PDF library, so a real PDF could not be produced here.
+     * Invoices becoming an upload rather than a generated document removed
+     * that problem along with the question that caused it — the file this
+     * route now serves is the one somebody in Finance attached, not something
+     * built on the fly.
      * ─────────────────────────────────────────────────────────────────────────
      */
-    public function download(Request $request, string $invoice): Response
+    public function downloadDocument(Request $request, string $invoice): StreamedResponse
+    {
+        $model = $this->documentFor($request, $invoice);
+
+        $this->auditDocumentAccess($request, $model, 'Downloaded');
+
+        return $this->documents->download($model->document_path, $model->document_name ?? $model->number.'.pdf');
+    }
+
+    protected function documentFor(Request $request, string $invoice): Invoice
     {
         $client = $this->client($request);
 
@@ -121,19 +140,23 @@ class InvoiceController extends PortalController
 
         abort_if($record === null, 404);
 
+        $model = $record['model'];
+
+        abort_if(! $model->hasDocument() || ! $this->documents->exists($model->document_path), 404);
+
+        return $model;
+    }
+
+    protected function auditDocumentAccess(Request $request, Invoice $model, string $verb): void
+    {
         $this->audit->record(
             action: AuditLog::INVOICE_DOWNLOADED,
             actor: $request->user(),
             entityType: 'invoice',
-            entityId: $record['id'],
-            after: $client->name.' downloaded '.$record['id'],
+            entityId: $model->number,
+            after: $verb.' '.$model->number,
             request: $request,
         );
-
-        return response()->view('client.invoices.print', [
-            'invoice' => $this->decorate($client, $record),
-            'client' => $client,
-        ]);
     }
 
     /**

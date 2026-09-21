@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Employee;
 use App\Models\Invoice;
-use App\Models\InvoiceLine;
 use App\Models\InvoicePayment;
 use App\Models\Project;
 use App\Support\Audit\AuditLog;
 use App\Support\ClientDirectory;
+use App\Support\Documents\DocumentStore;
 use App\Support\InvoiceDirectory;
 use App\Support\InvoicePresenter;
 use App\Support\Money;
@@ -17,6 +17,7 @@ use App\Support\Rbac\Rbac;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Carbon;
@@ -24,6 +25,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 /**
  * Invoices — what clients owe us and what has been received.
@@ -32,15 +35,17 @@ use Illuminate\Validation\ValidationException;
  * (`/invoices/{invoice}`) and the create form (`/invoices/create`).
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * FOUR OBLIGATIONS, ALL FOUR NOW IN THE SCHEMA AND THE WRITES
+ * FOUR OBLIGATIONS
  *
  * 1. AMOUNTS ARE INTEGER MINOR UNITS. No float touches money at any layer — not
  *    the column, not the request, not the calculation. App\Support\Money is the
  *    only thing that holds an amount.
  *
- * 2. TOTALS AND STATUS ARE DERIVED. The total is the sum of the lines; the
- *    status falls out of the payments and the due date. Neither is a column
- *    somebody can set, so neither can contradict the records beneath it.
+ * 2. THE INVOICE IS AN UPLOADED DOCUMENT, NOT A GENERATED ONE (decided
+ *    2026-09-11). The amount is typed once, the same way SalaryRecord's net
+ *    figure is — this is not "less derived" than the old line-item sum, it is
+ *    a different fact typed in a different number of fields. Status is still
+ *    derived, from the amount, the payments and the dates.
  *
  * 3. OWNERSHIP. §6 names invoices as the canonical case: "a client requesting
  *    invoice 47 must be verified as the owner of invoice 47", enforced at the
@@ -58,9 +63,11 @@ class InvoiceController extends Controller
     /** Matches the 132×132 viewBox and 18px stroke the donut is drawn at. */
     protected const DONUT_RADIUS = 48;
 
-    public function __construct(protected Rbac $rbac, protected AuditLog $audit)
-    {
-    }
+    public function __construct(
+        protected Rbac $rbac,
+        protected AuditLog $audit,
+        protected DocumentStore $documents,
+    ) {}
 
     /**
      * GET /invoices
@@ -148,13 +155,21 @@ class InvoiceController extends Controller
      * Raise an invoice.
      *
      * ─────────────────────────────────────────────────────────────────────────
-     * THE NUMBER IS ALLOCATED INSIDE THE TRANSACTION
+     * THE NUMBER IS ALLOCATED INSIDE A TRANSACTION; THE UPLOAD NEVER IS
      *
-     * Not read from the form — the form's copy is a preview, and by the time
-     * somebody submits it another invoice may exist. The allocation is a locked
-     * read of the table followed by the insert, in one transaction, so two
-     * people pressing Create in the same second get consecutive numbers rather
-     * than a unique-key error and a lost invoice.
+     * The number is not read from the form — the form's copy is a preview,
+     * and by the time somebody submits it another invoice may exist. The
+     * allocation is a locked read of the table followed by the insert, in one
+     * short, DB-only transaction, so two people pressing Create in the same
+     * second get consecutive numbers rather than a unique-key error and a
+     * lost invoice.
+     *
+     * The document upload happens AFTER that transaction commits, never
+     * inside it — Drive is a network call, and a database lock has no
+     * business waiting on one. If the upload fails, the invoice row already
+     * exists (as a draft with no document yet) rather than being lost, and
+     * the redirect says so: `send()` refuses a document-less invoice, so
+     * nothing reaches a client half-finished.
      *
      * It is created as a DRAFT. Sending is a separate act, because an invoice
      * that reaches a client the instant somebody finishes typing is one nobody
@@ -170,31 +185,17 @@ class InvoiceController extends Controller
             // interleave with.
             Invoice::query()->lockForUpdate()->count();
 
-            $invoice = Invoice::create([
+            return Invoice::create([
                 'number' => InvoiceDirectory::nextNumber(),
                 'client_id' => $data['client_id'],
                 'project_id' => $data['project_id'] ?? null,
                 'currency' => $data['currency'],
+                'amount_minor' => Money::fromMajor($data['amount'], $data['currency'])->minor,
                 'invoice_date' => $data['invoice_date'],
                 'due_date' => $data['due_date'],
                 'notes' => $data['notes'] ?? null,
             ]);
-
-            foreach (array_values($data['lines']) as $position => $line) {
-                InvoiceLine::create([
-                    'invoice_id' => $invoice->id,
-                    'description' => $line['description'],
-                    'quantity' => (int) $line['qty'],
-                    // Typed in major units, stored in minor, converted once.
-                    'unit_price_minor' => Money::fromMajor($line['unit'], $data['currency'])->minor,
-                    'position' => $position,
-                ]);
-            }
-
-            return $invoice;
         });
-
-        $invoice->load(['client', 'lines', 'payments']);
 
         $this->audit->record(
             action: AuditLog::INVOICE_CREATED,
@@ -206,10 +207,87 @@ class InvoiceController extends Controller
             request: $request,
         );
 
+        $status = $invoice->number.' created as a draft. Send it when it has been checked.';
+        $tone = 'success';
+
+        try {
+            $this->attachDocument($request, $invoice, $data['document']);
+        } catch (Throwable $e) {
+            $status = $invoice->number.' was created, but the document could not be stored: '
+                .$e->getMessage().' Attach it again from the invoice page before sending.';
+            $tone = 'warning';
+        }
+
         return redirect()
             ->route('invoices.show', ['invoice' => $invoice->number])
-            ->with('status', $invoice->number.' created as a draft. Send it when it has been checked.')
+            ->with('status', $status)
+            ->with('status_tone', $tone);
+    }
+
+    /**
+     * POST /invoices/{invoice}/document — attach or replace the PDF.
+     *
+     * The recovery path when `store()`'s own upload failed, and the ordinary
+     * path for correcting a document before the invoice is sent. Reuses the
+     * same audit action either way — see AuditLog::INVOICE_DOCUMENT_ADDED —
+     * because "attached" and "replaced" are the same fact from the record's
+     * point of view: which document is behind this invoice right now.
+     */
+    public function storeDocument(Request $request, string $invoice): RedirectResponse
+    {
+        $record = $this->find($invoice);
+        $model = $record['model'];
+
+        if ($model->isCancelled()) {
+            throw ValidationException::withMessages([
+                'document' => 'This invoice was cancelled. Nothing can be attached to it.',
+            ]);
+        }
+
+        $data = $request->validate([
+            'document' => [
+                'required', 'file',
+                'mimes:'.implode(',', DocumentStore::ALLOWED),
+                'max:'.(int) (DocumentStore::MAX_BYTES / 1024),
+            ],
+        ]);
+
+        try {
+            $this->attachDocument($request, $model, $data['document']);
+        } catch (Throwable $e) {
+            throw ValidationException::withMessages([
+                'document' => 'Could not store the file: '.$e->getMessage(),
+            ]);
+        }
+
+        return redirect()
+            ->route('invoices.show', ['invoice' => $model->number])
+            ->with('status', 'Document attached.')
             ->with('status_tone', 'success');
+    }
+
+    /**
+     * GET /invoices/{invoice}/document/download
+     */
+    public function downloadDocument(Request $request, string $invoice): StreamedResponse
+    {
+        $model = $this->documentFor($invoice);
+
+        $this->auditDocumentAccess($request, $model, 'Downloaded');
+
+        return $this->documents->download($model->document_path, $model->document_name ?? $model->number.'.pdf');
+    }
+
+    /**
+     * GET /invoices/{invoice}/document/view — opened rather than saved.
+     */
+    public function viewDocument(Request $request, string $invoice): StreamedResponse
+    {
+        $model = $this->documentFor($invoice);
+
+        $this->auditDocumentAccess($request, $model, 'Viewed');
+
+        return $this->documents->viewInline($model->document_path, $model->document_name ?? $model->number.'.pdf');
     }
 
     /**
@@ -261,7 +339,7 @@ class InvoiceController extends Controller
             'recorded_by' => $this->employeeFor($request)?->id,
         ]);
 
-        $model->load(['lines', 'payments']);
+        $model->load('payments');
 
         $this->audit->record(
             action: AuditLog::INVOICE_PAYMENT_RECORDED,
@@ -297,11 +375,12 @@ class InvoiceController extends Controller
             ]);
         }
 
-        if ($model->lines()->count() === 0) {
-            // An invoice for nothing is not a document anybody should be able
-            // to put in front of a client.
+        if (! $model->hasDocument()) {
+            // An invoice with nothing behind it is not a document anybody
+            // should be able to put in front of a client — the same rule
+            // that used to be "no lines", read against the new shape.
             throw ValidationException::withMessages([
-                'send' => 'This invoice has no lines on it.',
+                'send' => 'This invoice has no document attached yet.',
             ]);
         }
 
@@ -396,6 +475,62 @@ class InvoiceController extends Controller
        ══════════════════════════════════════════════════════════════════════ */
 
     /**
+     * Store or replace the document behind an invoice.
+     *
+     * A replaced document's old file goes. Nothing points at it any more, and
+     * keeping a superseded invoice PDF with no record naming it is worse than
+     * deleting it — the same rule SalaryController::storePayslip follows.
+     */
+    protected function attachDocument(Request $request, Invoice $invoice, UploadedFile $file): void
+    {
+        $wasAttached = $invoice->hasDocument();
+        $previous = $invoice->document_path;
+
+        $stored = $this->documents->put('invoices/'.$invoice->number, $file);
+
+        $invoice->update([
+            'document_path' => $stored['path'],
+            'document_name' => $stored['name'],
+            'document_bytes' => $stored['bytes'],
+            'document_added_at' => now(),
+            'document_added_by' => $this->employeeFor($request)?->id,
+        ]);
+
+        $this->documents->forget($previous);
+
+        $this->audit->record(
+            action: AuditLog::INVOICE_DOCUMENT_ADDED,
+            actor: $request->user(),
+            entityType: 'invoice',
+            entityId: $invoice->number,
+            after: $wasAttached ? 'Document replaced' : 'Document attached',
+            request: $request,
+        );
+    }
+
+    protected function documentFor(string $invoice): Invoice
+    {
+        $record = $this->find($invoice);
+        $model = $record['model'];
+
+        abort_if(! $model->hasDocument() || ! $this->documents->exists($model->document_path), 404);
+
+        return $model;
+    }
+
+    protected function auditDocumentAccess(Request $request, Invoice $model, string $verb): void
+    {
+        $this->audit->record(
+            action: AuditLog::INVOICE_DOWNLOADED,
+            actor: $request->user(),
+            entityType: 'invoice',
+            entityId: $model->number,
+            after: $verb.' the document',
+            request: $request,
+        );
+    }
+
+    /**
      * @return array<string, mixed>
      */
     protected function find(string $number): array
@@ -417,21 +552,6 @@ class InvoiceController extends Controller
      */
     protected function validated(Request $request): array
     {
-        /*
-         * Blank rows are dropped before validation, not refused by it. The form
-         * offers three and most invoices use one, so an empty second row is the
-         * normal case rather than a mistake — and rejecting it would make
-         * somebody delete placeholder text to save a one-line invoice.
-         */
-        $request->merge([
-            'lines' => array_values(array_filter(
-                (array) $request->input('lines', []),
-                fn ($line) => is_array($line)
-                    && (trim((string) ($line['description'] ?? '')) !== ''
-                        || trim((string) ($line['unit'] ?? '')) !== ''),
-            )),
-        ]);
-
         $data = $request->validate([
             'client_id' => ['required', Rule::exists('clients', 'id')],
             'project_id' => ['nullable', Rule::exists('projects', 'id')],
@@ -440,11 +560,12 @@ class InvoiceController extends Controller
             'due_date' => ['required', 'date', 'after_or_equal:invoice_date'],
             'notes' => ['nullable', 'string', 'max:2000'],
 
-            // At least one line. An invoice for nothing is not a document.
-            'lines' => ['required', 'array', 'min:1'],
-            'lines.*.description' => ['required', 'string', 'max:300'],
-            'lines.*.qty' => ['required', 'integer', 'min:1', 'max:100000'],
-            'lines.*.unit' => ['required', 'numeric', 'min:0', 'max:99999999'],
+            'amount' => ['required', 'numeric', 'min:0.01', 'max:99999999'],
+            'document' => [
+                'required', 'file',
+                'mimes:'.implode(',', DocumentStore::ALLOWED),
+                'max:'.(int) (DocumentStore::MAX_BYTES / 1024),
+            ],
         ]);
 
         if (($data['project_id'] ?? null) !== null) {

@@ -55,17 +55,21 @@ Route::get('/invoices/{invoice}', [ClientInvoiceController::class, 'show'])
 
 /*
  * The document, through a route that checks ownership and audits the
- * download — never a static file under a guessable path, for the same
- * reason profile documents are not. An invoice names what a company pays
- * and for what.
+ * access — never a static file under a guessable path, for the same reason
+ * profile documents are not. An invoice names what a company pays and for
+ * what.
  *
- * It renders a printable page rather than generating a PDF: this host has no
- * PDF library, and a route that returned a file claiming to be one would be
- * worse than an honest page. See Client\InvoiceController::download.
+ * The real uploaded PDF, not a page built to look like one — invoices became
+ * an upload rather than a generated document on 2026-09-21, which is what
+ * makes this possible at all. `view` opens it in the browser; `download`
+ * saves it. See Client\InvoiceController.
  */
-Route::get('/invoices/{invoice}/download', [ClientInvoiceController::class, 'download'])
+Route::get('/invoices/{invoice}/document/view', [ClientInvoiceController::class, 'viewDocument'])
     ->where('invoice', '[A-Za-z0-9-]{1,32}')
-    ->name('invoices.download');
+    ->name('invoices.document.view');
+Route::get('/invoices/{invoice}/document/download', [ClientInvoiceController::class, 'downloadDocument'])
+    ->where('invoice', '[A-Za-z0-9-]{1,32}')
+    ->name('invoices.document.download');
 
 Route::get('/tickets', [ClientTicketController::class, 'index'])->name('tickets.index');
 // Before /tickets/{ticket}, or "raise" is read as a ticket reference.

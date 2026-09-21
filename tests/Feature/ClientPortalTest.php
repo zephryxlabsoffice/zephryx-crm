@@ -11,7 +11,8 @@ use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\User;
 use App\Support\ClientPortal;
-use App\Support\TicketPresenter;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -380,7 +381,7 @@ class ClientPortalTest extends TestCase
         $this->assertStringNotContainsString($draft->number, $this->pageBody('/client/invoices'));
 
         $this->get('/client/invoices/'.$draft->number)->assertNotFound();
-        $this->get('/client/invoices/'.$draft->number.'/download')->assertNotFound();
+        $this->get('/client/invoices/'.$draft->number.'/document/download')->assertNotFound();
     }
 
     public function test_a_client_does_not_see_internal_tickets_on_their_own_project(): void
@@ -541,47 +542,60 @@ class ClientPortalTest extends TestCase
         $this->assertSame($wasIndustry, $client->industry);
     }
 
-    public function test_the_printable_invoice_is_the_clients_own_and_is_logged(): void
-    {
-        $invoice = Invoice::query()
-            ->where('client_id', $this->ours()->id)
-            ->whereNotNull('sent_at')
-            ->firstOrFail();
-
-        $this->get('/client/invoices/'.$invoice->number.'/download')
-            ->assertOk()
-            ->assertSee($invoice->number, false);
-
-        $this->assertDatabaseHas('audit_log', [
-            'action' => 'invoice.downloaded',
-            'entity_id' => $invoice->number,
-        ]);
-
-        // Somebody else's is a 404, like every other read in this realm.
-        $this->get('/client/invoices/'.$this->theirInvoice().'/download')->assertNotFound();
-    }
-
-    public function test_the_printable_copy_does_not_claim_to_be_a_pdf(): void
+    public function test_the_document_is_the_clients_own_and_is_logged(): void
     {
         /*
-         * This host has no PDF library. The page says what it is and the button
-         * that leads to it says "Printable copy" — a file claiming to be a PDF
-         * and not being one is worse than an honest page.
+         * The seeded invoices carry no document — see InvoiceSeeder, which
+         * follows SalarySeeder's own reasoning: there is no PDF to invent,
+         * and a row whose `document_path` pointed at nothing would break the
+         * download route rather than demonstrate it. So this test attaches
+         * one directly, the same way InvoiceWritesTest::anInvoice() does.
          */
+        Storage::fake('local');
+
         $invoice = Invoice::query()
             ->where('client_id', $this->ours()->id)
             ->whereNotNull('sent_at')
             ->firstOrFail();
 
-        $this->assertStringContainsString(
-            'Printable copy',
-            $this->get('/client/invoices/'.$invoice->number)->getContent(),
+        Storage::disk('local')->put('invoices/'.$invoice->number.'/stored.pdf', 'not a real pdf');
+        $invoice->update([
+            'document_path' => 'invoices/'.$invoice->number.'/stored.pdf',
+            'document_name' => 'invoice.pdf',
+            'document_bytes' => 14,
+        ]);
+
+        $download = $this->get('/client/invoices/'.$invoice->number.'/document/download');
+        $download->assertOk();
+        $this->assertStringContainsString('attachment', $download->headers->get('content-disposition'));
+
+        $view = $this->get('/client/invoices/'.$invoice->number.'/document/view');
+        $view->assertOk();
+        $this->assertStringContainsString('inline', $view->headers->get('content-disposition'));
+
+        $this->assertSame(
+            2,
+            DB::table('audit_log')->where('action', 'invoice.downloaded')
+                ->where('entity_id', $invoice->number)->count(),
         );
 
-        $this->assertStringContainsString(
-            'printable copy',
-            $this->get('/client/invoices/'.$invoice->number.'/download')->getContent(),
-        );
+        // Somebody else's is a 404, like every other read in this realm.
+        $this->get('/client/invoices/'.$this->theirInvoice().'/document/download')->assertNotFound();
+    }
+
+    public function test_an_invoice_with_no_document_yet_404s_rather_than_erroring(): void
+    {
+        // The seeded set demonstrates exactly this state — see the note on
+        // the test above.
+        $invoice = Invoice::query()
+            ->where('client_id', $this->ours()->id)
+            ->whereNotNull('sent_at')
+            ->firstOrFail();
+
+        $this->assertFalse($invoice->hasDocument());
+
+        $this->get('/client/invoices/'.$invoice->number.'/document/download')->assertNotFound();
+        $this->get('/client/invoices/'.$invoice->number.'/document/view')->assertNotFound();
     }
 
     /* ══════════════════════════════════════════════════════════════════════
@@ -682,7 +696,7 @@ class ClientPortalTest extends TestCase
     public function test_the_write_routes_exist_so_the_forms_are_real(): void
     {
         foreach (['client.tickets.store', 'client.tickets.comment', 'client.meetings.request',
-            'client.profile.update', 'client.invoices.download'] as $route) {
+            'client.profile.update', 'client.invoices.document.download', 'client.invoices.document.view'] as $route) {
             $this->assertTrue(app('router')->has($route), $route.' is missing');
         }
     }
