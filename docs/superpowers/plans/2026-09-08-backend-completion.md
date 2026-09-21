@@ -624,15 +624,35 @@ get them:
   moved onto the base `Tests\TestCase` alongside the two fixture keys, so this
   suite and `GoogleIntegrationTest` share them. **1256 tests pass.**
 
+**The inline PDF viewer is built too (2026-09-21, commit `8a6753b`).**
+`DocumentStore::stream()`'s old refusal of uploaded files ("Never for an
+uploaded document") is met on its own terms, not loosened:
+
+- **`DocumentStore::viewInline()`** — a sibling to `stream()`, not a change to
+  it. Works on both drivers, and takes an optional `$mimeType` (Employee
+  Document's stored, content-sniffed `mime`; derived from the display name's
+  extension when there is no such column, i.e. a payslip).
+- **`SecurityHeaders` locks the CSP to nothing for any `application/pdf`
+  response** — checked by `Content-Type`, not by route, so this is a property
+  of the response, not something a future PDF route has to remember to ask
+  for. This is the plan doc's own condition ("How, concretely", point 4) for
+  letting an uploaded PDF render inline at all.
+- **`salary.payslip.view`** and **`profile.documents.view`** — siblings to the
+  existing `.download` routes, same guard, same audit action
+  (`SALARY_PAYSLIP_DOWNLOADED` / `PROFILE_DOCUMENT_DOWNLOADED` — viewing is
+  still "somebody obtained the bytes," not a different act). Both pages' links
+  now point at `.view` by default, opening in the browser rather than saving —
+  the plan doc's "clicking a payslip lands on the document itself." No
+  separate download link was kept: the browser's own PDF viewer already has
+  one in its toolbar.
+- **26 new tests** (1268 total) — the middleware's CSP swap proven directly,
+  both viewer routes end to end, `viewInline()` on both drivers.
+
 **Still to build, not this pass:**
 
 - **Tickets and tasks have no attachment feature at all yet** — not a Drive
-  gap, the upload UI and columns for either don't exist. The driver is ready
-  for whenever that module lands.
-- **The inline PDF viewer** (plan doc, "In-browser viewing is ours, not
-  Drive's") is not built. `DocumentStore::stream()` still refuses everything
-  but a local PNG/JPEG — a downloaded payslip works today; opening one in the
-  browser does not yet.
+  gap, the upload UI and columns for either don't exist. The driver — and now
+  the viewer — are ready for whenever that module lands.
 - **`GoogleMeetProvider` still throws** on every method, deliberately, per its
   own header comment. It does not yet read `GoogleConnection` — when it is
   built, it should, not `config('meetings.google.*')`, which is what it
