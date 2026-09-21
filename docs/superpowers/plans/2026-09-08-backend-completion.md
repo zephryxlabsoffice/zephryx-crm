@@ -706,9 +706,35 @@ State verified in code on 2026-09-17, not assumed:
 - `pint --test` fails across ~150 pre-existing files; style has never been
   enforced here, and a formatting pass is its own job. (The files this pass
   touched are pint-clean.)
-- `php artisan migrate` has NOT been run against the owner's MySQL — it is not
-  reachable from this machine either. The tests use SQLite. Seven migrations
-  are waiting: `000017` through `000023`.
+
+## All 32 migrations verified against real MySQL (2026-09-21)
+
+Superseding the line above: `php artisan migrate` had never been run against
+MySQL — SQLite in tests only, and MySQL was not reachable from this dev
+machine at all (no server installed). Fixed and verified the same session:
+MySQL installed via scoop (the same tool already used for PHP/Composer here),
+a `zephryx_crm` database created, and every migration — `0001_01_01_...`
+through `2026_09_21_000024` — ran clean with no errors. Spot-checked the
+migrations most likely to behave differently under MySQL than SQLite (the
+`aadhaar` → `id_proof_number` rename, the `invoice_lines` drop, the new
+`google_connection` and `invoices.document_*` columns) directly against the
+schema; all matched what the SQLite-backed tests already proved.
+
+`RbacSeeder` and `MasterDataSeeder` — the two seeders `DatabaseSeeder` runs
+unconditionally, not gated to local + debug — were also run against this
+database and verified: 62 permissions (including `admin.integrations.view`,
+seeded correctly from this session's own Drive work), 8 roles, 26 master data
+rows. `AccountSeeder`'s demo-account half was deliberately NOT run — this
+local MySQL has `APP_ENV=local`/`APP_DEBUG=true`, under which it would seed
+the whole demo dataset with a well-known password, which was out of scope for
+what was asked.
+
+**This is a local MySQL on this dev machine, not the owner's actual
+production database.** It proves the migrations and the production seeders
+are MySQL-clean; it does not mean anything has touched real infrastructure.
+The server is running as a foreground process started this session (not
+installed as a Windows service) — it will not survive a reboot without that
+extra step, which nobody has asked for.
 
 ## Open questions — Client portal and Admin panel (asked 2026-09-17)
 
