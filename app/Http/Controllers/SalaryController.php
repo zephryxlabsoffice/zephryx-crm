@@ -22,6 +22,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 /**
  * Salary — recording payslips and tracking who has been paid.
@@ -61,8 +62,7 @@ class SalaryController extends Controller
         protected Rbac $rbac,
         protected AuditLog $audit,
         protected DocumentStore $documents,
-    ) {
-    }
+    ) {}
 
     /**
      * GET /salary — the month's payroll.
@@ -260,7 +260,21 @@ class SalaryController extends Controller
             ? 'net '.$record->net()->format()
             : null;
 
-        $stored = $this->documents->put('payslips/'.$period, $request->file('payslip'));
+        try {
+            $stored = $this->documents->put('payslips/'.$period, $request->file('payslip'));
+        } catch (Throwable $e) {
+            /*
+             * Nothing is saved on the way to this line, so there is no
+             * partial state to leave behind — unlike a meeting's calendar
+             * event, a payslip upload that fails here simply never happened.
+             * A validation error on the same field the "already paid" refusal
+             * above uses, rather than a 500: the cause is Drive being
+             * unreachable or not yet connected, not a bug in this request.
+             */
+            throw ValidationException::withMessages([
+                'payslip' => 'Could not store the file: '.$e->getMessage(),
+            ]);
+        }
 
         // A replaced payslip's file goes. Nothing points at it any more, and
         // keeping somebody's pay document with no record naming it is worse

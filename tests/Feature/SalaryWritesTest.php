@@ -90,6 +90,8 @@ class SalaryWritesTest extends TestCase
          */
         $subject = $this->anEmployee('EMP871', 'Their Person');
         $this->signInAsPayroll();
+        $this->connectGoogleDrive();
+        $this->fakeDriveUpload();
 
         $this->post('/salary/EMP871/'.$this->period().'/payslip', [
             'net' => '75000.50',
@@ -114,6 +116,8 @@ class SalaryWritesTest extends TestCase
         $record = $this->aRecord($subject, ['net_minor' => 7500050]);
 
         $this->signInAsPayroll();
+        $this->connectGoogleDrive();
+        $this->fakeDriveUpload();
 
         $this->post('/salary/EMP883/'.$this->period().'/payslip', [
             'net' => $record->net()->plain(),
@@ -126,12 +130,15 @@ class SalaryWritesTest extends TestCase
     public function test_the_file_is_stored_off_the_webroot_under_a_name_we_chose(): void
     {
         /*
-         * An uploaded name reaching the filesystem is how "../../.env" and
+         * An uploaded name reaching storage is how "../../.env" and
          * "payslip.pdf.php" become a problem. The original is kept in the
-         * database for display and never used as a path.
+         * database for display and never used as a path — nor, now that this
+         * goes to Drive, as the stored file's own name.
          */
         $this->anEmployee('EMP872', 'Their Person');
         $this->signInAsPayroll();
+        $this->connectGoogleDrive();
+        $this->fakeDriveUpload();
 
         $this->post('/salary/EMP872/'.$this->period().'/payslip', [
             'net' => '50000',
@@ -140,12 +147,9 @@ class SalaryWritesTest extends TestCase
 
         $record = SalaryRecord::query()->latest('id')->firstOrFail();
 
-        $this->assertStringStartsWith('payslips/'.$this->period().'/', $record->payslip_path);
-        $this->assertStringEndsWith('.pdf', $record->payslip_path);
+        $this->assertStringStartsWith('drive:', $record->payslip_path);
         $this->assertStringNotContainsString('September payslip', $record->payslip_path);
         $this->assertSame('September payslip.pdf', $record->payslip_name);
-
-        Storage::disk('local')->assertExists($record->payslip_path);
     }
 
     public function test_a_file_that_is_not_an_allowed_type_is_refused(): void
@@ -198,6 +202,8 @@ class SalaryWritesTest extends TestCase
         $this->aRecord($subject, ['net_minor' => 5000000, 'payslip_name' => 'old.pdf']);
 
         $this->signInAsPayroll();
+        $this->connectGoogleDrive();
+        $this->fakeDriveUpload();
 
         $this->post('/salary/EMP875/'.$this->period().'/payslip', [
             'net' => '60000',

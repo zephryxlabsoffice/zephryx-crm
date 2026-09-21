@@ -2,16 +2,22 @@
 
 namespace Tests\Feature;
 
+use App\Mail\AccountInviteMail;
 use App\Models\Employee;
 use App\Models\EmployeeBanking;
+use App\Models\EmployeeDocument;
 use App\Models\EmployeeProfile;
+use App\Models\EmployeeSalaryStructure;
 use App\Models\MasterDataItem;
 use App\Models\User;
 use App\Support\Audit\AuditLog;
 use App\Support\Documents\DocumentStore;
 use App\Support\IdProof;
+use App\Support\ProfileDirectory;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -96,7 +102,7 @@ class EmployeeConversionTest extends TestCase
         $intern = $this->intern();
         $this->post('/employees/'.$intern->user->user_id.'/convert');
 
-        Mail::assertSent(\App\Mail\AccountInviteMail::class);
+        Mail::assertSent(AccountInviteMail::class);
     }
 
     public function test_the_leave_year_starts_again_from_the_conversion(): void
@@ -180,6 +186,74 @@ class EmployeeConversionTest extends TestCase
         $this->assertTrue(app(DocumentStore::class)->exists($stored['path']));
     }
 
+    public function test_a_drive_backed_document_is_copied_on_drives_own_terms_not_downloaded(): void
+    {
+        /*
+         * Documents are Drive-backed going forward (see DocumentStore's class
+         * header), so carryDocuments() has to use Drive's own copy endpoint —
+         * not download the bytes through this application and re-upload
+         * them, which is slower and is exactly the two-call shape
+         * DriveClient::copyFile() exists to avoid.
+         */
+        $this->signInAsStaff(['employee', 'hr']);
+
+        $intern = $this->intern();
+
+        $this->connectGoogleDrive();
+
+        /*
+         * One fake for the whole scenario, not one per phase: DriveClient's
+         * folder lookup, folder create and file-metadata-create all hit the
+         * same URL (differing only by HTTP method), so a second `Http::fake`
+         * call registered later does not replace the first — Laravel checks
+         * stubs oldest-first, and an exhausted sequence throws rather than
+         * falling through to a newer one. Four calls land on that one URL
+         * across this test: three from the initial upload, one more from the
+         * conversion's own folder lookup (the folder already exists by then).
+         */
+        Http::fake([
+            'https://oauth2.googleapis.com/token' => Http::response(['access_token' => 'fake-token'], 200),
+            'https://www.googleapis.com/drive/v3/files?*' => Http::sequence()
+                ->push(['files' => []], 200) // put(): folder lookup, not found
+                ->push(['id' => 'folder-id'], 200) // put(): folder created
+                ->push(['id' => 'file-id'], 200) // put(): file metadata created
+                ->push(['files' => [['id' => 'folder-id']]], 200), // copyFile(): folder lookup, found
+            'https://www.googleapis.com/upload/drive/v3/files/*' => Http::response(['id' => 'file-id'], 200),
+            'https://www.googleapis.com/drive/v3/files/*/copy*' => Http::response(
+                ['id' => 'copied-file-id', 'size' => '1024'],
+                200,
+            ),
+        ]);
+
+        $stored = app(DocumentStore::class)->put(
+            'employees/'.$intern->id.'/documents',
+            UploadedFile::fake()->create('offer-letter.pdf', 10, 'application/pdf'),
+        );
+
+        $document = EmployeeDocument::create([
+            'reference' => ProfileDirectory::nextDocumentReference(),
+            'employee_id' => $intern->id,
+            'name' => 'Offer letter.pdf',
+            'kind' => 'employment',
+            'path' => $stored['path'],
+            'bytes' => $stored['bytes'],
+            'mime' => 'application/pdf',
+        ]);
+
+        $this->post('/employees/'.$intern->user->user_id.'/convert')->assertRedirect();
+
+        $fresh = Employee::where('converted_from_id', $intern->id)->firstOrFail();
+        $copied = EmployeeDocument::where('employee_id', $fresh->id)->firstOrFail();
+
+        $this->assertSame('drive:copied-file-id', $copied->path);
+        $this->assertSame(1024, $copied->bytes);
+        $this->assertNotSame($document->path, $copied->path);
+
+        // The download route — the only way bytes actually pass through this
+        // application — was never hit.
+        Http::assertNotSent(fn ($request) => str_contains((string) $request->url(), 'alt=media'));
+    }
+
     public function test_the_salary_is_deliberately_not_carried(): void
     {
         /*
@@ -195,7 +269,7 @@ class EmployeeConversionTest extends TestCase
 
         $fresh = Employee::where('converted_from_id', $intern->id)->with('user')->firstOrFail();
 
-        $this->assertSame(0, \App\Models\EmployeeSalaryStructure::where('employee_id', $fresh->id)->count());
+        $this->assertSame(0, EmployeeSalaryStructure::where('employee_id', $fresh->id)->count());
 
         $this->get('/employees/'.$fresh->user->user_id)->assertOk()->assertSee('Nothing on file yet');
     }

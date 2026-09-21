@@ -2,18 +2,22 @@
 
 namespace Tests\Feature;
 
+use App\Models\EmailChange;
 use App\Models\Employee;
 use App\Models\EmployeeDocument;
-use App\Models\LeaveRequest;
+use App\Models\ProfileChangeRequest;
 use App\Models\Project;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Support\LeaveDirectory;
 use App\Support\LeavePolicy;
+use App\Support\Profile\ProfileChanges;
 use App\Support\ProfileDirectory;
 use App\Support\ProfilePolicy;
 use App\Support\Rbac\Rbac;
 use Database\Seeders\AccountSeeder;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 /**
@@ -168,7 +172,7 @@ class ProfilePageTest extends TestCase
         // reach the record through either path.
         $this->assertNotSame('+91 90000 12345', $this->viewer->fresh()->profile?->phone);
 
-        $changes = \App\Models\ProfileChangeRequest::query()->pending()->firstOrFail()->changes;
+        $changes = ProfileChangeRequest::query()->pending()->firstOrFail()->changes;
 
         $this->assertSame('+91 90000 12345', $changes['phone']);
 
@@ -242,7 +246,7 @@ class ProfilePageTest extends TestCase
 
         $this->assertSame($wasPhone, $this->viewer->fresh()->profile?->phone);
 
-        $pending = \App\Models\ProfileChangeRequest::query()->pending()->firstOrFail();
+        $pending = ProfileChangeRequest::query()->pending()->firstOrFail();
 
         // Empties dropped and duplicates removed BEFORE the comparison:
         // "English, Hindi,  , English" is a typo, not four languages — and a
@@ -263,7 +267,7 @@ class ProfilePageTest extends TestCase
         $this->post('/profile', $this->details(['phone' => '+91 90000 00000']))
             ->assertSessionHasErrors('pending');
 
-        $this->assertSame(1, \App\Models\ProfileChangeRequest::query()->pending()->count());
+        $this->assertSame(1, ProfileChangeRequest::query()->pending()->count());
     }
 
     public function test_a_submission_that_changes_nothing_asks_for_nothing(): void
@@ -279,13 +283,13 @@ class ProfilePageTest extends TestCase
         // Apply it for real first, so the second submission genuinely differs
         // from nothing.
         $this->post('/profile', $this->details())->assertRedirect('/profile');
-        $pending = \App\Models\ProfileChangeRequest::query()->pending()->firstOrFail();
+        $pending = ProfileChangeRequest::query()->pending()->firstOrFail();
 
-        app(\App\Support\Profile\ProfileChanges::class)->apply($pending, $this->viewer->user);
+        app(ProfileChanges::class)->apply($pending, $this->viewer->user);
 
         $this->post('/profile', $this->details())->assertRedirect('/profile');
 
-        $this->assertSame(0, \App\Models\ProfileChangeRequest::query()->pending()->count());
+        $this->assertSame(0, ProfileChangeRequest::query()->pending()->count());
     }
 
     public function test_a_request_can_be_withdrawn(): void
@@ -294,10 +298,10 @@ class ProfilePageTest extends TestCase
 
         $this->post('/profile/requests/withdraw')->assertRedirect('/profile');
 
-        $this->assertSame(0, \App\Models\ProfileChangeRequest::query()->pending()->count());
+        $this->assertSame(0, ProfileChangeRequest::query()->pending()->count());
         // Kept, not deleted: "they asked and then changed their mind" is still
         // the history an argument later turns on.
-        $this->assertSame(1, \App\Models\ProfileChangeRequest::query()->count());
+        $this->assertSame(1, ProfileChangeRequest::query()->count());
     }
 
     /**
@@ -377,7 +381,7 @@ class ProfilePageTest extends TestCase
             'current_password' => AccountSeeder::DEV_PASSWORD,
         ])->assertRedirect();
 
-        $change = \App\Models\EmailChange::firstOrFail();
+        $change = EmailChange::firstOrFail();
 
         $this->assertSame($was, $user->fresh()->email, 'the address moved before anybody confirmed');
 
@@ -418,7 +422,7 @@ class ProfilePageTest extends TestCase
 
         $user = $this->viewer->user->fresh();
 
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('a perfectly fine passphrase', $user->password));
+        $this->assertTrue(Hash::check('a perfectly fine passphrase', $user->password));
         $this->assertNotNull($user->password_changed_at);
     }
 
@@ -516,6 +520,35 @@ class ProfilePageTest extends TestCase
             'action' => 'profile.document_downloaded',
             'actor_user_id' => $this->viewer->user_id,
         ]);
+    }
+
+    public function test_uploading_a_document_stores_it_on_drive(): void
+    {
+        // Documents are Drive-backed going forward — see DocumentStore's
+        // class header.
+        $this->connectGoogleDrive();
+        $this->fakeDriveUpload();
+
+        $this->post('/profile/documents', [
+            'document' => UploadedFile::fake()->create('resume.pdf', 30, 'application/pdf'),
+            'kind' => 'resume',
+        ])->assertRedirect();
+
+        $document = EmployeeDocument::where('employee_id', $this->viewer->id)
+            ->where('name', 'resume.pdf')
+            ->firstOrFail();
+
+        $this->assertStringStartsWith('drive:', $document->path);
+    }
+
+    public function test_a_document_upload_that_cannot_reach_drive_is_a_validation_error_not_a_500(): void
+    {
+        // No connectGoogleDrive() — the singleton row does not exist, so
+        // DocumentStore::put() throws before anything is saved.
+        $this->post('/profile/documents', [
+            'document' => UploadedFile::fake()->create('resume.pdf', 30, 'application/pdf'),
+            'kind' => 'resume',
+        ])->assertSessionHasErrors('document');
     }
 
     public function test_the_activity_log_is_the_viewers_own_only(): void
@@ -830,7 +863,7 @@ class ProfilePageTest extends TestCase
      * lookup `confirm()` does without weakening the storage to make a test
      * convenient.
      */
-    protected function tokenFor(\App\Models\EmailChange $change, string $half): string
+    protected function tokenFor(EmailChange $change, string $half): string
     {
         $token = 'test-token-'.$half.'-'.$change->id;
 

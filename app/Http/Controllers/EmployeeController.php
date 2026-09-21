@@ -4,26 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Mail\AccountInviteMail;
 use App\Models\Employee;
+use App\Models\EmployeeBanking;
+use App\Models\EmployeeDocument;
+use App\Models\EmployeeProfile;
+use App\Models\EmployeeSalaryStructure as SalaryStructureModel;
 use App\Models\MasterDataItem;
+use App\Models\ProfileChangeRequest;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Audit\AuditLog;
 use App\Support\Auth\PasswordResets;
 use App\Support\Documents\DocumentStore;
-use App\Support\ProfileDirectory;
-use App\Models\EmployeeBanking;
-use App\Models\EmployeeDocument;
-use App\Models\EmployeeProfile;
-use App\Models\EmployeeSalaryStructure as SalaryStructureModel;
-use App\Models\ProfileChangeRequest;
 use App\Support\EmployeeDirectory;
-use App\Support\Money;
-use App\Support\SalaryStructure;
 use App\Support\EmployeePresenter;
 use App\Support\IdProof;
+use App\Support\Money;
+use App\Support\ProfileDirectory;
 use App\Support\Rbac\Rbac;
 use App\Support\Realm;
 use App\Support\SalaryDirectory;
+use App\Support\SalaryStructure;
 use App\Support\Sensitive;
 use App\Support\StaffId;
 use Illuminate\Http\RedirectResponse;
@@ -71,8 +71,7 @@ class EmployeeController extends Controller
         protected Rbac $rbac,
         protected AuditLog $audit,
         protected DocumentStore $documents,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -1190,7 +1189,19 @@ class EmployeeController extends Controller
                 continue;
             }
 
-            $copied = $this->documents->copy($document->path, 'employees/'.$to->id.'/documents');
+            try {
+                $copied = $this->documents->copy($document->path, 'employees/'.$to->id.'/documents');
+            } catch (\Throwable $e) {
+                /*
+                 * Same tolerance as a missing source, extended to a Drive
+                 * that will not answer right now: the conversion is the act
+                 * that matters, and it runs inside one transaction (see
+                 * performConversion). Failing the whole thing because one old
+                 * document could not be copied would lose the account
+                 * creation over a problem that has nothing to do with it.
+                 */
+                continue;
+            }
 
             EmployeeDocument::create([
                 'reference' => ProfileDirectory::nextDocumentReference(),

@@ -2,6 +2,10 @@
 
 namespace App\Support\Documents;
 
+use App\Models\GoogleConnection;
+use App\Support\Google\DriveClient;
+use App\Support\Google\GoogleAuth;
+use App\Support\Google\GoogleServiceAccountKey;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -12,24 +16,50 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * Files this application holds on somebody's behalf.
  *
  * ═════════════════════════════════════════════════════════════════════════════
- * NOTHING THIS CLASS WRITES IS REACHABLE OVER HTTP
+ * TWO DRIVERS, ONE SEAM — AND THE METHOD CALLED IS THE ROUTING
  *
- * Everything goes to the `local` disk, which is `storage/app/private` — outside
- * the webroot. §6 requires it and the reason is one sentence: a payslip or a
- * PAN scan under a guessable public path is a link somebody can forward, and no
- * amount of care in the application can take it back.
+ * Decided 2026-09-16: photos stay on the local disk (small, few of them,
+ * nothing to check them against); payslips, invoices and ticket/task
+ * attachments go to Google Drive. The application never passes a "which
+ * driver" flag to say so, because the two kinds of write already arrive
+ * through different methods:
  *
- * So there is no `url()` here and there never will be. Files come back through
- * `download()`, from a controller that has already decided the person asking
- * may have this one and has written an audit entry saying they did.
+ *   putBytes() — bytes this application composed (a resized photo). Always
+ *   local. Every call site already is a photo; see App\Support\Images\
+ *   PhotoIntake, the only producer of bytes this method receives.
+ *
+ *   put() — a file somebody uploaded (a payslip, a document). Always Drive.
+ *
+ * `exists()`, `copy()`, `download()` and `forget()` take a stored `path` back
+ * and cannot ask the caller which driver wrote it, so the path itself carries
+ * that: a Drive file lives behind the `drive:` prefix this class puts on it,
+ * and everything else is a local disk path exactly as before. A local path
+ * can never collide with the prefix — `put()`'s local paths are composed from
+ * a folder and `Str::random(40)`, never typed by hand.
+ *
+ * NOTHING IS MIGRATED (decided 2026-09-16). Files already on local disk
+ * before this landed — demo content — stay there and still work; `copy()` and
+ * `download()` read the prefix to decide, not a global switch. The production
+ * seeder ships no files, so the first real payslip goes straight to Drive.
+ * ═════════════════════════════════════════════════════════════════════════════
+ *
+ * NOTHING THIS CLASS WRITES ON THE LOCAL DISK IS REACHABLE OVER HTTP
+ *
+ * Local files go to `storage/app/private`, outside the webroot — §6 requires
+ * it, and a payslip or a PAN scan under a guessable public path is a link
+ * somebody can forward, no amount of care afterwards takes it back. Drive
+ * files carry the same rule a different way: the service account is a member
+ * of the Shared Drive, nothing on it is shared "anyone with the link", and
+ * `download()` is the only route back out — see the class-level note above
+ * `stream()`.
  *
  * THE STORED NAME IS NOT THE UPLOADED NAME
  *
- * The path is composed by the caller plus a random token; the original filename
- * is data, kept in the database for display. An uploaded name reaching the
- * filesystem is how "../../.env" and "payslip.pdf.php" become a problem, and
- * the extension is taken from a whitelist rather than from whatever was typed.
- * ═════════════════════════════════════════════════════════════════════════════
+ * The path (or the Drive filename) is composed by the caller plus a random
+ * token; the original filename is data, kept in the database for display. An
+ * uploaded name reaching storage is how "../../.env" and "payslip.pdf.php"
+ * become a problem, and the extension is taken from a whitelist rather than
+ * from whatever was typed.
  */
 class DocumentStore
 {
@@ -46,13 +76,26 @@ class DocumentStore
     /** 8 MB. A payslip is tens of kilobytes; a scan is a couple of megabytes. */
     public const MAX_BYTES = 8 * 1024 * 1024;
 
+    /**
+     * Marks a stored path as a Drive file id rather than a local disk path.
+     * Never appears in a path `put()` composes for the local disk — those are
+     * always `folder/random-token.ext`.
+     */
+    protected const DRIVE_PREFIX = 'drive:';
+
     public function disk(): Filesystem
     {
         return Storage::disk('local');
     }
 
     /**
-     * Store a file under a folder, and return what the database needs.
+     * Store an uploaded file. Always Drive — see the class header.
+     *
+     * `$folder` is still `employees/{id}/documents` or `payslips/{period}`,
+     * exactly as it was on the local disk: the first path segment becomes the
+     * Drive module folder ("employees", "payslips"), and the rest is folded
+     * into the stored filename so the file stays traceable inside a flat
+     * Drive folder listing without needing nested Drive folders to exist.
      *
      * @return array{path: string, name: string, bytes: int}
      */
@@ -66,33 +109,38 @@ class DocumentStore
             throw new \InvalidArgumentException('That file type cannot be stored.');
         }
 
-        // The stored name is ours. The uploaded one is data.
-        $stored = Str::random(40).'.'.$extension;
-        $path = trim($folder, '/').'/'.$stored;
+        $module = $this->moduleOf($folder);
+        $stored = $this->storedName($folder, $extension);
 
-        $this->disk()->putFileAs(dirname($path), $file, basename($path));
+        $fileId = $this->drive()->upload(
+            $module,
+            $stored,
+            (string) file_get_contents($file->getRealPath()),
+            $file->getMimeType() ?: 'application/octet-stream',
+        );
 
         return [
-            'path' => $path,
-            // Trimmed to the base name: a browser can send a whole path, and it
-            // is displayed rather than used, but displaying somebody's folder
-            // structure is not something to do by accident.
+            'path' => self::DRIVE_PREFIX.$fileId,
+            // Trimmed to the base name: a browser can send a whole path, and
+            // it is displayed rather than used, but displaying somebody's
+            // folder structure is not something to do by accident.
             'name' => mb_substr(basename($file->getClientOriginalName()), 0, 190),
             'bytes' => (int) $file->getSize(),
         ];
     }
 
     /**
-     * Store bytes we composed rather than a file we received.
+     * Store bytes we composed rather than a file we received. Always local —
+     * see the class header. Every caller today is a photo.
      *
      * Added for the profile photo, which is not stored as it arrived: it is
      * parsed and rebuilt from its picture segments first (see
      * App\Support\Images\PhotoIntake), so what reaches the disk is a string
      * this application produced and the UploadedFile is long gone by then.
      *
-     * The same rules apply — whitelisted extension, a name that is ours, a path
-     * composed by the caller — because the reason for each of them is where the
-     * file ENDS UP, not where it came from.
+     * The same validation rules apply — whitelisted extension, a name that is
+     * ours, a path composed by the caller — because the reason for each of
+     * them is where the file ENDS UP, not where it came from.
      *
      * @return array{path: string, bytes: int}
      */
@@ -113,6 +161,19 @@ class DocumentStore
 
     public function exists(string $path): bool
     {
+        /*
+         * Trusted, not probed. A Drive file does not vanish out from under
+         * its database row the way a local disk file theoretically can (a
+         * cleanup script, a full volume), which is the actual reason this
+         * method exists on the local side. Calling Drive on every profile
+         * page load and every download to answer a question that is already
+         * answered by the row existing would be a real cost for no real
+         * safety.
+         */
+        if ($this->isDrivePath($path)) {
+            return true;
+        }
+
         return $this->disk()->exists($path);
     }
 
@@ -123,20 +184,28 @@ class DocumentStore
      * A COPY, NOT A SECOND ROW POINTING AT ONE FILE
      *
      * Added for converting an intern (2026-09-16), where a photo and a set of
-     * documents move from a closed record to a new one. The cheap version is to
-     * write the same `path` onto both rows — and the cost lands later, when the
-     * person replaces their photo and `forget()` deletes the file out from
-     * under the record that is supposed to be history. One row, one file.
-     *
-     * The extension comes from the stored path, which is safe precisely because
-     * `put()` composed it from the whitelist rather than from anything anybody
-     * typed. It is checked again anyway: this returns a path a database column
-     * will hold, and re-checking costs nothing.
+     * documents move from a closed record to a new one. The cheap version is
+     * to write the same `path` onto both rows — and the cost lands later, when
+     * the person replaces their photo and `forget()` deletes the file out
+     * from under the record that is supposed to be history. One row, one
+     * file, on whichever driver the source already lives on: a photo copy
+     * (`$from` local) never touches Drive, and a document copy (`$from`
+     * Drive, going forward) never touches the local disk.
      *
      * @return array{path: string, bytes: int}
      */
     public function copy(string $from, string $folder): array
     {
+        if ($this->isDrivePath($from)) {
+            $copied = $this->drive()->copyFile(
+                $this->driveFileId($from),
+                $this->moduleOf($folder),
+                $this->storedName($folder, 'copy'),
+            );
+
+            return ['path' => self::DRIVE_PREFIX.$copied['id'], 'bytes' => $copied['bytes']];
+        }
+
         $extension = mb_strtolower(pathinfo($from, PATHINFO_EXTENSION));
 
         if (! in_array($extension, self::ALLOWED, true)) {
@@ -146,9 +215,9 @@ class DocumentStore
         $contents = $this->disk()->get($from);
 
         if ($contents === null) {
-            // The caller decides what a missing source means. For a conversion
-            // it means that record simply has no photo, which is survivable —
-            // and far better than half a conversion.
+            // The caller decides what a missing source means. For a
+            // conversion it means that record simply has no photo, which is
+            // survivable — and far better than half a conversion.
             throw new \RuntimeException('There is no file at '.$from.' to copy.');
         }
 
@@ -160,6 +229,16 @@ class DocumentStore
      */
     public function download(string $path, string $name): StreamedResponse
     {
+        if ($this->isDrivePath($path)) {
+            $contents = $this->drive()->download($this->driveFileId($path));
+
+            return response()->streamDownload(
+                fn () => print ($contents),
+                $name,
+                ['Content-Type' => 'application/octet-stream'],
+            );
+        }
+
         return $this->disk()->download($path, $name);
     }
 
@@ -168,19 +247,25 @@ class DocumentStore
      *
      * Only for things this application produced and knows the shape of — the
      * profile photo, which is rebuilt byte by byte from its picture segments
-     * before it is written (see App\Support\Images\PhotoIntake).
+     * before it is written (see App\Support\Images\PhotoIntake). Always
+     * local: see the class header — nothing that reaches this method is ever
+     * a Drive path, and it refuses one outright rather than guess.
      *
      * Never for an uploaded document. `download()` sends
      * `Content-Disposition: attachment`, which is what stops a browser
-     * rendering somebody's upload in the page's own origin; inline is only safe
-     * when the bytes are ours.
+     * rendering somebody's upload in the page's own origin; inline is only
+     * safe when the bytes are ours.
      *
      * The content type is stated, not sniffed from the file, for the same
-     * reason: a browser guessing at a type is a browser that can be talked into
-     * guessing "html".
+     * reason: a browser guessing at a type is a browser that can be talked
+     * into guessing "html".
      */
     public function stream(string $path): StreamedResponse
     {
+        if ($this->isDrivePath($path)) {
+            throw new \InvalidArgumentException('That is a Drive file — this store streams inline only from the local disk.');
+        }
+
         $extension = mb_strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
         $type = match ($extension) {
@@ -203,8 +288,68 @@ class DocumentStore
      */
     public function forget(?string $path): void
     {
-        if ($path !== null && $this->disk()->exists($path)) {
+        if ($path === null) {
+            return;
+        }
+
+        if ($this->isDrivePath($path)) {
+            $this->drive()->delete($this->driveFileId($path));
+
+            return;
+        }
+
+        if ($this->disk()->exists($path)) {
             $this->disk()->delete($path);
         }
+    }
+
+    protected function isDrivePath(string $path): bool
+    {
+        return str_starts_with($path, self::DRIVE_PREFIX);
+    }
+
+    protected function driveFileId(string $path): string
+    {
+        return mb_substr($path, mb_strlen(self::DRIVE_PREFIX));
+    }
+
+    protected function moduleOf(string $folder): string
+    {
+        return Str::before(trim($folder, '/'), '/');
+    }
+
+    /**
+     * A name for the Drive file that keeps the caller's folder legible inside
+     * a flat module folder — "employees/12/documents" becomes a filename
+     * carrying "employees_12_documents", not a nested path Drive would have
+     * to be taught to create.
+     */
+    protected function storedName(string $folder, string $extension): string
+    {
+        $trace = str_replace('/', '_', trim($folder, '/'));
+
+        return $trace.'-'.Str::random(24).'.'.$extension;
+    }
+
+    /**
+     * A Drive client built from the current connection. Fresh per call — the
+     * connection can change between requests, and this class is resolved new
+     * per request anyway (see the controllers that inject it).
+     *
+     * @throws \RuntimeException if Google is not connected
+     */
+    protected function drive(): DriveClient
+    {
+        $connection = GoogleConnection::current();
+
+        if (! $connection->isConnected()) {
+            throw new \RuntimeException(
+                'Google Drive is not connected. An administrator has to connect it in the Admin Panel before files can be stored.'
+            );
+        }
+
+        $auth = new GoogleAuth(GoogleServiceAccountKey::parse($connection->service_account_key));
+
+        return new DriveClient($auth, (string) $connection->shared_drive_id);
     }
 }

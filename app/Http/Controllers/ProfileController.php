@@ -34,6 +34,7 @@ use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 /**
  * My Profile — what a person may change about themselves, and what the company
@@ -113,8 +114,7 @@ class ProfileController extends Controller
         protected TrustedDevices $devices,
         protected PasswordResets $resets,
         protected ProfileChanges $changes,
-    ) {
-    }
+    ) {}
 
     /* ══════════════════════════════════════════════════════════════════════
        THE PAGES
@@ -735,7 +735,15 @@ class ProfileController extends Controller
             'kind' => ['required', Rule::in(EmployeeDocument::KINDS)],
         ]);
 
-        $stored = $this->documents->put('employees/'.$employee->id.'/documents', $request->file('document'));
+        try {
+            $stored = $this->documents->put('employees/'.$employee->id.'/documents', $request->file('document'));
+        } catch (Throwable $e) {
+            // Nothing is saved on the way here, so there is no partial state
+            // to leave behind — an upload that fails simply never happened.
+            throw ValidationException::withMessages([
+                'document' => 'Could not store the file: '.$e->getMessage(),
+            ]);
+        }
 
         $document = EmployeeDocument::create([
             'reference' => ProfileDirectory::nextDocumentReference(),
@@ -973,7 +981,6 @@ class ProfileController extends Controller
      */
     protected function passwordRules(): array
     {
-        return [Password::min(12), new NotACommonPassword()];
+        return [Password::min(12), new NotACommonPassword];
     }
-
 }
