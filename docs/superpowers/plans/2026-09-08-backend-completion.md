@@ -555,6 +555,57 @@ screen FIRST**, then steps 2 → 5 of the rework order below. Drive is what
 unblocks the Invoices rewrite, and the connection screen is Admin Panel work,
 so the question round below feeds straight into it.
 
+**Paused mid-build, before any code was written.** Question 10 is answered
+(above) and the access-model question it raised is resolved. What follows is
+what the research pass found, so the next session starts writing rather than
+re-reading the codebase.
+
+Nothing below is installed or written yet — no migration, no controller, no
+composer package. This is a plan, not a status report.
+
+- **No Google API client library in `composer.json` yet.** `google/apiclient`
+  or equivalent has to be required before `GoogleMeetProvider` or a Drive
+  client can do anything real.
+- **`config/filesystems.php` has no `google`/`drive` disk.** Only `local`,
+  `public`, `s3` exist. The Drive driver DocumentStore is meant to grow (§ "How,
+  concretely" above) is not scaffolded.
+- **The credential table doesn't exist.** Shape decided by reading
+  `employee_banking`'s `encrypted` cast pattern and `CompanySettings`: one
+  singleton row, not a `company_settings` entry, because `company_settings`
+  pushes every stored value into `config()` at boot (`CompanySettings::apply()`)
+  — exactly the "key in reach of any stack trace" problem §"Connecting it"
+  above warns about. Working shape: a `google_connection` table with
+  `service_account_key` (encrypted cast, write-only — never rendered back),
+  `service_account_email` and `key_fingerprint` (both derived from the key at
+  connect time, shown on the screen per the plan's rule 2), `calendar_id`,
+  `impersonate_email`, `shared_drive_id` (plain — not secrets), `connected_at`,
+  `connected_by` (nullable FK to `users`). One row supersedes all three of
+  `GOOGLE_CALENDAR_ID` / `GOOGLE_SERVICE_ACCOUNT_KEY` / `GOOGLE_IMPERSONATE_EMAIL`
+  in `config/meetings.php`, so Calendar reads from it too, not from `.env`.
+- **Permission:** add `admin.integrations.view` to `Rbac::ADMIN_BASE`, which
+  self-seeds via `RbacSeeder::permissionKeys()` — no seeder edit needed beyond
+  the constant. Add to `RbacSeeder::SENSITIVE` for documentation even though
+  ADMIN_BASE keys aren't grantable. Add an `admin.integrations` entry to
+  `config/navigation-admin.php`. No route-level `permission:` middleware needed
+  — none of the other admin routes use it either; the realm is the only gate
+  today (matches the "one admin account for now" decision above).
+- **Audit:** new `AuditLog` constants needed —
+  connected / key rotated / disconnected / test succeeded / test failed —
+  following the existing rule that these name the fingerprint and actor, never
+  the key material.
+- **Controller/view pattern to follow:** `Admin\SettingsController` +
+  `admin/settings/index.blade.php` for the two-step review shape (not needed
+  here — a key paste isn't retroactive — but the card/form layout and
+  `partials.notice` usage are the right template). `admin/accounts/show.blade.php`
+  for the rail-card style if the connected-state summary wants one.
+- **Test connection button**, from the plan doc above: creates and deletes a
+  small file in the Shared Drive. Needs the Drive client to exist first, so it
+  is the last piece, not the first.
+- **Still not designed:** whether `calendar_id` / `impersonate_email` /
+  `shared_drive_id` are entered on the same screen as the key paste in one
+  form, or as separate fields editable independently of reconnecting the key.
+  Lean toward one form, since the plan doc calls this "one Google connection."
+
 State verified in code on 2026-09-17, not assumed:
 
 - Every one of the 43 `abort(501)` write routes is implemented. None remain.
@@ -568,49 +619,87 @@ State verified in code on 2026-09-17, not assumed:
 
 ## Open questions — Client portal and Admin panel (asked 2026-09-17)
 
-Put to the owner and not yet answered. They asked for these two areas
-specifically.
+Put to the owner. **All 16 answered as of 2026-09-21** — none of it is built
+yet, this section is the decision record for when each item's module is
+picked up.
 
-**Client portal**
+**Client portal — answered 2026-09-21**
 
-1. Several contacts, one login: may the client add and remove contacts, or only
-   edit the main one?
-2. Currency: keep all seven the CRM supports, or cut to the ones actually
-   billed in?
-3. Country: free text or a fixed dropdown?
-4. An Inactive client — does their login stop at once, or keep read-only access
-   to old invoices?
-5. Does "email OTP for every account" include client logins, or staff only?
-6. Do clients get an in-app notification bell, or nothing?
-7. May a client see WHICH employee is on their project or ticket, or only the
-   company?
-8. May a client cancel a meeting after it is scheduled, or must they ask?
-9. What should the client dashboard lead with — top three, ranked?
+1. **Self-serve.** The client adds and removes their own contacts from the
+   portal (Company Profile → Contacts), no staff involved. One login still
+   governs the whole company; the contact list is just data attached to it.
+2. **Cut to what's actually billed in**, not all seven the CRM supports.
+3. **Fixed dropdown**, not free text — avoids typos on a field invoicing and
+   currency logic read.
+4. **Read-only, through an Ex-Client page.** Going Inactive does not cut the
+   login off. It lands on an Ex-Client page carrying one button through to
+   Invoices, which renders read-only for that account. Every other client
+   route — Projects, Tickets, Meetings, Profile edit — is **403** for an
+   Inactive client, not hidden, not redirected elsewhere.
+5. **Yes — client logins get email OTP too**, on the same "new device or
+   browser, trusted 30 days" terms as staff (§ Security).
+6. **Yes**, an in-app notification bell, same shape as staff's.
+7. **Only the Project Manager's name**, not the wider team. A client sees who
+   is accountable for their project/ticket, not everybody working on it.
+8. **Yes — the client cancels a scheduled meeting themselves.** Same reasoning
+   as raising their own tickets: routing it through staff is friction with no
+   protective purpose.
+9. **Dashboard order:** open tickets needing their input, then upcoming
+   meetings, then unpaid invoices — the three things a client can actually act
+   on, ranked by urgency.
 
 **Admin panel**
 
-10. Who connects Google Drive: CEO only, or CEO and System Administrator?
-    Company settings are CEO-only, but a service-account key is a technical
-    setup job.
-11. May an admin force a password reset, sign somebody out everywhere, or
-    untrust their devices — which of the three?
-12. May an admin CREATE a role, or only assign existing ones and change their
-    permissions?
-13. Master data: ticket categories and announcement categories are decided.
-    Anything else — ticket departments?
-14. Audit screen: any export, or read-on-screen only? An export carries
-    personal data and would need its own permission and its own entry.
-15. Attendance and leave settings silently re-judge months of past records when
-    changed (see SettingsCatalogue). Now the rules are firm, should they become
-    fixed in code rather than editable settings?
+10. **Answered 2026-09-17: CEO and System Administrator.** Both should be able
+    to connect and rotate the key — a service-account key is a technical setup
+    job, and the CEO should not be the sole person who can reconnect Drive if
+    the key is ever revoked.
+
+    **How this actually lands, decided the same day.** The Admin Panel realm
+    has exactly one account type today (`account_type = admin`, the owner —
+    see `Rbac::ADMIN_BASE`, `getDisplayRoleAttribute`), and staff sessions are
+    hard-refused from `/admin` by design (routes/admin.php's own comment: "A
+    staff session is refused here — including the owner's"). So "CEO and
+    System Administrator" as two separate account holders does not map onto
+    anything that exists yet, and building it for real means either a second
+    admin-realm account (a schema and `Rbac` change) or letting a staff
+    `system_admin` account through a scoped hole in the realm wall. Both are
+    bigger than this job.
+
+    **Decided: build it as ADMIN_BASE for now.** The new permission
+    (`admin.integrations.view` / the connect-disconnect-test actions behind
+    it) is its own key, not folded into `admin.settings.view` — per the
+    reasoning below, a Drive key must not be reachable by the same grant that
+    lets somebody add a department. But it lives in `Rbac::ADMIN_BASE` like
+    every other admin capability, which today means the one owner account.
+    The CEO/System-Administrator split is a real decision to revisit when a
+    second admin-realm account is actually needed — nothing here blocks it,
+    but nothing here builds it either.
+11. **Answered 2026-09-21: all three, separately.** Force a password reset,
+    sign out everywhere and untrust devices are three distinct buttons on the
+    account, not one action — they answer three different problems (forgotten
+    password, a stolen session, a compromised device) and none substitutes for
+    another.
+12. **Answered 2026-09-21: yes, an admin may create a role**, not only assign
+    and edit existing ones. The role list is not fixed, and needing a deploy
+    to add one defeats the point of the Admin Panel.
+13. **Answered 2026-09-21: ticket departments join Master Data too**, alongside
+    the already-decided ticket categories and announcement categories.
+14. **Answered 2026-09-21: read-on-screen only, no export**, for now. An export
+    of personal data would need its own permission and its own audit entry —
+    scope for later, not this round.
+15. **Answered 2026-09-21: stays editable**, not fixed in code. The
+    retroactive-preview machinery in `SettingsCatalogue`/`Retroactive` is what
+    makes an edit safe to make at all — it names exactly what would move
+    before anything saves — so removing the setting would remove a safety net
+    that already works, not just a knob.
 
 **A gap nobody has decided**
 
-16. **HR cannot see anybody's documents.** `employee_documents` is only
-    readable by the person who uploaded them — there is no HR view. So HR
-    cannot check a submitted offer letter or ID photocopy against the record,
-    which is the whole point of the "photocopy received" date. Should the
-    employee record page show documents to `employees.identifiers` holders?
+16. **Answered 2026-09-21: yes.** The employee record page shows documents to
+    `employees.identifiers` holders (HR, CEO). That is the reason the
+    "photocopy received" date exists at all — without this, HR can log that a
+    photocopy arrived but never actually check it against the record.
 Also still missing from the add form, noticed while doing the addresses:
 personal email alongside the work email, and a phone number — the latter is
 required of interns and freelancers by the decisions above, so it cannot wait
