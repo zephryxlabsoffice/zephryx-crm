@@ -124,10 +124,37 @@ class ProjectsPageTest extends TestCase
         // Content-Security-Policy blocks — every bar would have been empty.
         $this->withDemoData();
 
+        $project = Project::where('reference', 'WD-2024-001')->firstOrFail();
+        $value = ProjectDirectory::progress($project);
+
         $html = $this->get('/projects')->getContent();
 
-        $this->assertStringContainsString('<progress class="progress" max="100" value="75"', $html);
+        $this->assertStringContainsString('<progress class="progress" max="100" value="'.$value.'"', $html);
         $this->assertSame(0, preg_match_all('/\sstyle="/i', $html), 'inline style attribute');
+    }
+
+    public function test_progress_is_derived_from_completed_tasks(): void
+    {
+        /*
+         * Dropped as a typed column 2026-09-21 — completed tasks over total
+         * tasks, computed rather than kept honestly by whoever last opened
+         * the form. Asserted from the data the seeder actually wrote rather
+         * than a fixed number, so this keeps testing something when the
+         * demo tasks are edited.
+         */
+        $this->withDemoData();
+
+        $project = Project::where('reference', 'WD-2024-001')->firstOrFail();
+
+        $total = $project->tasks()->count();
+        $completed = $project->tasks()->where('status', 'completed')->count();
+
+        $this->assertGreaterThan(0, $total, 'no seeded tasks for this project, so this proves nothing');
+
+        $this->assertSame(
+            (int) round($completed / $total * 100),
+            ProjectDirectory::progress($project),
+        );
     }
 
     public function test_a_completed_project_past_its_date_is_not_counted_overdue(): void

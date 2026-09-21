@@ -426,7 +426,6 @@ class ProjectController extends Controller
             'name' => ['required', 'string', 'max:160'],
             'client_id' => ['required', Rule::exists('clients', 'id')],
             'manager_id' => ['nullable', Rule::exists('employees', 'id')],
-            'progress' => ['required', 'integer', 'between:0,100'],
             'status' => ['required', Rule::in(Project::STATUSES)],
             'priority' => ['required', Rule::in(Project::PRIORITIES)],
             'started_on' => ['nullable', 'date'],

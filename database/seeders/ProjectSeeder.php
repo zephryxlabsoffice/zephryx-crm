@@ -53,7 +53,6 @@ class ProjectSeeder extends Seeder
                     'name' => $row['name'],
                     'client_id' => $clientId,
                     'manager_id' => $employees->get($row['manager'])?->id,
-                    'progress' => $row['progress'],
                     'status' => $row['status'],
                     'priority' => $row['priority'],
                     'started_on' => $row['start_date'],

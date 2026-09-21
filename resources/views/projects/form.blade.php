@@ -2,6 +2,7 @@
 
 @php
     use App\Models\Project as ProjectModel;
+    use App\Support\ProjectDirectory;
     use App\Support\ProjectPresenter as P;
 
     // One template for creating and for editing.
@@ -155,17 +156,17 @@
                                 <span class="field-error">{{ $message }}</span>
                             @enderror
                         </div>
-
-                        <div class="form-field">
-                            <label class="form-field-lbl" for="proj-progress">Progress</label>
-                            <input id="proj-progress" name="progress" type="number" min="0" max="100" required
-                                   value="{{ old('progress', $project?->progress ?? 0) }}">
-                            <span class="pay-hint">Typed for now. It becomes a figure computed from tasks when Tasks lands.</span>
-                            @error('progress')
-                                <span class="field-error">{{ $message }}</span>
-                            @enderror
-                        </div>
                     </div>
+
+                    @if ($editing)
+                        <div class="prose prose-quiet">
+                            <p>
+                                Progress is {{ ProjectDirectory::progress($project) }}%,
+                                computed from this project's tasks — completed over total. There is
+                                nothing to type here; add, assign and complete tasks to move it.
+                            </p>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="card">

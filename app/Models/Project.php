@@ -12,14 +12,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * A project (foundation spec §12.1).
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * `progress` IS TYPED IN, AND THAT IS DELIBERATE FOR NOW
+ * `progress` IS DERIVED, AND NO LONGER A COLUMN
  *
- * The obvious improvement is to derive it from completed tasks. It is not done
- * here because Tasks has no table yet, and a percentage derived from an empty
- * table would report every project as 0% — which is worse than a number
- * somebody keeps honestly, because it looks computed.
- *
- * When Tasks lands this becomes a derived figure and the column goes.
+ * It used to be typed in — a tinyint somebody kept honestly because Tasks had
+ * no table yet, and a percentage derived from an empty one would have reported
+ * every project as 0%. Tasks landed
+ * (2026_09_09_000004_create_tasks_table.php), and
+ * 2026_09_21_000027_derive_project_progress_drop_column.php dropped the
+ * column. `ProjectDirectory::row()` computes it now — completed tasks over
+ * total tasks for the project — the same place `due_in` is computed rather
+ * than stored, for the same reason: a typed number can disagree with the
+ * facts beside it, and a derived one cannot.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 class Project extends Model
@@ -32,7 +35,7 @@ class Project extends Model
 
     protected $fillable = [
         'reference', 'name', 'client_id', 'manager_id',
-        'progress', 'status', 'priority', 'started_on', 'deadline',
+        'status', 'priority', 'started_on', 'deadline',
     ];
 
     protected function casts(): array
@@ -40,7 +43,6 @@ class Project extends Model
         return [
             'started_on' => 'date',
             'deadline' => 'date',
-            'progress' => 'integer',
         ];
     }
 
@@ -74,6 +76,14 @@ class Project extends Model
     public function updates(): HasMany
     {
         return $this->hasMany(ProjectUpdate::class)->latest();
+    }
+
+    /**
+     * @return HasMany<Task, $this>
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
     }
 
     public function getRouteKeyName(): string

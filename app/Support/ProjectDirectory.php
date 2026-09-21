@@ -15,8 +15,12 @@ use Illuminate\Support\Carbon;
  * `deadline_meta`, which the controller used to attach in a decorate() step and
  * which belong with the rest of the shape.
  *
- * `due_in` is kept because the KPI counts used it. It is derived from the
- * deadline rather than stored, which is what it always was.
+ * `due_in` and `progress` are both kept because the KPIs and the pages already
+ * read them, and both are derived rather than stored — `due_in` from the
+ * deadline, `progress` from completed tasks over total tasks
+ * (2026_09_21_000027_derive_project_progress_drop_column.php dropped the typed
+ * column). Neither can drift from the facts beside it the way a stored figure
+ * could.
  */
 class ProjectDirectory
 {
@@ -60,7 +64,7 @@ class ProjectDirectory
             'client_reference' => $project->client?->reference,
             'manager' => $project->manager?->user?->user_id,
             'manager_record' => $project->manager ? EmployeeDirectory::row($project->manager) : null,
-            'progress' => $project->progress,
+            'progress' => self::progress($project),
             'status' => $project->status,
             'priority' => $project->priority,
             'deadline' => $deadline,
@@ -70,6 +74,26 @@ class ProjectDirectory
             'due_in' => (int) Carbon::today()->diffInDays($project->deadline->startOfDay(), false),
             'deadline_meta' => ProjectPresenter::deadline($deadline, $project->status),
         ];
+    }
+
+    /**
+     * Completed tasks over total tasks, as a whole-number percentage.
+     *
+     * A project with no tasks yet reads 0% rather than dividing by zero — the
+     * honest answer for a project nothing has been logged against, not a
+     * missing value to hide.
+     */
+    public static function progress(Project $project): int
+    {
+        $total = $project->tasks()->count();
+
+        if ($total === 0) {
+            return 0;
+        }
+
+        $completed = $project->tasks()->where('status', 'completed')->count();
+
+        return (int) round($completed / $total * 100);
     }
 
     /**

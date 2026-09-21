@@ -869,8 +869,10 @@ change modules that are already committed.
    breakdown, masking rules, convert-to-full-time.
 2. **Clients** ✅ **Done, 2026-09-21** — client statuses, country and currency,
    self-serve contacts. **Teams** ✅ **Done, 2026-09-21** — "Archived"
-   dropped. **→ Projects → Tasks**, still to do: derived project progress and
-   `PRJ-YYYY-NNN`; task comments, attachments and several assignees.
+   dropped. **Projects** ✅ **Done, 2026-09-21** — progress derived from
+   tasks (`PRJ-YYYY-NNN` was already in place from when the module was first
+   built). **→ Tasks**, still to do: comments, attachments and several
+   assignees.
 3. **Attendance roster and comp-off → Leave year rules** — Sunday roster,
    comp-off earning and expiry; the per-employee leave year, monthly casual
    accrual, privilege and sick granted in full.
@@ -957,13 +959,40 @@ sections for Ex-Client gating, self-serve contacts and meeting self-cancel.
 Full suite green (1294 passing) on both SQLite (test runner) and against
 real MySQL (migration re-verified after the index fix).
 
-**Left for later, if this is where work stops**: Projects (derived progress,
-`PRJ-YYYY-NNN` reference), Tasks (multiple assignees, comments, attachments)
-— the rest of step 2. Then step 3 (attendance roster/comp-off, leave year
-rules), step 5 (Tickets/Announcements/Notifications polish — Meetings and
-Profile already done), step 6 (2FA device management, Support page, admin
-role creation and other tidy-up). See the "RESUME HERE" section above for the
-full order.
+**Left for later, if this is where work stops**: Tasks (multiple assignees,
+comments, attachments) — the last piece of step 2. Then step 3 (attendance
+roster/comp-off, leave year rules), step 5 (Tickets/Announcements/
+Notifications polish — Meetings and Profile already done), step 6 (2FA
+device management, Support page, admin role creation and other tidy-up). See
+the "RESUME HERE" section above for the full order.
+
+## Step 2's Projects half is done (2026-09-21)
+
+Only one item was actually open: derived progress. `PRJ-YYYY-NNN` turned out
+to already be built — `ProjectController::nextReference()` has generated it
+since the module was first built (commit `04630c0`, before the review round
+even happened), and the decision record hadn't caught up with that.
+
+`progress` was a typed `unsignedTinyInteger` column that `Project`'s own
+docblock had been promising to drop "when Tasks lands" since the day it was
+written. Tasks landed in the same original build. Migration
+`2026_09_21_000027_derive_project_progress_drop_column.php` drops the column
+— no index to fight this time, no backfill needed, because nothing reads the
+stored value after this commit. `ProjectDirectory::progress()` computes it
+now — completed tasks over total, for that project, rounded to a whole
+percentage, `0` for a project with no tasks yet rather than a division by
+zero. Called from the same `row()` method that already computed `due_in` the
+same way, for the same reason.
+
+The form's progress input is gone — there is nothing to type — replaced on
+the edit form with a read-only line stating the current figure and pointing
+at tasks as how to move it. `ProjectController::validated()` no longer
+accepts a `progress` field; posting one is silently ignored, same as any
+other field client-portal writes drop that they are not allowed to touch. One
+new test (`ProjectsPageTest::test_progress_is_derived_from_completed_tasks`)
+computes the expected percentage from the seeded tasks directly, so it keeps
+proving something if the demo fixture changes. Full suite green — 1296
+passing — on both SQLite and real MySQL.
 
 ## Step 2's Teams half is done (2026-09-21)
 

@@ -376,7 +376,6 @@ class ProjectWritesTest extends TestCase
         return $overrides + [
             'name' => 'A New Project',
             'client_id' => $this->aClient()->id,
-            'progress' => 0,
             'status' => 'planning',
             'priority' => 'medium',
             'deadline' => Carbon::now()->addMonth()->toDateString(),
@@ -400,7 +399,6 @@ class ProjectWritesTest extends TestCase
             'reference' => 'PRJ-TEST-001',
             'name' => 'Original Project',
             'client_id' => $this->aClient()->id,
-            'progress' => 10,
             'status' => 'in_progress',
             'priority' => 'medium',
             'deadline' => Carbon::now()->addMonth(),
