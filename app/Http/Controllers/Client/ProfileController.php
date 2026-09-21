@@ -59,11 +59,15 @@ class ProfileController extends PortalController
 
     public function show(Request $request): Response
     {
-        $client = $this->client($request);
+        $client = $this->requireActiveClient($request);
 
         return response()->view('client.profile.show', $this->shell($request, 'profile') + [
             'profile' => $client,
             'editable' => self::EDITABLE,
+            // Additional contacts beyond the one main contact above — several
+            // people, one login. See App\Models\ClientContact and
+            // Client\ContactController for the add/remove routes.
+            'contacts' => $client->contacts,
             'stats' => ClientPortal::stats($client),
             'support' => [
                 'email' => SupportContact::address(),
@@ -90,7 +94,7 @@ class ProfileController extends PortalController
      */
     public function update(Request $request): RedirectResponse
     {
-        $client = $this->client($request);
+        $client = $this->requireActiveClient($request);
 
         $data = $request->validate([
             'contact_name' => ['nullable', 'string', 'max:120'],
@@ -158,7 +162,7 @@ class ProfileController extends PortalController
      */
     public function photo(Request $request): RedirectResponse
     {
-        $client = $this->client($request);
+        $client = $this->requireActiveClient($request);
 
         $request->validate([
             'photo' => [
@@ -217,7 +221,7 @@ class ProfileController extends PortalController
      */
     public function showPhoto(Request $request): StreamedResponse
     {
-        $path = $this->client($request)->photo_path;
+        $path = $this->requireActiveClient($request)->photo_path;
 
         abort_if($path === null || ! $this->documents->exists($path), 404);
 

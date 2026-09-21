@@ -78,6 +78,8 @@ class ClientDirectory
             'reference' => $client->reference,
             'name' => $client->name,
             'industry' => $client->industry,
+            'country' => $client->country,
+            'currency' => $client->currency,
             'status' => $client->status,
             'manager' => $client->accountManager?->name,
             'signed' => $client->signed_on?->toDateString(),

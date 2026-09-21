@@ -878,6 +878,9 @@ Route::post('/profile/documents', [ProfileController::class, 'storeDocument'])
 // invites somebody to check back, while a deferred 404 says plainly that the
 // module is planned and its place is already reserved. Reports also has nothing
 // to report on until the modules it would summarise have real data behind them.
-Route::get('/leads', [ModulePlaceholderController::class, 'missing'])->name('leads.index');
+//
+// Leads left this list on 2026-09-11 — not deferred, cancelled: "No Leads
+// module. The unused leads.view permission goes." A cancelled module gets no
+// placeholder at all, deferred or otherwise.
 Route::get('/calendar', [ModulePlaceholderController::class, 'missing'])->name('calendar.index');
 Route::get('/reports', [ModulePlaceholderController::class, 'missing'])->name('reports.index');

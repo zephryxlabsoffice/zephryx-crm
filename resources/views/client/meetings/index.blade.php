@@ -78,7 +78,9 @@
                                     @endphp
                                     <tr>
                                         <td>
-                                            <strong>{{ $meeting['title'] }}</strong>
+                                            <a class="row-link" href="{{ route('client.meetings.show', ['meeting' => $meeting['id']]) }}">
+                                                <strong>{{ $meeting['title'] }}</strong>
+                                            </a>
                                             @if ($meeting['project'])
                                                 <span class="dash-sub">{{ $meeting['project'] }}</span>
                                             @endif

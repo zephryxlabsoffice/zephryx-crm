@@ -18,7 +18,7 @@ class ProjectController extends PortalController
 {
     public function index(Request $request): Response
     {
-        $client = $this->client($request);
+        $client = $this->requireActiveClient($request);
 
         return response()->view('client.projects.index', $this->shell($request, 'projects') + [
             'projects' => ClientPortal::projects($client)->map(
@@ -30,7 +30,7 @@ class ProjectController extends PortalController
 
     public function show(Request $request, string $project): Response
     {
-        $client = $this->client($request);
+        $client = $this->requireActiveClient($request);
 
         $record = ClientPortal::project($client, $project);
 

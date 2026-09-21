@@ -53,7 +53,7 @@ class TicketController extends PortalController
 
     public function index(Request $request): Response
     {
-        $client = $this->client($request);
+        $client = $this->requireActiveClient($request);
 
         $filters = $request->validate([
             'status' => ['nullable', Rule::in(TicketPresenter::statusOptions())],
@@ -83,7 +83,7 @@ class TicketController extends PortalController
 
     public function show(Request $request, string $ticket): Response
     {
-        $client = $this->client($request);
+        $client = $this->requireActiveClient($request);
 
         $record = ClientPortal::ticket($client, $ticket);
 
@@ -101,7 +101,7 @@ class TicketController extends PortalController
      */
     public function create(Request $request): Response
     {
-        $client = $this->client($request);
+        $client = $this->requireActiveClient($request);
 
         return response()->view('client.tickets.create', $this->shell($request, 'tickets') + [
             /*
@@ -143,7 +143,7 @@ class TicketController extends PortalController
      */
     public function store(Request $request): RedirectResponse
     {
-        $client = $this->client($request);
+        $client = $this->requireActiveClient($request);
 
         $data = $request->validate([
             'subject' => ['required', 'string', 'max:200'],
@@ -210,7 +210,7 @@ class TicketController extends PortalController
      */
     public function comment(Request $request, string $ticket): RedirectResponse
     {
-        $client = $this->client($request);
+        $client = $this->requireActiveClient($request);
 
         $record = ClientPortal::ticket($client, $ticket);
 

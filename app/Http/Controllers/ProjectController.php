@@ -455,10 +455,10 @@ class ProjectController extends Controller
     protected function formOptions(): array
     {
         return [
-            // Clients that are actually being worked with. A completed
+            // Clients that are actually being worked with. An inactive
             // engagement is not one to start new work against, and offering it
             // invites the mistake.
-            'clients' => Client::query()->whereNot('status', 'completed')->orderBy('name')->get(),
+            'clients' => Client::query()->whereNot('status', 'inactive')->orderBy('name')->get(),
             'managers' => Employee::query()->with('user')->active()->get()
                 ->sortBy(fn (Employee $e) => $e->user?->name)->values(),
             'teams' => Team::query()->active()->orderBy('name')->get(),

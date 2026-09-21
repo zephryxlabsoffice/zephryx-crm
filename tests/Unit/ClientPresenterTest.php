@@ -10,8 +10,7 @@ class ClientPresenterTest extends TestCase
     public function test_it_maps_known_statuses_to_a_pill(): void
     {
         $this->assertSame(['tone' => 'pill-green', 'label' => 'Active'], ClientPresenter::status('active'));
-        $this->assertSame(['tone' => 'pill-blue', 'label' => 'In Review'], ClientPresenter::status('review'));
-        $this->assertSame(['tone' => 'pill-amber', 'label' => 'On Hold'], ClientPresenter::status('on_hold'));
+        $this->assertSame(['tone' => 'pill-gray', 'label' => 'Inactive'], ClientPresenter::status('inactive'));
     }
 
     public function test_an_unknown_status_still_renders_readably(): void

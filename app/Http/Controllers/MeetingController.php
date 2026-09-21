@@ -140,7 +140,7 @@ class MeetingController extends Controller
                 ->sortBy('name')
                 ->values()
                 ->all(),
-            'clients' => Client::query()->whereNot('status', 'completed')->orderBy('name')->get(['id', 'name']),
+            'clients' => Client::query()->whereNot('status', 'inactive')->orderBy('name')->get(['id', 'name']),
             'projects' => $this->projectOptions(),
             'defaultDuration' => (int) config('meetings.default_duration', 30),
             'zone' => MeetingPresenter::zone(),

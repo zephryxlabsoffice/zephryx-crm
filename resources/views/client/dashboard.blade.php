@@ -44,18 +44,13 @@
         No "Completed Tasks" tile: tasks are internal work items, and a lifetime
         count reads zero for a client whose project started this month.
     --}}
+    {{--
+        Open tickets, then upcoming meetings, then outstanding invoices, then
+        active projects — the order the client portal decisions (Q4,
+        2026-09-21) settled on, leading with the two things most likely to
+        need a client's attention today rather than the slowest-moving one.
+    --}}
     <section class="kpi-row" aria-label="Summary">
-        @include('client.partials.stat', [
-            'label' => 'Active projects',
-            'value' => $stats['projects']['active'],
-            'sub' => $stats['projects']['completed'] > 0
-                ? $stats['projects']['completed'].' delivered'
-                : 'Under way now',
-            'icon' => 'projects',
-            'tone' => 'tone-soft',
-            'route' => 'client.projects.index',
-        ])
-
         @include('client.partials.stat', [
             'label' => 'Open tickets',
             'value' => $stats['tickets']['total'] - $stats['tickets']['resolved'],
@@ -87,6 +82,17 @@
             'icon' => 'invoices',
             'tone' => $stats['invoices']['overdue'] > 0 ? 'tone-warn' : 'tone-soft',
             'route' => 'client.invoices.index',
+        ])
+
+        @include('client.partials.stat', [
+            'label' => 'Active projects',
+            'value' => $stats['projects']['active'],
+            'sub' => $stats['projects']['completed'] > 0
+                ? $stats['projects']['completed'].' delivered'
+                : 'Under way now',
+            'icon' => 'projects',
+            'tone' => 'tone-soft',
+            'route' => 'client.projects.index',
         ])
     </section>
 
@@ -229,7 +235,7 @@
                     </div>
 
                     <div class="dash-punch-action">
-                        <a class="btn btn-primary" href="{{ route('client.meetings.index') }}">Meeting details</a>
+                        <a class="btn btn-primary" href="{{ route('client.meetings.show', ['meeting' => $nextMeeting['id']]) }}">Meeting details</a>
                     </div>
                 @endif
             </section>

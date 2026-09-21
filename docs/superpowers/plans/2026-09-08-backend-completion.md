@@ -867,9 +867,10 @@ change modules that are already committed.
 1. **Employee record and the ZEPH ID scheme** — everything hangs off it: type
    (full-time / intern / freelance), ID proof, PAN, addresses, bank, salary
    breakdown, masking rules, convert-to-full-time.
-2. **Clients → Teams → Projects → Tasks** — client statuses, country and
-   currency, contacts; "Archived" off teams; derived project progress and
-   `PRJ-YYYY-NNN`; task comments, attachments and several assignees.
+2. **Clients** ✅ **Done, 2026-09-21** — client statuses, country and currency,
+   self-serve contacts. **→ Teams → Projects → Tasks**, still to do:
+   "Archived" off teams; derived project progress and `PRJ-YYYY-NNN`; task
+   comments, attachments and several assignees.
 3. **Attendance roster and comp-off → Leave year rules** — Sunday roster,
    comp-off earning and expiry; the per-employee leave year, monthly casual
    accrual, privilege and sick granted in full.
@@ -888,3 +889,78 @@ feature. Sequenced before step 4, since the Invoices rewrite is an uploaded PDF
 and has nowhere to put one until this exists.
 
 The office-IP attendance logic is dropped, not deferred.
+
+## Step 2's Clients half is done (2026-09-21)
+
+Everything the "Client portal" and "Clients" sections of the 2026-09-17
+decision record asked for, except Teams/Projects/Tasks which are the rest of
+step 2.
+
+**Clients (staff side)**
+
+- `status` collapsed from the five project-style states (`active` /
+  `pending` / `review` / `on_hold` / `completed`) to `active` / `inactive`.
+  Migration `2026_09_21_000025` does the portable SQLite/MySQL-safe swap —
+  add a column, backfill, drop the old one, rename — and had to explicitly
+  drop `clients_status_index` first: SQLite refuses to drop an indexed
+  column with the index still attached, which the first pass of this
+  migration did not do and failed loudly under `php artisan test` until
+  fixed.
+- `country` (ISO 3166-1 alpha-2, `config/countries.php`, 13 entries) and
+  `currency` (`Client::CURRENCIES`, closed list) added, both on the form and
+  the record page. Every place that offered a client picker keyed off the
+  old `!= 'completed'` filter — `TicketController`, `ProjectController`,
+  `MeetingController` (all staff-side) — is now `!= 'inactive'`.
+- `client_contacts` table: several contacts per client company, alongside
+  the one "main" contact (`clients.contact_*`) that stays editable exactly
+  as before. Staff can read the list on the client record page; there is no
+  staff write on it at all — see below.
+- Leads left the sidebar, the routes and `RbacSeeder`'s permission lists —
+  cancelled, not deferred, per the decision record.
+
+**Client portal**
+
+- `PortalController::requireActiveClient()` is the gate: everywhere in the
+  realm calls it instead of `client()` and gets a plain 403 if the
+  engagement is inactive, except `DashboardController` (which has to stay
+  reachable to RENDER the Ex-Client page) and `Client\InvoiceController`
+  (invoices stay read-only and reachable regardless of status — it was
+  never touched, it just never called the gate).
+- `client/ex-client.blade.php`: the page an inactive client's dashboard
+  redirects to instead of the normal one. One button through to Invoices.
+- Self-serve contacts: `Client\ContactController` (add/remove only, no
+  edit — a wrong entry is cheaper to delete and re-add), routed at
+  `POST /client/contacts` and `DELETE /client/contacts/{contact}`, both
+  scoped to the session's own client the same way every other write in this
+  realm is. A new "Other contacts" card on `client/profile/show.blade.php`.
+- Meeting self-cancel: `Client\MeetingController::cancel()`, same
+  Google-first-then-local-record order as the staff side's `cancel()`, a
+  required reason, and ownership through a new
+  `ClientPortal::meetingModel()` (the display array `meeting()` returns
+  carries no model to call `update()` on). Needed an actual detail page —
+  `client/meetings/show.blade.php` — which did not exist before; its
+  `organiser_record` is trimmed to a name only, mirroring the redaction
+  `Client\ProjectController::decorate()` already applied to a project's
+  manager.
+- Dashboard KPI order: Open tickets → Upcoming meetings → Outstanding
+  invoices → Active projects, leading with what is most likely to need the
+  client's attention today.
+- Three "already built" findings from earlier reading that needed no new
+  work: the notification bell (shared `layouts.app` topbar), OTP/2FA on
+  client logins (no account-type branch in `LoginController`), and "client
+  sees only the PM's name, not the team" (`ProjectController::decorate()`
+  already did this).
+
+**Tests**: `ClientPresenterTest`, `ClientWritesTest`, `ClientsPageTest`
+rewritten off the old five-state enum; `ClientPortalTest` gained new
+sections for Ex-Client gating, self-serve contacts and meeting self-cancel.
+Full suite green (1294 passing) on both SQLite (test runner) and against
+real MySQL (migration re-verified after the index fix).
+
+**Left for later, if this is where work stops**: Teams (drop "Archived"),
+Projects (derived progress, `PRJ-YYYY-NNN` reference), Tasks (multiple
+assignees, comments, attachments) — the rest of step 2. Then step 3
+(attendance roster/comp-off, leave year rules), step 5 (Tickets/
+Announcements/Notifications polish — Meetings and Profile already done),
+step 6 (2FA device management, Support page, admin role creation and other
+tidy-up). See the "RESUME HERE" section above for the full order.

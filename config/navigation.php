@@ -20,10 +20,12 @@
 | `route`      a named route, resolved at render. Entries whose route does not
 |              exist yet are skipped, so this file can list the whole roadmap
 |              without breaking the shell as modules land one at a time.
-| `deferred`   true for Leads, Calendar and Reports, which §12 keeps in the
+| `deferred`   true for Calendar and Reports, which §12 keeps in the
 |              navigation deliberately so the shape stays stable when they ship
 |              in v2. Their routes exist and return 404; the 404 view recognises
 |              them and says "not built yet" rather than "not found".
+|              Leads used to be here too — removed 2026-09-11: "No Leads
+|              module. The unused leads.view permission goes."
 |
 */
 
@@ -35,7 +37,6 @@ return [
     ['key' => 'teams',         'label' => 'Teams',          'icon' => 'teams',         'route' => 'teams.index',   'permission' => 'teams.view'],
     ['key' => 'projects',      'label' => 'Projects',       'icon' => 'projects',      'route' => 'projects.index', 'permission' => 'projects.view'],
     ['key' => 'tasks',         'label' => 'Tasks',          'icon' => 'tasks',         'route' => 'tasks.index',   'permission' => 'tasks.view'],
-    ['key' => 'leads',         'label' => 'Leads',          'icon' => 'leads',         'route' => 'leads.index',   'permission' => 'leads.view', 'deferred' => true],
     ['key' => 'tickets',       'label' => 'Tickets',        'icon' => 'tickets',       'route' => 'tickets.index', 'permission' => 'tickets.view'],
     ['key' => 'invoices',      'label' => 'Invoices',       'icon' => 'invoices',      'route' => 'invoices.index', 'permission' => 'invoices.view'],
     ['key' => 'salary',        'label' => 'Salary',         'icon' => 'salary',        'route' => 'salary.index',  'permission' => 'salary.view'],

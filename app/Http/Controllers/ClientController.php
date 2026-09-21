@@ -89,6 +89,7 @@ class ClientController extends Controller
             'client' => ClientDirectory::row($record),
             'record' => $record,
             'accounts' => $record->accounts()->orderBy('name')->get(),
+            'contacts' => $record->contacts,
             'history' => $this->audit->entriesFor('client', $record->reference),
             'mayEdit' => $this->rbac->can($request->user(), 'clients.edit'),
             'mayInvite' => $this->rbac->can($request->user(), 'clients.invite'),
@@ -305,6 +306,8 @@ class ClientController extends Controller
                 Rule::unique('clients', 'name')->ignore($existing?->id),
             ],
             'industry' => ['nullable', 'string', 'max:80'],
+            'country' => ['nullable', Rule::in(array_keys(config('countries')))],
+            'currency' => ['required', Rule::in(Client::CURRENCIES)],
             'status' => ['required', Rule::in(Client::STATUSES)],
 
             'contact_name' => ['nullable', 'string', 'max:120'],
@@ -342,6 +345,8 @@ class ClientController extends Controller
                 ->where('status', 'active')
                 ->orderBy('name')
                 ->get(['id', 'name', 'user_id']),
+            'countries' => config('countries'),
+            'currencies' => Client::CURRENCIES,
         ];
     }
 
@@ -397,10 +402,6 @@ class ClientController extends Controller
      */
     protected function words(string $status): string
     {
-        return match ($status) {
-            'on_hold' => 'on hold',
-            'review' => 'in review',
-            default => $status,
-        };
+        return $status;
     }
 }

@@ -421,7 +421,7 @@ class RbacSeeder extends Seeder
                 'description' => 'Authority over projects and teams, and the leave decisions that follow.',
                 'permissions' => [
                     ...$staffReading, 'employees.view', 'clients.view', 'leave.approve',
-                    'meetings.schedule', 'leads.view',
+                    'meetings.schedule',
                     // The client relationship is the manager's, so the client
                     // record is too — including who at the client gets a login.
                     'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
@@ -492,7 +492,7 @@ class RbacSeeder extends Seeder
                     ...$staffReading, 'clients.view', 'employees.view', 'attendance.view',
                     'attendance.view.all', 'attendance.reject', 'leave.approve', 'salary.view',
                     'invoices.view', 'tickets.triage', 'meetings.schedule', 'announcements.post',
-                    'announcements.holiday', 'reports.view', 'leads.view',
+                    'announcements.holiday', 'reports.view',
                     'employees.create', 'employees.edit', 'employees.deactivate',
                     'employees.identifiers',
                     'clients.create', 'clients.edit', 'clients.status', 'clients.invite',

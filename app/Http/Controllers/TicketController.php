@@ -183,7 +183,7 @@ class TicketController extends Controller
             'activeNav' => 'tickets',
             'reference' => TicketDirectory::nextReference(),
             'projects' => Project::query()->open()->orderBy('name')->get(),
-            'clients' => Client::query()->whereNot('status', 'completed')->orderBy('name')->get(),
+            'clients' => Client::query()->whereNot('status', 'inactive')->orderBy('name')->get(),
             'mayTriage' => $this->rbac->can($request->user(), 'tickets.triage'),
         ] + $this->options());
     }

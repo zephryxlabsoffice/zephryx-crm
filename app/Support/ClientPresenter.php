@@ -19,10 +19,7 @@ class ClientPresenter
      */
     protected const STATUSES = [
         'active' => ['pill-green', 'Active'],
-        'pending' => ['pill-amber', 'Pending'],
-        'review' => ['pill-blue', 'In Review'],
-        'on_hold' => ['pill-amber', 'On Hold'],
-        'completed' => ['pill-gray', 'Completed'],
+        'inactive' => ['pill-gray', 'Inactive'],
     ];
 
     /**

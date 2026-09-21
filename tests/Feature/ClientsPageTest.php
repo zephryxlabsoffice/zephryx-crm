@@ -165,13 +165,13 @@ class ClientsPageTest extends TestCase
     {
         $this->seedDemoWorkforce();
 
-        $completed = Client::where('status', 'completed')->firstOrFail();
-        $pending = Client::where('status', 'pending')->firstOrFail();
+        $inactive = Client::where('status', 'inactive')->firstOrFail();
+        $active = Client::where('status', 'active')->firstOrFail();
 
-        $body = $this->pageBody('/clients?status=completed');
+        $body = $this->pageBody('/clients?status=inactive');
 
-        $this->assertStringContainsString('/clients/'.$completed->reference, $body);
-        $this->assertStringNotContainsString('/clients/'.$pending->reference, $body);
+        $this->assertStringContainsString('/clients/'.$inactive->reference, $body);
+        $this->assertStringNotContainsString('/clients/'.$active->reference, $body);
     }
 
     public function test_an_invalid_status_is_rejected_rather_than_ignored(): void

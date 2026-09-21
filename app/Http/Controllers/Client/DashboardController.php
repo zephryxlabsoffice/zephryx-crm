@@ -40,6 +40,17 @@ class DashboardController extends PortalController
     {
         $client = $this->client($request);
 
+        /*
+         * The one route in this realm an Inactive client may still reach
+         * without a 403 — because it is what SHOWS them they are inactive,
+         * with the one thing still theirs (Invoices) one click away. See
+         * PortalController::requireActiveClient for the rule everywhere
+         * else.
+         */
+        if (! $client->isActive()) {
+            return response()->view('client.ex-client', $this->shell($request, 'dashboard'));
+        }
+
         $projects = ClientPortal::projects($client);
 
         return response()->view('client.dashboard', $this->shell($request, 'dashboard') + [

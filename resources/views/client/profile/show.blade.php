@@ -139,6 +139,89 @@
                 </div>
             </form>
 
+            {{--
+                Additional contacts, beyond the one main contact in the form
+                above. A client organisation is one login, not one person —
+                the accounts payable contact who wants invoice copies is
+                rarely the one who raises tickets. See
+                App\Http\Controllers\Client\ContactController.
+            --}}
+            <div class="card">
+                <div class="card-hd">
+                    <span class="card-title">Other contacts</span>
+                </div>
+
+                <div class="card-body">
+                    @if ($contacts->isEmpty())
+                        <p class="rail-empty">
+                            Just the main contact above so far. Add anybody else here
+                            who should be on our records.
+                        </p>
+                    @else
+                        <ul class="cl-contact-list">
+                            @foreach ($contacts as $contact)
+                                <li class="cl-contact-row">
+                                    <div class="cl-contact-id">
+                                        <strong>{{ $contact->name }}</strong>
+                                        @if ($contact->email)
+                                            <span class="dash-quiet-meta">{{ $contact->email }}</span>
+                                        @endif
+                                        @if ($contact->phone)
+                                            <span class="dash-quiet-meta">{{ $contact->phone }}</span>
+                                        @endif
+                                    </div>
+
+                                    <form method="POST" action="{{ route('client.contacts.destroy', ['contact' => $contact->id]) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-outline btn-danger btn-sm" type="submit">
+                                            Remove
+                                        </button>
+                                    </form>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+
+                    <form class="cl-contact-form" method="POST" action="{{ route('client.contacts.store') }}">
+                        @csrf
+
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label class="form-field-lbl" for="cc-name">Name</label>
+                                <input id="cc-name" name="name" type="text" value="{{ old('name') }}"
+                                       maxlength="120" required>
+                                @error('name')
+                                    <span class="field-error">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-field">
+                                <label class="form-field-lbl" for="cc-email">Email</label>
+                                <input id="cc-email" name="email" type="email" value="{{ old('email') }}"
+                                       maxlength="190" placeholder="name@company.com">
+                                @error('email')
+                                    <span class="field-error">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-field">
+                                <label class="form-field-lbl" for="cc-phone">Phone</label>
+                                <input id="cc-phone" name="phone" type="tel" value="{{ old('phone') }}"
+                                       maxlength="32" placeholder="+91 98765 43210">
+                                @error('phone')
+                                    <span class="field-error">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button class="btn btn-outline" type="submit">Add contact</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-hd">
                     <span class="card-title">On file with us</span>

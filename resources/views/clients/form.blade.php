@@ -78,6 +78,36 @@
                         </div>
 
                         <div class="form-field">
+                            <label class="form-field-lbl" for="cl-country">Country <span class="an-optional">(optional)</span></label>
+                            <select id="cl-country" name="country">
+                                <option value="">Not set</option>
+                                @foreach ($countries as $code => $name)
+                                    <option value="{{ $code }}" @selected(old('country', $client?->country) === $code)>
+                                        {{ $name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('country')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="cl-currency">Currency</label>
+                            <select id="cl-currency" name="currency" required>
+                                @foreach ($currencies as $code)
+                                    <option value="{{ $code }}" @selected(old('currency', $client?->currency ?? 'INR') === $code)>
+                                        {{ $code }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <span class="pay-hint">What this client is invoiced in. Figures across clients in different currencies are never summed into one total.</span>
+                            @error('currency')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
                             <label class="form-field-lbl" for="cl-status">Status</label>
                             <select id="cl-status" name="status" required>
                                 @foreach (ClientModel::STATUSES as $value)
@@ -86,7 +116,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <span class="pay-hint">The engagement, not anybody's login. A completed client can still read their old invoices.</span>
+                            <span class="pay-hint">The engagement, not anybody's login. An inactive client's own portal switches to a read-only invoices page — they never lose access outright.</span>
                             @error('status')
                                 <span class="field-error">{{ $message }}</span>
                             @enderror

@@ -31,16 +31,16 @@ class DemoClients
         }
 
         return collect([
-            ['name' => 'DGL International School', 'industry' => 'Education',     'project' => 'Website Redesign',            'status' => 'active',    'payment' => 'paid',    'activity' => '2 hrs ago'],
-            ['name' => 'TechNova Solutions',       'industry' => 'Software',      'project' => 'CRM Setup',                   'status' => 'pending',   'payment' => 'due',     'activity' => 'Yesterday'],
-            ['name' => 'ABC Pvt Ltd',              'industry' => 'Corporate',     'project' => 'Branding Kit',                'status' => 'review',    'payment' => 'partial', 'activity' => '3 days ago'],
-            ['name' => 'GreenLeaf Foods',          'industry' => 'Food Industry', 'project' => 'Social Media Marketing',      'status' => 'active',    'payment' => 'paid',    'activity' => '4 days ago'],
-            ['name' => 'Innovate Hub',             'industry' => 'Technology',    'project' => 'Mobile App',                  'status' => 'on_hold',   'payment' => 'due',     'activity' => '5 days ago'],
-            ['name' => 'Bright Future Academy',    'industry' => 'Education',     'project' => 'Learning Management System',  'status' => 'active',    'payment' => 'paid',    'activity' => '1 week ago'],
-            ['name' => 'MediCare Services',        'industry' => 'Healthcare',    'project' => 'Website Development',         'status' => 'completed', 'payment' => 'paid',    'activity' => '1 week ago'],
-            ['name' => 'Urban Nest Interiors',     'industry' => 'Interior',      'project' => 'E-commerce Storefront',       'status' => 'active',    'payment' => 'partial', 'activity' => '2 weeks ago'],
-            ['name' => 'Sunrise Logistics',        'industry' => 'Logistics',     'project' => 'Fleet Tracking Dashboard',    'status' => 'pending',   'payment' => 'due',     'activity' => '2 weeks ago'],
-            ['name' => 'Kolkata Craft Collective', 'industry' => 'Retail',        'project' => 'Brand Photography',           'status' => 'completed', 'payment' => 'paid',    'activity' => '3 weeks ago'],
+            ['name' => 'DGL International School', 'industry' => 'Education',     'project' => 'Website Redesign',            'status' => 'active',   'country' => 'IN', 'currency' => 'INR', 'payment' => 'paid',    'activity' => '2 hrs ago'],
+            ['name' => 'TechNova Solutions',       'industry' => 'Software',      'project' => 'CRM Setup',                   'status' => 'active',   'country' => 'IN', 'currency' => 'INR', 'payment' => 'due',     'activity' => 'Yesterday'],
+            ['name' => 'ABC Pvt Ltd',              'industry' => 'Corporate',     'project' => 'Branding Kit',                'status' => 'active',   'country' => 'IN', 'currency' => 'INR', 'payment' => 'partial', 'activity' => '3 days ago'],
+            ['name' => 'GreenLeaf Foods',          'industry' => 'Food Industry', 'project' => 'Social Media Marketing',      'status' => 'active',   'country' => 'IN', 'currency' => 'INR', 'payment' => 'paid',    'activity' => '4 days ago'],
+            ['name' => 'Innovate Hub',             'industry' => 'Technology',    'project' => 'Mobile App',                  'status' => 'active',   'country' => 'US', 'currency' => 'USD', 'payment' => 'due',     'activity' => '5 days ago'],
+            ['name' => 'Bright Future Academy',    'industry' => 'Education',     'project' => 'Learning Management System',  'status' => 'active',   'country' => 'IN', 'currency' => 'INR', 'payment' => 'paid',    'activity' => '1 week ago'],
+            ['name' => 'MediCare Services',        'industry' => 'Healthcare',    'project' => 'Website Development',         'status' => 'inactive', 'country' => 'IN', 'currency' => 'INR', 'payment' => 'paid',    'activity' => '1 week ago'],
+            ['name' => 'Urban Nest Interiors',     'industry' => 'Interior',      'project' => 'E-commerce Storefront',       'status' => 'active',   'country' => 'IN', 'currency' => 'INR', 'payment' => 'partial', 'activity' => '2 weeks ago'],
+            ['name' => 'Sunrise Logistics',        'industry' => 'Logistics',     'project' => 'Fleet Tracking Dashboard',    'status' => 'active',   'country' => 'IN', 'currency' => 'INR', 'payment' => 'due',     'activity' => '2 weeks ago'],
+            ['name' => 'Kolkata Craft Collective', 'industry' => 'Retail',        'project' => 'Brand Photography',           'status' => 'inactive', 'country' => 'IN', 'currency' => 'INR', 'payment' => 'paid',    'activity' => '3 weeks ago'],
         ]);
     }
 

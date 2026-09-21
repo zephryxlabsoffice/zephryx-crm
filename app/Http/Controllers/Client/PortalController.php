@@ -62,6 +62,34 @@ abstract class PortalController extends Controller
     }
 
     /**
+     * The client record, refused if the engagement is over.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * INACTIVE MEANS THE EX-CLIENT PAGE, AND EVERYTHING ELSE IS A 403
+     *
+     * Decided 2026-09-21 (client portal, Q4): going Inactive does not stop the
+     * login. It lands on an Ex-Client page carrying one button through to
+     * Invoices, which stays read-only and reachable — Client\InvoiceController
+     * calls `client()`, not this method, and must keep working regardless of
+     * status. Every other route in this realm calls this method instead, and
+     * gets a plain 403, not a redirect: the plan doc is explicit that it is
+     * 403, not hidden, not sent anywhere else.
+     *
+     * Client\DashboardController is the one controller that does not call
+     * this either — it is what RENDERS the Ex-Client page, so it has to be
+     * reachable by an inactive client to show it.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    protected function requireActiveClient(Request $request): Client
+    {
+        $client = $this->client($request);
+
+        abort_if(! $client->isActive(), 403);
+
+        return $client;
+    }
+
+    /**
      * View data every page in the portal needs.
      *
      * @return array<string, mixed>

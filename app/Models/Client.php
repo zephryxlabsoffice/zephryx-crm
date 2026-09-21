@@ -23,12 +23,28 @@ class Client extends Model
      * validation rule and the dropdown all have to agree, and three copies of a
      * list is two chances for them to stop agreeing.
      *
+     * Active / Inactive replaced the project-style states (decided 2026-09-11):
+     * none of `pending` / `review` / `on_hold` / `completed` read differently
+     * anywhere the portal or invoicing actually looked, and Inactive is what
+     * gates the Ex-Client page (see App\Http\Controllers\Client\
+     * PortalController::requireActiveClient).
+     *
      * @var list<string>
      */
-    public const STATUSES = ['active', 'pending', 'review', 'on_hold', 'completed'];
+    public const STATUSES = ['active', 'inactive'];
+
+    /**
+     * What this company actually bills in — not the full list App\Support\
+     * Money supports. Closed, the same reasoning `config/invoices.php`'s
+     * payment methods list gives: free text here means "INR", "inr" and
+     * "Inr" in the same column.
+     *
+     * @var list<string>
+     */
+    public const CURRENCIES = ['INR', 'USD'];
 
     protected $fillable = [
-        'reference', 'name', 'industry', 'status',
+        'reference', 'name', 'industry', 'country', 'currency', 'status',
         'contact_name', 'contact_email', 'contact_phone', 'billing_address',
         // A key into the private disk, never a URL. See the migration.
         'photo_path',
@@ -62,6 +78,21 @@ class Client extends Model
     public function accountManager(): BelongsTo
     {
         return $this->belongsTo(User::class, 'account_manager_id');
+    }
+
+    /**
+     * Everybody beyond the main contact — see App\Models\ClientContact.
+     *
+     * @return HasMany<ClientContact, $this>
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(ClientContact::class)->orderBy('name');
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
     }
 
     /**

@@ -64,7 +64,7 @@ class ClientWritesTest extends TestCase
 
         $this->get('/clients/'.$client->reference.'/edit')->assertOk();
         $this->get('/clients/create')->assertForbidden();
-        $this->post('/clients/'.$client->reference.'/status', ['status' => 'on_hold'])->assertForbidden();
+        $this->post('/clients/'.$client->reference.'/status', ['status' => 'inactive'])->assertForbidden();
         $this->post('/clients/'.$client->reference.'/invite', [
             'name' => 'Someone', 'email' => 'someone@example.test',
         ])->assertForbidden();
@@ -242,16 +242,16 @@ class ClientWritesTest extends TestCase
         $client = $this->aClient();
         $this->signInAsStaff(['employee', 'manager']);
 
-        $this->post('/clients/'.$client->reference.'/status', ['status' => 'on_hold'])
+        $this->post('/clients/'.$client->reference.'/status', ['status' => 'inactive'])
             ->assertRedirect();
 
-        $this->assertSame('on_hold', $client->fresh()->status);
+        $this->assertSame('inactive', $client->fresh()->status);
 
         $entry = DB::table('audit_log')->where('action', AuditLog::CLIENT_STATUS_CHANGED)->first();
 
         $this->assertNotNull($entry);
         $this->assertStringContainsString('active', (string) $entry->before_json);
-        $this->assertStringContainsString('on_hold', (string) $entry->after_json);
+        $this->assertStringContainsString('inactive', (string) $entry->after_json);
     }
 
     public function test_setting_the_status_it_already_has_writes_nothing(): void
@@ -279,7 +279,7 @@ class ClientWritesTest extends TestCase
 
         $this->signInAsStaff(['employee', 'manager']);
 
-        $this->post('/clients/'.$client->reference.'/status', ['status' => 'completed']);
+        $this->post('/clients/'.$client->reference.'/status', ['status' => 'inactive']);
 
         $this->assertSame('active', $account->fresh()->status);
     }
@@ -379,6 +379,8 @@ class ClientWritesTest extends TestCase
         return $overrides + [
             'name' => 'Northwind Trading',
             'industry' => 'Logistics',
+            'country' => 'IN',
+            'currency' => 'INR',
             'status' => 'active',
             'contact_name' => 'A Person',
             'contact_email' => 'a.person@example.test',

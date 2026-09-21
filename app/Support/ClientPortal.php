@@ -273,6 +273,23 @@ class ClientPortal
     }
 
     /**
+     * The model behind one of this client's meetings, for the one write this
+     * realm makes against it — cancelling. `meeting()` above returns the
+     * display array `toRecordArray` builds, which carries no model to call
+     * `update` on; this runs the same ownership filter and hands back the
+     * row itself.
+     */
+    public static function meetingModel(Client $client, string $reference): ?Meeting
+    {
+        return Meeting::query()
+            ->where('reference', $reference)
+            ->where(fn ($q) => $q
+                ->where('requested_by_client_id', $client->id)
+                ->orWhereHas('project', fn ($p) => $p->where('client_id', $client->id)))
+            ->first();
+    }
+
+    /**
      * The next meeting this client can still attend.
      *
      * @return array<string, mixed>|null

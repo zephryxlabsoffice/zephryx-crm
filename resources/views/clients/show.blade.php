@@ -77,6 +77,16 @@
                     </div>
 
                     <div class="lv-field">
+                        <dt class="lv-field-lbl">Country</dt>
+                        <dd>{{ $record->country ? (config('countries')[$record->country] ?? $record->country) : 'Not recorded' }}</dd>
+                    </div>
+
+                    <div class="lv-field">
+                        <dt class="lv-field-lbl">Currency</dt>
+                        <dd>{{ $record->currency }}</dd>
+                    </div>
+
+                    <div class="lv-field">
                         <dt class="lv-field-lbl">Signed on</dt>
                         <dd>{{ $record->signed_on?->format('d M Y') ?: 'Not recorded' }}</dd>
                     </div>
@@ -88,6 +98,28 @@
                     </div>
                 @endif
             </div>
+
+            @if ($contacts->isNotEmpty())
+                <div class="card">
+                    <div class="section-hd">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Other contacts
+                    </div>
+
+                    {{-- Self-served by the client through their own portal —
+                         see Client\ContactController. This page only reads
+                         them; there is no add or remove here, so the client's
+                         own list and this one can never disagree. --}}
+                    @foreach ($contacts as $contact)
+                        <div class="stat-row">
+                            <span class="stat-label">{{ $contact->name }}</span>
+                            <span class="stat-value">{{ implode(' · ', array_filter([$contact->email, $contact->phone])) ?: '—' }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
 
             <div class="card">
                 <div class="section-hd">
@@ -158,8 +190,10 @@
                     <div class="prose">
                         <p>
                             The status of the work, not of anybody's login. Marking a client
-                            completed keeps every invoice, ticket and project exactly where it
-                            is — which is why there is no delete on this page at all.
+                            inactive keeps every invoice, ticket and project exactly where it
+                            is — which is why there is no delete on this page at all. The
+                            client's own portal switches to a read-only Invoices page the
+                            moment this changes.
                         </p>
                     </div>
 

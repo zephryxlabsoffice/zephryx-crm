@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Client;
+use App\Models\ClientContact;
 use App\Models\Invoice;
+use App\Models\Meeting;
 use App\Models\Notification;
 use App\Models\Project;
 use App\Models\ProjectUpdate;
@@ -732,5 +734,128 @@ class ClientPortalTest extends TestCase
             ->assertOk()
             ->assertSee('Something is wrong with the site', false)
             ->assertSee(self::OURS, false);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       EX-CLIENT GATING
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_an_inactive_client_lands_on_the_ex_client_page(): void
+    {
+        $this->ours()->update(['status' => 'inactive']);
+
+        $this->get('/client/dashboard')
+            ->assertOk()
+            ->assertSee('inactive', false);
+    }
+
+    public function test_an_inactive_client_is_refused_everywhere_except_the_dashboard_and_invoices(): void
+    {
+        $this->ours()->update(['status' => 'inactive']);
+
+        foreach (['/client/projects', '/client/tickets', '/client/tickets/raise',
+            '/client/meetings', '/client/meetings/request', '/client/profile'] as $page) {
+            $this->get($page)->assertForbidden();
+        }
+
+        // The one thing that stays reachable and read-only.
+        $this->get('/client/invoices')->assertOk();
+    }
+
+    public function test_an_active_client_never_sees_the_ex_client_page(): void
+    {
+        $this->assertSame('active', $this->ours()->status);
+
+        $this->get('/client/dashboard')->assertOk()->assertDontSee('This engagement is marked inactive', false);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       SELF-SERVE CONTACTS
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_a_client_may_add_and_remove_their_own_contact(): void
+    {
+        $client = $this->ours();
+
+        $this->post('/client/contacts', [
+            'name' => 'Accounts Payable',
+            'email' => 'ap@example.test',
+            'phone' => '+91 90000 00001',
+        ])->assertRedirect(route('client.profile.show'));
+
+        $contact = ClientContact::where('client_id', $client->id)->where('name', 'Accounts Payable')->first();
+        $this->assertNotNull($contact);
+
+        $this->delete('/client/contacts/'.$contact->id)->assertRedirect(route('client.profile.show'));
+
+        $this->assertNull(ClientContact::find($contact->id));
+    }
+
+    public function test_a_client_cannot_remove_another_clients_contact(): void
+    {
+        $theirContact = ClientContact::create([
+            'client_id' => $this->theirs()->id,
+            'name' => 'Somebody Else',
+        ]);
+
+        $this->delete('/client/contacts/'.$theirContact->id)->assertNotFound();
+
+        $this->assertNotNull(ClientContact::find($theirContact->id));
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       MEETING SELF-CANCEL
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_a_client_may_cancel_a_meeting_they_requested(): void
+    {
+        $meeting = Meeting::create([
+            'reference' => 'MTG-TEST-001',
+            'title' => 'Kickoff call',
+            'requested_by_client_id' => $this->ours()->id,
+            'starts_at' => now()->addDay(),
+            'ends_at' => now()->addDay()->addMinutes(30),
+        ]);
+
+        $this->post('/client/meetings/'.$meeting->reference.'/cancel', [
+            'reason' => 'No longer needed, resolved over email.',
+        ])->assertRedirect(route('client.meetings.index'));
+
+        $meeting->refresh();
+        $this->assertNotNull($meeting->cancelled_at);
+        $this->assertSame('No longer needed, resolved over email.', $meeting->cancellation_reason);
+    }
+
+    public function test_a_client_cannot_cancel_another_clients_meeting(): void
+    {
+        $meeting = Meeting::create([
+            'reference' => 'MTG-TEST-002',
+            'title' => 'Somebody else’s call',
+            'requested_by_client_id' => $this->theirs()->id,
+            'starts_at' => now()->addDay(),
+            'ends_at' => now()->addDay()->addMinutes(30),
+        ]);
+
+        $this->post('/client/meetings/'.$meeting->reference.'/cancel', [
+            'reason' => 'Trying to cancel somebody else’s meeting.',
+        ])->assertNotFound();
+
+        $this->assertNull($meeting->fresh()->cancelled_at);
+    }
+
+    public function test_cancelling_a_meeting_requires_a_reason(): void
+    {
+        $meeting = Meeting::create([
+            'reference' => 'MTG-TEST-003',
+            'title' => 'Kickoff call',
+            'requested_by_client_id' => $this->ours()->id,
+            'starts_at' => now()->addDay(),
+            'ends_at' => now()->addDay()->addMinutes(30),
+        ]);
+
+        $this->post('/client/meetings/'.$meeting->reference.'/cancel', [])
+            ->assertSessionHasErrors('reason');
+
+        $this->assertNull($meeting->fresh()->cancelled_at);
     }
 }

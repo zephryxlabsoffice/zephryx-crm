@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Client\ContactController as ClientContactController;
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
 use App\Http\Controllers\Client\InvoiceController as ClientInvoiceController;
 use App\Http\Controllers\Client\MeetingController as ClientMeetingController;
@@ -95,6 +96,7 @@ Route::post('/tickets/{ticket}/comment', [ClientTicketController::class, 'commen
     ->name('tickets.comment');
 
 Route::get('/meetings', [ClientMeetingController::class, 'index'])->name('meetings.index');
+// Before /meetings/{meeting}, or "request" is read as a meeting reference.
 Route::get('/meetings/request', [ClientMeetingController::class, 'create'])->name('meetings.create');
 
 /*
@@ -104,6 +106,20 @@ Route::get('/meetings/request', [ClientMeetingController::class, 'create'])->nam
  * there is deliberately no route here that would let them.
  */
 Route::post('/meetings/request', [ClientMeetingController::class, 'store'])->name('meetings.request');
+
+Route::get('/meetings/{meeting}', [ClientMeetingController::class, 'show'])
+    ->where('meeting', '[A-Za-z0-9-]{1,32}')
+    ->name('meetings.show');
+
+/*
+ * The one write a client may make against a meeting: calling it off. Google
+ * is told first — see Client\MeetingController::cancel — and ownership runs
+ * through ClientPortal::meetingModel, the same filter every other read in
+ * this realm uses.
+ */
+Route::post('/meetings/{meeting}/cancel', [ClientMeetingController::class, 'cancel'])
+    ->where('meeting', '[A-Za-z0-9-]{1,32}')
+    ->name('meetings.cancel');
 
 Route::get('/profile', [ClientProfileController::class, 'show'])->name('profile.show');
 
@@ -131,3 +147,15 @@ Route::post('/profile', [ClientProfileController::class, 'update'])->name('profi
  */
 Route::post('/profile/photo', [ClientProfileController::class, 'photo'])->name('profile.photo');
 Route::get('/profile/photo', [ClientProfileController::class, 'showPhoto'])->name('profile.photo.show');
+
+/*
+ * The additional contacts beyond the one main contact on the profile above —
+ * several people, one login. No edit route: a wrong entry is cheaper to
+ * delete and re-add than a second edit form is worth building. Ownership on
+ * the delete runs through the query itself, not a check afterwards — see
+ * Client\ContactController::destroy.
+ */
+Route::post('/contacts', [ClientContactController::class, 'store'])->name('contacts.store');
+Route::delete('/contacts/{contact}', [ClientContactController::class, 'destroy'])
+    ->where('contact', '[0-9]+')
+    ->name('contacts.destroy');
