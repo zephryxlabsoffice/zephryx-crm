@@ -548,74 +548,82 @@ Step 1 is part done. What is committed, in order:
 
 **Step 1 is finished.**
 
-## Where to pick up (paused 2026-09-17)
+## Where to pick up (paused 2026-09-21)
 
 Ordering settled with the owner: **Google Drive + the Admin Panel connection
 screen FIRST**, then steps 2 → 5 of the rework order below. Drive is what
-unblocks the Invoices rewrite, and the connection screen is Admin Panel work,
-so the question round below feeds straight into it.
+unblocks the Invoices rewrite, and the connection screen is Admin Panel work.
 
-**Paused mid-build, before any code was written.** Question 10 is answered
-(above) and the access-model question it raised is resolved. What follows is
-what the research pass found, so the next session starts writing rather than
-re-reading the codebase.
+**The connection screen is built (2026-09-21, commit `8588c99`).** What
+landed:
 
-Nothing below is installed or written yet — no migration, no controller, no
-composer package. This is a plan, not a status report.
+- **`google_connection`** — the singleton credential table, exactly the shape
+  this section previously sketched: `service_account_key` under the
+  `encrypted` cast, `service_account_email` and `key_fingerprint` derived at
+  connect time, `calendar_id` / `impersonate_email` / `shared_drive_id` plain,
+  `connected_at` / `connected_by`. Not yet wired INTO `GoogleMeetProvider` or
+  `DocumentStore` — see "Still to build" below.
+- **`App\Support\Google`** (`GoogleServiceAccountKey`, `GoogleAuth`,
+  `DriveClient`) — hand-rolled, not `google/apiclient`. Every version of that
+  SDK pins `guzzlehttp/guzzle` to `^7.4.5`; this app is on Guzzle 8 via
+  Laravel 13's own HTTP client, and there is no version that accepts it. What
+  Drive needs here is one JWT-bearer token exchange (`openssl_sign`, no JWT
+  library either) and two REST calls, so that is what got written, against
+  Laravel's own `Http` facade. Read `GoogleAuth`'s header comment before
+  reaching for the SDK again — the incompatibility does not go away on retry.
+- **`Admin\IntegrationsController`** at `/admin/integrations` — connect
+  (doubles as reconnect/rotate), test, disconnect. The key is write-only, same
+  rule as the identity card: never rendered back after it is saved, only the
+  derived email and fingerprint.
+- **"Test connection" is real** — creates and deletes an actual file in the
+  Shared Drive. Not stubbed, on purpose (see `GoogleMeetProvider`'s own header
+  comment for why a fabricated success is the failure mode this application
+  refuses everywhere).
+- **`admin.integrations.view`** in `Rbac::ADMIN_BASE`, its own key, not folded
+  into Settings — reachable by the one existing admin account, per the
+  "one admin account for now" decision above. `RbacSeeder::SENSITIVE` marks it
+  for documentation, though ADMIN_BASE keys are not grantable.
+- **11 tests** in `tests/Feature/GoogleIntegrationTest.php` — encryption at
+  rest, the key never rendering back, connect/reconnect/disconnect audit
+  entries (by fingerprint, never by value), a real success and a real failure
+  path for "Test connection" (via `Http::fake()`), and the permission not
+  being offered to any staff role. Full suite: 1239 passing.
 
-- **No Google API client library in `composer.json` yet.** `google/apiclient`
-  or equivalent has to be required before `GoogleMeetProvider` or a Drive
-  client can do anything real.
-- **`config/filesystems.php` has no `google`/`drive` disk.** Only `local`,
-  `public`, `s3` exist. The Drive driver DocumentStore is meant to grow (§ "How,
-  concretely" above) is not scaffolded.
-- **The credential table doesn't exist.** Shape decided by reading
-  `employee_banking`'s `encrypted` cast pattern and `CompanySettings`: one
-  singleton row, not a `company_settings` entry, because `company_settings`
-  pushes every stored value into `config()` at boot (`CompanySettings::apply()`)
-  — exactly the "key in reach of any stack trace" problem §"Connecting it"
-  above warns about. Working shape: a `google_connection` table with
-  `service_account_key` (encrypted cast, write-only — never rendered back),
-  `service_account_email` and `key_fingerprint` (both derived from the key at
-  connect time, shown on the screen per the plan's rule 2), `calendar_id`,
-  `impersonate_email`, `shared_drive_id` (plain — not secrets), `connected_at`,
-  `connected_by` (nullable FK to `users`). One row supersedes all three of
-  `GOOGLE_CALENDAR_ID` / `GOOGLE_SERVICE_ACCOUNT_KEY` / `GOOGLE_IMPERSONATE_EMAIL`
-  in `config/meetings.php`, so Calendar reads from it too, not from `.env`.
-- **Permission:** add `admin.integrations.view` to `Rbac::ADMIN_BASE`, which
-  self-seeds via `RbacSeeder::permissionKeys()` — no seeder edit needed beyond
-  the constant. Add to `RbacSeeder::SENSITIVE` for documentation even though
-  ADMIN_BASE keys aren't grantable. Add an `admin.integrations` entry to
-  `config/navigation-admin.php`. No route-level `permission:` middleware needed
-  — none of the other admin routes use it either; the realm is the only gate
-  today (matches the "one admin account for now" decision above).
-- **Audit:** new `AuditLog` constants needed —
-  connected / key rotated / disconnected / test succeeded / test failed —
-  following the existing rule that these name the fingerprint and actor, never
-  the key material.
-- **Controller/view pattern to follow:** `Admin\SettingsController` +
-  `admin/settings/index.blade.php` for the two-step review shape (not needed
-  here — a key paste isn't retroactive — but the card/form layout and
-  `partials.notice` usage are the right template). `admin/accounts/show.blade.php`
-  for the rail-card style if the connected-state summary wants one.
-- **Test connection button**, from the plan doc above: creates and deletes a
-  small file in the Shared Drive. Needs the Drive client to exist first, so it
-  is the last piece, not the first.
-- **Still not designed:** whether `calendar_id` / `impersonate_email` /
-  `shared_drive_id` are entered on the same screen as the key paste in one
-  form, or as separate fields editable independently of reconnecting the key.
-  Lean toward one form, since the plan doc calls this "one Google connection."
+**Still to build, not this pass:**
+
+- **`config/filesystems.php` has no `google`/`drive` disk**, and `DocumentStore`
+  has no Drive driver yet. Nothing uploads to Drive because of this work —
+  only the connection exists. That is the next piece, and it is what the
+  Invoices rewrite (step 4 below) is waiting on.
+- **The inline PDF viewer** (plan doc, "In-browser viewing is ours, not
+  Drive's") is not built.
+- **`GoogleMeetProvider` still throws** on every method, deliberately, per its
+  own header comment. It does not yet read `GoogleConnection` — when it is
+  built, it should, not `config('meetings.google.*')`, which is what it
+  supersedes.
+- **`config/meetings.php`'s `google.*` keys are now stale** (superseded by
+  `google_connection`, per the plan doc's "Connecting it" section) but were
+  not touched or removed this pass — nothing reads them yet either way, so
+  there was nothing to migrate off.
+
+**Environment note, not a code decision:** this machine's PHP CLI had
+`openssl`, `mbstring`, `pdo_mysql`, `pdo_sqlite`, `fileinfo`, `gd`, `intl`,
+`curl`, `mysqli`, `zip` and `sqlite3` all disabled in `php.ini`, and `vendor/`
+had never been installed. Both are fixed now (see commit `8588c99`'s message).
+Neither is a fact about the codebase — flagged here only because it blocked
+every command in this session before it was found.
 
 State verified in code on 2026-09-17, not assumed:
 
 - Every one of the 43 `abort(501)` write routes is implemented. None remain.
 - No controller reads a `Demo*` source. Only comments mention them.
 - 2FA by email OTP with trusted devices is wired into sign-in.
-- 1228 tests pass. `pint --test` fails across ~150 pre-existing files; style
-  has never been enforced here, and a formatting pass is its own job.
-- `php artisan migrate` has NOT been run against the owner's MySQL — it was not
-  running locally. The tests use SQLite. Six migrations are waiting:
-  `000017` through `000022`.
+- `pint --test` fails across ~150 pre-existing files; style has never been
+  enforced here, and a formatting pass is its own job. (The files this pass
+  touched are pint-clean.)
+- `php artisan migrate` has NOT been run against the owner's MySQL — it is not
+  reachable from this machine either. The tests use SQLite. Seven migrations
+  are waiting: `000017` through `000023`.
 
 ## Open questions — Client portal and Admin panel (asked 2026-09-17)
 
