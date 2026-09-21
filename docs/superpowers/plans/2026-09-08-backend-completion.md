@@ -868,9 +868,9 @@ change modules that are already committed.
    (full-time / intern / freelance), ID proof, PAN, addresses, bank, salary
    breakdown, masking rules, convert-to-full-time.
 2. **Clients** ✅ **Done, 2026-09-21** — client statuses, country and currency,
-   self-serve contacts. **→ Teams → Projects → Tasks**, still to do:
-   "Archived" off teams; derived project progress and `PRJ-YYYY-NNN`; task
-   comments, attachments and several assignees.
+   self-serve contacts. **Teams** ✅ **Done, 2026-09-21** — "Archived"
+   dropped. **→ Projects → Tasks**, still to do: derived project progress and
+   `PRJ-YYYY-NNN`; task comments, attachments and several assignees.
 3. **Attendance roster and comp-off → Leave year rules** — Sunday roster,
    comp-off earning and expiry; the per-employee leave year, monthly casual
    accrual, privilege and sick granted in full.
@@ -957,10 +957,26 @@ sections for Ex-Client gating, self-serve contacts and meeting self-cancel.
 Full suite green (1294 passing) on both SQLite (test runner) and against
 real MySQL (migration re-verified after the index fix).
 
-**Left for later, if this is where work stops**: Teams (drop "Archived"),
-Projects (derived progress, `PRJ-YYYY-NNN` reference), Tasks (multiple
-assignees, comments, attachments) — the rest of step 2. Then step 3
-(attendance roster/comp-off, leave year rules), step 5 (Tickets/
-Announcements/Notifications polish — Meetings and Profile already done),
-step 6 (2FA device management, Support page, admin role creation and other
-tidy-up). See the "RESUME HERE" section above for the full order.
+**Left for later, if this is where work stops**: Projects (derived progress,
+`PRJ-YYYY-NNN` reference), Tasks (multiple assignees, comments, attachments)
+— the rest of step 2. Then step 3 (attendance roster/comp-off, leave year
+rules), step 5 (Tickets/Announcements/Notifications polish — Meetings and
+Profile already done), step 6 (2FA device management, Support page, admin
+role creation and other tidy-up). See the "RESUME HERE" section above for the
+full order.
+
+## Step 2's Teams half is done (2026-09-21)
+
+Small: `Team::STATUSES` drops `archived`, leaving `active`/`inactive`. Nothing
+in this application ever read `archived` differently from `inactive` — both
+meant "not currently used, keep everything it holds" — so an existing
+archived row folds into inactive rather than surviving as a state nothing
+distinguishes. Migration `2026_09_21_000026` does the same portable
+add-backfill-drop-rename swap as the Clients status migration, and drops
+`teams_status_index` before the column from the start rather than
+rediscovering the SQLite index-drop trap the Clients migration hit. The status
+select on `teams/form.blade.php` and the filter/validation in
+`TeamController` already looped `Team::STATUSES`, so they needed no edit at
+all — only the constant and `TeamPresenter`'s pill map changed. One new
+regression test (`TeamWritesTest::test_archived_is_no_longer_a_status`). Full
+suite green — 1295 passing — on both SQLite and real MySQL.

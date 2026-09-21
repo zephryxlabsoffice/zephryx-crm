@@ -176,6 +176,19 @@ class TeamWritesTest extends TestCase
         $this->assertSame(0, DB::table('audit_log')->where('action', AuditLog::TEAM_STATUS_CHANGED)->count());
     }
 
+    public function test_archived_is_no_longer_a_status(): void
+    {
+        // Dropped 2026-09-21 (review round decision): nothing in this
+        // application ever read it differently from `inactive`.
+        $team = $this->aTeam();
+        $this->signInAsStaff(['employee', 'manager']);
+
+        $this->post('/teams/'.$team->reference, $this->validPayload(['status' => 'archived']))
+            ->assertSessionHasErrors('status');
+
+        $this->assertSame('active', $team->fresh()->status);
+    }
+
     public function test_there_is_no_delete_route(): void
     {
         // Tasks and projects will point at teams.

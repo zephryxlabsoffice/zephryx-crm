@@ -13,14 +13,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Team extends Model
 {
     /**
-     * The three states, and the order the filter offers them.
+     * The two states, and the order the filter offers them.
      *
-     * None of them means "deleted": tasks and projects point at teams, so one
-     * that stops being used is marked inactive and keeps everything it holds.
+     * Neither means "deleted": tasks and projects point at teams, so one that
+     * stops being used is marked inactive and keeps everything it holds.
+     * There used to be a third, `archived` — dropped 2026-09-21 (review round
+     * decision) because nothing in this application ever read it differently
+     * from `inactive`; see the migration that folded it in.
      *
      * @var list<string>
      */
-    public const STATUSES = ['active', 'inactive', 'archived'];
+    public const STATUSES = ['active', 'inactive'];
 
     protected $fillable = ['reference', 'name', 'purpose', 'lead_id', 'status', 'formed_on'];
 

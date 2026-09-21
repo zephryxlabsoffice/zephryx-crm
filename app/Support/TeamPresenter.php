@@ -13,7 +13,6 @@ class TeamPresenter
     protected const STATUSES = [
         'active' => ['pill-green', 'Active'],
         'inactive' => ['pill-red', 'Inactive'],
-        'archived' => ['pill-gray', 'Archived'],
     ];
 
     /**
