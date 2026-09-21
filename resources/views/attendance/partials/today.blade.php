@@ -72,7 +72,14 @@
     @endif
 
     <div class="att-today-action">
-        @if (! $checkedIn)
+        @if (! ($attends ?? true))
+            {{-- A freelancer, paid against work rather than time (decided
+                 2026-09-11): there is no clock for them, so there is no
+                 button — not a disabled one, none at all. --}}
+            <p class="att-today-note">
+                Freelance engagements are not tracked by attendance. There is nothing to check in to here.
+            </p>
+        @elseif (! $checkedIn)
             <form method="POST" action="{{ route('attendance.check-in') }}">
                 @csrf
                 {{-- The server's clock, never a posted time; unique on

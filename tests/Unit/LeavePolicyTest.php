@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Support\LeavePolicy;
 use App\Support\LeavePresenter as P;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class LeavePolicyTest extends TestCase
@@ -146,6 +147,106 @@ class LeavePolicyTest extends TestCase
         $this->assertSame(0, $balance['taken']);
         $this->assertSame(0, $balance['pending']);
         $this->assertSame(0, $balance['unpaid']);
+    }
+
+    /* ────────────  the per-employee leave year (decided 2026-09-11)  ──────────── */
+
+    public function test_the_leave_year_starts_on_the_joining_anniversary(): void
+    {
+        $joined = Carbon::parse('2024-03-15');
+
+        // Before this year's anniversary: still last year's window.
+        $this->assertSame(
+            '2025-03-15',
+            LeavePolicy::leaveYearStart($joined, Carbon::parse('2026-03-10'))->toDateString(),
+        );
+
+        // On or after it: this year's.
+        $this->assertSame(
+            '2026-03-15',
+            LeavePolicy::leaveYearStart($joined, Carbon::parse('2026-03-15'))->toDateString(),
+        );
+    }
+
+    public function test_a_february_29th_joiner_clamps_rather_than_overflows(): void
+    {
+        // Naive date arithmetic turns "2026-02-29" into "2026-03-01". That is
+        // a different day, not the closest one to what was actually agreed.
+        $joined = Carbon::parse('2024-02-29');
+
+        $this->assertSame(
+            '2026-02-28',
+            LeavePolicy::leaveYearStart($joined, Carbon::parse('2026-06-01'))->toDateString(),
+        );
+    }
+
+    public function test_months_accrued_is_zero_until_a_full_month_has_passed(): void
+    {
+        $start = Carbon::parse('2026-01-01');
+
+        $this->assertSame(0, LeavePolicy::monthsAccrued($start, Carbon::parse('2026-01-15')));
+        $this->assertSame(1, LeavePolicy::monthsAccrued($start, Carbon::parse('2026-02-01')));
+        $this->assertSame(6, LeavePolicy::monthsAccrued($start, Carbon::parse('2026-07-01')));
+        // Capped, not left to run past a full year.
+        $this->assertSame(12, LeavePolicy::monthsAccrued($start, Carbon::parse('2030-01-01')));
+    }
+
+    public function test_casual_accrues_monthly_privilege_and_sick_are_granted_in_full(): void
+    {
+        $start = Carbon::parse('2026-01-01');
+        $asOf = Carbon::parse('2026-04-01'); // 3 months in
+
+        $this->assertSame(3, LeavePolicy::accruedEntitlement('casual', $start, $asOf));
+        $this->assertSame(LeavePolicy::entitlementFor('sick'), LeavePolicy::accruedEntitlement('sick', $start, $asOf));
+        $this->assertSame(LeavePolicy::entitlementFor('privilege'), LeavePolicy::accruedEntitlement('privilege', $start, $asOf));
+        // Unpaid has no entitlement to accrue.
+        $this->assertSame(0, LeavePolicy::accruedEntitlement('unpaid', $start, $asOf));
+    }
+
+    public function test_balance_with_a_leave_year_uses_accrued_entitlement(): void
+    {
+        $start = Carbon::parse('2026-01-01');
+        $asOf = Carbon::parse('2026-04-01');
+
+        $balance = LeavePolicy::balance([
+            ['type' => 'casual', 'status' => P::APPROVED, 'days' => 2, 'from' => '2026-02-01'],
+        ], $start, $asOf);
+
+        $casual = collect($balance['types'])->firstWhere('key', 'casual');
+
+        // 3 accrued, 2 taken, 1 left — not the flat annual figure.
+        $this->assertSame(3, $casual['entitlement']);
+        $this->assertSame(12, $casual['annual_entitlement']);
+        $this->assertSame(1, $casual['remaining']);
+    }
+
+    public function test_balance_without_a_leave_year_still_uses_the_flat_annual_figure(): void
+    {
+        // Backward compatible: every existing test above calls balance() with
+        // no calendar at all and still gets the old, simple arithmetic.
+        $balance = LeavePolicy::balance([
+            ['type' => 'casual', 'status' => P::APPROVED, 'days' => 2],
+        ]);
+
+        $casual = collect($balance['types'])->firstWhere('key', 'casual');
+
+        $this->assertSame(12, $casual['entitlement']);
+    }
+
+    public function test_a_request_from_a_lapsed_leave_year_does_not_eat_into_the_current_one(): void
+    {
+        // Unused days lapse at the end of an employee's leave year (decided).
+        // A request dated before the current year started must not count
+        // against a balance that has since reset.
+        $start = Carbon::parse('2026-01-01');
+
+        $balance = LeavePolicy::balance([
+            ['type' => 'casual', 'status' => P::APPROVED, 'days' => 5, 'from' => '2025-06-01'],
+        ], $start, Carbon::parse('2026-04-01'));
+
+        $casual = collect($balance['types'])->firstWhere('key', 'casual');
+
+        $this->assertSame(0, $casual['taken']);
     }
 
     /* ────────────  what is deliberately absent  ──────────── */

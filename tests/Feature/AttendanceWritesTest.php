@@ -144,6 +144,29 @@ class AttendanceWritesTest extends TestCase
         $this->assertSame(0, AttendanceRecord::count());
     }
 
+    public function test_a_freelancer_cannot_clock_in_or_out(): void
+    {
+        // Paid against work, not time (decided 2026-09-11): no attendance for
+        // them at all, even though they DO have an employment record — the
+        // rule a Mentor's missing record cannot express on its own.
+        $employee = $this->signInAsEmployee();
+        $employee->update(['employment_type' => Employee::FREELANCE]);
+
+        $this->post('/attendance/check-in')->assertForbidden();
+        $this->assertSame(0, AttendanceRecord::count());
+
+        // Nor can they close a day that somehow exists — belt and braces,
+        // since the same gate protects both routes.
+        AttendanceRecord::create([
+            'employee_id' => $employee->id,
+            'date' => Carbon::today(),
+            'check_in' => '09:00',
+        ]);
+
+        $this->post('/attendance/check-out')->assertForbidden();
+        $this->assertNull(AttendanceRecord::first()->check_out);
+    }
+
     /* ══════════════════════════════════════════════════════════════════════
        REJECTION — A CORRECTION, NOT A GATE
        ══════════════════════════════════════════════════════════════════════ */

@@ -117,7 +117,9 @@ class LeaveController extends Controller
         return response()->view('leave.mine', [
             'activeNav' => 'leave',
             'requests' => $this->paginateRows($shown, $request),
-            'balance' => LeavePolicy::balance($mine),
+            'balance' => $viewer === null
+                ? LeavePolicy::balance($mine)
+                : LeavePolicy::balance($mine, LeavePolicy::leaveYearStart($viewer->joined_on)),
             'stats' => $counts,
             'tab' => $tab,
             'tabCounts' => [
@@ -138,10 +140,17 @@ class LeaveController extends Controller
      */
     public function create(Request $request): Response
     {
+        $viewer = $this->employeeFor($request);
+
         return response()->view('leave.request', [
             'activeNav' => 'leave',
-            'balance' => LeavePolicy::balance(LeaveDirectory::forEmployee($this->employeeFor($request))),
+            'balance' => $viewer === null
+                ? LeavePolicy::balance(collect())
+                : LeavePolicy::balance(LeaveDirectory::forEmployee($viewer), LeavePolicy::leaveYearStart($viewer->joined_on)),
             'types' => LeavePolicy::types(),
+            // False only when there IS a record and it says freelance (decided
+            // 2026-09-11: paid against work, not time, so no leave for them).
+            'attends' => $viewer === null || $viewer->attendsWork(),
         ]);
     }
 
@@ -164,7 +173,10 @@ class LeaveController extends Controller
             'clashes' => LeaveDirectory::clashesWith($record),
             // The requester's balance, so a decision is made against the days
             // they actually have rather than in the abstract.
-            'balance' => LeavePolicy::balance(LeaveDirectory::forEmployee($record['model']->employee)),
+            'balance' => LeavePolicy::balance(
+                LeaveDirectory::forEmployee($record['model']->employee),
+                LeavePolicy::leaveYearStart($record['model']->employee->joined_on),
+            ),
             /*
              * Nobody decides their own request — not even the owner, and not
              * even with the permission. Both halves are checked again on the
@@ -424,13 +436,15 @@ class LeaveController extends Controller
 
     /**
      * A Mentor and the owner hold no Employee base, so they have no leave to
-     * ask for (§2.1).
+     * ask for (§2.1). A freelancer has one but no leave either — paid
+     * against work, not time (decided 2026-09-11).
      */
     protected function requireEmployee(Request $request): Employee
     {
         $employee = $this->employeeFor($request);
 
         abort_if($employee === null, 403);
+        abort_unless($employee->attendsWork(), 403);
 
         return $employee;
     }

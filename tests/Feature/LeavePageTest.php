@@ -306,10 +306,13 @@ class LeavePageTest extends TestCase
         // The handover granted 34 days, said 12 taken, and showed 18 left.
         $this->withDemoData();
 
-        $balance = LeavePolicy::balance(LeaveDirectory::forEmployee($this->viewer()));
+        $viewer = $this->viewer();
+        $balance = LeavePolicy::balance(
+            LeaveDirectory::forEmployee($viewer),
+            LeavePolicy::leaveYearStart($viewer->joined_on),
+        );
 
         $this->assertSame($balance['entitlement'] - $balance['taken'], $balance['remaining']);
-        $this->assertSame(LeavePolicy::totalEntitlement(), $balance['entitlement']);
 
         $response = $this->get('/leave/mine');
         $response->assertSee((string) $balance['remaining'], false);

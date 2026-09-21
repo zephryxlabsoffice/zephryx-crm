@@ -79,6 +79,16 @@ class Employee extends Model
     }
 
     /**
+     * The single-record version of the scope above — for the controllers
+     * that already have one Employee in hand (checking in, requesting
+     * leave) rather than a list to filter.
+     */
+    public function attendsWork(): bool
+    {
+        return in_array($this->employment_type, self::ATTENDS, true);
+    }
+
+    /**
      * @param  Builder<Employee>  $query
      * @return Builder<Employee>
      */

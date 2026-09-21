@@ -32,8 +32,9 @@
     </ul>
 
     <p class="lv-policy-note">
-        Set in the Admin Panel. Balances shown across this module are for the
-        current year
+        Set in the Admin Panel. Your leave year runs from your own joining
+        month, not a company-wide calendar year, and balances shown across
+        this module are for your current year
         @if (LeavePolicy::carryForward() === null)
             {{-- Said plainly rather than showing an "Expired" figure whose rule
                  does not exist yet — which the handover did, reading zero. --}}
@@ -41,5 +42,11 @@
         @else
             , with up to {{ LeavePolicy::carryForward() }} days carrying forward.
         @endif
+    </p>
+
+    <p class="lv-policy-note">
+        Privilege and sick leave are granted in full at the start of your
+        year. Casual leave accrues a twelfth of its allowance for each whole
+        month that has passed since.
     </p>
 </section>

@@ -59,6 +59,18 @@ class LeaveWritesTest extends TestCase
         $this->assertSame(0, LeaveRequest::count());
     }
 
+    public function test_a_freelancer_has_no_leave_to_ask_for_either(): void
+    {
+        // Paid against work, not time (decided 2026-09-11) — unlike a
+        // Mentor, a freelancer DOES have an employment record, so this is a
+        // separate check rather than the same §2.1 gap.
+        $employee = $this->signInAsEmployee();
+        $employee->update(['employment_type' => Employee::FREELANCE]);
+
+        $this->post('/leave', $this->validPayload())->assertForbidden();
+        $this->assertSame(0, LeaveRequest::count());
+    }
+
     public function test_a_request_needs_a_reason(): void
     {
         $this->signInAsEmployee();

@@ -873,9 +873,12 @@ change modules that are already committed.
    (`PRJ-YYYY-NNN` was already in place from when the module was first
    built). ✅ Tasks: several assignees, comments, attachments, created by
    Manager and Team Lead, ticket-to-task conversion. Step 2 is closed.
-3. **Attendance roster and comp-off → Leave year rules** — Sunday roster,
-   comp-off earning and expiry; the per-employee leave year, monthly casual
-   accrual, privilege and sick granted in full.
+3. **Attendance roster and comp-off → Leave year rules.** ✅ **Leave year
+   rules done, 2026-09-21** — the per-employee leave year, monthly casual
+   accrual, privilege and sick granted in full; freelancers gained no
+   attendance/leave at all, closing a gap the decision had already settled
+   but nothing enforced. **Still open:** Sunday roster, comp-off earning and
+   expiry.
 4. **Salary → the Invoices rewrite.** ✅ **Done, 2026-09-21 (commit `3b69637`)** —
    the line-item builder is replaced by an uploaded PDF with amount, due date
    and hand-recorded bank payments. Salary's own half landed earlier, inside
@@ -1063,3 +1066,66 @@ select on `teams/form.blade.php` and the filter/validation in
 all — only the constant and `TeamPresenter`'s pill map changed. One new
 regression test (`TeamWritesTest::test_archived_is_no_longer_a_status`). Full
 suite green — 1295 passing — on both SQLite and real MySQL.
+
+## Step 3's leave year rules are done (2026-09-21)
+
+The half of step 3 that did not need a new table. Comp-off and the Sunday
+roster are still open — see below.
+
+**The leave year is each employee's own** (decided 2026-09-11): twelve
+months from their joining month, not a company-wide calendar year.
+`LeavePolicy::leaveYearStart(Carbon $joinedOn, ?Carbon $asOf = null)` finds
+the most recent joining anniversary on or before `$asOf`, clamping a Feb 29
+joiner to Feb 28 in a non-leap year rather than overflowing into March the
+way naive date arithmetic would.
+
+**Casual accrues monthly; privilege and sick are granted in full** at the
+start of that year. `config/leave.php` gained an `accrual` key per type
+(`'monthly'`/`'annual'`) rather than hardcoding the rule to the string
+`'casual'`, so a future policy change is still a config edit, not a code
+one. `LeavePolicy::accruedEntitlement()` reads it: `monthsAccrued()` counts
+whole months actually elapsed (zero until a full month has passed — "earned
+monthly" means a month passed, not merely started), and casual gets a
+twelfth of its annual figure per month, capped at the annual total.
+
+**`LeavePolicy::balance()` stays backward compatible.** `$leaveYearStart` is
+an optional third-ish parameter (after `$asOf`, added as the second): when
+omitted, `balance()` behaves exactly as it always did — flat annual
+entitlement, no date filtering — which is why every pre-existing unit test
+in `LeavePolicyTest` needed no change at all. Every REAL caller
+(`LeaveController`'s three call sites) now passes
+`LeavePolicy::leaveYearStart($employee->joined_on)`, which both scopes
+`$requests` to the current leave year (a request from a year that has
+already lapsed no longer eats into a fresh one — "unused days lapse at the
+end of it") and switches each type's `entitlement` from the flat annual
+figure to what has actually accrued. A new `annual_entitlement` key sits
+alongside it for anywhere that wants the full-year number instead.
+
+**Freelancers now actually have no attendance or leave**, closing a gap
+that turned out to be undecided in code even though the plan doc had
+settled it: `Employee::ATTENDS`/`scopeAttends()` existed but nothing called
+it — a freelancer could check in and request leave same as anyone. New
+`Employee::attendsWork()` instance method, checked in both
+`AttendanceController::requireEmployee()` and
+`LeaveController::requireEmployee()`. The two `mine()`/`create()` GET pages
+get a softer treatment than the flat 403 the write routes give — an
+`attends` flag hides the check-in button / leave-request form behind a
+short explanatory notice instead, matching how the pages already handle a
+Mentor or the owner having no employment record at all.
+
+Two new tests confirming the gate (`AttendanceWritesTest`,
+`LeaveWritesTest`), plus a `LeavePolicyTest` section covering the
+anniversary math, monthly accrual, and the leave-year filter on `balance()`.
+Full suite green — 1313 passing — on both SQLite and real MySQL.
+
+**Left for later, if this is where work stops**: the Sunday/holiday roster
+(Manager/Team Lead rosters who works, no approval step), comp-off earning
+(a full day present on a rostered Sunday/holiday earns one; half a day
+earns nothing — the later decision overriding the earlier "half a day
+earns half" answer), comp-off expiry (before the next Sunday or it lapses),
+taking a comp-off (a request the manager approves), and Sunday-against-leave
+(working a rostered Sunday against already-approved leave needs manager
+approval BEFORE working it, asked in the same month, and the leave day
+returns to the balance on approval) — the rest of step 3. Then step 5
+(Tickets/Announcements/Notifications polish), step 6 (2FA device
+management, Support page, admin tidy-up).

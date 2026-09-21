@@ -18,6 +18,16 @@
         </div>
     </div>
 
+    @if (! $attends)
+        {{-- A freelancer, paid against work rather than time (decided
+             2026-09-11): there is no leave balance for them, so there is no
+             form — not a disabled one, none at all. --}}
+        @include('partials.notice', [
+            'tone' => 'info',
+            'title' => 'Nothing to request here',
+            'message' => 'Freelance engagements carry no leave balance. This page does not apply to your record.',
+        ])
+    @else
     <form class="lv-form" method="POST" action="{{ route('leave.store') }}">
         @csrf
 
@@ -138,4 +148,5 @@
             </aside>
         </section>
     </form>
+    @endif
 @endsection

@@ -175,6 +175,11 @@ class AttendanceController extends Controller
             // rather than drawing an empty calendar as though they were absent
             // every day.
             'hasRecord' => $viewer !== null,
+            // False only when there IS a record and it says freelance (decided
+            // 2026-09-11: paid against work, not time, so no clock for them).
+            // A null viewer is left true here — same as before this flag
+            // existed — because that is §2.1's separate, pre-existing case.
+            'attends' => $viewer === null || $viewer->attendsWork(),
         ]);
     }
 
@@ -402,17 +407,20 @@ class AttendanceController extends Controller
     }
 
     /**
-     * The same, refusing anybody who has none.
+     * The same, refusing anybody who has none — or who is a freelancer.
      *
      * A Mentor and the owner hold no Employee base at all (§2.1), so they have
      * no attendance to record — and a clock button that half-worked for them
-     * would be worse than one that says no.
+     * would be worse than one that says no. A freelancer HAS an employment
+     * record but is paid against work, not time (decided 2026-09-11): no
+     * attendance, no leave, no clock for them either.
      */
     protected function requireEmployee(Request $request): Employee
     {
         $employee = $this->employeeFor($request);
 
         abort_if($employee === null, 403);
+        abort_unless($employee->attendsWork(), 403);
 
         return $employee;
     }
