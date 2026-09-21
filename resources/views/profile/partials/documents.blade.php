@@ -42,7 +42,9 @@
     @else
         <div class="rail-list">
             @foreach ($documents as $document)
-                <a class="rail-row" href="{{ route('profile.documents.download', ['document' => $document['id']]) }}">
+                {{-- Opens in the browser's own viewer, not as a download —
+                     see salary/record.blade.php for the same choice and why. --}}
+                <a class="rail-row" href="{{ route('profile.documents.view', ['document' => $document['id']]) }}" target="_blank" rel="noopener">
                     <span class="rail-ic {{ $document['kind'] === 'identity' ? 'tone-danger' : 'tone-accent' }}" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>

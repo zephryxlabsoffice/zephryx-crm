@@ -790,6 +790,29 @@ class ProfileController extends Controller
      */
     public function downloadDocument(Request $request, string $document): StreamedResponse
     {
+        $record = $this->documentFor($request, $document, 'Downloaded');
+
+        return $this->documents->download($record->path, $record->name);
+    }
+
+    /**
+     * GET /profile/documents/{document}/view — the same file, opened rather
+     * than saved (plan doc, "In-browser viewing is ours, not Drive's"). Same
+     * scope, same guard; only the response shape and the audit verb differ.
+     */
+    public function viewDocument(Request $request, string $document): StreamedResponse
+    {
+        $record = $this->documentFor($request, $document, 'Viewed');
+
+        return $this->documents->viewInline($record->path, $record->name, $record->mime);
+    }
+
+    /**
+     * The scoped lookup, the existence check and the audit entry shared by
+     * the download and the view.
+     */
+    protected function documentFor(Request $request, string $document, string $verb): EmployeeDocument
+    {
         $employee = $this->requireEmployee($request);
 
         $record = $employee->documents()->where('reference', $document)->first();
@@ -803,11 +826,11 @@ class ProfileController extends Controller
             actor: $request->user(),
             entityType: 'user',
             entityId: $request->user()->user_id,
-            after: 'Downloaded '.$record->name,
+            after: $verb.' '.$record->name,
             request: $request,
         );
 
-        return $this->documents->download($record->path, $record->name);
+        return $record;
     }
 
     /* ══════════════════════════════════════════════════════════════════════

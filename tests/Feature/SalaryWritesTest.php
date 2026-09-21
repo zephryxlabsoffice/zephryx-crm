@@ -365,6 +365,66 @@ class SalaryWritesTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
+       THE VIEWER — THE SAME FILE, OPENED RATHER THAN SAVED
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_somebody_may_view_their_own_payslip_inline(): void
+    {
+        $me = $this->signInAsEmployee();
+        $this->aRecordWithFile($me);
+
+        $response = $this->get('/salary/'.$me->user->user_id.'/'.$this->period().'/payslip/view');
+
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringContainsString('inline', $response->headers->get('Content-Disposition'));
+    }
+
+    public function test_a_colleague_cannot_view_somebody_elses_payslip(): void
+    {
+        $subject = $this->anEmployee('EMP884', 'Their Person');
+        $this->aRecordWithFile($subject);
+
+        $this->signInAsEmployee();
+
+        $this->get('/salary/EMP884/'.$this->period().'/payslip/view')->assertForbidden();
+    }
+
+    public function test_viewing_a_payslip_is_recorded_same_as_downloading_it(): void
+    {
+        $subject = $this->anEmployee('EMP885', 'Their Person');
+        $this->aRecordWithFile($subject);
+
+        $this->signInAsPayroll();
+
+        $this->get('/salary/EMP885/'.$this->period().'/payslip/view')->assertOk();
+
+        $entry = DB::table('audit_log')->where('action', AuditLog::SALARY_PAYSLIP_DOWNLOADED)->first();
+
+        $this->assertNotNull($entry);
+        $this->assertStringContainsString('Viewed', $entry->after_json);
+    }
+
+    public function test_the_payslip_viewer_carries_a_locked_down_content_security_policy(): void
+    {
+        /*
+         * The whole reason inline viewing of an upload is safe at all — see
+         * App\Http\Middleware\SecurityHeaders and DocumentStore::viewInline().
+         * An uploaded PDF must not be able to act inside our origin, whatever
+         * it contains.
+         */
+        $me = $this->signInAsEmployee();
+        $this->aRecordWithFile($me);
+
+        $policy = $this->get('/salary/'.$me->user->user_id.'/'.$this->period().'/payslip/view')
+            ->headers->get('Content-Security-Policy');
+
+        $this->assertStringContainsString("default-src 'none'", $policy);
+        $this->assertStringContainsString("script-src 'none'", $policy);
+        $this->assertStringContainsString("connect-src 'none'", $policy);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
        HELPERS
        ══════════════════════════════════════════════════════════════════════ */
 

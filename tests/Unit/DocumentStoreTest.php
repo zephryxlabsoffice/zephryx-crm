@@ -144,6 +144,67 @@ class DocumentStoreTest extends TestCase
         $this->assertSame('the payslip contents', ob_get_clean());
     }
 
+    public function test_view_inline_of_a_drive_pdf_sets_inline_disposition_not_attachment(): void
+    {
+        $this->connectGoogleDrive();
+
+        Http::fake([
+            'https://oauth2.googleapis.com/token' => Http::response(['access_token' => 'fake-token'], 200),
+            'https://www.googleapis.com/drive/v3/files/file-id*' => Http::response('%PDF-1.4 fake bytes', 200),
+        ]);
+
+        $response = (new DocumentStore)->viewInline('drive:file-id', 'payslip.pdf');
+
+        $this->assertSame('application/pdf', $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('inline', $response->headers->get('Content-Disposition'));
+        $this->assertStringNotContainsString('attachment', $response->headers->get('Content-Disposition'));
+
+        ob_start();
+        $response->sendContent();
+        $this->assertSame('%PDF-1.4 fake bytes', ob_get_clean());
+    }
+
+    public function test_view_inline_of_a_local_file_works_too(): void
+    {
+        $store = new DocumentStore;
+
+        $stored = $store->putBytes('employees/1/photo', 'png', 'fake-png-bytes');
+
+        $response = $store->viewInline($stored['path'], 'photo.png');
+
+        $this->assertSame('image/png', $response->headers->get('Content-Type'));
+    }
+
+    public function test_view_inline_derives_the_content_type_from_the_name_when_none_is_given(): void
+    {
+        $this->connectGoogleDrive();
+
+        Http::fake([
+            'https://oauth2.googleapis.com/token' => Http::response(['access_token' => 'fake-token'], 200),
+            'https://www.googleapis.com/drive/v3/files/file-id*' => Http::response('scan bytes', 200),
+        ]);
+
+        $response = (new DocumentStore)->viewInline('drive:file-id', 'id-scan.jpg');
+
+        $this->assertSame('image/jpeg', $response->headers->get('Content-Type'));
+    }
+
+    public function test_view_inline_prefers_an_explicit_mime_type_over_the_name(): void
+    {
+        // EmployeeDocument stores a content-sniffed mime — more trustworthy
+        // than a display name somebody could have typed anything into.
+        $this->connectGoogleDrive();
+
+        Http::fake([
+            'https://oauth2.googleapis.com/token' => Http::response(['access_token' => 'fake-token'], 200),
+            'https://www.googleapis.com/drive/v3/files/file-id*' => Http::response('bytes', 200),
+        ]);
+
+        $response = (new DocumentStore)->viewInline('drive:file-id', 'no-extension-here', 'application/pdf');
+
+        $this->assertSame('application/pdf', $response->headers->get('Content-Type'));
+    }
+
     public function test_forget_deletes_a_drive_file_and_tolerates_it_already_being_gone(): void
     {
         $this->connectGoogleDrive();

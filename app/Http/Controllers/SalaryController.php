@@ -392,6 +392,35 @@ class SalaryController extends Controller
      */
     public function downloadPayslip(Request $request, string $employee, string $period): StreamedResponse
     {
+        [$record, $own] = $this->payslipFor($request, $employee, $period, 'Downloaded');
+
+        return $this->documents->download($record->payslip_path, $record->payslip_name ?? 'payslip.pdf');
+    }
+
+    /**
+     * GET /salary/{employee}/{period}/payslip/view — the same file, opened
+     * rather than saved (plan doc, "In-browser viewing is ours, not Drive's").
+     *
+     * Audited the same way as the download: both are "somebody obtained the
+     * bytes of this payslip," which is the fact §6 cares about, and the
+     * difference between clicking "view" and "download" is a browser-chrome
+     * decision, not a different act.
+     */
+    public function viewPayslip(Request $request, string $employee, string $period): StreamedResponse
+    {
+        [$record, $own] = $this->payslipFor($request, $employee, $period, 'Viewed');
+
+        return $this->documents->viewInline($record->payslip_path, $record->payslip_name ?? 'payslip.pdf');
+    }
+
+    /**
+     * The guard, the lookup and the audit entry shared by the download and
+     * the view — everything except which shape the response takes.
+     *
+     * @return array{0: SalaryRecord, 1: bool}
+     */
+    protected function payslipFor(Request $request, string $employee, string $period, string $verb): array
+    {
         abort_if(! $this->isPeriod($period), 404);
 
         $subject = $this->employeeByStaffId($employee);
@@ -413,11 +442,11 @@ class SalaryController extends Controller
             actor: $request->user(),
             entityType: 'salary',
             entityId: $period.'-'.$employee,
-            after: $own ? 'Downloaded their own payslip' : 'Downloaded the payslip',
+            after: $verb.($own ? ' their own payslip' : ' the payslip'),
             request: $request,
         );
 
-        return $this->documents->download($record->payslip_path, $record->payslip_name ?? 'payslip.pdf');
+        return [$record, $own];
     }
 
     /* ══════════════════════════════════════════════════════════════════════

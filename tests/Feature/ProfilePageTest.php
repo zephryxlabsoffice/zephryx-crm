@@ -522,6 +522,51 @@ class ProfilePageTest extends TestCase
         ]);
     }
 
+    public function test_viewing_your_own_document_opens_it_inline_and_is_logged(): void
+    {
+        // Same route, opened rather than saved — plan doc, "In-browser
+        // viewing is ours, not Drive's".
+        $document = $this->viewer->documents()->firstOrFail();
+
+        $response = $this->get('/profile/documents/'.$document->reference.'/view');
+
+        $response->assertOk();
+        $response->assertHeader('Content-Type', $document->mime);
+        $this->assertStringContainsString('inline', $response->headers->get('Content-Disposition'));
+
+        $this->assertDatabaseHas('audit_log', [
+            'action' => 'profile.document_downloaded',
+            'actor_user_id' => $this->viewer->user_id,
+        ]);
+    }
+
+    public function test_somebody_elses_document_cannot_be_viewed_either(): void
+    {
+        $colleague = Employee::where('id', '!=', $this->viewer->id)->firstOrFail();
+
+        $theirs = EmployeeDocument::create([
+            'reference' => 'DOC-9002',
+            'employee_id' => $colleague->id,
+            'name' => 'Their PAN card.pdf',
+            'kind' => 'identity',
+            'path' => 'employees/'.$colleague->id.'/documents/whatever.pdf',
+            'bytes' => 100,
+        ]);
+
+        $this->get('/profile/documents/'.$theirs->reference.'/view')->assertNotFound();
+    }
+
+    public function test_the_document_viewer_carries_a_locked_down_content_security_policy(): void
+    {
+        $document = $this->viewer->documents()->firstOrFail();
+
+        $policy = $this->get('/profile/documents/'.$document->reference.'/view')
+            ->headers->get('Content-Security-Policy');
+
+        $this->assertStringContainsString("default-src 'none'", $policy);
+        $this->assertStringContainsString("script-src 'none'", $policy);
+    }
+
     public function test_uploading_a_document_stores_it_on_drive(): void
     {
         // Documents are Drive-backed going forward — see DocumentStore's

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\SecurityHeaders;
+use Illuminate\Http\Request;
 use Tests\TestCase;
 
 /**
@@ -35,6 +37,30 @@ class SecurityHeadersTest extends TestCase
         $this->assertStringContainsString("script-src 'self'", $policy);
         $this->assertStringNotContainsString("'unsafe-inline'", $policy);
         $this->assertStringNotContainsString("'unsafe-eval'", $policy);
+    }
+
+    public function test_an_application_pdf_response_gets_a_locked_content_security_policy_instead(): void
+    {
+        /*
+         * App\Support\Documents\DocumentStore::viewInline() renders an
+         * uploaded PDF in the browser. That response must not inherit the
+         * ordinary same-origin policy above — see SalaryWritesTest and
+         * ProfilePageTest for it exercised through an actual viewer route;
+         * this proves the middleware's own rule directly, against a response
+         * it did not have to build a whole payslip to produce.
+         */
+        $response = (new SecurityHeaders)->handle(
+            Request::create('/whatever'),
+            fn () => response('%PDF-1.4', 200, ['Content-Type' => 'application/pdf']),
+        );
+
+        $policy = $response->headers->get('Content-Security-Policy');
+
+        $this->assertStringContainsString("default-src 'none'", $policy);
+        $this->assertStringContainsString("script-src 'none'", $policy);
+        $this->assertStringContainsString("connect-src 'none'", $policy);
+        $this->assertStringContainsString("frame-ancestors 'none'", $policy);
+        $this->assertStringNotContainsString("'self'", $policy);
     }
 
     public function test_hsts_is_only_asserted_over_tls(): void

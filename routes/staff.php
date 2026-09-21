@@ -563,6 +563,18 @@ Route::get('/salary/{employee}/{period}/payslip/download', [SalaryController::cl
     ->where('period', '[0-9]{4}-[0-9]{2}')
     ->name('salary.payslip.download');
 
+/*
+ * The viewer sibling (plan doc, "In-browser viewing is ours, not Drive's").
+ * Same guard as the download above — the two only differ in whether the
+ * response says `inline` or `attachment`, and in the Content-Security-Policy
+ * a `application/pdf` response carries (see App\Http\Middleware\
+ * SecurityHeaders).
+ */
+Route::get('/salary/{employee}/{period}/payslip/view', [SalaryController::class, 'viewPayslip'])
+    ->where('employee', '[A-Za-z0-9-]{1,32}')
+    ->where('period', '[0-9]{4}-[0-9]{2}')
+    ->name('salary.payslip.view');
+
 Route::get('/leave', [LeaveController::class, 'index'])->name('leave.index');
 // Before /leave/{leaveRequest}, or these are read as request references.
 Route::get('/leave/mine', [LeaveController::class, 'mine'])->name('leave.mine');
@@ -828,6 +840,11 @@ Route::get('/profile/photo', [ProfileController::class, 'showPhoto'])->name('pro
 Route::get('/profile/documents/{document}', [ProfileController::class, 'downloadDocument'])
     ->where('document', 'DOC-[0-9]{4}')
     ->name('profile.documents.download');
+// The viewer sibling — same guard, `inline` instead of `attachment`. See the
+// matching comment on the salary payslip routes.
+Route::get('/profile/documents/{document}/view', [ProfileController::class, 'viewDocument'])
+    ->where('document', 'DOC-[0-9]{4}')
+    ->name('profile.documents.view');
 Route::post('/profile/documents', [ProfileController::class, 'storeDocument'])
     ->name('profile.documents.store');
 

@@ -28,7 +28,7 @@ class SecurityHeaders
             'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()'
         );
 
-        $response->headers->set('Content-Security-Policy', $this->contentSecurityPolicy());
+        $response->headers->set('Content-Security-Policy', $this->contentSecurityPolicyFor($response));
 
         // HSTS is only meaningful over TLS, and asserting it from a local
         // http:// dev server would pin the developer's browser to https.
@@ -43,6 +43,58 @@ class SecurityHeaders
     }
 
     /**
+     * The app's own policy, or a locked one for a rendered document.
+     *
+     * App\Support\Documents\DocumentStore::viewInline() renders an UPLOADED
+     * PDF in the browser — a payslip, an identity scan — which is content
+     * this application did not produce and cannot vouch for the inside of.
+     * That page still has to load at our own origin, so it cannot get
+     * "no `default-src`" for free; it gets a policy that denies everything a
+     * PDF viewer could otherwise be talked into doing (scripts, network,
+     * embedded frames, form submission) while the plain HTML pages around it
+     * keep the ordinary same-origin policy below.
+     *
+     * Checked by Content-Type rather than by route, so a future route
+     * serving a PDF inherits this automatically instead of somebody having to
+     * remember it exists.
+     */
+    protected function contentSecurityPolicyFor(Response $response): string
+    {
+        if (str_starts_with((string) $response->headers->get('Content-Type'), 'application/pdf')) {
+            return $this->documentContentSecurityPolicy();
+        }
+
+        return $this->contentSecurityPolicy();
+    }
+
+    /**
+     * Nothing, not even same-origin (plan doc, "In-browser viewing is ours,
+     * not Drive's" — point 4: "a CSP that allows the document nothing — no
+     * scripts, no network"). This is the condition
+     * App\Support\Documents\DocumentStore::viewInline()'s own header comment
+     * points back to.
+     */
+    protected function documentContentSecurityPolicy(): string
+    {
+        return collect([
+            'default-src' => ["'none'"],
+            'script-src' => ["'none'"],
+            'style-src' => ["'none'"],
+            'img-src' => ["'none'"],
+            'font-src' => ["'none'"],
+            'connect-src' => ["'none'"],
+            'media-src' => ["'none'"],
+            'object-src' => ["'none'"],
+            'frame-src' => ["'none'"],
+            'form-action' => ["'none'"],
+            'base-uri' => ["'none'"],
+            'frame-ancestors' => ["'none'"],
+        ])
+            ->map(fn (array $values, string $name) => $name.' '.implode(' ', $values))
+            ->implode('; ');
+    }
+
+    /**
      * Everything is same-origin: fonts, styles and scripts are all built into
      * public/build by Vite (§6 — no third-party CDN assets in production).
      *
@@ -52,16 +104,16 @@ class SecurityHeaders
     protected function contentSecurityPolicy(): string
     {
         $directives = [
-            'default-src'     => ["'self'"],
-            'base-uri'        => ["'self'"],
-            'font-src'        => ["'self'", 'data:'],
-            'img-src'         => ["'self'", 'data:'],
-            'script-src'      => ["'self'"],
-            'style-src'       => ["'self'"],
-            'connect-src'     => ["'self'"],
-            'form-action'     => ["'self'"],
+            'default-src' => ["'self'"],
+            'base-uri' => ["'self'"],
+            'font-src' => ["'self'", 'data:'],
+            'img-src' => ["'self'", 'data:'],
+            'script-src' => ["'self'"],
+            'style-src' => ["'self'"],
+            'connect-src' => ["'self'"],
+            'form-action' => ["'self'"],
             'frame-ancestors' => ["'none'"],
-            'object-src'      => ["'none'"],
+            'object-src' => ["'none'"],
         ];
 
         if ($this->allowsViteDevServer()) {

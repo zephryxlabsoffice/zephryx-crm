@@ -243,18 +243,16 @@ class DocumentStore
     }
 
     /**
-     * Show a stored file in the browser rather than saving it.
+     * Show a stored file in the browser rather than saving it — for things
+     * THIS APPLICATION produced and knows the shape of. The profile photo,
+     * rebuilt byte by byte from its picture segments before it is written
+     * (see App\Support\Images\PhotoIntake). Always local: see the class
+     * header — nothing that reaches this method is ever a Drive path, and it
+     * refuses one outright rather than guess.
      *
-     * Only for things this application produced and knows the shape of — the
-     * profile photo, which is rebuilt byte by byte from its picture segments
-     * before it is written (see App\Support\Images\PhotoIntake). Always
-     * local: see the class header — nothing that reaches this method is ever
-     * a Drive path, and it refuses one outright rather than guess.
-     *
-     * Never for an uploaded document. `download()` sends
-     * `Content-Disposition: attachment`, which is what stops a browser
-     * rendering somebody's upload in the page's own origin; inline is only
-     * safe when the bytes are ours.
+     * Never for an uploaded document — see `viewInline()` for that, which
+     * exists because this method used to be the only way to show something
+     * inline, and an upload is not a shape this application chose.
      *
      * The content type is stated, not sniffed from the file, for the same
      * reason: a browser guessing at a type is a browser that can be talked
@@ -281,6 +279,65 @@ class DocumentStore
             // tells the browser not to look for a better one anyway.
             'X-Content-Type-Options' => 'nosniff',
         ]);
+    }
+
+    /**
+     * Show an UPLOADED file in the browser — a payslip, an identity scan.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * THE CONDITION stream() WAS WRITTEN TO WAIT FOR
+     *
+     * Rendering somebody's upload inline used to mean rendering it in this
+     * application's own origin — the reason `stream()` refused everything but
+     * bytes this application produced itself. That is no longer the whole
+     * picture: every `application/pdf` response now gets a Content-Security-
+     * Policy that allows the document nothing — no script, no network, no
+     * form submission (see App\Http\Middleware\SecurityHeaders). A PDF
+     * rendered under that policy cannot act inside our origin whatever it
+     * contains, which is the plan doc's own condition for lifting the
+     * refusal ("How, concretely", point 4).
+     *
+     * Images carry no such risk on their own — a PNG or JPEG cannot execute
+     * anything — so they pass through unlocked, same as `stream()`.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * `$mimeType` is trusted: it comes from either a caller's own stored
+     * `mime` column (content-sniffed at upload — see EmployeeDocument) or is
+     * derived here from the display name's extension when there is no such
+     * column (a payslip has none). Both are already constrained to
+     * DocumentStore::ALLOWED at upload time; this method is not where that
+     * boundary is enforced, only where the response is shaped.
+     */
+    public function viewInline(string $path, string $name, ?string $mimeType = null): StreamedResponse
+    {
+        $mimeType ??= self::mimeTypeFor(pathinfo($name, PATHINFO_EXTENSION));
+
+        $headers = [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="'.addslashes($name).'"',
+            'X-Content-Type-Options' => 'nosniff',
+        ];
+
+        if ($this->isDrivePath($path)) {
+            $contents = $this->drive()->download($this->driveFileId($path));
+
+            return new StreamedResponse(fn () => print ($contents), 200, $headers);
+        }
+
+        return $this->disk()->response($path, null, $headers);
+    }
+
+    /**
+     * The content type ALLOWED restricts uploads to, by extension.
+     */
+    public static function mimeTypeFor(string $extension): string
+    {
+        return match (mb_strtolower($extension)) {
+            'pdf' => 'application/pdf',
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            default => 'application/octet-stream',
+        };
     }
 
     /**
