@@ -44,13 +44,21 @@ class AuditLog
 {
     /* Authentication (§4) */
     public const SIGNED_IN = 'auth.signed_in';
+
     public const SIGN_IN_REFUSED = 'auth.sign_in_refused';
+
     public const SIGNED_OUT = 'auth.signed_out';
+
     public const OTP_ISSUED = 'auth.otp_issued';
+
     public const OTP_FAILED = 'auth.otp_failed';
+
     public const DEVICE_TRUSTED = 'auth.device_trusted';
+
     public const REMEMBER_THEFT = 'auth.remember_theft_detected';
+
     public const PASSWORD_RESET_REQUESTED = 'auth.password_reset_requested';
+
     public const PASSWORD_RESET = 'auth.password_reset';
 
     /*
@@ -61,8 +69,11 @@ class AuditLog
      * like a real one and matches nothing.
      */
     public const EMPLOYEE_CREATED = 'employee.created';
+
     public const EMPLOYEE_UPDATED = 'employee.updated';
+
     public const EMPLOYEE_STATUS_CHANGED = 'employee.status_changed';
+
     /*
      * An intern was taken on permanently.
      *
@@ -73,6 +84,7 @@ class AuditLog
      * has to be able to see that the other one exists.
      */
     public const EMPLOYEE_CONVERTED = 'employee.converted';
+
     /*
      * Where somebody lives, or the address on the document they were checked
      * against, was recorded or corrected.
@@ -84,6 +96,7 @@ class AuditLog
      * is the last place to keep a permanent copy of one.
      */
     public const EMPLOYEE_ADDRESS_CHANGED = 'employee.address_changed';
+
     /*
      * Somebody looked at one full identifier — an ID proof number, a PAN, a
      * bank account — and said why.
@@ -101,8 +114,11 @@ class AuditLog
     public const IDENTIFIER_REVEALED = 'employee.identifier_revealed';
 
     public const CLIENT_CREATED = 'client.created';
+
     public const CLIENT_UPDATED = 'client.updated';
+
     public const CLIENT_STATUS_CHANGED = 'client.status_changed';
+
     /*
      * Portal access is its own action and not an update, because it is the one
      * that creates an ACCOUNT — the entry somebody looks for when asking who
@@ -111,8 +127,11 @@ class AuditLog
     public const CLIENT_INVITED = 'client.invited';
 
     public const TEAM_CREATED = 'team.created';
+
     public const TEAM_UPDATED = 'team.updated';
+
     public const TEAM_STATUS_CHANGED = 'team.status_changed';
+
     /*
      * Joining and leaving share one action. Both answer the same question —
      * "who was on this team when" — and the entry carries which of the two it
@@ -121,8 +140,11 @@ class AuditLog
     public const TEAM_MEMBERS_CHANGED = 'team.members_changed';
 
     public const PROJECT_CREATED = 'project.created';
+
     public const PROJECT_UPDATED = 'project.updated';
+
     public const PROJECT_STATUS_CHANGED = 'project.status_changed';
+
     /*
      * Posting an update and publishing one are two actions, not one with a
      * flag. "What was put in front of the client, and by whom" is the question
@@ -130,11 +152,15 @@ class AuditLog
      * filtering rather than by reading every entry's payload.
      */
     public const PROJECT_UPDATE_POSTED = 'project.update_posted';
+
     public const PROJECT_UPDATE_PUBLISHED = 'project.update_published';
+
     public const PROJECT_UPDATE_HIDDEN = 'project.update_hidden';
 
     public const TASK_CREATED = 'task.created';
+
     public const TASK_UPDATED = 'task.updated';
+
     /*
      * Assigning and completing are named separately from `task.updated`
      * because they are what the task's timeline is read for: who was put on
@@ -142,7 +168,9 @@ class AuditLog
      * questions somebody has to read a payload to answer.
      */
     public const TASK_ASSIGNED = 'task.assigned';
+
     public const TASK_COMPLETED = 'task.completed';
+
     public const TASK_REOPENED = 'task.reopened';
 
     /*
@@ -152,8 +180,11 @@ class AuditLog
      * signed in and from which address when it said so.
      */
     public const ATTENDANCE_CHECKED_IN = 'attendance.checked_in';
+
     public const ATTENDANCE_CHECKED_OUT = 'attendance.checked_out';
+
     public const ATTENDANCE_REJECTED = 'attendance.rejected';
+
     public const ATTENDANCE_RESTORED = 'attendance.restored';
 
     /*
@@ -167,8 +198,11 @@ class AuditLog
      * by the page.
      */
     public const LEAVE_REQUESTED = 'leave.requested';
+
     public const LEAVE_APPROVED = 'leave.approved';
+
     public const LEAVE_REJECTED = 'leave.rejected';
+
     public const LEAVE_CANCELLED = 'leave.cancelled';
 
     /*
@@ -177,9 +211,13 @@ class AuditLog
      * having-been-read is itself the fact somebody may need to establish.
      */
     public const SALARY_PAYSLIP_ADDED = 'salary.payslip_added';
+
     public const SALARY_PAID = 'salary.paid';
+
     public const SALARY_PAYSLIP_DOWNLOADED = 'salary.payslip_downloaded';
+
     public const SALARY_BANKING_CHANGED = 'salary.banking_changed';
+
     /*
      * The standing agreement about somebody's pay was recorded or revised.
      *
@@ -193,7 +231,9 @@ class AuditLog
     public const SALARY_STRUCTURE_CHANGED = 'salary.structure_changed';
 
     public const TICKET_RAISED = 'ticket.raised';
+
     public const TICKET_COMMENTED = 'ticket.commented';
+
     public const TICKET_TRIAGED = 'ticket.triaged';
 
     /*
@@ -202,9 +242,13 @@ class AuditLog
      * it carries its reason into the entry rather than only onto the record.
      */
     public const INVOICE_CREATED = 'invoice.created';
+
     public const INVOICE_SENT = 'invoice.sent';
+
     public const INVOICE_PAYMENT_RECORDED = 'invoice.payment_recorded';
+
     public const INVOICE_CANCELLED = 'invoice.cancelled';
+
     /*
      * Who took a copy of the document, and when. Its own action rather than a
      * read nobody records, because an invoice is the page that gets argued
@@ -220,10 +264,15 @@ class AuditLog
      * shaped to avoid.
      */
     public const MEETING_SCHEDULED = 'meeting.scheduled';
+
     public const MEETING_REQUESTED = 'meeting.requested';
+
     public const MEETING_EVENT_CREATED = 'meeting.event_created';
+
     public const MEETING_EVENT_FAILED = 'meeting.event_failed';
+
     public const MEETING_CANCELLED = 'meeting.cancelled';
+
     public const MEETING_CANCEL_FAILED = 'meeting.cancel_failed';
 
     /*
@@ -233,7 +282,9 @@ class AuditLog
      * everybody's attendance changed.
      */
     public const ANNOUNCEMENT_DRAFTED = 'announcement.drafted';
+
     public const ANNOUNCEMENT_POSTED = 'announcement.posted';
+
     public const ANNOUNCEMENT_EXPIRED = 'announcement.expired';
 
     /*
@@ -251,10 +302,15 @@ class AuditLog
      * completes, which is exactly the case a single `email_changed` would miss.
      */
     public const PROFILE_UPDATED = 'profile.updated';
+
     public const PROFILE_PREFERENCES_UPDATED = 'profile.preferences_updated';
+
     public const PROFILE_PASSWORD_CHANGED = 'profile.password_changed';
+
     public const PROFILE_EMAIL_CHANGE_REQUESTED = 'profile.email_change_requested';
+
     public const PROFILE_EMAIL_CHANGED = 'profile.email_changed';
+
     /*
      * Correcting one's own details is a request now, not a save (2026-09-14),
      * so there are four entries where there used to be one `profile.updated`.
@@ -278,13 +334,36 @@ class AuditLog
     public const PROFILE_CHANGE_WITHDRAWN = 'profile.change_withdrawn';
 
     public const PROFILE_DOCUMENT_UPLOADED = 'profile.document_uploaded';
+
     public const PROFILE_DOCUMENT_DOWNLOADED = 'profile.document_downloaded';
 
     /* Admin Panel (§6 requires all of its actions) */
     public const PERMISSION_CHANGED = 'admin.permission_changed';
+
     public const SETTING_CHANGED = 'admin.setting_changed';
+
     public const ACCOUNT_CHANGED = 'admin.account_changed';
+
     public const MASTER_DATA_CHANGED = 'admin.master_data_changed';
+
+    /*
+     * The Google connection. Every entry names the fingerprint and the
+     * actor, never the key (plan doc, "Connecting it", rule 4) — the same
+     * rule IDENTIFIER_REVEALED follows for a bank account number.
+     *
+     * A failed test is its own action and not swallowed, because it is the
+     * entry that explains an outage afterwards: "the key stopped working on
+     * the 14th" has an answer only if that day wrote something.
+     */
+    public const GOOGLE_CONNECTED = 'admin.google_connected';
+
+    public const GOOGLE_RECONNECTED = 'admin.google_reconnected';
+
+    public const GOOGLE_DISCONNECTED = 'admin.google_disconnected';
+
+    public const GOOGLE_TEST_SUCCEEDED = 'admin.google_test_succeeded';
+
+    public const GOOGLE_TEST_FAILED = 'admin.google_test_failed';
 
     /**
      * Write one entry.

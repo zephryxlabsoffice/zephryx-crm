@@ -114,6 +114,12 @@ class RbacSeeder extends Seeder
         'salary.manage',
         // Raises what a client owes, and records what has arrived.
         'invoices.manage',
+        /*
+         * Not grantable — it is ADMIN_BASE, held by account type — but listed
+         * here anyway so the row is marked sensitive from the day it is
+         * seeded. See Rbac::ADMIN_BASE for why it is its own key.
+         */
+        'admin.integrations.view',
     ];
 
     /**

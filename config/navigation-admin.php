@@ -40,6 +40,7 @@ return [
     ['key' => 'access',      'label' => 'Access Control', 'icon' => 'teams',         'route' => 'admin.access.index', 'permission' => 'admin.access.view'],
     ['key' => 'master-data', 'label' => 'Master Data',    'icon' => 'reports',       'route' => 'admin.master.index', 'permission' => 'admin.master.view'],
     ['key' => 'settings',    'label' => 'Settings',       'icon' => 'settings',      'route' => 'admin.settings',     'permission' => 'admin.settings.view'],
+    ['key' => 'integrations', 'label' => 'Integrations',  'icon' => 'integrations',  'route' => 'admin.integrations', 'permission' => 'admin.integrations.view'],
     ['key' => 'audit',       'label' => 'Audit Log',      'icon' => 'announcements', 'route' => 'admin.audit.index',  'permission' => 'admin.audit.view'],
 
 ];

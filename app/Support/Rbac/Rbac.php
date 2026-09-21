@@ -129,6 +129,16 @@ class Rbac
         'admin.master.view',
         'admin.settings.view',
         'admin.audit.view',
+        /*
+         * The Google connection screen. Its own key rather than folded into
+         * `admin.settings.view` — a Drive key must not be reachable by the
+         * same grant that changes the brand name (plan doc, "Connecting it",
+         * rule 3). It still lives in ADMIN_BASE like everything else here:
+         * the realm has one account today, so this is the ceiling until a
+         * second admin-realm account exists to actually split CEO from
+         * System Administrator (decided 2026-09-17/21).
+         */
+        'admin.integrations.view',
     ];
 
     /** @var array<int, list<string>> resolved permissions, per user, per request */

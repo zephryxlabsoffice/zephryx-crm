@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AccessController as AdminAccessController;
 use App\Http\Controllers\Admin\AccountController as AdminAccountController;
 use App\Http\Controllers\Admin\AuditController as AdminAuditController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\IntegrationsController as AdminIntegrationsController;
 use App\Http\Controllers\Admin\MasterDataController as AdminMasterDataController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use Illuminate\Support\Facades\Route;
@@ -122,6 +123,20 @@ Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settin
  */
 Route::post('/settings/preview', [AdminSettingsController::class, 'preview'])->name('settings.preview');
 Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+
+/*
+ * The one Google connection. Its own key (`admin.integrations.view`, see
+ * Rbac::ADMIN_BASE) rather than folded into Settings — a Drive credential
+ * must not be reachable by the grant that changes the brand name.
+ *
+ * `test` and `disconnect` are POST for the reason every other admin write is:
+ * an act, not a page. `connect` doubles as reconnect/rotate — there is one
+ * connection, not a history of them.
+ */
+Route::get('/integrations', [AdminIntegrationsController::class, 'index'])->name('integrations');
+Route::post('/integrations/connect', [AdminIntegrationsController::class, 'connect'])->name('integrations.connect');
+Route::post('/integrations/test', [AdminIntegrationsController::class, 'test'])->name('integrations.test');
+Route::post('/integrations/disconnect', [AdminIntegrationsController::class, 'disconnect'])->name('integrations.disconnect');
 
 /*
  * The audit log. GET only, in both senses — nothing writes to it through
