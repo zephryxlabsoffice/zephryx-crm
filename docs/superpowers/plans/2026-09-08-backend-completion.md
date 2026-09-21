@@ -885,7 +885,14 @@ change modules that are already committed.
    the line-item builder is replaced by an uploaded PDF with amount, due date
    and hand-recorded bank payments. Salary's own half landed earlier, inside
    step 1's Drive work.
-5. **Tickets, Meetings, Announcements, Notifications, Profile.**
+5. **Tickets, Meetings, Announcements, Notifications, Profile: all done,
+   2026-09-22.** ✅ Meetings and Profile landed in an earlier session. ✅
+   Tickets: categories and departments moved to Master Data, staff-side
+   attachments, "closed is final", a new ticket can reference and close a
+   previous one. ✅ Announcements: categories moved to Master Data, a
+   `for_clients` flag and a new read-only client board. ✅ Notifications: a
+   new client ticket now notifies Support and the project manager before
+   triage, not only the assignee after it. Step 5 is closed.
 6. **2FA on new devices, the Support page, Admin tidy-up.**
 
 Storage moves to Google Drive as one job — decided in full above, and no longer
@@ -1197,3 +1204,87 @@ checks. Full suite green — 1337 passing — on both SQLite and real MySQL.
 
 **Step 3 (Attendance roster/comp-off, Leave year rules) is now fully
 closed.**
+
+## Step 5's Tickets/Announcements/Notifications are done, and step 5 is closed (2026-09-22)
+
+Meetings and Profile were already done in an earlier session. This closes the
+other three: Tickets, Announcements, Notifications.
+
+**Tickets.** Categories and departments moved to Master Data
+(`MasterDataItem::TICKET_CATEGORIES`, and departments reuse the existing
+`DEPARTMENTS` list rather than `EmployeeDirectory::departmentsInUse()`, which
+only showed departments currently staffed — ticket routing and company
+departments are the same real-world concept). Triage's `category`/
+`department` fields are now `Rule::in()` against the master-data list instead
+of free text. Attachments landed staff-side only for now (`ticket_attachments`
+table, `TicketController::storeAttachment/viewAttachment/downloadAttachment`,
+same shape as Task attachments — ownership in the query, never fetch-then-
+check); a client-side upload form is a known gap, not a silent drop — see
+"Left for later" below. "Closed is final" (decided 2026-09-21): neither
+triage nor a reply is accepted on a closed ticket, on both the staff and
+client side, and the show pages hide the composer/buttons rather than show
+them and 403 on submit. "A new ticket can reference the previous one, and
+closes it" — `tickets.supersedes_ticket_id`, set and the old ticket closed in
+the same `store()` write, exposed on the raise-ticket form as an optional
+reference field.
+
+**Announcements.** Categories moved to Master Data the same way
+(`MasterDataItem::ANNOUNCEMENT_CATEGORIES`), preserving `'holiday'`/
+`'milestone'` string-key stability by storing the master data `code`
+uppercase and having `AnnouncementPresenter::categories()` lowercase it back
+— the same convention `LeavePolicy`'s type codes already use. "Clients"
+audience marking: a new `for_clients` boolean, deliberately NOT a fourth
+`audience` value — `audience` (everyone/department/managers) narrows which
+STAFF see a post, and a client board membership is a separate, unrelated
+question a post can answer independently of it (see
+`Announcement::scopeForClientBoard`'s docblock). A new read-only client
+board exists now where none did before: `Client\AnnouncementController`
+(index/show), `client.announcements.*` routes, `client.announcements.view`
+added to `Rbac::CLIENT_BASE` (implicit, like every other client permission —
+no role screen grants it), and an "Announcements" entry in
+`config/navigation-client.php`. No ownership scoping beyond
+`requireActiveClient` — an announcement isn't one client's record the way a
+project is, every client reads the same board.
+
+**Notifications.** The one real gap: nothing notified anybody when a new
+CLIENT ticket was raised — only `ticketAssigned` (after triage) and
+`ticketCommented` existed. Added `Notifier::ticketRaised()`: for a client
+ticket only (a no-op on internal ones — those are visible in the queue
+immediately to a colleague who can just look), it notifies everyone holding
+the `support` role plus the ticket's project manager, if it has a project.
+Wired into both `TicketController::store()` (staff) and
+`Client\TicketController::store()`. In-app only — still true, nothing new
+here.
+
+Tests: `TicketWritesTest` gained closed-list category/department validation,
+"closed is final" on both triage and reply, supersedes-and-closes, and
+attachment upload/ownership-scoping (mirroring `TaskWritesTest`'s pattern).
+`AnnouncementWritesTest` gained an unknown-category rejection and the
+`for_clients` flag round-trip. `ClientPortalTest` gained the client board's
+`for_clients`-only filter, a not-marked announcement 404ing by reference, and
+CSP coverage for the two new client pages. `NotificationsTest` needed one
+fix, not a new test: `test_re_saving_triage_does_not_notify_the_same_person_
+again` was posting `category: 'hardware'/'equipment'`, which the now-closed
+category list rejects — changed to `'Bug'`/`'Network'`, the seeded values.
+All three new migrations (`ticket_attachments`, tickets `supersedes_ticket_
+id`, announcements `for_clients`) verified clean against real MySQL. Full
+suite green — 1345 passing, plus one pre-existing unrelated failure (
+`AdminPanelTest::test_a_setting_whose_value_is_a_set_previews_correctly`,
+fails identically on a clean checkout before this session's changes — not
+caused by this work, not fixed by it).
+
+**Left for later, if this is where work stops:**
+1. Client-side ticket attachment upload — the client ticket show page can
+   still be extended to let a client attach a file to their own ticket;
+   staff-side upload/view/download is done and the client ticket show page
+   does not break, it simply has no upload form.
+2. `AdminPanelTest::test_a_setting_whose_value_is_a_set_previews_correctly`
+   is a pre-existing failure (confirmed via `git stash`, fails identically
+   without this session's changes) — worth a look whenever Admin Settings is
+   next touched, not part of this step.
+3. Step 6 — 2FA device management, the Support page, Admin tidy-up — is
+   entirely unstarted. It is the last item in the rework order; once it
+   closes, the whole steps-2-through-6 backlog the owner asked to finish
+   before git is done.
+
+**Step 5 (Tickets, Announcements, Notifications) is now fully closed.**

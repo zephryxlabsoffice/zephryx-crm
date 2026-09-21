@@ -102,6 +102,7 @@ class Rbac
         'client.tickets.view',
         'client.meetings.view',
         'client.profile.view',
+        'client.announcements.view',
     ];
 
     /**

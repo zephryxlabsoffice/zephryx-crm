@@ -174,6 +174,54 @@ class Notifier
     }
 
     /**
+     * A client ticket landed, before anybody has triaged it.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * "THE SUPPORT ROLE AND THE PROJECT MANAGER FIRST"
+     *
+     * Decided in the rework order for this module. An internal ticket is raised
+     * by a colleague who can walk over and mention it; a client ticket lands
+     * with nobody watching it until somebody in Support notices the queue, and
+     * the project manager is the one person who already has context on
+     * whatever the client is describing. Both are told the moment it arrives —
+     * `ticketAssigned` below covers the assignee once triage actually happens,
+     * which may be one of these same people or somebody else entirely.
+     *
+     * Internal tickets do not reach this method at all: they are visible in
+     * the queue immediately to everyone who reads it, and a ticket raised by
+     * a colleague is not the same silence a client ticket would otherwise sit
+     * in.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function ticketRaised(Ticket $ticket, ?User $actor = null): void
+    {
+        if ($ticket->type !== 'client') {
+            return;
+        }
+
+        $readers = Employee::query()
+            ->whereHas('user.roles', fn ($q) => $q->where('role_key', 'support'))
+            ->with('user')
+            ->get()
+            ->map(fn (Employee $e) => $e->user)
+            ->push($ticket->project?->manager?->user)
+            ->filter()
+            ->unique('id');
+
+        foreach ($readers as $reader) {
+            $this->send(
+                reader: $reader,
+                kind: 'ticket',
+                title: 'A client raised a new ticket',
+                body: $ticket->reference.' — '.$ticket->subject,
+                route: 'tickets.show',
+                params: ['ticket' => $ticket->reference],
+                actor: $actor,
+            );
+        }
+    }
+
+    /**
      * A ticket came out of triage with somebody's name on it.
      *
      * Only when the assignee actually changed. Triage is one write covering

@@ -37,6 +37,7 @@ return [
     ['key' => 'invoices',  'label' => 'Invoices',        'icon' => 'invoices',  'route' => 'client.invoices.index', 'permission' => 'client.invoices.view'],
     ['key' => 'tickets',   'label' => 'Support Tickets', 'icon' => 'tickets',   'route' => 'client.tickets.index',  'permission' => 'client.tickets.view'],
     ['key' => 'meetings',  'label' => 'Meetings',        'icon' => 'meetings',  'route' => 'client.meetings.index', 'permission' => 'client.meetings.view'],
+    ['key' => 'announcements', 'label' => 'Announcements', 'icon' => 'announcements', 'route' => 'client.announcements.index', 'permission' => 'client.announcements.view'],
     ['key' => 'profile',   'label' => 'My Profile',      'icon' => 'profile',   'route' => 'client.profile.show',   'permission' => 'client.profile.view'],
 
 ];

@@ -68,6 +68,18 @@ class MasterDataDirectory
                     .'downloaded through an authorising route, never a static path.',
                 'unit' => 'document',
             ],
+            MasterDataItem::TICKET_CATEGORIES => [
+                'label' => 'Ticket categories',
+                'note' => 'The support team\'s own labels for what a ticket is about.',
+                'unit' => 'ticket',
+            ],
+            MasterDataItem::ANNOUNCEMENT_CATEGORIES => [
+                'label' => 'Announcement categories',
+                'note' => 'One of these — "holiday" — closes the office on its observed dates; '
+                    .'see Announcements. "Milestone" is generated, never posted by hand, and does '
+                    .'not appear on the compose form however it is set here.',
+                'unit' => 'announcement',
+            ],
         ];
     }
 

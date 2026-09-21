@@ -105,6 +105,16 @@
                                 <span class="field-error">{{ $message }}</span>
                             @enderror
                         </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="ticket-supersedes">Replaces ticket <span class="an-optional">(optional)</span></label>
+                            <input id="ticket-supersedes" name="supersedes" type="text" maxlength="32"
+                                   placeholder="e.g. TKT-2026-014" value="{{ old('supersedes') }}">
+                            <span class="pay-hint">If this continues an earlier ticket, reference it here — it will be closed automatically.</span>
+                            @error('supersedes')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
                     </div>
                 </div>
             </div>

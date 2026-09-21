@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Support\Audit\AuditLog;
 use App\Support\Rbac\Rbac;
 use App\Support\TicketDirectory;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -256,6 +257,100 @@ class TicketWritesTest extends TestCase
         $this->signInAsEmployee(['employee', 'support'], 'EMP896');
 
         $this->delete('/tickets/'.$ticket->reference)->assertStatus(405);
+    }
+
+    public function test_category_and_department_are_a_closed_list(): void
+    {
+        // Master data now (decided 2026-09-21) — a triage cannot invent a
+        // category nobody set up in the Admin Panel.
+        $ticket = $this->aTicket();
+        $this->signInAsEmployee(['employee', 'support'], 'EMP897');
+
+        $this->post('/tickets/'.$ticket->reference.'/triage', [
+            'category' => 'Not A Real Category',
+            'department' => 'Not A Real Department',
+        ])->assertSessionHasErrors(['category', 'department']);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       "CLOSED IS FINAL"
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_a_closed_ticket_refuses_further_triage(): void
+    {
+        $ticket = $this->aTicket(['status' => 'closed']);
+        $this->signInAsEmployee(['employee', 'support'], 'EMP898');
+
+        $this->post('/tickets/'.$ticket->reference.'/triage', ['priority' => 'high'])
+            ->assertRedirect('/tickets/'.$ticket->reference);
+
+        $this->assertNull($ticket->fresh()->priority);
+    }
+
+    public function test_a_closed_ticket_refuses_a_reply(): void
+    {
+        $ticket = $this->aTicket(['status' => 'closed']);
+        $this->signInAsEmployee();
+
+        $this->post('/tickets/'.$ticket->reference.'/comment', ['body' => 'One more thing.'])
+            ->assertRedirect('/tickets/'.$ticket->reference);
+
+        $this->assertSame(0, TicketComment::count());
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       SUPERSEDING
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_raising_can_reference_and_close_a_previous_ticket(): void
+    {
+        $old = $this->aTicket(['reference' => 'TKT-OLD-001', 'type' => 'internal', 'client_id' => null]);
+        $this->signInAsEmployee();
+
+        $this->post('/tickets', $this->validPayload(['supersedes' => $old->reference]))
+            ->assertRedirect();
+
+        $new = Ticket::where('reference', '!=', $old->reference)->firstOrFail();
+
+        $this->assertSame($old->id, $new->supersedes_ticket_id);
+        $this->assertSame('closed', $old->fresh()->status);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       ATTACHMENTS
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_a_file_can_be_attached_to_a_ticket(): void
+    {
+        $ticket = $this->aTicket();
+        $this->signInAsEmployee();
+        $this->connectGoogleDrive();
+        $this->fakeDriveUpload();
+
+        $this->post('/tickets/'.$ticket->reference.'/attachments', [
+            'document' => UploadedFile::fake()->create('screenshot.png', 20, 'image/png'),
+        ])->assertRedirect();
+
+        $this->assertSame(1, $ticket->attachments()->count());
+        $this->assertSame(1, DB::table('audit_log')->where('action', AuditLog::TICKET_ATTACHMENT_ADDED)->count());
+    }
+
+    public function test_an_attachment_from_another_ticket_cannot_be_reached(): void
+    {
+        $ticket = $this->aTicket();
+        $other = $this->aTicket(['reference' => 'TKT-TEST-902']);
+        $this->signInAsEmployee();
+        $this->connectGoogleDrive();
+        $this->fakeDriveUpload();
+
+        $this->post('/tickets/'.$other->reference.'/attachments', [
+            'document' => UploadedFile::fake()->create('screenshot.png', 20, 'image/png'),
+        ]);
+
+        $attachment = $other->attachments()->firstOrFail();
+
+        $this->get('/tickets/'.$ticket->reference.'/attachments/'.$attachment->id.'/download')
+            ->assertNotFound();
     }
 
     /* ══════════════════════════════════════════════════════════════════════

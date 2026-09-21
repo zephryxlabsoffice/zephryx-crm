@@ -108,6 +108,45 @@ class AnnouncementDirectory
     }
 
     /**
+     * The client board: live announcements marked `for_clients`, newest first.
+     *
+     * No milestones — those are internal (birthdays, anniversaries) and were
+     * never meant for a client to read. No `audience` filtering either: that
+     * column narrows which STAFF see a post and a client account holds none
+     * of `everyone`/`department`/`managers` — see Announcement::scopeForClientBoard.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    public static function forClients(): Collection
+    {
+        return Announcement::query()
+            ->with(['author.user', 'author.designation'])
+            ->forClientBoard()
+            ->orderByDesc('pinned')
+            ->orderByDesc('starts_on')
+            ->get()
+            ->map(fn (Announcement $a) => $a->toRecordArray());
+    }
+
+    /**
+     * One client-visible announcement, or null if it is not on the client
+     * board — closed off the same way an unowned record 404s, rather than
+     * fetched and then checked.
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function findForClients(string $reference): ?array
+    {
+        $announcement = Announcement::query()
+            ->with(['author.user', 'author.designation'])
+            ->forClientBoard()
+            ->where('reference', $reference)
+            ->first();
+
+        return $announcement === null ? null : $announcement->toRecordArray();
+    }
+
+    /**
      * Every holiday notice that has been published, for App\Support\Holidays.
      *
      * Published only — a draft closes nothing.

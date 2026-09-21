@@ -39,31 +39,39 @@
             --}}
             @include('client.partials.thread')
 
-            <section class="card">
-                <div class="card-hd">
-                    <span class="card-title">Add a reply</span>
-                </div>
+            @if ($ticket['status'] === 'closed')
+                @include('partials.notice', [
+                    'tone' => 'info',
+                    'title' => 'This ticket is closed',
+                    'message' => 'Raise a new ticket if this continues — our team can reference this one.',
+                ])
+            @else
+                <section class="card">
+                    <div class="card-hd">
+                        <span class="card-title">Add a reply</span>
+                    </div>
 
-                <div class="card-body">
-                    {{-- A comment posted here is
-                         client-visible by construction, because the client
-                         wrote it. --}}
-                    <form method="POST" action="{{ route('client.tickets.comment', $ticket['id']) }}">
-                        @csrf
+                    <div class="card-body">
+                        {{-- A comment posted here is
+                             client-visible by construction, because the client
+                             wrote it. --}}
+                        <form method="POST" action="{{ route('client.tickets.comment', $ticket['id']) }}">
+                            @csrf
 
-                        <div class="form-field">
-                            <label class="form-field-lbl sr-only" for="ticket-reply">Your reply</label>
-                            <textarea id="ticket-reply" name="body" rows="4"
-                                      maxlength="5000" required
-                                      placeholder="Add anything that would help — a page, a screenshot, what you expected to happen.">{{ old('body') }}</textarea>
-                        </div>
+                            <div class="form-field">
+                                <label class="form-field-lbl sr-only" for="ticket-reply">Your reply</label>
+                                <textarea id="ticket-reply" name="body" rows="4"
+                                          maxlength="5000" required
+                                          placeholder="Add anything that would help — a page, a screenshot, what you expected to happen.">{{ old('body') }}</textarea>
+                            </div>
 
-                        <div class="form-actions">
-                            <button class="btn btn-primary" type="submit">Post reply</button>
-                        </div>
-                    </form>
-                </div>
-            </section>
+                            <div class="form-actions">
+                                <button class="btn btn-primary" type="submit">Post reply</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            @endif
         </div>
 
         <aside class="rail">

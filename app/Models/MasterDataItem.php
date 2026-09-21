@@ -6,12 +6,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * One row of one master data list — a department, a designation, a leave type,
- * a document type.
+ * One row of one master data list — a department, a designation, a leave
+ * type, a document type, a ticket category, an announcement category.
  *
- * The four lists share a table because they share a shape and a screen; `list`
- * is the discriminator. See the migration for why that is one table and not
- * four.
+ * The lists share a table because they share a shape and a screen; `list` is
+ * the discriminator. See the migration for why that is one table and not one
+ * per list. Ticket categories and announcement categories joined the other
+ * four in the review round (decided 2026-09-21) — both used to be
+ * `config()` arrays, and both still validate against exactly this table now.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * DEACTIVATION IS NOT DELETION, AND `in_use` IS WHY
@@ -28,6 +30,8 @@ class MasterDataItem extends Model
     public const DESIGNATIONS = 'designations';
     public const LEAVE_TYPES = 'leave-types';
     public const DOCUMENT_TYPES = 'document-types';
+    public const TICKET_CATEGORIES = 'ticket-categories';
+    public const ANNOUNCEMENT_CATEGORIES = 'announcement-categories';
 
     protected $fillable = ['list', 'name', 'code', 'is_active', 'sort_order'];
 
@@ -46,7 +50,10 @@ class MasterDataItem extends Model
      */
     public static function lists(): array
     {
-        return [self::DEPARTMENTS, self::DESIGNATIONS, self::LEAVE_TYPES, self::DOCUMENT_TYPES];
+        return [
+            self::DEPARTMENTS, self::DESIGNATIONS, self::LEAVE_TYPES, self::DOCUMENT_TYPES,
+            self::TICKET_CATEGORIES, self::ANNOUNCEMENT_CATEGORIES,
+        ];
     }
 
     /**
@@ -71,14 +78,15 @@ class MasterDataItem extends Model
      * How many records point at this row.
      *
      * ─────────────────────────────────────────────────────────────────────────
-     * THREE LISTS ARE COUNTABLE AND ONE IS NOT, AND THE NULL IS THE POINT
+     * FIVE LISTS ARE COUNTABLE AND ONE IS NOT, AND THE NULL IS THE POINT
      *
      * Departments and designations are foreign keys on `employees`, so the
-     * count is a join. Leave types are matched on `leave_requests.type`, which
-     * holds the policy KEY — the seeder writes the code as its uppercase, so
-     * the two meet here and nowhere else. Not a foreign key, and worth saying
-     * out loud: it is the one list whose link to its records is a string
-     * convention.
+     * count is a join. Leave types, ticket categories and announcement
+     * categories are all matched on a string held by the record — not a
+     * foreign key, and worth saying out loud: renaming one of these rows does
+     * not move existing records with it, the same as renaming a department
+     * would not either (the join makes that automatic; the string convention
+     * does not).
      *
      * DOCUMENT TYPES ARE COUNTED BY NOTHING, AND THAT IS A REAL GAP.
      *
@@ -97,6 +105,15 @@ class MasterDataItem extends Model
             self::DEPARTMENTS => Employee::where('department_id', $this->id)->count(),
             self::DESIGNATIONS => Employee::where('designation_id', $this->id)->count(),
             self::LEAVE_TYPES => LeaveRequest::where('type', mb_strtolower($this->code))->count(),
+            // Tickets store the category as the label itself — the same
+            // free-text shape config('tickets.categories') always was, so the
+            // move to master data changes where the list lives, not what a
+            // ticket's own column holds.
+            self::TICKET_CATEGORIES => Ticket::where('category', $this->name)->count(),
+            // Announcements store the CODE, lowercased — the same convention
+            // leave types use, and the one that keeps AnnouncementPresenter::
+            // HOLIDAY and the 'milestone' special case stable across the move.
+            self::ANNOUNCEMENT_CATEGORIES => Announcement::where('category', mb_strtolower($this->code))->count(),
             default => null,
         };
     }

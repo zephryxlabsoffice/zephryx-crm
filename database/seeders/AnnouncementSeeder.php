@@ -57,6 +57,7 @@ class AnnouncementSeeder extends Seeder
                     'audience_department_id' => $row['audience_value']
                         ? ($departments[$row['audience_value']] ?? null)
                         : null,
+                    'for_clients' => $row['for_clients'] ?? false,
                     'starts_on' => Carbon::parse($row['published_at'])->toDateString(),
                     'ends_on' => $row['expires_at'],
                     // The days the office is shut — not the window the notice is

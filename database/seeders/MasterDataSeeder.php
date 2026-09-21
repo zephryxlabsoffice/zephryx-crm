@@ -34,6 +34,8 @@ class MasterDataSeeder extends Seeder
         $this->designations();
         $this->leaveTypes();
         $this->documentTypes();
+        $this->ticketCategories();
+        $this->announcementCategories();
     }
 
     protected function departments(): void
@@ -92,6 +94,44 @@ class MasterDataSeeder extends Seeder
             ['Offer letter', 'OFFER'],
             ['Educational certificate', 'EDU'],
             ['Previous payslip', 'PPAY'],
+        ]);
+    }
+
+    /**
+     * Joined master data 2026-09-21 — the same seven values
+     * config('tickets.categories') carried before the move.
+     */
+    protected function ticketCategories(): void
+    {
+        $this->put(MasterDataItem::TICKET_CATEGORIES, [
+            ['Access', 'ACCESS'],
+            ['Billing', 'BILLING'],
+            ['Bug', 'BUG'],
+            ['Network', 'NETWORK'],
+            ['Performance', 'PERFORMANCE'],
+            ['Reporting', 'REPORTING'],
+            ['Feature request', 'FEATURE'],
+        ]);
+    }
+
+    /**
+     * Joined master data 2026-09-21. The CODE is what
+     * AnnouncementPresenter::categories() lowercases back to the key the rest
+     * of the application already reads — 'HOLIDAY' has to stay 'HOLIDAY',
+     * because App\Support\Holidays and AnnouncementPresenter::HOLIDAY are
+     * written against the lowercase string 'holiday', and 'MILESTONE'
+     * because `isAuthorable()` checks for the literal string 'milestone'.
+     */
+    protected function announcementCategories(): void
+    {
+        $this->put(MasterDataItem::ANNOUNCEMENT_CATEGORIES, [
+            ['Policy', 'POLICY'],
+            ['HR', 'HR'],
+            ['Holiday', 'HOLIDAY'],
+            ['Event', 'EVENT'],
+            ['Training', 'TRAINING'],
+            ['IT', 'IT'],
+            ['Milestone', 'MILESTONE'],
         ]);
     }
 

@@ -271,6 +271,10 @@ class AuditLog
 
     public const TICKET_TRIAGED = 'ticket.triaged';
 
+    public const TICKET_ATTACHMENT_ADDED = 'ticket.attachment_added';
+
+    public const TICKET_CLOSED = 'ticket.closed';
+
     /*
      * Invoices. Every one of these is a financial act, and the cancellation is
      * the one somebody will eventually be asked to account for — which is why

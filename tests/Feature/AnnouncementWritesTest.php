@@ -224,6 +224,35 @@ class AnnouncementWritesTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
+       CATEGORIES, FROM MASTER DATA
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_an_unknown_category_is_refused(): void
+    {
+        // Categories are master data now (decided 2026-09-21) — a category
+        // nobody set up in the Admin Panel cannot be posted against.
+        $this->signInAsHr();
+
+        $this->post('/announcements', $this->validPayload(['category' => 'not-a-real-category']))
+            ->assertSessionHasErrors('category');
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       THE CLIENT BOARD
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_for_clients_is_off_by_default_and_can_be_set(): void
+    {
+        $this->signInAsHr();
+
+        $this->post('/announcements', $this->validPayload())->assertRedirect();
+        $this->assertFalse(Announcement::firstOrFail()->for_clients);
+
+        $this->post('/announcements', $this->validPayload(['for_clients' => 1]))->assertRedirect();
+        $this->assertTrue(Announcement::latest('id')->firstOrFail()->for_clients);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
        WHAT IS NEVER A ROW
        ══════════════════════════════════════════════════════════════════════ */
 

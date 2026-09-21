@@ -212,6 +212,7 @@ class AnnouncementController extends Controller
             'audience_department_id' => $data['audience'] === 'everyone'
                 ? null
                 : ($data['audience_department_id'] ?? null),
+            'for_clients' => $data['for_clients'] ?? false,
             'starts_on' => $data['starts_on'],
             'ends_on' => $data['ends_on'] ?? null,
             'observed_from' => $mayCloseTheOffice ? ($data['observed_from'] ?? null) : null,
@@ -388,6 +389,7 @@ class AnnouncementController extends Controller
             'observed_to' => ['nullable', 'date', 'after_or_equal:observed_from'],
             'publish' => ['nullable', 'boolean'],
             'pinned' => ['nullable', 'boolean'],
+            'for_clients' => ['nullable', 'boolean'],
         ]);
 
         if (($data['observed_from'] ?? null) !== null) {
@@ -418,6 +420,7 @@ class AnnouncementController extends Controller
             $announcement->audience === 'everyone'
                 ? 'everyone'
                 : (string) $announcement->audienceDepartment?->name,
+            $announcement->for_clients ? 'also on the client board' : null,
             $announcement->observed_from !== null
                 ? 'office closed '.$announcement->observed_from->format('D d M Y')
                     .($announcement->observed_to && ! $announcement->observed_to->isSameDay($announcement->observed_from)

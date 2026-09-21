@@ -54,7 +54,7 @@ class DemoAnnouncements
             [
                 'id' => 'ANN-2026-036', 'title' => 'Office closed for the festival holiday',
                 'category' => 'holiday', 'author' => 'EMP005', 'audience' => 'everyone', 'audience_value' => null,
-                'from' => -2, 'to' => 12, 'draft' => false, 'pinned' => true,
+                'from' => -2, 'to' => 12, 'draft' => false, 'pinned' => true, 'for_clients' => true,
                 'observed' => [10, 10],
                 'body' => 'The office is closed for the day. Client calls have been moved — check Meetings for the new times.',
             ],
@@ -74,6 +74,12 @@ class DemoAnnouncements
                 'category' => 'policy', 'author' => 'EMP005', 'audience' => 'everyone', 'audience_value' => null,
                 'from' => -5, 'to' => null, 'draft' => false, 'pinned' => false,
                 'body' => 'Machines are replaced every three years, or sooner if repair costs more than half a replacement. Raise a ticket under IT Support to start one.',
+            ],
+            [
+                'id' => 'ANN-2026-038', 'title' => 'Support hours over the festival week',
+                'category' => 'holiday', 'author' => 'EMP005', 'audience' => 'everyone', 'audience_value' => null,
+                'from' => -3, 'to' => 15, 'draft' => false, 'pinned' => false, 'for_clients' => true,
+                'body' => 'Tickets are still triaged daily over the festival week, but replies may take a little longer than usual.',
             ],
             [
                 'id' => 'ANN-2026-034', 'title' => 'Advanced Excel training — Thursday',
@@ -142,6 +148,7 @@ class DemoAnnouncements
 
         return collect(self::rows())->map(function (array $row) use ($employees) {
             $announcement = $row + [
+                'for_clients' => false,
                 'kind' => 'authored',
                 'author_record' => $employees->get($row['author']),
                 'published_at' => Carbon::today()->addDays($row['from'])->setTime(9, 0)->toDateTimeString(),

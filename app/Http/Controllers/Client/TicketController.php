@@ -187,6 +187,11 @@ class TicketController extends PortalController
             request: $request,
         );
 
+        // Support and the project manager first — see Notifier::ticketRaised.
+        // No actor: the client is not a staff account and has no bell to be
+        // excluded from, the same reasoning as the comment route below.
+        $this->notify->ticketRaised($ticket->load('project.manager.user'), null);
+
         return redirect()
             ->route('client.tickets.show', ['ticket' => $ticket->reference])
             ->with('status', 'Raised. Somebody will pick it up and you will see their reply here.')
@@ -215,6 +220,15 @@ class TicketController extends PortalController
         $record = ClientPortal::ticket($client, $ticket);
 
         abort_if($record === null, 404);
+
+        // "Closed is final" (decided 2026-09-21) — same rule as the staff
+        // side: a closed ticket takes no further reply, from either side.
+        if ($record['model']->status === 'closed') {
+            return redirect()
+                ->route('client.tickets.show', ['ticket' => $record['model']->reference])
+                ->with('status', 'This ticket is closed. Raise a new one and reference it if this continues.')
+                ->with('status_tone', 'info');
+        }
 
         $data = $request->validate([
             'body' => ['required', 'string', 'max:5000'],

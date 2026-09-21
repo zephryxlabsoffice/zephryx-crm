@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Announcement;
 use App\Models\Client;
 use App\Models\ClientContact;
 use App\Models\Invoice;
@@ -601,6 +602,48 @@ class ClientPortalTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
+       THE CLIENT ANNOUNCEMENT BOARD
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_the_client_board_shows_only_announcements_marked_for_clients(): void
+    {
+        /*
+         * `for_clients` is the only filter — see Announcement::scopeForClientBoard.
+         * An internal-only live announcement in the seed must not appear here,
+         * and the one marked for clients must.
+         */
+        $marked = Announcement::query()->where('for_clients', true)->live()->first();
+        $notMarked = Announcement::query()->where('for_clients', false)->live()->first();
+
+        $this->assertNotNull($marked, 'no for_clients announcement in the seed');
+        $this->assertNotNull($notMarked, 'no internal-only announcement in the seed');
+
+        $body = $this->pageBody('/client/announcements');
+
+        $this->assertStringContainsString($marked->title, $body);
+        $this->assertStringNotContainsString($notMarked->title, $body);
+    }
+
+    public function test_an_announcement_not_marked_for_clients_404s_by_reference(): void
+    {
+        $notMarked = Announcement::query()->where('for_clients', false)->live()->firstOrFail();
+
+        // Not fetched and then hidden — AnnouncementDirectory::findForClients
+        // never returns it in the first place, so a direct reference 404s the
+        // same way an imaginary one does.
+        $this->get('/client/announcements/'.$notMarked->reference)->assertNotFound();
+    }
+
+    public function test_a_marked_announcement_is_reachable_by_reference(): void
+    {
+        $marked = Announcement::query()->where('for_clients', true)->live()->firstOrFail();
+
+        $this->get('/client/announcements/'.$marked->reference)
+            ->assertOk()
+            ->assertSee($marked->title, false);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
        THE SHELL
        ══════════════════════════════════════════════════════════════════════ */
 
@@ -683,7 +726,7 @@ class ClientPortalTest extends TestCase
 
     public function test_it_renders_nothing_the_content_security_policy_would_block(): void
     {
-        foreach (['/client/dashboard', '/client/invoices', '/client/tickets/raise'] as $page) {
+        foreach (['/client/dashboard', '/client/invoices', '/client/tickets/raise', '/client/announcements'] as $page) {
             $html = $this->get($page)->getContent();
 
             $this->assertSame(0, preg_match_all('/<style[\s>]/i', $html), $page.': inline <style>');

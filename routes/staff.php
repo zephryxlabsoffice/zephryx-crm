@@ -492,6 +492,24 @@ Route::post('/tickets/{ticket}/convert-to-task', [TicketController::class, 'conv
     ->middleware('permission:tasks.create')
     ->name('tickets.convertToTask');
 
+/*
+ * Attachments (decided 2026-09-21) — staff-only for now, `tickets.view` is
+ * the whole of the gate, same as replying: anybody who can see the ticket
+ * may attach something to it. No delete route.
+ */
+Route::post('/tickets/{ticket}/attachments', [TicketController::class, 'storeAttachment'])
+    ->where('ticket', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:tickets.view')
+    ->name('tickets.attachments.store');
+Route::get('/tickets/{ticket}/attachments/{attachment}/view', [TicketController::class, 'viewAttachment'])
+    ->where(['ticket' => '[A-Za-z0-9-]{1,32}', 'attachment' => '[0-9]+'])
+    ->middleware('permission:tickets.view')
+    ->name('tickets.attachments.view');
+Route::get('/tickets/{ticket}/attachments/{attachment}/download', [TicketController::class, 'downloadAttachment'])
+    ->where(['ticket' => '[A-Za-z0-9-]{1,32}', 'attachment' => '[0-9]+'])
+    ->middleware('permission:tickets.view')
+    ->name('tickets.attachments.download');
+
 Route::get('/invoices', [InvoiceController::class, 'index'])
     ->middleware('permission:invoices.view')
     ->name('invoices.index');

@@ -78,45 +78,47 @@
         the other — it carries its own colour so the pair never reads as
         primary and secondary.
     --}}
-    <form class="composer" method="POST" action="{{ route('tickets.comment', ['ticket' => $ticket['id']]) }}">
-        @csrf
-        <span class="avatar tint-1" aria-hidden="true">—</span>
+    @if ($ticket['status'] !== 'closed')
+        <form class="composer" method="POST" action="{{ route('tickets.comment', ['ticket' => $ticket['id']]) }}">
+            @csrf
+            <span class="avatar tint-1" aria-hidden="true">—</span>
 
-        <div class="composer-body">
-            <label class="sr-only" for="ticket-comment">Add an update</label>
-            <textarea id="ticket-comment" name="body" placeholder="Write an update…" required maxlength="5000">{{ old('body') }}</textarea>
-            @error('body')
-                <span class="field-error">{{ $message }}</span>
-            @enderror
+            <div class="composer-body">
+                <label class="sr-only" for="ticket-comment">Add an update</label>
+                <textarea id="ticket-comment" name="body" placeholder="Write an update…" required maxlength="5000">{{ old('body') }}</textarea>
+                @error('body')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
 
-            <div class="composer-actions">
-                {{-- On an internal ticket the same button posts an ordinary
-                     update: there is no client audience to reply TO, and a
-                     thread whose only button said "internal note" would make
-                     every answer read as a note about the person who asked. --}}
-                <button class="btn btn-primary" type="submit" name="visibility" value="public">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                    </svg>
-                    {{ $isClientTicket ? 'Reply to client' : 'Post update' }}
-                </button>
+                <div class="composer-actions">
+                    {{-- On an internal ticket the same button posts an ordinary
+                         update: there is no client audience to reply TO, and a
+                         thread whose only button said "internal note" would make
+                         every answer read as a note about the person who asked. --}}
+                    <button class="btn btn-primary" type="submit" name="visibility" value="public">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                        {{ $isClientTicket ? 'Reply to client' : 'Post update' }}
+                    </button>
 
-                <button class="btn btn-outline btn-internal" type="submit" name="visibility" value="internal">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                    </svg>
-                    Internal note
-                </button>
+                    <button class="btn btn-outline btn-internal" type="submit" name="visibility" value="internal">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        Internal note
+                    </button>
 
-                <p class="composer-hint">
-                    @if ($isClientTicket)
-                        A reply is emailed to {{ $ticket['client'] }} and shown in their portal.
-                        An internal note is never shown to them.
-                    @else
-                        This is an internal ticket, so there is no client to see it.
-                    @endif
-                </p>
+                    <p class="composer-hint">
+                        @if ($isClientTicket)
+                            A reply is emailed to {{ $ticket['client'] }} and shown in their portal.
+                            An internal note is never shown to them.
+                        @else
+                            This is an internal ticket, so there is no client to see it.
+                        @endif
+                    </p>
+                </div>
             </div>
-        </div>
-    </form>
+        </form>
+    @endif
 </div>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Client\AnnouncementController as ClientAnnouncementController;
 use App\Http\Controllers\Client\ContactController as ClientContactController;
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
 use App\Http\Controllers\Client\InvoiceController as ClientInvoiceController;
@@ -120,6 +121,15 @@ Route::get('/meetings/{meeting}', [ClientMeetingController::class, 'show'])
 Route::post('/meetings/{meeting}/cancel', [ClientMeetingController::class, 'cancel'])
     ->where('meeting', '[A-Za-z0-9-]{1,32}')
     ->name('meetings.cancel');
+
+/*
+ * The client board — see Client\AnnouncementController. Read-only: nothing
+ * here writes anything, so there is no `store` alongside these two.
+ */
+Route::get('/announcements', [ClientAnnouncementController::class, 'index'])->name('announcements.index');
+Route::get('/announcements/{announcement}', [ClientAnnouncementController::class, 'show'])
+    ->where('announcement', '[A-Za-z0-9-]{1,32}')
+    ->name('announcements.show');
 
 Route::get('/profile', [ClientProfileController::class, 'show'])->name('profile.show');
 

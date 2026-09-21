@@ -24,32 +24,16 @@
 | up. The board is only worth having while it stays readable.
 | ─────────────────────────────────────────────────────────────────────────
 |
-| Categories are master data and move to the Admin Panel (§12) with the rest of
-| company configuration. `tone` maps to the chip colours in
-| resources/css/pages/announcements.css — categorical accents, never feedback
-| colours (§7): a category must not borrow the green that means "active" or the
-| red that means "expired".
+| Categories moved to master data (§12) on 2026-09-21 — see
+| MasterDataItem::ANNOUNCEMENT_CATEGORIES and
+| App\Support\AnnouncementPresenter::categories(), which is now the only
+| reader. Their labels live in the Admin Panel; their tone and icon stay in
+| AnnouncementPresenter::CATEGORY_STYLES, because MasterDataItem carries no
+| such columns and a category must not borrow a feedback colour (§7).
 |
 */
 
 return [
-
-    'categories' => [
-        'policy' => ['label' => 'Policy', 'tone' => 'an-policy', 'icon' => 'reports'],
-        'hr' => ['label' => 'HR', 'tone' => 'an-hr', 'icon' => 'employees'],
-        'holiday' => ['label' => 'Holiday', 'tone' => 'an-holiday', 'icon' => 'calendar'],
-        'event' => ['label' => 'Event', 'tone' => 'an-event', 'icon' => 'meetings'],
-        'training' => ['label' => 'Training', 'tone' => 'an-training', 'icon' => 'tasks'],
-        'it' => ['label' => 'IT', 'tone' => 'an-it', 'icon' => 'settings'],
-
-        /*
-        | Milestones are generated, not written. They are a category rather than
-        | a separate feed because everybody reads them the same way — but they
-        | can never be authored by hand, and AnnouncementPresenter::isAuthorable()
-        | is what keeps this one out of the compose form.
-        */
-        'milestone' => ['label' => 'Milestone', 'tone' => 'an-milestone', 'icon' => 'announcements'],
-    ],
 
     /*
     | Who may post (decided 2026-08-28): HR, project managers and the owner.

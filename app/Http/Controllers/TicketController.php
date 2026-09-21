@@ -4,15 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\Employee;
+use App\Models\MasterDataItem;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\Ticket;
+use App\Models\TicketAttachment;
 use App\Models\TicketComment;
 use App\Support\Audit\AuditLog;
-use App\Support\EmployeeDirectory;
+use App\Support\Documents\DocumentStore;
 use App\Support\Notifier;
 use App\Support\Rbac\Rbac;
 use App\Support\TaskDirectory;
+use App\Support\TaskPresenter;
 use App\Support\TicketDirectory;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,6 +26,8 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 /**
  * Tickets — internal operations and client support.
@@ -58,6 +63,7 @@ class TicketController extends Controller
         protected Rbac $rbac,
         protected AuditLog $audit,
         protected Notifier $notify,
+        protected DocumentStore $documents,
     ) {
     }
 
@@ -171,9 +177,12 @@ class TicketController extends Controller
             // Staff realm, so the whole thread. The client realm passes
             // AUDIENCE_CLIENT and gets only public replies.
             'comments' => TicketDirectory::commentsFor($record['model'], TicketDirectory::AUDIENCE_STAFF),
-            // Files wait on the payslip store being extended to threads; the
-            // route and the check exist, the ticket-side upload does not yet.
-            'attachments' => [],
+            'attachments' => $record['model']->attachments->map(fn (TicketAttachment $a) => [
+                'id' => $a->id,
+                'name' => $a->document_name,
+                'kind' => TaskPresenter::fileKind($a->document_name),
+                'size' => TaskPresenter::fileSize($a->document_bytes),
+            ])->all(),
             // Triage is offered when the ticket needs it — unassigned, or
             // escalated back for someone else to route.
             'needsTriage' => in_array($record['status'], ['unassigned', 'escalated'], true),
@@ -204,6 +213,15 @@ class TicketController extends Controller
      * judged unimportant. Letting the person raising it set the priority makes
      * every ticket high, which is the same as none of them being.
      * ─────────────────────────────────────────────────────────────────────────
+     * "A NEW TICKET CAN REFERENCE THE PREVIOUS ONE, AND CLOSES IT"
+     *
+     * `supersedes` is optional and takes a ticket REFERENCE, the same as
+     * every other cross-record pointer a form here takes. Closing the old
+     * ticket is a side effect of THIS write, not a second visit to
+     * `triage()` — "closed is final" refuses moving a closed ticket any
+     * further, and this is the one place that legitimately moves a ticket
+     * TO closed from wherever it was, including already-closed (a no-op).
+     * ─────────────────────────────────────────────────────────────────────────
      */
     public function store(Request $request): RedirectResponse
     {
@@ -215,7 +233,12 @@ class TicketController extends Controller
             'description' => ['required', 'string', 'max:5000'],
             'project_id' => ['nullable', Rule::exists('projects', 'id')],
             'client_id' => ['nullable', 'required_if:type,client', Rule::exists('clients', 'id')],
+            'supersedes' => ['nullable', 'string', 'max:32', Rule::exists('tickets', 'reference')],
         ]);
+
+        $supersedes = ($data['supersedes'] ?? null) !== null
+            ? Ticket::where('reference', $data['supersedes'])->first()
+            : null;
 
         $ticket = Ticket::create([
             'reference' => TicketDirectory::nextReference(),
@@ -226,6 +249,7 @@ class TicketController extends Controller
             'client_id' => $data['type'] === 'client' ? $data['client_id'] : null,
             'project_id' => $data['project_id'] ?? null,
             'status' => 'unassigned',
+            'supersedes_ticket_id' => $supersedes?->id,
         ]);
 
         $this->audit->record(
@@ -236,6 +260,26 @@ class TicketController extends Controller
             after: $ticket->subject,
             request: $request,
         );
+
+        // Support and the project manager first — see Notifier::ticketRaised.
+        // A no-op for an internal ticket.
+        $this->notify->ticketRaised($ticket->load('project.manager.user'), $request->user());
+
+        if ($supersedes !== null && $supersedes->status !== 'closed') {
+            $supersedes->update([
+                'status' => 'closed',
+                'resolved_at' => $supersedes->resolved_at ?? now(),
+            ]);
+
+            $this->audit->record(
+                action: AuditLog::TICKET_CLOSED,
+                actor: $request->user(),
+                entityType: 'ticket',
+                entityId: $supersedes->reference,
+                after: 'Closed — replaced by '.$ticket->reference,
+                request: $request,
+            );
+        }
 
         return redirect()
             ->route('tickets.show', ['ticket' => $ticket->reference])
@@ -262,6 +306,16 @@ class TicketController extends Controller
     {
         $record = $this->find($ticket);
         $model = $record['model'];
+
+        // "Closed is final" (decided 2026-09-21): the same rule as triage —
+        // nothing writes to a closed ticket, including a reply. A new ticket
+        // referencing it is the only way the conversation continues.
+        if ($model->status === 'closed') {
+            return redirect()
+                ->route('tickets.show', ['ticket' => $model->reference])
+                ->with('status', 'This ticket is closed. Closed tickets are final — raise a new one and reference this if it continues.')
+                ->with('status_tone', 'info');
+        }
 
         $data = $request->validate([
             'body' => ['required', 'string', 'max:5000'],
@@ -301,6 +355,85 @@ class TicketController extends Controller
     }
 
     /**
+     * Attach a file to a ticket.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * STAFF-ONLY FOR NOW
+     *
+     * "Attachments allowed" (decided 2026-09-21) does not say who uploads
+     * them. A client ticket's thread already carries files the far side
+     * might send by email or describe over a call — this is where staff
+     * attach them. Add-only, no delete route, matching every other module
+     * this round — see TaskController::storeAttachment for the identical
+     * reasoning.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function storeAttachment(Request $request, string $ticket): RedirectResponse
+    {
+        $record = $this->find($ticket);
+        $model = $record['model'];
+
+        $data = $request->validate([
+            'document' => [
+                'required', 'file',
+                'mimes:'.implode(',', DocumentStore::ALLOWED),
+                'max:'.(int) (DocumentStore::MAX_BYTES / 1024),
+            ],
+        ]);
+
+        try {
+            $stored = $this->documents->put('tickets/'.$model->reference, $data['document']);
+        } catch (Throwable $e) {
+            throw ValidationException::withMessages([
+                'document' => 'Could not store the file: '.$e->getMessage(),
+            ]);
+        }
+
+        TicketAttachment::create([
+            'ticket_id' => $model->id,
+            'uploaded_by' => $request->user()->id,
+            'uploaded_by_label' => $request->user()->name,
+            'document_path' => $stored['path'],
+            'document_name' => $stored['name'],
+            'document_bytes' => $stored['bytes'],
+        ]);
+
+        $this->audit->record(
+            action: AuditLog::TICKET_ATTACHMENT_ADDED,
+            actor: $request->user(),
+            entityType: 'ticket',
+            entityId: $model->reference,
+            after: $stored['name'].' attached',
+            request: $request,
+        );
+
+        return redirect()
+            ->route('tickets.show', ['ticket' => $model->reference])
+            ->with('status', 'File attached.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * GET /tickets/{ticket}/attachments/{attachment}/view
+     */
+    public function viewAttachment(Request $request, string $ticket, int $attachment): StreamedResponse
+    {
+        $file = $this->attachmentFor($ticket, $attachment);
+
+        return $this->documents->viewInline($file->document_path, $file->document_name);
+    }
+
+    /**
+     * GET /tickets/{ticket}/attachments/{attachment}/download
+     */
+    public function downloadAttachment(Request $request, string $ticket, int $attachment): StreamedResponse
+    {
+        $file = $this->attachmentFor($ticket, $attachment);
+
+        return $this->documents->download($file->document_path, $file->document_name);
+    }
+
+    /**
      * Triage: route it, prioritise it, and say who is picking it up.
      *
      * One act rather than four separate writes, because it is one decision —
@@ -312,11 +445,27 @@ class TicketController extends Controller
         $record = $this->find($ticket);
         $model = $record['model'];
 
+        /*
+         * "Closed is final" (decided 2026-09-21). Not a status a ticket
+         * moves out of by any route here — a new ticket referencing this one
+         * is the only thing that reopens the conversation, and it does so as
+         * ITS OWN ticket, never by un-closing this one.
+         */
+        if ($model->status === 'closed') {
+            return redirect()
+                ->route('tickets.show', ['ticket' => $model->reference])
+                ->with('status', 'This ticket is closed. Closed tickets are final — raise a new one and reference this if it continues.')
+                ->with('status_tone', 'info');
+        }
+
         $data = $request->validate([
             'assignee_id' => ['nullable', Rule::exists('employees', 'id')],
             'priority' => ['nullable', Rule::in(Ticket::PRIORITIES)],
-            'category' => ['nullable', 'string', 'max:60'],
-            'department' => ['nullable', 'string', 'max:60'],
+            // Closed lists now (decided 2026-09-21) — both are master data,
+            // and a category typed once as "Bug" and once as "bug" is a
+            // filter that quietly misses half its rows.
+            'category' => ['nullable', Rule::in($this->categoryNames())],
+            'department' => ['nullable', Rule::in($this->departmentNames())],
             'status' => ['nullable', Rule::in(Ticket::STATUSES)],
         ]);
 
@@ -470,6 +619,21 @@ class TicketController extends Controller
         return $found;
     }
 
+    /**
+     * A ticket's attachment, scoped to that ticket rather than fetched by id
+     * alone — ownership in the query, the same rule every other read in this
+     * application follows: an attachment id from a different ticket's page
+     * must 404 rather than resolve to a file that is not this ticket's.
+     */
+    protected function attachmentFor(string $ticket, int $attachment): TicketAttachment
+    {
+        $record = $this->find($ticket);
+
+        return TicketAttachment::where('ticket_id', $record['model']->id)
+            ->where('id', $attachment)
+            ->firstOrFail();
+    }
+
     protected function employeeFor(Request $request): ?Employee
     {
         return Employee::where('user_id', $request->user()?->id)->first();
@@ -521,17 +685,20 @@ class TicketController extends Controller
     /**
      * Options for the triage selects.
      *
-     * Categories are the support team's own labels and nothing points at one,
-     * so they are a config list rather than a table — see config/tickets.php.
-     * Departments come from master data, because employees are already in them.
+     * Both categories and departments are master data now (decided
+     * 2026-09-21) — `MasterDataItem::TICKET_CATEGORIES` is its own list, and
+     * departments reuse `MasterDataItem::DEPARTMENTS` directly (the full
+     * active list a ticket might route to) rather than
+     * `EmployeeDirectory::departmentsInUse()`, which only shows a department
+     * once somebody is actually in it — not the question a ticket asks.
      *
      * @return array<string, mixed>
      */
     protected function options(): array
     {
         return [
-            'categories' => (array) config('tickets.categories', []),
-            'departments' => EmployeeDirectory::departmentsInUse(),
+            'categories' => $this->categoryNames(),
+            'departments' => $this->departmentNames(),
             'agents' => Employee::query()
                 ->with('user')
                 ->active()
@@ -541,6 +708,30 @@ class TicketController extends Controller
                 ->values()
                 ->all(),
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function categoryNames(): array
+    {
+        return MasterDataItem::query()
+            ->inList(MasterDataItem::TICKET_CATEGORIES)
+            ->active()
+            ->pluck('name')
+            ->all();
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function departmentNames(): array
+    {
+        return MasterDataItem::query()
+            ->inList(MasterDataItem::DEPARTMENTS)
+            ->active()
+            ->pluck('name')
+            ->all();
     }
 
     protected function describe(Ticket $ticket): string

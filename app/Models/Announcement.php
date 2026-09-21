@@ -16,7 +16,7 @@ class Announcement extends Model
 {
     protected $fillable = [
         'reference', 'title', 'body', 'category', 'author_id',
-        'audience', 'audience_department_id',
+        'audience', 'audience_department_id', 'for_clients',
         'starts_on', 'ends_on', 'observed_from', 'observed_to',
         'published_at', 'pinned',
     ];
@@ -30,6 +30,7 @@ class Announcement extends Model
             'observed_to' => 'date',
             'published_at' => 'datetime',
             'pinned' => 'boolean',
+            'for_clients' => 'boolean',
         ];
     }
 
@@ -78,6 +79,7 @@ class Announcement extends Model
                 : null,
             'audience' => $this->audience,
             'audience_value' => $this->audienceDepartment?->name,
+            'for_clients' => $this->for_clients,
             'draft' => $this->isDraft(),
             'pinned' => $this->pinned,
             'published_at' => $this->published_at?->toDateTimeString()
@@ -122,5 +124,21 @@ class Announcement extends Model
             ->where(function (Builder $q) {
                 $q->whereNull('ends_on')->orWhereDate('ends_on', '>=', now()->toDateString());
             });
+    }
+
+    /**
+     * Live, and marked for the client board too.
+     *
+     * `audience`/`audience_department_id` narrow which STAFF see a post and
+     * mean nothing to a client account, so this reads `for_clients` alone —
+     * a post can be both "everyone" internally and on the client board, or
+     * "managers only" internally and still on it.
+     *
+     * @param  Builder<Announcement>  $query
+     * @return Builder<Announcement>
+     */
+    public function scopeForClientBoard(Builder $query): Builder
+    {
+        return $query->live()->where('for_clients', true);
     }
 }

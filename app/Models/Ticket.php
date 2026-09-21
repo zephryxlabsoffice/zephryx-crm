@@ -25,6 +25,7 @@ class Ticket extends Model
         'reference', 'type', 'subject', 'description', 'raised_by', 'client_id',
         'project_id', 'assignee_id', 'status', 'priority', 'category', 'department',
         'escalated_by', 'escalated_at', 'resolved_at', 'converted_task_id',
+        'supersedes_ticket_id',
     ];
 
     protected function casts(): array
@@ -83,6 +84,25 @@ class Ticket extends Model
     public function convertedTask(): BelongsTo
     {
         return $this->belongsTo(Task::class, 'converted_task_id');
+    }
+
+    /**
+     * @return HasMany<TicketAttachment, $this>
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(TicketAttachment::class)->latest();
+    }
+
+    /**
+     * The ticket this one replaces, and closed on creation. See
+     * TicketController::store().
+     *
+     * @return BelongsTo<Ticket, $this>
+     */
+    public function supersedes(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'supersedes_ticket_id');
     }
 
     /**

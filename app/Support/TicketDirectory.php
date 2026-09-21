@@ -89,6 +89,10 @@ class TicketDirectory
             // TicketController::convertToTask. Read from the relation rather
             // than the raw column so the page can link straight to it.
             'converted_task' => $ticket->convertedTask?->reference,
+            // Set at creation when this ticket replaces an older one — see
+            // TicketController::store(). The old ticket is closed at the same
+            // moment; this is only the link back to it.
+            'supersedes' => $ticket->supersedes?->reference,
         ];
     }
 
@@ -98,7 +102,10 @@ class TicketDirectory
     public static function find(string $reference): ?array
     {
         $ticket = Ticket::query()
-            ->with(['raiser.user', 'assignee.user', 'assignee.designation', 'escalator.user', 'client', 'project.client', 'convertedTask'])
+            ->with([
+                'raiser.user', 'assignee.user', 'assignee.designation', 'escalator.user',
+                'client', 'project.client', 'convertedTask', 'supersedes', 'attachments',
+            ])
             ->where('reference', $reference)
             ->first();
 

@@ -37,8 +37,11 @@
                 resolving means. They are shown to whoever holds the triage
                 permission; everybody else reads the ticket and replies to it.
             --}}
-            @if ($mayTriage)
-                @if (! in_array($ticket['status'], ['resolved', 'closed'], true))
+            {{-- Closed is final (decided 2026-09-21): neither button is
+                 offered once a ticket is closed, and the controller refuses
+                 the write even if one were somehow posted anyway. --}}
+            @if ($mayTriage && $ticket['status'] !== 'closed')
+                @if ($ticket['status'] !== 'resolved')
                     <form method="POST" action="{{ route('tickets.triage', ['ticket' => $ticket['id']]) }}">
                         @csrf
                         <input type="hidden" name="status" value="resolved">
@@ -68,6 +71,22 @@
             @endif
         </div>
     </div>
+
+    @if ($ticket['status'] === 'closed')
+        @include('partials.notice', [
+            'tone' => 'info',
+            'title' => 'This ticket is closed',
+            'message' => 'Closed is final — raise a new ticket and reference this one if it continues.',
+        ])
+    @endif
+
+    @if ($ticket['supersedes'])
+        @include('partials.notice', [
+            'tone' => 'info',
+            'title' => 'Replaces an earlier ticket',
+            'message' => 'This ticket references and closed '.$ticket['supersedes'].'.',
+        ])
+    @endif
 
     <section class="tkt-detail-grid">
         <div class="tkt-detail-main">

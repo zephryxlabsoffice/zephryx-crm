@@ -439,12 +439,12 @@ class NotificationsTest extends TestCase
             'status' => 'unassigned',
         ]);
 
-        $triage = ['assignee_id' => $onIt->id, 'priority' => 'medium', 'category' => 'hardware'];
+        $triage = ['assignee_id' => $onIt->id, 'priority' => 'medium', 'category' => 'Bug'];
 
         $this->post('/tickets/'.$ticket->reference.'/triage', $triage)->assertRedirect();
         $this->assertSame(1, Notification::where('user_id', $onIt->user_id)->count());
 
-        $this->post('/tickets/'.$ticket->reference.'/triage', $triage + ['category' => 'equipment'])
+        $this->post('/tickets/'.$ticket->reference.'/triage', $triage + ['category' => 'Network'])
             ->assertRedirect();
 
         $this->assertSame(1, Notification::where('user_id', $onIt->user_id)->count());

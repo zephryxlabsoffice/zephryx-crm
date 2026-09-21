@@ -82,6 +82,14 @@
                                 <span class="field-error">{{ $message }}</span>
                             @enderror
                         </div>
+
+                        <div class="form-field an-form-wide">
+                            <label class="form-field-lbl" for="an-for-clients">
+                                <input id="an-for-clients" name="for_clients" type="checkbox" value="1" @checked(old('for_clients'))>
+                                Also show this on the client board
+                            </label>
+                            <span class="pay-hint">A separate question from who sees it above — clients never see the internal audience, only this.</span>
+                        </div>
                     </div>
                 </div>
 

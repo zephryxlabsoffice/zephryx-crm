@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\MasterDataItem;
 use Illuminate\Support\Carbon;
 
 /**
@@ -72,11 +73,47 @@ class AnnouncementPresenter
     /* ─────────────────────────  categories  ───────────────────────── */
 
     /**
+     * Tone and icon per category — presentation only, kept here rather than
+     * on the master data row because MasterDataItem carries no such columns
+     * (§7: a category must not borrow a feedback colour, so these are picked
+     * by hand). A category added later that is not in this map gets the
+     * generic fallback below, the same way an unrecognised leave type does.
+     *
+     * @var array<string, array{tone: string, icon: string}>
+     */
+    protected const CATEGORY_STYLES = [
+        'policy' => ['tone' => 'an-policy', 'icon' => 'reports'],
+        'hr' => ['tone' => 'an-hr', 'icon' => 'employees'],
+        'holiday' => ['tone' => 'an-holiday', 'icon' => 'calendar'],
+        'event' => ['tone' => 'an-event', 'icon' => 'meetings'],
+        'training' => ['tone' => 'an-training', 'icon' => 'tasks'],
+        'it' => ['tone' => 'an-it', 'icon' => 'settings'],
+        'milestone' => ['tone' => 'an-milestone', 'icon' => 'announcements'],
+    ];
+
+    /**
+     * Categories are master data now (decided 2026-09-21) — the key is the
+     * master data CODE lowercased, the same convention LeavePolicy's types
+     * use, and the one that keeps `HOLIDAY` and `isAuthorable()`'s
+     * `'milestone'` check working unchanged across the move.
+     *
      * @return array<string, array{label: string, tone: string, icon: string}>
      */
     public static function categories(): array
     {
-        return config('announcements.categories', []);
+        return MasterDataItem::query()
+            ->inList(MasterDataItem::ANNOUNCEMENT_CATEGORIES)
+            ->active()
+            ->get()
+            ->mapWithKeys(function (MasterDataItem $item) {
+                $key = mb_strtolower($item->code);
+
+                return [$key => ['label' => $item->name] + (self::CATEGORY_STYLES[$key] ?? [
+                    'tone' => 'an-it',
+                    'icon' => 'announcements',
+                ])];
+            })
+            ->all();
     }
 
     /**
