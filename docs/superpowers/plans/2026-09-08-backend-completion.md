@@ -653,18 +653,49 @@ uploaded document") is met on its own terms, not loosened:
 - **Tickets and tasks have no attachment feature at all yet** — not a Drive
   gap, the upload UI and columns for either don't exist. The driver — and now
   the viewer — are ready for whenever that module lands.
-- **`GoogleMeetProvider` still throws** on every method, deliberately, per its
-  own header comment. It does not yet read `GoogleConnection` — when it is
-  built, it should, not `config('meetings.google.*')`, which is what it
-  supersedes.
-- **`config/meetings.php`'s `google.*` keys are now stale** (superseded by
-  `google_connection`, per the plan doc's "Connecting it" section) but were
-  not touched or removed — nothing reads them yet either way, so there was
-  nothing to migrate off.
 - **Q16 (HR viewing employee documents) is answered but not built.** There is
   still no HR-facing route to see another employee's documents —
   `EmployeeController` has no such method. Unrelated to Drive; it is its own
   small piece of Employees work.
+
+## GoogleMeetProvider is real (2026-09-21, commit `7394a6a`)
+
+Deliberately not a stub any more — it calls the real Calendar API, reading
+the credential from `GoogleConnection` at the point of use, the same rule
+`DocumentStore` already followed for Drive. `config/meetings.php`'s `google.*`
+keys (the stale `.env` values the section above flagged) are gone — this is
+what actually supersedes them.
+
+- **`App\Support\Google\CalendarClient`** mirrors `DriveClient`'s shape but
+  not its trust model: Drive needs no delegation at all (Shared Drive
+  membership is enough); Calendar impersonates
+  `GoogleConnection::impersonate_email` via the JWT's `sub` claim — the
+  asymmetry the plan doc's "Connecting it" section calls out by name. Every
+  event insert carries `conferenceDataVersion=1` and a deterministic
+  per-meeting `createRequest.requestId`, so an event is never created
+  without a way to join it and a retry never produces a second Meet link.
+  Cancelling tolerates the event already being gone (404/410).
+- **The failure contract is unchanged.** `MeetingController` already treated
+  every throw from the provider as "the invite did not go out, meeting stays
+  requested" — that behavior is identical whether the throw comes from an
+  unconnected Google, a real outage, or (before this pass) a deliberate
+  stub. Nothing in the controller changed; only what's on the other end of
+  the interface did.
+- **Two connection states are distinguished.** Drive can be connected on its
+  own — nothing about it needs delegation — so `GoogleMeetProvider` refuses
+  with a specific message when Google is connected for uploads but has no
+  `calendar_id` / `impersonate_email` set, not the generic "not connected"
+  one.
+- **10 new tests** (`GoogleMeetProviderTest`) prove the real Calendar-calling
+  logic directly: the event body, the conference request, external
+  attendees, RFC 3339 times, RSVP status mapping, both refusal states.
+  `MeetingWritesTest` needed no logic changes — it was always testing
+  `MeetingController` against a fake `MeetingProvider` binding, which stays
+  the right way to test the controller in isolation from a real network
+  call. **1286 tests pass.**
+- **Still not built:** nothing calls `refreshAttendance()` yet — no route,
+  no button, no scheduled job. The interface method is implemented and
+  tested directly; wiring a caller to it is separate, smaller work.
 
 **Environment note, not a code decision:** this machine's PHP CLI had
 `openssl`, `mbstring`, `pdo_mysql`, `pdo_sqlite`, `fileinfo`, `gd`, `intl`,
