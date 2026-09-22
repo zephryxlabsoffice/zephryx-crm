@@ -16,6 +16,7 @@ use App\Http\Controllers\ProfileRequestController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\ShellPreferenceController;
+use App\Http\Controllers\SupportController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TicketController;
@@ -988,3 +989,13 @@ Route::post('/profile/documents', [ProfileController::class, 'storeDocument'])
 // placeholder at all, deferred or otherwise.
 Route::get('/calendar', [ModulePlaceholderController::class, 'missing'])->name('calendar.index');
 Route::get('/reports', [ModulePlaceholderController::class, 'missing'])->name('reports.index');
+
+/*
+ * Support. Two buttons and nothing else — raise a ticket, or email us
+ * directly (App\Support\SupportContact, the same mailto builder the public
+ * landing page and the error pages already use). No permission middleware:
+ * the page holds no per-user data, so there is nothing on it a signed-in
+ * staff account should not see. `support.view` on the nav entry only
+ * decides whether the sidebar link shows.
+ */
+Route::get('/support', SupportController::class)->name('support.show');

@@ -184,6 +184,57 @@
                     </div>
                 </form>
             </section>
+
+            {{--
+                ─────────────────────────────────────────────────────────────
+                THREE BUTTONS, THREE PROBLEMS (review round Q11)
+
+                A forgotten password, a stolen session and a compromised
+                device are different things to have happened to an account,
+                and none of these three substitutes for another — see
+                AdminAccountController's own header on each route.
+                ─────────────────────────────────────────────────────────────
+            --}}
+            <section class="rail-card">
+                <div class="rail-hd">
+                    <strong>If something is wrong</strong>
+                </div>
+
+                <form method="POST" action="{{ route('admin.accounts.force-password-reset', $account['user_id']) }}">
+                    @csrf
+                    <p class="dash-note">
+                        Emails a reset link and signs them out everywhere until they use
+                        it. Use this for a forgotten or possibly-known password.
+                    </p>
+                    <div class="dash-punch-action">
+                        <button class="btn btn-outline" type="submit">Force password reset</button>
+                    </div>
+                </form>
+
+                <form method="POST" action="{{ route('admin.accounts.sign-out', $account['user_id']) }}">
+                    @csrf
+                    <p class="dash-note">
+                        Ends every session and remember-me chain. The password and any
+                        trusted devices are untouched. Use this for a session or a
+                        browser believed to be in the wrong hands.
+                    </p>
+                    <div class="dash-punch-action">
+                        <button class="btn btn-outline" type="submit">Sign out everywhere</button>
+                    </div>
+                </form>
+
+                <form method="POST" action="{{ route('admin.accounts.untrust-devices', $account['user_id']) }}">
+                    @csrf
+                    <p class="dash-note">
+                        Forgets every device this account skipped the code on. The next
+                        sign-in from any of them asks for one again. Nothing else
+                        changes — this does not sign anybody out.
+                    </p>
+                    <div class="dash-punch-action">
+                        <button class="btn btn-outline" type="submit">Untrust devices</button>
+                    </div>
+                </form>
+            </section>
         </aside>
     </section>
 @endsection

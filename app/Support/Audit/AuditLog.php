@@ -396,6 +396,20 @@ class AuditLog
 
     public const ACCOUNT_CHANGED = 'admin.account_changed';
 
+    /*
+     * Three distinct account-security acts (review round Q11, decided
+     * 2026-09-21) — a forgotten password, a stolen session and a compromised
+     * device are different problems, and none of the three routes below
+     * substitutes for another.
+     */
+    public const ACCOUNT_PASSWORD_RESET_FORCED = 'admin.account_password_reset_forced';
+
+    public const ACCOUNT_SESSIONS_REVOKED = 'admin.account_sessions_revoked';
+
+    public const ACCOUNT_DEVICES_UNTRUSTED = 'admin.account_devices_untrusted';
+
+    public const ROLE_CREATED = 'admin.role_created';
+
     public const MASTER_DATA_CHANGED = 'admin.master_data_changed';
 
     /*

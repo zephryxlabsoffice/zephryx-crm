@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Domain;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Support\Admin\AccessDirectory;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 /**
@@ -51,9 +53,7 @@ use Illuminate\Validation\Rule;
  */
 class AccessController extends Controller
 {
-    public function __construct(protected AuditLog $audit, protected Rbac $rbac)
-    {
-    }
+    public function __construct(protected AuditLog $audit, protected Rbac $rbac) {}
 
     public function index(Request $request): Response
     {
@@ -73,6 +73,98 @@ class AccessController extends Controller
                 'holders' => AccessDirectory::whoHolds($key),
             ]),
         ]);
+    }
+
+    /**
+     * GET /admin/access/create
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * "AN ADMIN MAY CREATE A ROLE" (review round Q12, answered 2026-09-21)
+     *
+     * Everything below is the same form `show`/`update` already render and
+     * write — permissions grouped by module, rank per domain — with a name
+     * and a key added at the top. A new role is not a different KIND of
+     * screen from editing one; it is the same screen with nothing ticked yet.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function create(Request $request): Response
+    {
+        return response()->view('admin.access.create', [
+            'activeNav' => 'access',
+            'permissions' => AccessDirectory::permissions(),
+            'domains' => AccessDirectory::domains(),
+        ]);
+    }
+
+    /**
+     * POST /admin/access
+     *
+     * A blank role — no permissions, rank 0 everywhere — is a valid save.
+     * Refusing an empty grant would push somebody to tick something just to
+     * get past validation, which is a worse outcome than a role that starts
+     * doing nothing and is edited on the next visit to `show`.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'role_key' => [
+                'required', 'string', 'max:32', 'regex:/^[a-z_]+$/',
+                Rule::notIn(['create']),
+                Rule::unique('roles', 'role_key'),
+            ],
+            'role_name' => ['required', 'string', 'max:100'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => [Rule::in(AccessDirectory::assignableKeys())],
+            'ranks' => ['nullable', 'array'],
+            'ranks.*' => ['nullable', 'integer', 'min:0', 'max:100'],
+        ], [
+            'role_key.regex' => 'Lowercase letters and underscores only, e.g. support_lead.',
+        ]);
+
+        $role = Role::create([
+            'role_key' => $data['role_key'],
+            'role_name' => $data['role_name'],
+            'description' => $data['description'] ?? '',
+            'is_active' => true,
+        ]);
+
+        $role->permissions()->sync(
+            Permission::whereIn('permission_key', $data['permissions'] ?? [])->pluck('id')
+        );
+
+        $domainIds = Domain::pluck('id', 'domain_key');
+
+        foreach ($data['ranks'] ?? [] as $domainKey => $rank) {
+            if (! isset($domainIds[$domainKey])) {
+                // A stale or invented key in the payload — nothing in
+                // AccessDirectory::domains() offers one that would not
+                // exist, so this is a request built by hand, not a form.
+                continue;
+            }
+
+            DB::table('role_domain_rank')->insert([
+                'role_id' => $role->id,
+                'domain_id' => $domainIds[$domainKey],
+                'rank' => (int) $rank,
+            ]);
+        }
+
+        $this->rbac->forget();
+
+        $this->audit->record(
+            action: AuditLog::ROLE_CREATED,
+            actor: $request->user(),
+            entityType: 'role',
+            entityId: $role->role_key,
+            after: $role->role_name.' — '.($role->permissions()->count()).' permissions',
+            request: $request,
+        );
+
+        return redirect()
+            ->route('admin.access.show', ['role' => $role->role_key])
+            ->with('status', $role->role_name.' created. Nobody holds it yet — assign it from an account.')
+            ->with('status_tone', 'success');
     }
 
     public function show(Request $request, string $role): Response

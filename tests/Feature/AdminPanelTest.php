@@ -788,6 +788,184 @@ class AdminPanelTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
+       THREE DISTINCT ACCOUNT-SECURITY ACTS (review round Q11)
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_forcing_a_password_reset_emails_a_link_and_signs_out_everywhere(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        $this->seedDemoWorkforce();
+
+        $user = \App\Models\User::where('user_id', 'EMP002')->firstOrFail();
+
+        \Illuminate\Support\Facades\DB::table('trusted_devices')->insert([
+            'user_id' => $user->id,
+            'token_hash' => 'whatever',
+            'trusted_until' => now()->addDays(30),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->postWithToken('/admin/accounts/EMP002/force-password-reset', [])
+            ->assertRedirect();
+
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\PasswordResetMail::class, function ($mail) use ($user) {
+            return $mail->hasTo($user->email);
+        });
+
+        $this->assertSame(1, \Illuminate\Support\Facades\DB::table('password_resets')
+            ->where('user_id', $user->id)->whereNull('consumed_at')->count());
+
+        $this->assertSame(0, \Illuminate\Support\Facades\DB::table('trusted_devices')
+            ->where('user_id', $user->id)->whereNull('revoked_at')->count());
+
+        // The password itself is untouched — only a live reset link and a
+        // clean slate of sessions/devices. Forcing a reset is not the same
+        // act as performing one.
+        $this->assertSame(1, \Illuminate\Support\Facades\DB::table('audit_log')
+            ->where('action', \App\Support\Audit\AuditLog::ACCOUNT_PASSWORD_RESET_FORCED)->count());
+    }
+
+    public function test_signing_out_everywhere_leaves_the_password_and_device_trust_alone(): void
+    {
+        $this->seedDemoWorkforce();
+
+        $user = \App\Models\User::where('user_id', 'EMP002')->firstOrFail();
+
+        \Illuminate\Support\Facades\DB::table('trusted_devices')->insert([
+            'user_id' => $user->id,
+            'token_hash' => 'whatever',
+            'trusted_until' => now()->addDays(30),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->postWithToken('/admin/accounts/EMP002/sign-out', [])
+            ->assertRedirect();
+
+        // Device trust is a different problem and is not touched here — see
+        // the untrust-devices test below.
+        $this->assertSame(1, \Illuminate\Support\Facades\DB::table('trusted_devices')
+            ->where('user_id', $user->id)->whereNull('revoked_at')->count());
+
+        $this->assertSame(0, \Illuminate\Support\Facades\DB::table('password_resets')
+            ->where('user_id', $user->id)->count());
+
+        $this->assertSame(1, \Illuminate\Support\Facades\DB::table('audit_log')
+            ->where('action', \App\Support\Audit\AuditLog::ACCOUNT_SESSIONS_REVOKED)->count());
+    }
+
+    public function test_untrusting_devices_does_not_sign_anybody_out(): void
+    {
+        $this->seedDemoWorkforce();
+
+        $user = \App\Models\User::where('user_id', 'EMP002')->firstOrFail();
+
+        \Illuminate\Support\Facades\DB::table('trusted_devices')->insert([
+            'user_id' => $user->id,
+            'token_hash' => 'whatever',
+            'trusted_until' => now()->addDays(30),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->postWithToken('/admin/accounts/EMP002/untrust-devices', [])
+            ->assertRedirect();
+
+        $this->assertSame(0, \Illuminate\Support\Facades\DB::table('trusted_devices')
+            ->where('user_id', $user->id)->whereNull('revoked_at')->count());
+
+        $this->assertSame(1, \Illuminate\Support\Facades\DB::table('audit_log')
+            ->where('action', \App\Support\Audit\AuditLog::ACCOUNT_DEVICES_UNTRUSTED)->count());
+    }
+
+    public function test_the_owner_account_cannot_be_reached_by_any_of_the_three(): void
+    {
+        $owner = \App\Models\User::where('account_type', \App\Support\Realm::ADMIN)->firstOrFail();
+
+        $this->postWithToken('/admin/accounts/'.$owner->user_id.'/force-password-reset', [])
+            ->assertNotFound();
+        $this->postWithToken('/admin/accounts/'.$owner->user_id.'/sign-out', [])
+            ->assertNotFound();
+        $this->postWithToken('/admin/accounts/'.$owner->user_id.'/untrust-devices', [])
+            ->assertNotFound();
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       CREATING A ROLE (review round Q12)
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_an_admin_may_create_a_role(): void
+    {
+        $this->postWithToken('/admin/access', [
+            'role_key' => 'support_lead',
+            'role_name' => 'Support Lead',
+            'description' => 'Second-line triage on the busiest queues.',
+            'permissions' => ['tickets.view', 'tickets.triage'],
+            'ranks' => ['support' => 40],
+        ])->assertRedirect('/admin/access/support_lead');
+
+        $role = \App\Models\Role::where('role_key', 'support_lead')->firstOrFail();
+
+        $this->assertSame('Support Lead', $role->role_name);
+        $this->assertTrue($role->is_active);
+        $this->assertSame(
+            ['tickets.triage', 'tickets.view'],
+            $role->permissions->pluck('permission_key')->sort()->values()->all(),
+        );
+
+        $rank = \Illuminate\Support\Facades\DB::table('role_domain_rank')
+            ->join('domains', 'domains.id', '=', 'role_domain_rank.domain_id')
+            ->where('role_id', $role->id)
+            ->where('domains.domain_key', 'support')
+            ->value('rank');
+
+        $this->assertSame(40, $rank);
+
+        $this->assertSame(1, \Illuminate\Support\Facades\DB::table('audit_log')
+            ->where('action', \App\Support\Audit\AuditLog::ROLE_CREATED)->count());
+    }
+
+    public function test_a_new_role_may_be_created_with_nothing_ticked(): void
+    {
+        // A blank role is a valid save — refusing it would push somebody to
+        // tick something just to get past validation.
+        $this->postWithToken('/admin/access', [
+            'role_key' => 'observer',
+            'role_name' => 'Observer',
+        ])->assertRedirect('/admin/access/observer');
+
+        $role = \App\Models\Role::where('role_key', 'observer')->firstOrFail();
+
+        $this->assertCount(0, $role->permissions);
+    }
+
+    public function test_a_role_key_must_be_unique_and_lowercase(): void
+    {
+        $this->postWithToken('/admin/access', [
+            'role_key' => 'hr', // already seeded
+            'role_name' => 'Whatever',
+        ])->assertSessionHasErrors('role_key');
+
+        $this->postWithToken('/admin/access', [
+            'role_key' => 'Not Valid',
+            'role_name' => 'Whatever',
+        ])->assertSessionHasErrors('role_key');
+    }
+
+    public function test_a_role_cannot_be_created_with_an_admin_or_client_permission(): void
+    {
+        // Both are realm bases, held by account type and never by a role
+        // (§2.1, §2.2) — the same rule AccessController::update() enforces
+        // on an existing role.
+        $this->postWithToken('/admin/access', [
+            'role_key' => 'sneaky',
+            'role_name' => 'Sneaky',
+            'permissions' => ['admin.settings.view'],
+        ])->assertSessionHasErrors('permissions.0');
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
        MASTER DATA AND THE REST
        ══════════════════════════════════════════════════════════════════════ */
 

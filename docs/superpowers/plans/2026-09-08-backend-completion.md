@@ -413,7 +413,10 @@ record moves. Nothing changes on the strength of the form alone.
 ### Security
 
 - **Two-factor by email OTP for every account**, on a new device or browser
-  only, then trusted for 30 days.
+  only, then trusted for 7 days (§4.3 of the foundation spec is the
+  authoritative number — this line said 30 until 2026-09-22, which was this
+  paragraph's own error: `TrustedDevices::DAYS` was already 7 and correct,
+  remember-me is the thing that runs 30 days).
 - **No idle sign-out.** These are office machines.
 - **Audit entries are kept forever.** Backups are handled on cPanel, not by
   the CRM.
@@ -787,7 +790,7 @@ picked up.
    route — Projects, Tickets, Meetings, Profile edit — is **403** for an
    Inactive client, not hidden, not redirected elsewhere.
 5. **Yes — client logins get email OTP too**, on the same "new device or
-   browser, trusted 30 days" terms as staff (§ Security).
+   browser, trusted 7 days" terms as staff (§ Security).
 6. **Yes**, an in-app notification bell, same shape as staff's.
 7. **Only the Project Manager's name**, not the wider team. A client sees who
    is accountable for their project/ticket, not everybody working on it.
@@ -893,7 +896,15 @@ change modules that are already committed.
    `for_clients` flag and a new read-only client board. ✅ Notifications: a
    new client ticket now notifies Support and the project manager before
    triage, not only the assignee after it. Step 5 is closed.
-6. **2FA on new devices, the Support page, Admin tidy-up.**
+6. **2FA on new devices, the Support page, Admin tidy-up: all done,
+   2026-09-22.** ✅ 2FA itself needed nothing — already wired uniformly into
+   sign-in for every account type. What was missing was device MANAGEMENT
+   (review round Q11): force a password reset, sign out everywhere, and
+   untrust devices, as three distinct admin-panel buttons on an account. ✅
+   Admin tidy-up (Q12): an admin may now create a role, not only edit the
+   seeded ones. ✅ The Support page: a new sidebar entry, two buttons (raise
+   a ticket, email us). Step 6 is closed — the whole steps-2-through-6
+   backlog is done.
 
 Storage moves to Google Drive as one job — decided in full above, and no longer
 waiting on anything. It lands with the **Admin Panel connection screen** and the
@@ -1288,3 +1299,83 @@ caused by this work, not fixed by it).
    before git is done.
 
 **Step 5 (Tickets, Announcements, Notifications) is now fully closed.**
+
+## Step 6's 2FA device management, Support page and Admin tidy-up are done, and step 6 — the last of the rework order — is closed (2026-09-22)
+
+Three items, from the review round's outstanding questions and the
+§Support spec.
+
+**2FA device management (review round Q11).** OTP-based two-factor was
+already wired into every account type uniformly — nothing to build there,
+confirmed by reading `LoginController`/`TrustedDevices` rather than assumed.
+What was actually missing was giving the Admin Panel a way to act on a
+compromised account: "force a password reset, sign out everywhere and
+untrust devices are three distinct buttons on the account, not one action —
+they answer three different problems … and none substitutes for another."
+None of the three existed before this. Added to `Admin\AccountController`:
+`forcePasswordReset()` (issues the same token `PasswordResetController`
+would, emails it, and cuts off every current session/remember-me/device —
+because a "forced" reset that left the old password and an open session
+still working would not be forcing anything), `signOutEverywhere()` (kills
+sessions and remember-me chains only — password and device trust untouched,
+for a stolen session that has nothing wrong with the password), and
+`untrustDevices()` (revokes device trust only — the one of the three that
+does not sign anybody out, for a device that should have to prove itself
+with a code again). `cutOff()` was split to share a new `killSessions()`
+helper rather than duplicating the session-driver warning three times. Four
+new `AuditLog` actions, bucketed under the existing `account` filter kind in
+`AuditDirectory::kindOf()`.
+
+**While checking the 2FA numbers, found and fixed a doc bug, not a code
+bug**: the plan doc's own §Security said devices are "trusted for 30 days",
+but `TrustedDevices::DAYS` has always been 7 — which turns out to be the
+CORRECT number (foundation spec §4.3 is explicit: "on success the device is
+trusted for 7 days"; 30 days is `RememberMe::DAYS`, a different mechanism
+entirely). The doc's two "30 days" mentions are corrected in place above;
+nothing in `app/` changed.
+
+**Admin tidy-up — role creation (review round Q12).** "An admin may create
+a role, not only assign and edit existing ones." Added
+`AccessController::create()`/`store()` — the same screen `show()`/`update()`
+already render (permissions grouped by module, checkboxes) with a name, a
+key (`[a-z_]+`, unique, `create` reserved so it can never collide with the
+route segment in front of `/access/{role}`) and a per-domain rank added at
+the top. A blank role — nothing ticked, rank 0 everywhere — is accepted:
+refusing an empty grant would push somebody to tick something just to get
+past validation. Cannot be created holding `admin.*` or `client.*` — the
+same realm-base rule `update()` already enforces on an existing role.
+`ROLE_CREATED` is a new `AuditLog` action, bucketed with `permission_changed`
+since both live on the same screen.
+
+**The Support page (§Support spec).** Did not exist at all — no route, no
+controller, no sidebar entry. Now: `support.view` (added to
+`Rbac::EMPLOYEE_BASE` and, following the exact precedent `dashboard.view`
+set for a role with no Employee base, to the Mentor role's explicit
+permission list), a `SupportController` with one `__invoke()`, and
+`resources/views/support/show.blade.php` — two buttons, "Raise a ticket"
+(→ `tickets.create`, the module's own write) and "Email us"
+(→ `App\Support\SupportContact::mailto()`, the same mailto builder the
+public landing page and the error pages already use). No permission
+middleware on the route: the page holds no per-user data, so there is
+nothing on it a signed-in staff account should not see — `support.view`
+only decides whether the sidebar link shows.
+
+Tests: 8 new cases in `AdminPanelTest` (the three account-security routes,
+including that the owner account is unreachable by any of them, plus role
+creation — a full grant, a blank one, key uniqueness/casing, and the
+realm-base refusal) and a new `SupportPageTest` (renders for an employee and
+for a Mentor, both links point at the real routes, CSP-clean). No new
+migrations — every change here is application logic and views over schema
+that already exists. 1359 passing, plus the same pre-existing
+`AdminPanelTest` failure noted in the Step 5 section (still unrelated,
+still unfixed by or because of this work).
+
+**Step 6 is now fully closed. So is the entire steps-2-through-6 backlog the
+owner asked to finish before git — see the "RESUME HERE" section above for
+the order this followed.** What is left, listed in full: Q16 (HR viewing
+employee documents) and wiring a caller to `refreshAttendance()` — both
+older, smaller gaps noted in earlier sections of this doc, outside the
+rework order proper — plus the pre-existing `AdminPanelTest` failure and the
+client-side ticket attachment upload noted in Step 5. None of the four
+blocks anything; all are candidates for after GitHub/deployment rather than
+before it.

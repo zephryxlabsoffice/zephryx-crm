@@ -47,6 +47,7 @@ return [
     ['key' => 'reports',       'label' => 'Reports',        'icon' => 'reports',       'route' => 'reports.index', 'permission' => 'reports.view', 'deferred' => true],
     ['key' => 'announcements', 'label' => 'Announcements',  'icon' => 'announcements', 'route' => 'announcements.index', 'permission' => 'announcements.view'],
     ['key' => 'profile',       'label' => 'My Profile',     'icon' => 'profile',       'route' => 'profile.show',  'permission' => 'profile.view'],
+    ['key' => 'support',       'label' => 'Support',        'icon' => 'support',       'route' => 'support.show',  'permission' => 'support.view'],
 
     /*
      * ─────────────────────────────────────────────────────────────────────────

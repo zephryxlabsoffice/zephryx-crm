@@ -70,7 +70,33 @@ Route::post('/accounts/{account}/roles', [AdminAccountController::class, 'roles'
     ->where('account', '[A-Za-z0-9-]{1,32}')
     ->name('accounts.roles');
 
+/*
+ * Three distinct account-security acts, decided 2026-09-21 (review round
+ * Q11) — a forgotten password, a stolen session and a compromised device are
+ * three different problems, and none of the three routes below substitutes
+ * for another. See AdminAccountController's own header on each method.
+ */
+Route::post('/accounts/{account}/force-password-reset', [AdminAccountController::class, 'forcePasswordReset'])
+    ->where('account', '[A-Za-z0-9-]{1,32}')
+    ->name('accounts.force-password-reset');
+Route::post('/accounts/{account}/sign-out', [AdminAccountController::class, 'signOutEverywhere'])
+    ->where('account', '[A-Za-z0-9-]{1,32}')
+    ->name('accounts.sign-out');
+Route::post('/accounts/{account}/untrust-devices', [AdminAccountController::class, 'untrustDevices'])
+    ->where('account', '[A-Za-z0-9-]{1,32}')
+    ->name('accounts.untrust-devices');
+
 Route::get('/access', [AdminAccessController::class, 'index'])->name('access.index');
+
+/*
+ * Before /access/{role}, or "create" is read as a role key. Answered
+ * 2026-09-21 (review round Q12): an admin may create a role, not only
+ * assign and edit the seeded ones — the role list is not fixed, and needing
+ * a deploy to add one defeats the point of the Admin Panel.
+ */
+Route::get('/access/create', [AdminAccessController::class, 'create'])->name('access.create');
+Route::post('/access', [AdminAccessController::class, 'store'])->name('access.store');
+
 Route::get('/access/{role}', [AdminAccessController::class, 'show'])
     ->where('role', '[a-z_]{1,32}')
     ->name('access.show');

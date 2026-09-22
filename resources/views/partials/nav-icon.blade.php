@@ -66,6 +66,9 @@
     @case('integrations')
         <svg {!! $s !!}><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         @break
+    @case('support')
+        <svg {!! $s !!}><circle cx="12" cy="12" r="10"/><path d="M12 16v.01"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 2-3 4"/></svg>
+        @break
     @default
         <svg {!! $s !!}><circle cx="12" cy="12" r="9"/></svg>
 @endswitch

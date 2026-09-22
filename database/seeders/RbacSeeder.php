@@ -538,7 +538,7 @@ class RbacSeeder extends Seeder
                 'permissions' => [
                     'clients.view', 'employees.view', 'teams.view', 'projects.view', 'tasks.view',
                     'tickets.view', 'invoices.view', 'meetings.view', 'announcements.view',
-                    'reports.view', 'dashboard.view',
+                    'reports.view', 'dashboard.view', 'support.view',
                 ],
                 'ranks' => [],
             ],

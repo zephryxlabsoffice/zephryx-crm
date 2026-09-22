@@ -90,9 +90,10 @@ class AuditDirectory
 
         if ($parts[0] === 'admin') {
             return match ($parts[1] ?? '') {
-                'permission_changed' => 'permission',
+                'permission_changed', 'role_created' => 'permission',
                 'setting_changed' => 'setting',
-                'account_changed' => 'account',
+                'account_changed', 'account_password_reset_forced',
+                'account_sessions_revoked', 'account_devices_untrusted' => 'account',
                 'master_data_changed' => 'master',
                 default => 'admin',
             };

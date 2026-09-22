@@ -64,6 +64,7 @@ class Rbac
         'tasks.self',
         'teams.self',
         'meetings.self',
+        'support.view',
     ];
 
     /**

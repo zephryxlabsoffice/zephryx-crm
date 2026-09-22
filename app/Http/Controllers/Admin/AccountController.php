@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Mail\PasswordResetMail;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Admin\AccessDirectory;
 use App\Support\Admin\AccountDirectory;
 use App\Support\Audit\AuditLog;
+use App\Support\Auth\PasswordResets;
 use App\Support\Auth\RememberMe;
 use App\Support\Auth\TrustedDevices;
 use App\Support\Rbac\Rbac;
@@ -17,6 +19,7 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 /**
@@ -63,6 +66,7 @@ class AccountController extends Controller
         protected Rbac $rbac,
         protected RememberMe $remember,
         protected TrustedDevices $devices,
+        protected PasswordResets $resets,
     ) {
     }
 
@@ -253,6 +257,113 @@ class AccountController extends Controller
             ->with('status_tone', 'success');
     }
 
+    /**
+     * POST /admin/accounts/{account}/force-password-reset
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * THREE DISTINCT BUTTONS, ONE PROBLEM EACH (review round Q11)
+     *
+     * A forgotten or possibly-known password, a stolen session, and a
+     * compromised device are three different things to have happened to an
+     * account, and none of the three routes below stands in for another.
+     * This one answers the first: it puts the account through exactly the
+     * self-service reset flow (`PasswordResetController`) would, on the
+     * admin's say-so rather than the owner's own click on an email link, and
+     * — because a "forced" reset that left the old password and an
+     * already-open session still working would not be forcing anything —
+     * cuts off everywhere they are currently signed in at the same time.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function forcePasswordReset(Request $request, string $account): RedirectResponse
+    {
+        $user = $this->find($account);
+
+        $token = $this->resets->issue($user, $request);
+
+        Mail::to($user->email)->send(new PasswordResetMail(
+            url: route('password.reset.form', ['token' => $token]),
+            name: $user->name,
+            ip: $request->ip(),
+        ));
+
+        $this->cutOff($user);
+
+        $this->audit->record(
+            action: AuditLog::ACCOUNT_PASSWORD_RESET_FORCED,
+            actor: $request->user(),
+            entityType: 'user',
+            entityId: $user->user_id,
+            after: 'Reset link emailed; sessions, remember-me tokens and trusted devices revoked',
+            request: $request,
+        );
+
+        return redirect()
+            ->route('admin.accounts.show', ['account' => $user->user_id])
+            ->with('status', $user->name.' has been emailed a reset link, and is signed out everywhere until they use it.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * POST /admin/accounts/{account}/sign-out
+     *
+     * The second of the three (see forcePasswordReset above): a session or a
+     * remember-me chain believed to be in the wrong hands, with nothing wrong
+     * with the password itself. Device trust is untouched on purpose — the
+     * next sign-in still needs the password, which is the actual barrier a
+     * stolen browser tab does not get past.
+     */
+    public function signOutEverywhere(Request $request, string $account): RedirectResponse
+    {
+        $user = $this->find($account);
+
+        $this->remember->revokeAll($user);
+        $this->killSessions($user);
+
+        $this->audit->record(
+            action: AuditLog::ACCOUNT_SESSIONS_REVOKED,
+            actor: $request->user(),
+            entityType: 'user',
+            entityId: $user->user_id,
+            after: 'Sessions and remember-me tokens revoked; password and device trust untouched',
+            request: $request,
+        );
+
+        return redirect()
+            ->route('admin.accounts.show', ['account' => $user->user_id])
+            ->with('status', $user->name.' has been signed out everywhere.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * POST /admin/accounts/{account}/untrust-devices
+     *
+     * The third (see forcePasswordReset above): a device that should have to
+     * prove itself with a code again, without touching whatever session or
+     * password is already working. The one of the three that does not sign
+     * anybody out — a currently open session is not device trust, it is a
+     * session, and stays open until it expires or one of the other two acts.
+     */
+    public function untrustDevices(Request $request, string $account): RedirectResponse
+    {
+        $user = $this->find($account);
+
+        $this->devices->revokeAll($user);
+
+        $this->audit->record(
+            action: AuditLog::ACCOUNT_DEVICES_UNTRUSTED,
+            actor: $request->user(),
+            entityType: 'user',
+            entityId: $user->user_id,
+            after: 'Every trusted device revoked; the next sign-in from any of them asks for a code again',
+            request: $request,
+        );
+
+        return redirect()
+            ->route('admin.accounts.show', ['account' => $user->user_id])
+            ->with('status', 'Every device trusted for '.$user->name.' has been forgotten. The next sign-in anywhere asks for a code.')
+            ->with('status_tone', 'success');
+    }
+
     /* ══════════════════════════════════════════════════════════════════════
        THE PIECES
        ══════════════════════════════════════════════════════════════════════ */
@@ -279,19 +390,31 @@ class AccountController extends Controller
     {
         $this->remember->revokeAll($user);
         $this->devices->revokeAll($user);
+        $this->killSessions($user);
+    }
 
+    /**
+     * Delete every live session row for a user — the one part of "signed out
+     * everywhere" that needs the database session driver to reach at all.
+     *
+     * Shared by `cutOff` (suspend, force-password-reset) and
+     * `signOutEverywhere`, so the misconfiguration warning below is written
+     * once rather than copied at each call site.
+     */
+    protected function killSessions(User $user): void
+    {
         if (config('session.driver') !== 'database') {
             /*
-             * The same misconfiguration the password reset logs, and it matters
-             * more here: on `file` or `cookie` there is no way to reach another
-             * session, so a suspended account stays signed in until its session
-             * expires — while the panel reports that it has been suspended.
+             * On `file` or `cookie` there is no way to reach another session,
+             * so an account this was meant to cut off stays signed in until
+             * its session expires — while the panel reports that it has been
+             * handled.
              */
-            Log::error('An account was suspended without its sessions being invalidated.', [
+            Log::error('An account action could not invalidate other sessions.', [
                 'driver' => config('session.driver'),
                 'user_id' => $user->user_id,
-                'why' => 'SESSION_DRIVER must be `database` for §4.4 — other sessions cannot be reached '
-                    .'on this driver and stay signed in after a suspension.',
+                'why' => 'SESSION_DRIVER must be `database` for §4.4/§4.6 — other sessions cannot be '
+                    .'reached on this driver and stay signed in.',
             ]);
 
             return;
