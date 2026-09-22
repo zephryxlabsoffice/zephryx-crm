@@ -236,6 +236,27 @@ Route::post('/employees/{employee}/reveal', [EmployeeController::class, 'reveal'
     ->name('employees.reveal');
 
 /*
+ * HR viewing another employee's documents (review round Q16, answered
+ * 2026-09-21: "yes … the reason the 'photocopy received' date exists at
+ * all — without this, HR can log that a photocopy arrived but never
+ * actually check it against the record"). Same permission as the identity
+ * card, same shape as My Profile's own document routes — see
+ * ProfileController::documentFor, whose own comment already named this as
+ * the second of the two parties who reach a document, on a route that did
+ * not exist until now.
+ */
+Route::get('/employees/{employee}/documents/{document}/view', [EmployeeController::class, 'viewDocument'])
+    ->where('employee', '[A-Za-z0-9-]{1,32}')
+    ->where('document', 'DOC-[0-9]{4}')
+    ->middleware('permission:employees.identifiers')
+    ->name('employees.documents.view');
+Route::get('/employees/{employee}/documents/{document}/download', [EmployeeController::class, 'downloadDocument'])
+    ->where('employee', '[A-Za-z0-9-]{1,32}')
+    ->where('document', 'DOC-[0-9]{4}')
+    ->middleware('permission:employees.identifiers')
+    ->name('employees.documents.download');
+
+/*
  * Teams (2026-09-09).
  *
  * ─────────────────────────────────────────────────────────────────────────────

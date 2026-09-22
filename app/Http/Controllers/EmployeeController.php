@@ -35,6 +35,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Employees — the spine every other module references (foundation spec §12).
@@ -146,6 +147,18 @@ class EmployeeController extends Controller
             'addresses' => $this->addresses($request, $record),
             'salary' => $this->salaryCard($request, $record),
             'maySeeIdentifiers' => $this->rbac->can($request->user(), 'employees.identifiers'),
+            /*
+             * Behind the same permission as the identity card (review round
+             * Q16) — "without this, HR can log that a photocopy arrived but
+             * never actually check it against the record." `toRecordArray`
+             * takes the EMPLOYEE's own user id regardless of who is looking,
+             * because "self" vs "hr" answers who uploaded it, not who is
+             * viewing — the same call ProfileDirectory::documents() makes
+             * for the person's own copy of this page.
+             */
+            'documents' => $this->rbac->can($request->user(), 'employees.identifiers')
+                ? ProfileDirectory::documents($record)
+                : collect(),
             'mayEdit' => $this->rbac->can($request->user(), 'employees.edit'),
             /*
              * The two ends of a conversion, so either record can find the
@@ -477,6 +490,69 @@ class EmployeeController extends Controller
                 'label' => $label,
                 'value' => (string) $banking->{$field},
             ]);
+    }
+
+    /**
+     * GET /employees/{employee}/documents/{document}/view
+     *
+     * The second of the two parties ProfileController::documentFor names in
+     * its own header comment: the person's own copy is `profile.documents`,
+     * and this is HR's (review round Q16). Same file, same audit obligation,
+     * different entity on the entry — this one names the EMPLOYEE, because
+     * "who looked at whose documents" is the question this route exists to
+     * answer.
+     */
+    public function viewDocument(Request $request, string $employee, string $document): StreamedResponse
+    {
+        $record = $this->documentFor($employee, $document, AuditLog::EMPLOYEE_DOCUMENT_VIEWED, 'Viewed', $request);
+
+        return $this->documents->viewInline($record->path, $record->name, $record->mime);
+    }
+
+    /**
+     * GET /employees/{employee}/documents/{document}/download
+     */
+    public function downloadDocument(Request $request, string $employee, string $document): StreamedResponse
+    {
+        $record = $this->documentFor($employee, $document, AuditLog::EMPLOYEE_DOCUMENT_DOWNLOADED, 'Downloaded', $request);
+
+        return $this->documents->download($record->path, $record->name);
+    }
+
+    /**
+     * The scoped lookup, the existence check and the audit entry shared by
+     * the view and download routes above.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * THE SCOPE IS THE QUERY, NOT A CHECK AFTER IT
+     *
+     * The document is looked up WITHIN the named employee's own, so a
+     * reference that belongs to somebody else's record is a 404 rather than
+     * a 403 — the same shape as ProfileController::documentFor, and for the
+     * same reason: there is no branch here that could be written the wrong
+     * way round.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    protected function documentFor(string $employee, string $document, string $action, string $verb, Request $request): EmployeeDocument
+    {
+        $record = $this->find($employee);
+
+        $document = $record->documents()->where('reference', $document)->first();
+
+        abort_if($document === null, 404);
+
+        abort_if(! $this->documents->exists($document->path), 404);
+
+        $this->audit->record(
+            action: $action,
+            actor: $request->user(),
+            entityType: 'employee',
+            entityId: $record->user?->user_id ?? (string) $record->id,
+            after: $verb.' '.$document->name,
+            request: $request,
+        );
+
+        return $document;
     }
 
     /**

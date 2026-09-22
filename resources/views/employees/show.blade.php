@@ -123,6 +123,10 @@
                 @include('employees.partials.identity', ['identity' => $identity])
             @endif
 
+            @if ($maySeeIdentifiers)
+                @include('employees.partials.documents', ['documents' => $documents])
+            @endif
+
             @if ($salary !== null)
                 @include('employees.partials.salary', ['salary' => $salary])
             @endif

@@ -1379,3 +1379,55 @@ rework order proper — plus the pre-existing `AdminPanelTest` failure and the
 client-side ticket attachment upload noted in Step 5. None of the four
 blocks anything; all are candidates for after GitHub/deployment rather than
 before it.
+
+## Q16 (HR viewing employee documents) is done (2026-09-22)
+
+The owner asked for this by name before moving on to GitHub — the one item
+from the list directly above with a decision already on record (this
+doc's own "Open questions" section, Q16, answered 2026-09-21: "yes. The
+employee record page shows documents to `employees.identifiers` holders …
+That is the reason the 'photocopy received' date exists at all — without
+this, HR can log that a photocopy arrived but never actually check it
+against the record.")
+
+`ProfileController::documentFor()`'s own header comment had already named
+this: "§6 says two parties reach these, the person and HR; HR's route is the
+employee record, not this one" — a route that did not exist until now.
+
+**What landed.** `EmployeeController` gains `viewDocument()`/
+`downloadDocument()`, mirroring `ProfileController`'s own pair exactly:
+ownership-in-the-query (`$record->documents()->where('reference', $document)`,
+so a reference filed under somebody else 404s the same way an imaginary one
+does), the same existence check, the same `DocumentStore` calls. Two new
+routes, `employees.documents.view`/`.download`, behind
+`permission:employees.identifiers` — the same permission the identity card
+already sits behind. `employees.show()` now passes a `documents` collection
+built with `ProfileDirectory::documents($record)` — reused as-is rather than
+duplicated, because `toRecordArray()`'s "self" vs "hr" label was already
+keyed on the EMPLOYEE's own user id regardless of viewer, which is exactly
+right for both call sites. A new read-only partial,
+`employees/partials/documents.blade.php`, sits beside the identity card —
+deliberately no upload form: adding a document to somebody else's record is
+a write this round never asked for, and My Profile already owns it.
+
+**Two new audit actions**, not a reuse of `PROFILE_DOCUMENT_DOWNLOADED`:
+`EMPLOYEE_DOCUMENT_VIEWED`/`_DOWNLOADED` name the EMPLOYEE as the entity, not
+the actor, because "who looked at whose documents" has to be answerable from
+the row alone — the actor is already on every row as `actor_user_id`, but
+the subject of a self-download and the subject of an HR-download are
+different questions and needed different entity values to stay answerable.
+
+**Tests**: a new `EmployeeDocumentAccessTest` (7 cases) — HR can view and
+download, the plain `employees.view` permission alone cannot (the same split
+`EmployeeIdentityRevealTest` already proves for the identity reveal), the
+record page shows the list only to identifier holders, a reference filed
+under a different employee 404s, both actions are audited against the
+subject rather than the actor, and a row with nothing on disk 404s rather
+than erroring. No new migrations — `employees` and `employee_documents`
+already existed; this is a new read path over them. 1366 passing, same one
+pre-existing `AdminPanelTest` failure as every section above.
+
+**This closes the last named gap the owner asked for before GitHub.** What
+remains — wiring a caller to `refreshAttendance()`, the client-side ticket
+attachment upload, and the pre-existing `AdminPanelTest` failure — was not
+asked for and stays flagged rather than built.

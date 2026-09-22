@@ -113,6 +113,20 @@ class AuditLog
      */
     public const IDENTIFIER_REVEALED = 'employee.identifier_revealed';
 
+    /*
+     * HR (or the CEO) obtaining a document from someone ELSE's employee
+     * record — review round Q16. The entity is the employee the document
+     * belongs to, not the actor, which is what makes "who looked at whose
+     * documents" answerable from this row alone. Deliberately its own pair
+     * of actions rather than a reuse of PROFILE_DOCUMENT_DOWNLOADED, which
+     * is a person obtaining their OWN document and names themselves as the
+     * entity — the same distinction PROFILE_CHANGE_APPLIED draws from
+     * PROFILE_CHANGE_REQUESTED.
+     */
+    public const EMPLOYEE_DOCUMENT_VIEWED = 'employee.document_viewed';
+
+    public const EMPLOYEE_DOCUMENT_DOWNLOADED = 'employee.document_downloaded';
+
     public const CLIENT_CREATED = 'client.created';
 
     public const CLIENT_UPDATED = 'client.updated';
