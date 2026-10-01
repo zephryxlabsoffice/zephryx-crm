@@ -45,7 +45,6 @@ resources/
   views/layouts/            public.blade.php — shell for unauthenticated pages
   views/partials/           brand lockup, theme toggle
 public/assets/brand/        z-black.svg (light) · z-white.svg (dark)
-refference/                 the designer's original handover, for reference only
 ```
 
 ## Conventions worth knowing
