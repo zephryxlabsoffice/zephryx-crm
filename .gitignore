@@ -9,8 +9,9 @@
 /vendor
 /node_modules
 
-# Build output
-/public/build
+# Build output. /public/build is committed ON PURPOSE: the server runs PHP
+# only, with no Node.js, so the compiled CSS/JS must arrive with `git pull`.
+# After any front-end change, run `npm run build` and commit public/build.
 /public/hot
 /public/fonts-manifest.dev.json
 /public/storage
