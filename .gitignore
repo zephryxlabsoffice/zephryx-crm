@@ -69,3 +69,6 @@ _ide_helper.php
 
 # Local Claude settings
 .claude/settings.local.json
+
+# Upload zips made by MAKE-UPLOAD.bat (deploy/build.php)
+/upload

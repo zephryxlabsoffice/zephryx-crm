@@ -1,120 +1,111 @@
 # Deploying to crm.zephryxlabs.in
 
-First deployment to MilesWeb (cPanel, shared hosting). Foundation spec §10 is
-the reasoning; this file is only the steps. Do them in order.
+Upload-only, **no Terminal / SSH, no Node.js on the server.** Two zip files
+and a one-time setup page. Foundation spec §10 is the reasoning; this file is
+only the steps.
 
-Checked ready on 2026-10-09: 1367 tests pass, `npm run build` succeeds, every
-commit is pushed to `origin/main`. No scheduled tasks or queued jobs exist yet,
-so **no cron job is needed** for this first deploy.
+## How it is laid out on the server
+
+```
+/home/<cpanel-user>/
+├── public_html/        ← the website (only public files + install.php)
+└── zephryx-crm/        ← the application, BESIDE public_html, never inside it
+    ├── .env            ← written by install.php
+    ├── app, vendor, storage, …
+```
+
+Nothing in `zephryx-crm/` can be opened from a browser, so `.env`, the code
+and uploaded documents stay private. `public_html/index.php` reaches across
+to `../zephryx-crm` for everything else.
 
 ---
 
-## A. Before you start — have these ready
+## 1. On the PC — make the zips
 
-- [ ] cPanel login for MilesWeb, with **Terminal** (or SSH) enabled
-- [ ] Cloudflare login for `zephryxlabs.in`
-- [ ] GitHub access to `zephryxlabsoffice/zephryx-crm` from the server (a
-      deploy key, or a personal access token for the clone)
-- [ ] MilesWeb SMTP host, username and password for `no-reply@crm.zephryxlabs.in`
-- [ ] A strong owner password chosen (`ZEPHRYX_OWNER_PASSWORD`)
+Double-click **`MAKE-UPLOAD.bat`** in the project folder.
 
-## B. cPanel
+It builds, from the last commit:
 
-1. **PHP version** — MultiPHP Manager → set the domain to **PHP 8.3 or newer**
-   (`composer.json` requires `^8.3`). Extensions needed: `pdo_mysql`, `openssl`,
-   `mbstring`, `fileinfo`, `tokenizer`, `xml`, `ctype`, `curl`.
-2. **Database** — MySQL Databases → create `zephryx_crm`, create a user (not
-   root), give it ALL PRIVILEGES. Note the full prefixed names cPanel shows
-   (e.g. `cpuser_zephryx_crm`).
-3. **Mailbox** — Email Accounts → create `no-reply@crm.zephryxlabs.in`.
-   Email Deliverability → note the SPF and DKIM records it asks for.
+- `upload\zephryx-crm.zip` — the application (about 9 MB)
+- `upload\public_html.zip` — the website files (under 1 MB)
 
-## C. Code onto the server (cPanel Terminal)
+Uncommitted changes are left out on purpose; it warns you if there are any.
 
-```bash
-cd ~
-git clone https://github.com/zephryxlabsoffice/zephryx-crm.git zephryx-crm
-cd zephryx-crm
-composer install --no-dev --optimize-autoloader
-```
+## 2. cPanel — once
 
-**The server runs PHP only — no Node.js, no `npm`.** The compiled CSS/JS in
-`public/build` is committed to git, so it arrives with the clone. Node is used
-on the PC only: after any front-end change, run `npm run build` there and
-commit `public/build` with the change.
+1. **MultiPHP Manager** → set the domain to **PHP 8.3 or newer**.
+2. **MySQL Databases** → create a database, create a user, add the user to
+   the database with **ALL PRIVILEGES**. Write down the three names exactly as
+   cPanel shows them (with the prefix, e.g. `cpuser_zephryx`).
+3. **Email Accounts** → create `no-reply@…` and open **Connect Devices** to
+   see its SMTP host, port and username.
 
-## D. Point the subdomain at `/public`
+## 3. File Manager — upload
 
-Domains → create (or edit) `crm.zephryxlabs.in` → **Document Root:
-`zephryx-crm/public`**. Never the project folder itself — that would serve
-`.env` to the internet.
+1. Go to your home folder (`/home/<cpanel-user>`, one level ABOVE
+   `public_html`). Upload `zephryx-crm.zip` → right-click → **Extract**. You
+   should now have a `zephryx-crm` folder beside `public_html`. Delete the zip.
+2. Open `public_html`. **Delete what you uploaded earlier** (the old
+   `index.php`, `build`, `assets`, and any `public.rar`).
+3. Upload `public_html.zip` into `public_html` → **Extract** → delete the zip.
+   Turn on **Settings → Show Hidden Files** and check `.htaccess` is there.
 
-## E. `.env` on the server
+## 4. Browser — run the installer
 
-```bash
-cp .env.production.example .env
-php artisan key:generate
-nano .env
-```
+1. Open `https://<your-domain>/install.php`.
+   If it lists problems (PHP version, an extension, a folder), fix them in
+   cPanel and reload.
+2. It asks for a **setup code**. In File Manager open
+   `zephryx-crm/storage/install-token.txt` and copy the code. (This stops a
+   stranger who finds the page from installing it first.)
+3. Fill in database, email and the owner password → **Install**.
 
-Fill every `CHANGE THIS`: `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`,
-`MAIL_HOST`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `ZEPHRYX_OWNER_PASSWORD`.
-Check `APP_DEBUG=false`.
+It writes `.env`, generates the encryption key, creates every table, creates
+the owner account, then **deletes itself**. The owner password is never saved
+in any file.
 
-> **About the key.** The server gets its OWN key from `key:generate` — this
-> is correct now, while there is no real data. `README-TRANSFER.md` says never
-> run it; that warning is about the PC's key and about any time *after* real
-> records exist. Once staff data is on the server, **never run `key:generate`
-> there again** — it silently makes every encrypted ID, PAN and bank number
-> unreadable. Copy the server's `APP_KEY` into a password manager today.
+## 5. Check it works
 
-## F. Build the database and cache config
+- [ ] The site opens over HTTPS (cPanel → SSL/TLS Status → run AutoSSL if not)
+- [ ] `/login` → admin email (or user ID `OWNER`) + owner password
+- [ ] The sign-in code email arrives **in the inbox, not spam**
+- [ ] Change the owner password
+- [ ] `public_html/install.php` is gone
+- [ ] **Download `zephryx-crm/.env` and keep it somewhere safe.** Its
+      `APP_KEY` unlocks every encrypted record. If it is lost or changed, ID
+      numbers, PANs and bank details become unreadable forever.
+- [ ] Admin Panel → Integrations → connect Google → "Test connection"
 
-```bash
-php artisan migrate --seed --force
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-chmod -R 775 storage bootstrap/cache
-```
+## 6. DNS (Cloudflare)
 
-`--force` is required because Laravel refuses to migrate in production
-without it. The seed creates roles, permissions, master lists and the owner
-account only — no demo people (see `2-CREATE-DATABASE-ON-HOST.md`).
+- `A` record for the site → the MilesWeb server IP, **grey cloud
+  (DNS-only)**. Decided 2026-10-09: an orange cloud would make every visitor
+  look like a Cloudflare IP and break the per-IP login lock-out.
+- Mail: SPF and DKIM records for the sending (sub)domain from cPanel → Email
+  Deliverability, **grey cloud** on every MX/TXT. Never touch the apex SPF that
+  Google Workspace uses — a second SPF record breaks both.
 
-## G. DNS and HTTPS (Cloudflare)
+## Changing a setting later
 
-1. `A` record `crm` → the MilesWeb server IP, **grey cloud (DNS-only)**.
-   Decided 2026-10-09: proxying it would make every request arrive from a
-   Cloudflare IP, breaking per-IP login rate-limiting and the audit log.
-   Leave `TRUSTED_PROXIES` empty.
-2. Mail records for the **`crm` subdomain only** — SPF naming MilesWeb, and
-   MilesWeb's DKIM selector under `_domainkey.crm`. **Grey cloud (DNS-only)**
-   on every MX/TXT. Do not touch the apex SPF that Google Workspace uses.
-3. cPanel → SSL/TLS Status → run AutoSSL for `crm.zephryxlabs.in`.
-   With a grey cloud, the certificate is MilesWeb's — Cloudflare's SSL mode
-   does not apply to this record.
+Edit `zephryx-crm/.env` in File Manager and save. It takes effect on the next
+page load — the installer deliberately does not cache config, because
+without Terminal there would be no way to clear that cache.
 
-## H. Smoke test
+## Uploading a new version later
 
-- [ ] `https://crm.zephryxlabs.in` loads the landing page over HTTPS
-- [ ] Admin sign-in with `admin@zephryxlabs.in` + the owner password
-- [ ] The OTP email arrives **in the inbox, not spam** (launch blocker, §10)
-- [ ] Change the owner password straight away
-- [ ] Remove `ZEPHRYX_OWNER_PASSWORD` from `.env`, then `php artisan config:cache`
-- [ ] Admin Panel → Integrations → connect Google, press "Test connection"
+1. Commit on the PC, double-click `MAKE-UPLOAD.bat`.
+2. Upload and extract over the top (overwrite). **Never delete or replace
+   `zephryx-crm/.env` or `zephryx-crm/storage`** — they hold the key and the
+   uploaded files.
+3. If the new version has new database tables, they need a migration run —
+   ask for an update page before uploading (not built yet; the first install
+   does not need it). The `install.php` that comes back with
+   `public_html.zip` is harmless: the lock file makes it show "Not found"
+   and delete itself. Delete it anyway.
 
-## Updating later
+## Rules
 
-```bash
-cd ~/zephryx-crm
-php artisan down
-git pull
-composer install --no-dev --optimize-autoloader
-php artisan migrate --force
-php artisan config:cache && php artisan route:cache && php artisan view:cache
-php artisan up
-```
-
-Never `migrate:fresh` on the server once real data exists — it drops every
-table.
+- Never run the installer twice on a live site, and never delete
+  `zephryx-crm/storage/installed.lock`.
+- Never put `zephryx-crm` inside `public_html`.
+- Never set `APP_DEBUG=true` on the live site.
