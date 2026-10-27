@@ -41,6 +41,7 @@ return [
     ['key' => 'master-data', 'label' => 'Master Data',    'icon' => 'reports',       'route' => 'admin.master.index', 'permission' => 'admin.master.view'],
     ['key' => 'settings',    'label' => 'Settings',       'icon' => 'settings',      'route' => 'admin.settings',     'permission' => 'admin.settings.view'],
     ['key' => 'integrations', 'label' => 'Integrations',  'icon' => 'integrations',  'route' => 'admin.integrations', 'permission' => 'admin.integrations.view'],
-    ['key' => 'audit',       'label' => 'Audit Log',      'icon' => 'announcements', 'route' => 'admin.audit.index',  'permission' => 'admin.audit.view'],
+    ['key' => 'backups',     'label' => 'Backups',        'icon' => 'reports',       'route' => 'admin.backups',      'permission' => 'admin.integrations.view'],
+    ['key' => 'audit',      'label' => 'Audit Log',      'icon' => 'announcements', 'route' => 'admin.audit.index',  'permission' => 'admin.audit.view'],
 
 ];

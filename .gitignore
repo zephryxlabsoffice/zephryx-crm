@@ -55,6 +55,10 @@
 /storage/app/uploads/
 /storage/app/private/
 
+# Database backups (AppSupportBackups). The whole database in one file —
+# never source, and never to be pushed or packed into an upload zip.
+/storage/app/backups/
+
 # Editor / OS
 .DS_Store
 Thumbs.db

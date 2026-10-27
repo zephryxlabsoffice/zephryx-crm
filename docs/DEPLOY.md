@@ -103,6 +103,36 @@ without Terminal there would be no way to clear that cache.
    `public_html.zip` is harmless: the lock file makes it show "Not found"
    and delete itself. Delete it anyway.
 
+## Backups — set up once
+
+The app backs itself up: a copy of the whole database goes to
+`zephryx-crm/storage/app/backups` (last 14) and to the Google Shared Drive,
+folder `backups` (last 60). Admin → Backups shows them, has **Back up now**
+and a Download button, and warns if the nightly run stops.
+
+The nightly run is a cPanel Cron Job (cPanel → **Cron Jobs**; no Terminal needed):
+
+1. Common Settings: **Once Per Day** (it fills in `0 0 * * *`). Change the
+   hour to `2` for 2 AM: `0 2 * * *`.
+2. Command (use the real server path — File Manager shows it):
+
+   ```
+   /usr/local/bin/php /var/www/<uuid>/zephryx-crm/artisan backup:database
+   ```
+
+   If cPanel says that php path does not exist, try `/usr/bin/php` or
+   `/opt/cpanel/ea-php84/root/usr/bin/php`.
+3. Cron Email at the top of the page: put the owner's address. cPanel mails
+   the output of every run, so a failure arrives in the inbox.
+4. Next day, open Admin → Backups and check last night's file is listed
+   and says it reached Google Drive.
+
+**Restoring:** phpMyAdmin → the CRM database → Import → the `.sql.gz` file.
+It only works with the same `APP_KEY`, so also keep a copy of
+`zephryx-crm/.env` somewhere safe (not in the Shared Drive with the backups).
+
+MilesWeb also keeps its own account backups; this is the copy you control.
+
 ## Rules
 
 - Never run the installer twice on a live site, and never delete

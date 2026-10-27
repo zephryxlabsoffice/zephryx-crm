@@ -452,6 +452,14 @@ class AuditLog
 
     public const GOOGLE_TEST_FAILED = 'admin.google_test_failed';
 
+    /*
+     * Database backups (2026-10-27). Downloading one is logged because the
+     * file is the whole database — every salary, every client — in one place.
+     */
+    public const BACKUP_TAKEN = 'admin.backup_taken';
+
+    public const BACKUP_DOWNLOADED = 'admin.backup_downloaded';
+
     /**
      * Write one entry.
      *

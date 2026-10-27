@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AccessController as AdminAccessController;
 use App\Http\Controllers\Admin\AccountController as AdminAccountController;
 use App\Http\Controllers\Admin\AuditController as AdminAuditController;
+use App\Http\Controllers\Admin\BackupsController as AdminBackupsController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\IntegrationsController as AdminIntegrationsController;
 use App\Http\Controllers\Admin\MasterDataController as AdminMasterDataController;
@@ -163,6 +164,17 @@ Route::get('/integrations', [AdminIntegrationsController::class, 'index'])->name
 Route::post('/integrations/connect', [AdminIntegrationsController::class, 'connect'])->name('integrations.connect');
 Route::post('/integrations/test', [AdminIntegrationsController::class, 'test'])->name('integrations.test');
 Route::post('/integrations/disconnect', [AdminIntegrationsController::class, 'disconnect'])->name('integrations.disconnect');
+
+/*
+ * Database backups (2026-10-27). Taking one is a POST like every other admin
+ * act; the download name is checked against the pattern the backup writes,
+ * so it cannot be used to fetch any other file.
+ */
+Route::get('/backups', [AdminBackupsController::class, 'index'])->name('backups');
+Route::post('/backups', [AdminBackupsController::class, 'store'])->name('backups.store');
+Route::get('/backups/{file}', [AdminBackupsController::class, 'download'])
+    ->where('file', 'zephryx-crm-db-[0-9-]+\.sql\.gz')
+    ->name('backups.download');
 
 /*
  * The audit log. GET only, in both senses — nothing writes to it through

@@ -130,6 +130,42 @@ class DriveClient
     }
 
     /**
+     * The files in a module's folder, newest first.
+     *
+     * Used by the database backups to keep only the most recent copies.
+     *
+     * @return list<array{id: string, name: string, created: string}>
+     *
+     * @throws RuntimeException
+     */
+    public function listFolder(string $module): array
+    {
+        $token = $this->auth->token([self::SCOPE]);
+        $folderId = $this->folderId($token, $module);
+
+        $response = Http::withToken($token)->get(self::FILES_URL, [
+            'q' => "'{$folderId}' in parents and trashed = false",
+            'corpora' => 'drive',
+            'driveId' => $this->sharedDriveId,
+            'includeItemsFromAllDrives' => 'true',
+            'supportsAllDrives' => 'true',
+            'orderBy' => 'createdTime desc',
+            'pageSize' => 1000,
+            'fields' => 'files(id,name,createdTime)',
+        ]);
+
+        if ($response->failed()) {
+            throw new RuntimeException('Could not list the "'.$module.'" folder in the Shared Drive: '.$this->errorMessage($response));
+        }
+
+        return array_map(fn (array $f) => [
+            'id' => (string) $f['id'],
+            'name' => (string) $f['name'],
+            'created' => (string) ($f['createdTime'] ?? ''),
+        ], (array) $response->json('files', []));
+    }
+
+    /**
      * Remove a file. Tolerant of it already being gone (404) — the same
      * shape as DocumentStore::forget() on the local disk, and for the same
      * reason: the caller is usually cleaning up after a replacement, and a
