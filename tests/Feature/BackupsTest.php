@@ -167,6 +167,16 @@ class BackupsTest extends TestCase
         $this->post('/admin/backups')->assertNotFound();
     }
 
+    public function test_backup_times_are_shown_in_office_time_not_utc(): void
+    {
+        app(Backups::class)->run();
+
+        $at = app(Backups::class)->list()[0]['at'];
+
+        $this->assertSame('Asia/Kolkata', $at->getTimezone()->getName());
+        $this->assertSame(now()->format('Y-m-d H'), $at->format('Y-m-d H'));
+    }
+
     public function test_the_artisan_command_takes_a_backup(): void
     {
         $this->artisan('backup:database')->assertExitCode(0);

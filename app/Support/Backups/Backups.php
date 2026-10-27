@@ -103,7 +103,9 @@ class Backups
             $files[] = [
                 'name' => $file->getFilename(),
                 'bytes' => $file->getSize(),
-                'at' => Carbon::createFromTimestamp($file->getMTime()),
+                // The office's timezone, explicitly: Carbon 3 reads a Unix
+                // timestamp as UTC, which showed backups 5h30m early.
+                'at' => Carbon::createFromTimestamp($file->getMTime(), config('app.timezone')),
             ];
         }
 
