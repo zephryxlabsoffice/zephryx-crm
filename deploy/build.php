@@ -17,7 +17,11 @@
 declare(strict_types=1);
 
 $root = dirname(__DIR__);
-$out = $argv[1] ?? $root.DIRECTORY_SEPARATOR.'upload';
+// `--with-installer` adds install.php, for a first install only. An update
+// leaves it out, so there is nothing to delete after extracting.
+$withInstaller = in_array('--with-installer', $argv, true);
+$args = array_values(array_filter(array_slice($argv, 1), fn ($a) => $a !== '--with-installer'));
+$out = $args[0] ?? $root.DIRECTORY_SEPARATOR.'upload';
 $stage = sys_get_temp_dir().DIRECTORY_SEPARATOR.'zephryx-build-'.bin2hex(random_bytes(4));
 
 function step(string $msg): void
@@ -130,7 +134,9 @@ foreach (['storage/app/private', 'storage/app/public', 'storage/framework/cache/
 $web = $stage.'/public_html';
 rename($app.'/public', $web);
 copy(__DIR__.'/public_html/index.php', $web.'/index.php');
-copy(__DIR__.'/public_html/install.php', $web.'/install.php');
+if ($withInstaller) {
+    copy(__DIR__.'/public_html/install.php', $web.'/install.php');
+}
 foreach (['hot', 'public.rar', 'storage'] as $junk) {
     is_dir($web.'/'.$junk) ? rrmdir($web.'/'.$junk) : @unlink($web.'/'.$junk);
 }

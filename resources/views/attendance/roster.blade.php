@@ -34,12 +34,12 @@
                         <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
                         <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                     </svg>
-                    Upcoming and current roster
+                    Roster — last week and coming weeks
                 </div>
 
                 @if ($roster->isEmpty())
                     <div class="card-body">
-                        <p class="rail-empty">Nobody is rostered for an upcoming Sunday or holiday.</p>
+                        <p class="rail-empty">Nobody is rostered for a recent or upcoming Sunday or holiday.</p>
                     </div>
                 @else
                     <div class="card-body-table">
@@ -101,7 +101,7 @@
                                 <option value="{{ $day['date'] }}">{{ $day['label'] }}</option>
                             @endforeach
                         </select>
-                        <span class="pay-hint">Only Sundays and announced holidays are offered — a working day needs no roster.</span>
+                        <span class="pay-hint">Sundays and announced holidays from the last 7 days and the coming weeks. Rostering a past day someone already worked in full adds their comp-off straight away.</span>
                         @error('date')
                             <span class="field-error">{{ $message }}</span>
                         @enderror

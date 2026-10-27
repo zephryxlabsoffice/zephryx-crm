@@ -886,12 +886,16 @@ Route::post('/attendance/{record}/restore', [AttendanceController::class, 'resto
  * existing IS the roster — so this is a plain read-then-write pair behind
  * `attendance.roster`, the same permission Manager and Team Lead both hold;
  * AttendanceController::canRoster is what tells them apart (§2.6).
+ *
+ * HR (`attendance.reject`) may roster too, and for PAST dates as well as
+ * upcoming ones (decided 2026-10-27): somebody who worked a Sunday without
+ * being rostered first can still be given the comp-off afterwards.
  */
 Route::get('/attendance/roster', [AttendanceController::class, 'roster'])
-    ->middleware('permission:attendance.roster')
+    ->middleware('permission:attendance.roster,attendance.reject')
     ->name('attendance.roster');
 Route::post('/attendance/roster', [AttendanceController::class, 'storeRoster'])
-    ->middleware('permission:attendance.roster')
+    ->middleware('permission:attendance.roster,attendance.reject')
     ->name('attendance.roster.store');
 
 /*

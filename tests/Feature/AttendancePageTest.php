@@ -1059,12 +1059,17 @@ class AttendancePageTest extends TestCase
 
     public function test_the_roster_page_needs_the_permission(): void
     {
-        // HR is deliberately excluded — "rostered by a Manager or Team
-        // Lead (not HR)".
+        // HR may roster since 2026-10-27 (reversing "not HR", so a Sunday
+        // worked without a roster can still earn its comp-off). Deciding
+        // comp-off requests stays with Managers and Team Leads.
         $this->withDemoData();
 
-        $this->get('/attendance/roster')->assertForbidden();
+        $this->get('/attendance/roster')->assertOk();
         $this->get('/comp-offs/requests')->assertForbidden();
+
+        $this->signInAsStaff(['employee']);
+
+        $this->get('/attendance/roster')->assertForbidden();
     }
 
     public function test_the_sidebar_marks_attendance_as_current(): void

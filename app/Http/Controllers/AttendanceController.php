@@ -92,6 +92,14 @@ class AttendanceController extends Controller
 {
     protected const PER_PAGE = 10;
 
+    /**
+     * How far back a Sunday or holiday can be rostered. One week, because a
+     * comp-off lapses on the Sunday after the day that earned it
+     * (CompOffPolicy::expiresOn) — anything older would be granted already
+     * expired.
+     */
+    protected const ROSTER_BACK_DAYS = 7;
+
     public function __construct(protected Rbac $rbac, protected AuditLog $audit)
     {
     }
@@ -124,7 +132,8 @@ class AttendanceController extends Controller
             // admire the dedication. See AttendancePresenter::holidayLooksWrong.
             'holidayWorked' => $roll->whereNotNull('id')->count(),
             'holidayAnnouncement' => Holidays::announcementOn($date),
-            'mayRoster' => $this->rbac->can($request->user(), 'attendance.roster'),
+            'mayRoster' => $this->rbac->can($request->user(), 'attendance.roster')
+                || $this->rbac->can($request->user(), 'attendance.reject'),
             'mayEnter' => $this->rbac->can($request->user(), 'attendance.reject'),
         ] + $filters);
     }
@@ -372,7 +381,7 @@ class AttendanceController extends Controller
             'upcoming' => $this->upcomingRosterableDates(),
             'roster' => SundayRoster::query()
                 ->with(['employee.user', 'rosterer.user'])
-                ->whereDate('date', '>=', Carbon::today())
+                ->whereDate('date', '>=', Carbon::today()->subDays(self::ROSTER_BACK_DAYS))
                 ->orderBy('date')
                 ->get(),
         ]);
@@ -383,9 +392,24 @@ class AttendanceController extends Controller
      */
     public function storeRoster(Request $request): RedirectResponse
     {
+        /*
+         * Past dates too, since 2026-10-27: somebody who worked a Sunday or a
+         * holiday without being rostered first can still be given the
+         * comp-off. Bounded to the comp-off window — a day older than that
+         * would earn a comp-off that has already lapsed.
+         */
+        $earliest = Carbon::today()->subDays(self::ROSTER_BACK_DAYS);
+        $tracking = AttendancePolicy::startsOn();
+
+        if ($tracking !== null && $tracking->greaterThan($earliest)) {
+            $earliest = $tracking;
+        }
+
         $data = $request->validate([
             'employee_id' => ['required', Rule::exists('employees', 'id')],
-            'date' => ['required', 'date', 'after_or_equal:today'],
+            'date' => ['required', 'date_format:Y-m-d', 'after_or_equal:'.$earliest->toDateString()],
+        ], [
+            'date.after_or_equal' => 'That is too far back to roster.',
         ]);
 
         if (AttendancePolicy::isWorkingDay($data['date'])) {
@@ -406,6 +430,16 @@ class AttendanceController extends Controller
 
         $rosterer = $this->employeeFor($request);
 
+        $past = Carbon::parse($data['date'])->lessThanOrEqualTo(Carbon::today());
+
+        // Rostering yourself for a day already worked is granting yourself a
+        // comp-off. The same rule as approving your own leave (§2.6).
+        if ($past && $rosterer !== null && $rosterer->id === $target->id) {
+            throw ValidationException::withMessages([
+                'employee_id' => 'You cannot roster yourself for a day that has already happened.',
+            ]);
+        }
+
         $roster = SundayRoster::firstOrCreate(
             ['employee_id' => $target->id, 'date' => $data['date']],
             ['rostered_by' => $rosterer?->id],
@@ -422,11 +456,35 @@ class AttendanceController extends Controller
             );
         }
 
+        /*
+         * A day already worked earns its comp-off now. Check-out is normally
+         * the moment this happens, and on a past day that moment has gone —
+         * but the rule is identical: a full day only, never a half.
+         */
+        $earned = false;
+
+        if ($past) {
+            $record = AttendanceRecord::where('employee_id', $target->id)
+                ->whereDate('date', $data['date'])
+                ->whereNotNull('check_out')
+                ->first();
+
+            if ($record !== null) {
+                $earned = $this->earnCompOffIfDue($request, $target, $record);
+            }
+        }
+
+        $when = Carbon::parse($data['date'])->format('d M Y');
+
         return redirect()
             ->route('attendance.roster')
-            ->with('status', $roster->wasRecentlyCreated
-                ? $target->user?->name.' is rostered for '.Carbon::parse($data['date'])->format('d M Y').'.'
+            ->with('status', ($roster->wasRecentlyCreated
+                ? $target->user?->name.' is rostered for '.$when.'.'
                 : $target->user?->name.' was already rostered for that date.')
+                .($earned ? ' They worked it in full — one comp-off added.' : '')
+                .($past && ! $earned && $roster->wasRecentlyCreated
+                    ? ' No comp-off: there is no full day recorded for them on that date.'
+                    : ''))
             ->with('status_tone', 'success');
     }
 
@@ -441,7 +499,9 @@ class AttendanceController extends Controller
      */
     protected function canRoster(Request $request, Employee $target): bool
     {
-        if ($this->rbac->can($request->user(), 'teams.edit')) {
+        // HR rosters anyone (decided 2026-10-27).
+        if ($this->rbac->can($request->user(), 'teams.edit')
+            || $this->rbac->can($request->user(), 'attendance.reject')) {
             return true;
         }
 
@@ -462,7 +522,8 @@ class AttendanceController extends Controller
      */
     protected function rosterableEmployees(?Employee $rosterer, Request $request): Collection
     {
-        if ($this->rbac->can($request->user(), 'teams.edit')) {
+        if ($this->rbac->can($request->user(), 'teams.edit')
+            || $this->rbac->can($request->user(), 'attendance.reject')) {
             return Employee::query()->with('user')->attends()->get()
                 ->sortBy(fn (Employee $e) => $e->user?->name)->values();
         }
@@ -490,8 +551,14 @@ class AttendanceController extends Controller
     protected function upcomingRosterableDates(int $weeks = 8): array
     {
         $dates = [];
-        $cursor = Carbon::today();
+        // The last week too — see ROSTER_BACK_DAYS.
+        $cursor = Carbon::today()->subDays(self::ROSTER_BACK_DAYS);
         $end = Carbon::today()->addWeeks($weeks);
+        $tracking = AttendancePolicy::startsOn();
+
+        if ($tracking !== null && $tracking->greaterThan($cursor)) {
+            $cursor = $tracking->copy();
+        }
 
         while ($cursor->lessThanOrEqualTo($end)) {
             if (! AttendancePolicy::isWorkingDay($cursor)) {
@@ -499,7 +566,8 @@ class AttendanceController extends Controller
 
                 $dates[] = [
                     'date' => $cursor->toDateString(),
-                    'label' => $cursor->format('D, d M Y').($holiday !== null ? ' — '.$holiday : ''),
+                    'label' => $cursor->format('D, d M Y').($holiday !== null ? ' — '.$holiday : '')
+                        .($cursor->lessThan(Carbon::today()) ? ' (past)' : ''),
                 ];
             }
 

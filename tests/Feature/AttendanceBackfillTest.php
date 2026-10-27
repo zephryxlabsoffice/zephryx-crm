@@ -233,6 +233,74 @@ class AttendanceBackfillTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
+       ROSTERING A PAST SUNDAY (2026-10-27)
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_hr_can_roster_a_past_sunday_already_worked_and_the_comp_off_is_added(): void
+    {
+        $this->signIn(['employee', 'hr'], 'EMP900');
+        $riya = $this->anEmployee('EMP901', 'Riya Sharma');
+
+        // Sunday 25 Oct 2026, worked in full without being rostered first.
+        AttendanceRecord::create([
+            'employee_id' => $riya->id, 'date' => '2026-10-25', 'check_in' => '09:30', 'check_out' => '18:30',
+        ]);
+
+        $this->get('/attendance/roster')->assertOk()->assertSee('Sun, 25 Oct 2026');
+
+        $this->post('/attendance/roster', ['employee_id' => $riya->id, 'date' => '2026-10-25'])
+            ->assertRedirect('/attendance/roster')
+            ->assertSessionHas('status', fn (string $s) => str_contains($s, 'one comp-off added'));
+
+        $this->assertDatabaseHas('comp_offs', ['employee_id' => $riya->id]);
+    }
+
+    public function test_a_past_half_day_is_rostered_but_earns_no_comp_off(): void
+    {
+        $this->signIn(['employee', 'hr'], 'EMP900');
+        $riya = $this->anEmployee('EMP901', 'Riya Sharma');
+
+        AttendanceRecord::create([
+            'employee_id' => $riya->id, 'date' => '2026-10-25', 'check_in' => '09:30', 'check_out' => '11:00',
+        ]);
+
+        $this->post('/attendance/roster', ['employee_id' => $riya->id, 'date' => '2026-10-25'])
+            ->assertSessionHas('status', fn (string $s) => str_contains($s, 'No comp-off'));
+
+        $this->assertDatabaseMissing('comp_offs', ['employee_id' => $riya->id]);
+    }
+
+    public function test_a_sunday_more_than_a_week_back_cannot_be_rostered(): void
+    {
+        $this->signIn(['employee', 'hr'], 'EMP900');
+        $riya = $this->anEmployee('EMP901', 'Riya Sharma');
+
+        $this->post('/attendance/roster', ['employee_id' => $riya->id, 'date' => '2026-10-18'])
+            ->assertSessionHasErrors('date');
+    }
+
+    public function test_nobody_rosters_themselves_for_a_past_day(): void
+    {
+        $me = $this->signIn(['employee', 'hr'], 'EMP900');
+
+        AttendanceRecord::create([
+            'employee_id' => $me->id, 'date' => '2026-10-25', 'check_in' => '09:30', 'check_out' => '18:30',
+        ]);
+
+        $this->post('/attendance/roster', ['employee_id' => $me->id, 'date' => '2026-10-25'])
+            ->assertSessionHasErrors('employee_id');
+
+        $this->assertDatabaseMissing('comp_offs', ['employee_id' => $me->id]);
+    }
+
+    public function test_an_ordinary_employee_still_cannot_roster(): void
+    {
+        $this->signIn(['employee'], 'EMP900');
+
+        $this->get('/attendance/roster')->assertForbidden();
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
        HELPERS
        ══════════════════════════════════════════════════════════════════════ */
 

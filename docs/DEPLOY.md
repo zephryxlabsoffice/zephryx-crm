@@ -29,7 +29,8 @@ to `../zephryx-crm` for everything else.
 
 ## A1. On the PC — make the zips
 
-Double-click **`MAKE-UPLOAD.bat`** in the project folder. It builds, from the
+For a first install run `php deploy/build.php --with-installer` (it adds
+`install.php`); `MAKE-UPLOAD.bat` builds update zips without it. It builds, from the
 last commit:
 
 - `upload\zephryx-crm.zip` — the application (about 9 MB)
@@ -141,8 +142,8 @@ is safe; deleting the folder first is not.
 1. Open `public_html`. Delete the old **`build`** folder (old CSS/JS files
    pile up otherwise; the new ones have new names).
 2. Upload `public_html.zip` → **Extract** (overwrite) → delete the zip.
-3. Delete **`public_html/install.php`** that came back with it. (It would
-   refuse to run anyway — `installed.lock` — but it should not sit there.)
+3. Zips made after 2026-10-27 have no `install.php`. If one is ever there,
+   delete it.
 
 ## B5. Check
 
