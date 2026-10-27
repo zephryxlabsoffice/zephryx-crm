@@ -392,9 +392,144 @@
    action below the fold would cost them the page's only purpose. */
 @media (max-width: 760px) and (max-height: 720px) {
   .tagline-card { display: none; }
-  .topbar { padding: 16px 0 4px; }
+  .public-topbar { padding: 16px 0 4px; }
   .hero { gap: 18px; padding: 8px 0 16px; }
   .hero-title { margin-bottom: 14px; }
   .hero-lede { margin-bottom: 20px; }
   .info-strip { padding: 16px 8px; margin-bottom: 8px; }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════
+   ONE SCREEN, NO SCROLL (2026-10-27)
+
+   The owner's rule: the landing page never scrolls, at any size. It is one
+   screen with one job — get somebody to Login — so it is fitted to the
+   viewport's HEIGHT as well as its width.
+
+   The hero used to be a fixed 580px of artwork plus padding, which needed
+   ~810px and scrolled on every common 1280×720 / 1366×768 laptop. Now the
+   artwork, the title and the spacing are sized from the viewport height
+   (dvh, so a mobile address bar is accounted for), and the decoration gives
+   way first as the screen gets shorter. Nothing is clipped: if a screen is
+   too small even for that, the page still scrolls rather than hiding text.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* ── desktop and tablet: two columns ── */
+@media (min-width: 761px) {
+  .hero {
+    min-height: 0;
+    padding: clamp(8px, 3dvh, 32px) 0 clamp(16px, 5dvh, 64px);
+  }
+  .hero-title {
+    font-size: clamp(36px, min(5.6vw, 9dvh), 84px);
+    margin-bottom: clamp(14px, 3dvh, 28px);
+  }
+  .hero-lede { margin-bottom: clamp(18px, 4dvh, 38px); }
+  .cta-row { margin-bottom: clamp(20px, 6dvh, 64px); }
+
+  /* The artwork takes what the topbar and padding leave, within limits. */
+  .hero-visual { height: clamp(300px, calc(100dvh - 210px), 580px); }
+
+  /* Cards placed by proportion, so they keep their composition as the
+     artwork shrinks instead of sliding into each other. */
+  .hero-card-sales { top: 8%; }
+  .hero-card-activity { bottom: 10%; }
+
+  .public-topbar { padding: clamp(14px, 4dvh, 36px) 0 clamp(8px, 2dvh, 24px); }
+}
+
+/* Shorter desktop screens: the two cards no longer fit stacked, so the
+   second one and the badge give way — they are decoration. */
+@media (min-width: 761px) and (max-height: 640px) {
+  .hero-card-activity,
+  .float-badge { display: none; }
+  .hero-card-sales { top: 50%; transform: translateY(-50%); }
+  .hero-lede { font-size: 16px; }
+}
+
+/* ── landscape phones and very short screens ──
+   Too short for the artwork at all. Copy on the left, the actions and the
+   feature strip on the right, so everything sits side by side in one screen. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .public-topbar { padding: 12px 0 4px; }
+  .public-topbar .brand-mark { width: 32px; height: 32px; }
+  .brand-name { font-size: 18px; }
+
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 8px 0 12px;
+    gap: 0;
+    min-height: 0;
+  }
+  .hero-visual,
+  .tagline-card { display: none; }
+
+  .hero-copy {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "title cta"
+      "lede  strip";
+    column-gap: 32px;
+    align-items: start;
+  }
+  .hero-title {
+    grid-area: title;
+    font-size: clamp(28px, 11dvh, 44px);
+    margin-bottom: 10px;
+  }
+  .hero-lede {
+    grid-area: lede;
+    font-size: 14px;
+    margin: 0;
+  }
+  .cta-row {
+    grid-area: cta;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0 0 12px;
+    align-self: end;
+  }
+  .cta { width: 100%; min-width: 0; padding: 11px 18px; font-size: 14px; }
+
+  .info-strip {
+    grid-area: strip;
+    max-width: 100%;
+    margin: 0;
+    padding: 12px 6px;
+  }
+  .info-item { flex-direction: column; align-items: flex-start; gap: 6px; padding: 0 6px; }
+  .info-num { font-size: 14px; white-space: nowrap; }
+  .info-lbl { font-size: 11px; }
+  .info-ic { width: 30px; height: 30px; }
+  .info-ic svg { width: 15px; height: 15px; }
+}
+
+/* ── the smallest phones (iPhone SE 1st gen, 320×568) ── */
+@media (max-width: 760px) and (max-height: 600px) {
+  .public-topbar { padding: 12px 0 0; }
+  .hero { gap: 14px; padding: 6px 0 10px; }
+  .hero-title { font-size: clamp(34px, 10.5vw, 44px); margin-bottom: 10px; }
+  .hero-lede { font-size: 15px; margin-bottom: 16px; }
+  .info-strip { padding: 14px 6px; margin: 0; }
+}
+
+/* Fitting the height leaves spare room on taller screens; the hero sits in
+   the middle of it rather than leaving an empty band under the fold. */
+.landing-body > .container {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+.landing-body main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.landing-body .hero { width: 100%; min-width: 0; }
+
+/* "Role-based" broke at its hyphen on the narrowest phones. */
+@media (max-width: 360px) {
+  .info-num { font-size: 14px; white-space: nowrap; }
 }

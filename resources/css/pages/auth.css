@@ -476,7 +476,9 @@ body.auth-body { background: var(--surface); }
      with a large system font, the content must still be reachable rather than
      clipped under the fold. */
   .auth {
-    grid-template-columns: 1fr;
+    /* minmax(0, …), not 1fr: a bare 1fr will not shrink below its content,
+       which pushed the page 5px sideways on a 320px phone. */
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto 1fr;
   }
 
@@ -617,4 +619,26 @@ body.auth-body { background: var(--surface); }
   .visual-panel { height: 90px; padding: 10px 16px 24px; }
   .composition { display: none; }
   .form-panel { align-content: start; }
+}
+
+/* Tier 2b — landscape phones, no scroll (2026-10-27). Even the 90px token
+   strip pushed the sign-in form ~40px past the fold. The strip is decoration,
+   so on these screens it goes entirely and the form takes the full height.
+   Still min-height on .auth, so a longer form (the reset page with an error
+   showing) scrolls rather than clips. */
+@media (max-width: 900px) and (max-height: 560px) and (orientation: landscape) {
+  .visual-panel { display: none; }
+  .auth { grid-template-rows: 1fr; }
+  .form-panel {
+    margin-top: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 14px 24px 12px;
+    align-content: center;
+  }
+  .auth-form { gap: 10px; max-width: 420px; margin: 0 auto; }
+  .form-brand .brand-mark { width: 36px; height: 36px; }
+  .auth-heading { font-size: 17px; }
+  .field { height: 46px; }
+  .btn-auth { height: 44px; }
 }
