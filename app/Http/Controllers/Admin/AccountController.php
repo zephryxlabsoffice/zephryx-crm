@@ -10,6 +10,7 @@ use App\Models\MasterDataItem;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Admin\AccessDirectory;
+use App\Support\Admin\AccountRemoval;
 use App\Support\Admin\AccountDirectory;
 use App\Support\Audit\AuditLog;
 use App\Support\Auth\PasswordResets;
@@ -227,6 +228,55 @@ class AccountController extends Controller
     }
 
     /**
+     * POST /admin/accounts/{account}/delete — only for an account made by
+     * mistake and never used. See App\Support\Admin\AccountRemoval for the
+     * rule and why it is this narrow.
+     *
+     * The email has to be typed back. A delete cannot be undone, and the
+     * confirmation that stops a misclick is one that cannot be clicked.
+     */
+    public function destroy(Request $request, string $account): RedirectResponse
+    {
+        $user = $this->find($account);
+        $removal = app(AccountRemoval::class);
+
+        $blockers = $removal->blockers($user);
+
+        if ($blockers !== []) {
+            return redirect()->route('admin.accounts.show', ['account' => $user->user_id])
+                ->with('status', 'This account cannot be deleted — it has been used: '.implode(', ', $blockers)
+                    .'. Deactivate it instead.')
+                ->with('status_tone', 'danger');
+        }
+
+        $request->validate([
+            'confirm_email' => ['required', 'string', function ($attribute, $value, $fail) use ($user) {
+                if (strcasecmp(trim((string) $value), (string) $user->email) !== 0) {
+                    $fail('Type the account\'s email exactly to confirm.');
+                }
+            }],
+        ]);
+
+        $summary = $user->name.' · '.$user->user_id.' · '.$user->email;
+
+        $removal->delete($user);
+
+        $this->audit->record(
+            action: AuditLog::ACCOUNT_DELETED,
+            actor: $request->user(),
+            entityType: 'user',
+            entityId: $user->user_id,
+            before: $summary,
+            after: 'deleted — made by mistake, never used',
+            request: $request,
+        );
+
+        return redirect()->route('admin.accounts.index')
+            ->with('status', $user->name.' ('.$user->user_id.') was deleted. The email '.$user->email.' can be used again.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
      * POST /admin/accounts/{account}/company — department, designation,
      * reporting line and joining date (2026-10-27).
      *
@@ -391,6 +441,8 @@ class AccountController extends Controller
              * account, which is nobody's employment.
              */
             'employee' => $employee,
+            // Empty when the account may be deleted (made by mistake, unused).
+            'deleteBlockers' => app(AccountRemoval::class)->blockers($user),
             'departments' => MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->active()->get(),
             'designations' => MasterDataItem::inList(MasterDataItem::DESIGNATIONS)->active()->get(),
             'managers' => $employee === null ? collect() : Employee::query()

@@ -460,6 +460,9 @@ class AuditLog
 
     public const BACKUP_DOWNLOADED = 'admin.backup_downloaded';
 
+    // An account made by mistake and never used, removed (2026-10-27).
+    public const ACCOUNT_DELETED = 'admin.account_deleted';
+
     // Database changes applied from Admin → Updates (2026-10-27).
     public const UPDATE_APPLIED = 'admin.update_applied';
 

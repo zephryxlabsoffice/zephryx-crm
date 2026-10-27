@@ -78,6 +78,10 @@ Route::post('/accounts/{account}/status', [AdminAccountController::class, 'statu
 Route::post('/accounts/{account}/roles', [AdminAccountController::class, 'roles'])
     ->where('account', '[A-Za-z0-9-]{1,32}')
     ->name('accounts.roles');
+// Only an account made by mistake and never used — see AccountRemoval.
+Route::post('/accounts/{account}/delete', [AdminAccountController::class, 'destroy'])
+    ->where('account', '[A-Za-z0-9-]{1,32}')
+    ->name('accounts.delete');
 // Department, designation, reporting line, joining date — a record, not access.
 Route::post('/accounts/{account}/company', [AdminAccountController::class, 'company'])
     ->where('account', '[A-Za-z0-9-]{1,32}')

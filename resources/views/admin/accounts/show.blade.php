@@ -300,6 +300,38 @@
                     </div>
                 </form>
             </section>
+
+            {{-- Only for an account made by mistake and never used. See
+                 App\Support\Admin\AccountRemoval. --}}
+            <section class="rail-card">
+                <div class="rail-hd">
+                    <strong>Delete — made by mistake</strong>
+                </div>
+
+                @if ($deleteBlockers === [])
+                    <form method="POST" action="{{ route('admin.accounts.delete', $account['user_id']) }}">
+                        @csrf
+                        <p class="dash-note">
+                            This account has never been used, so it can be removed completely
+                            and its email freed for the right account. This cannot be undone.
+                        </p>
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="del-confirm">Type <strong>{{ $account['email'] }}</strong> to confirm</label>
+                            <input id="del-confirm" name="confirm_email" type="text" required autocomplete="off" spellcheck="false">
+                            @error('confirm_email') <span class="field-error">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="dash-punch-action">
+                            <button class="btn btn-outline btn-danger" type="submit">Delete this account</button>
+                        </div>
+                    </form>
+                @else
+                    <p class="dash-note">
+                        Not available: this account has been used
+                        ({{ implode(', ', $deleteBlockers) }}). Deactivate it instead —
+                        its history stays.
+                    </p>
+                @endif
+            </section>
         </aside>
     </section>
 @endsection
