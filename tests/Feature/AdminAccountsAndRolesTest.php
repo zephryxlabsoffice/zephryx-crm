@@ -30,7 +30,7 @@ class AdminAccountsAndRolesTest extends TestCase
 
     public function test_the_owner_can_add_the_first_hr_account_and_it_gets_the_invite(): void
     {
-        $this->get('/admin/accounts')->assertOk()->assertSee('Add staff account');
+        $this->get('/admin/accounts')->assertOk()->assertSee('Add account');
         $this->get('/admin/accounts/new')->assertOk()->assertSee('Add and send invite');
 
         $response = $this->post('/admin/accounts', [
@@ -90,6 +90,80 @@ class AdminAccountsAndRolesTest extends TestCase
         ])->assertSessionHasErrors('personal_email');
 
         $this->assertSame(1, User::where('email', 'twice@zephryxlabs.test')->count());
+    }
+
+    /* ── a normal account: roles, and no employment ── */
+
+    public function test_the_owner_can_add_a_normal_account_that_is_not_an_employee(): void
+    {
+        $this->get('/admin/accounts/new?kind=normal')->assertOk()->assertSee('Normal account');
+
+        $this->post('/admin/accounts', [
+            'kind' => 'normal',
+            'name' => 'HR Desk',
+            'account_email' => 'hr@zephryxlabs.test',
+            'roles' => ['hr'],
+        ])->assertRedirect();
+
+        $user = User::where('email', 'hr@zephryxlabs.test')->firstOrFail();
+
+        $this->assertStringStartsWith('ZEPH6', $user->user_id);
+        $this->assertNull($user->staff_kind);
+        $this->assertFalse($user->hasEmployeeBase());
+        $this->assertNull(Employee::where('user_id', $user->id)->first());
+        $this->assertSame(['hr'], $user->roles()->pluck('role_key')->all());
+
+        $rbac = app(Rbac::class);
+        $this->assertTrue($rbac->can($user, 'employees.create'));
+        $this->assertFalse($rbac->can($user, 'attendance.self'));
+
+        Mail::assertSent(AccountInviteMail::class, fn ($mail) => $mail->hasTo('hr@zephryxlabs.test'));
+
+        $this->get('/admin/accounts')->assertOk()->assertSee('HR Desk');
+        $this->get('/admin/accounts/'.$user->user_id)->assertOk()->assertSee('HR Desk');
+    }
+
+    public function test_a_normal_account_needs_a_role(): void
+    {
+        $this->post('/admin/accounts', [
+            'kind' => 'normal',
+            'name' => 'Nothing',
+            'account_email' => 'nothing@zephryxlabs.test',
+        ])->assertSessionHasErrors('roles');
+    }
+
+    public function test_a_normal_hr_account_can_open_every_page_in_its_menu(): void
+    {
+        $this->post('/admin/accounts', [
+            'kind' => 'normal',
+            'name' => 'HR Desk',
+            'account_email' => 'hr@zephryxlabs.test',
+            'roles' => ['hr'],
+        ]);
+
+        $user = User::where('email', 'hr@zephryxlabs.test')->firstOrFail();
+        $this->actingAs($user);
+
+        $rbac = app(Rbac::class);
+        $opened = 0;
+
+        foreach ((array) config('navigation') as $item) {
+            if (! isset($item['route']) || ! \Illuminate\Support\Facades\Route::has($item['route'])) {
+                continue;
+            }
+
+            if (isset($item['permission']) && ! $rbac->can($user, $item['permission'])) {
+                continue;
+            }
+
+            $status = $this->get(route($item['route']))->getStatusCode();
+
+            $this->assertLessThan(500, $status, $item['route'].' errored for a normal account');
+            $this->assertNotSame(403, $status, $item['route'].' is in the menu but refused');
+            $opened++;
+        }
+
+        $this->assertGreaterThan(5, $opened);
     }
 
     /* ── a role at the same level as another ── */

@@ -103,10 +103,11 @@ class AccountController extends Controller
      * department, documents and salary afterwards in Employees.
      * ─────────────────────────────────────────────────────────────────────────
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
         return response()->view('admin.accounts.create', [
             'activeNav' => 'accounts',
+            'kind' => old('kind', $request->query('kind')) === 'normal' ? 'normal' : 'employee',
             'roles' => AccessDirectory::roles()->keyBy('key'),
             'types' => [
                 Employee::FULL_TIME => 'Full-time',
@@ -121,17 +122,34 @@ class AccountController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        /*
+         * Two kinds (2026-10-27). An EMPLOYEE is a person with attendance,
+         * leave and payslips. A NORMAL account — hr@, admin@ — holds roles and
+         * nothing else: no employment record, so no attendance or payslip.
+         * Only this panel creates normal accounts; HR and CEO add employees.
+         */
+        $normal = $request->input('kind') === 'normal';
+
         $data = $request->validate([
+            'kind' => ['nullable', Rule::in(['employee', 'normal'])],
             'name' => ['required', 'string', 'max:120'],
-            // Personal required, work optional — see App\Support\StaffEmails.
-            'personal_email' => ['required', 'email', 'max:190'],
+            // Employee: personal required, work optional — see StaffEmails.
+            'personal_email' => [$normal ? 'nullable' : 'required', 'email', 'max:190'],
             'work_email' => ['nullable', 'email', 'max:190'],
-            'phone' => ['required', 'string', 'max:32'],
-            'employment_type' => ['required', Rule::in(Employee::TYPES)],
-            'joined_on' => ['required', 'date', 'before_or_equal:today'],
-            'roles' => ['nullable', 'array'],
+            'phone' => [$normal ? 'nullable' : 'required', 'string', 'max:32'],
+            'employment_type' => [$normal ? 'nullable' : 'required', Rule::in(Employee::TYPES)],
+            'joined_on' => [$normal ? 'nullable' : 'required', 'date', 'before_or_equal:today'],
+            // Normal account: one address, the one it signs in with.
+            'account_email' => [$normal ? 'required' : 'nullable', 'email', 'max:190'],
+            'roles' => [$normal ? 'required' : 'nullable', 'array'],
             'roles.*' => [Rule::exists('roles', 'role_key')],
+        ], [
+            'roles.required' => 'A normal account can do nothing without a role. Tick at least one.',
         ]);
+
+        if ($normal) {
+            return $this->storeNormal($request, $data);
+        }
 
         $taken = collect(['personal_email', 'work_email'])
             ->filter(fn (string $f) => trim((string) ($data[$f] ?? '')) !== ''
@@ -204,6 +222,77 @@ class AccountController extends Controller
             ->route('admin.accounts.show', ['account' => $user->user_id])
             ->with('status', $user->name.' was added as '.$user->user_id.' and emailed a link to set their password. '
                 .'HR can now complete their department, documents and salary in Employees.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * A normal account: roles and a sign-in, and no employment.
+     *
+     * `staff_kind` stays null, which is what keeps the Employee base — own
+     * attendance, leave, payslips — off it (User::hasEmployeeBase). The
+     * Employee role is never added, for the same reason.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function storeNormal(Request $request, array $data): RedirectResponse
+    {
+        $email = trim((string) $data['account_email']);
+
+        if (StaffEmails::takenByAnother($email, null)) {
+            throw ValidationException::withMessages(['account_email' => 'This email is already used by another account.']);
+        }
+
+        $roleKeys = collect($data['roles'])->reject(fn ($k) => $k === 'employee')->unique()->values();
+
+        if ($roleKeys->isEmpty()) {
+            throw ValidationException::withMessages(['roles' => 'A normal account can do nothing without a role. Tick at least one.']);
+        }
+
+        $user = DB::transaction(function () use ($data, $email, $roleKeys, $request) {
+            $user = User::create([
+                'user_id' => StaffId::forNormalAccount(),
+                'name' => $data['name'],
+                'email' => $email,
+                'password' => Str::random(64),
+                'account_type' => Realm::STAFF,
+                'staff_kind' => null,
+                'status' => 'active',
+            ]);
+
+            $user->roles()->sync(
+                Role::whereIn('role_key', $roleKeys)->pluck('id')
+                    ->mapWithKeys(fn (int $id) => [$id => [
+                        'assigned_by' => $request->user()?->id,
+                        'assigned_at' => now(),
+                    ]])->all()
+            );
+
+            return $user;
+        });
+
+        $token = $this->resets->issue($user, $request);
+
+        Mail::to($user->email)->send(new AccountInviteMail(
+            url: route('password.reset.form', ['token' => $token]),
+            name: $user->name,
+            staffId: $user->user_id,
+            addedBy: $request->user()->name,
+        ));
+
+        $this->audit->record(
+            action: AuditLog::ACCOUNT_CHANGED,
+            actor: $request->user(),
+            entityType: 'user',
+            entityId: $user->user_id,
+            before: 'no account',
+            after: 'normal account created from the Admin Panel · '.$user->email.' · roles '.$roleKeys->join(', '),
+            request: $request,
+        );
+
+        return redirect()
+            ->route('admin.accounts.show', ['account' => $user->user_id])
+            ->with('status', $user->name.' was added as '.$user->user_id.' (normal account, not an employee) '
+                .'and emailed a link to set the password.')
             ->with('status_tone', 'success');
     }
 

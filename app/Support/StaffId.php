@@ -56,6 +56,8 @@ class StaffId
 
     public const CLIENT_DIGIT = 5;
 
+    public const NORMAL_DIGIT = 6;
+
     /**
      * The next identifier for somebody joining on this kind of engagement.
      */
@@ -81,6 +83,15 @@ class StaffId
     public static function forMentor(): string
     {
         return self::next(self::PREFIX.self::MENTOR_DIGIT);
+    }
+
+    /**
+     * A normal account — hr@, admin@ — that holds roles but is nobody's
+     * employment (2026-10-27): `ZEPH6NNN`.
+     */
+    public static function forNormalAccount(): string
+    {
+        return self::next(self::PREFIX.self::NORMAL_DIGIT);
     }
 
     public static function forClient(): string

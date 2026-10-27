@@ -15,7 +15,7 @@
         </div>
 
         <div class="hd-actions">
-            <a class="btn btn-primary" href="{{ route('admin.accounts.create') }}">Add staff account</a>
+            <a class="btn btn-primary" href="{{ route('admin.accounts.create') }}">Add account</a>
         </div>
     </div>
 
