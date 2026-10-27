@@ -66,6 +66,19 @@ function zipDir(string $dir, string $zipPath): void
     foreach ($it as $f) {
         $rel = str_replace('\\', '/', substr($f->getPathname(), $base));
         $f->isDir() ? $zip->addEmptyDir($rel) : $zip->addFile($f->getPathname(), $rel);
+
+        /*
+         * Unix permissions stamped into each entry. A zip made on Windows has
+         * none, and cPanel's Extract then wrote every file as 666 — world
+         * writable, which the host's PHP refuses to run (first deploy,
+         * 2026-10-14, fixed by hand). With these, Extract writes 644 files and
+         * 755 folders, so a re-upload needs no permission fixing.
+         */
+        $zip->setExternalAttributesName(
+            $f->isDir() ? $rel.'/' : $rel,
+            ZipArchive::OPSYS_UNIX,
+            ($f->isDir() ? 040755 : 0100644) << 16,
+        );
     }
     $zip->close();
 }
