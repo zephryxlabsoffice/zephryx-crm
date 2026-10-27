@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * Company configuration.
@@ -219,6 +220,18 @@ class SettingsController extends Controller
     {
         if ($setting['type'] === 'days') {
             return array_values(array_map('intval', (array) ($value ?? [])));
+        }
+
+        // Blank clears the date. Anything else has to be a real day — a value
+        // the policy cannot parse would quietly mean "always tracked".
+        if ($setting['type'] === 'date') {
+            if ($value === null || $value === '') {
+                return null;
+            }
+
+            Validator::make(['value' => $value], ['value' => ['date_format:Y-m-d']])->validate();
+
+            return (string) $value;
         }
 
         return $value;

@@ -823,6 +823,17 @@ Route::post('/notifications/read', [NotificationController::class, 'read'])->nam
 Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
 // Before /attendance/{record}, or "mine" is read as a record reference.
 Route::get('/attendance/mine', [AttendanceController::class, 'mine'])->name('attendance.mine');
+/*
+ * Filling in a missed PAST day (decided 2026-10-27). The same permission as
+ * rejecting — it is the other half of correcting the record — and the
+ * controller refuses your own day, today, and any day that already has one.
+ */
+Route::get('/attendance/add', [AttendanceController::class, 'createEntry'])
+    ->middleware('permission:attendance.reject')
+    ->name('attendance.add');
+Route::post('/attendance/add', [AttendanceController::class, 'storeEntry'])
+    ->middleware('permission:attendance.reject')
+    ->name('attendance.add.store');
 Route::get('/attendance/{record}', [AttendanceController::class, 'show'])
     // The staff id half is no longer pinned to EMP000: test and future accounts
     // carry other shapes, and a route pattern that quietly 404s a real record is

@@ -130,6 +130,11 @@
                             --}}
                             @if ($url)
                                 <a class="btn btn-outline btn-sm" href="{{ $url }}">Open</a>
+                            @elseif (($mayEnter ?? false) && $row['state'] === P::ABSENT)
+                                {{-- A past absence HR can fill in, prefilled with
+                                     who and when; the form asks for the rest. --}}
+                                <a class="btn btn-outline btn-sm"
+                                   href="{{ route('attendance.add', ['employee' => $row['employee_record']['employee_id'], 'date' => $row['date']]) }}">Add</a>
                             @else
                                 <span class="att-nothing" aria-hidden="true">—</span>
                             @endif

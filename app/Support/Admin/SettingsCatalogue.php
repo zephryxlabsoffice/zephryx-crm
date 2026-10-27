@@ -142,6 +142,13 @@ class SettingsCatalogue
                 retroactive: true,
                 affects: 'Adding a day turns every past one into a week-off; removing one turns '
                     .'every past one into a working day people may not have attended.'),
+
+            self::setting('attendance.starts_on', 'Attendance starts on', 'date', AttendancePolicy::startsOn()?->toDateString(),
+                'Days before this with no check-in show as "Not tracked" instead of Absent. '
+                .'Blank means attendance has always been tracked.',
+                retroactive: true,
+                affects: 'Absences before the new date become "Not tracked"; moving it earlier turns '
+                    .'those days back into absences.'),
         ];
     }
 

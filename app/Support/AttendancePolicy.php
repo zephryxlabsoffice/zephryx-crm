@@ -90,6 +90,38 @@ class AttendancePolicy
     }
 
     /**
+     * The first day attendance is tracked, or null when it always has been.
+     *
+     * A blank or unparseable value is null rather than an exception: this is
+     * read for every cell of every calendar, and a typo in a setting must not
+     * take the attendance pages down with it.
+     */
+    public static function startsOn(): ?Carbon
+    {
+        $value = config('attendance.starts_on');
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse((string) $value)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * Whether a date falls before attendance was being tracked.
+     */
+    public static function beforeTracking(Carbon|string $date): bool
+    {
+        $start = self::startsOn();
+
+        return $start !== null && Carbon::parse($date)->startOfDay()->lessThan($start);
+    }
+
+    /**
      * The days the office is shut, from the holiday announcements.
      *
      * NOT from this module's configuration. HR announces a holiday on the board
@@ -144,6 +176,14 @@ class AttendancePolicy
     {
         $cursor = $month->copy()->startOfMonth();
         $end = $month->copy()->endOfMonth();
+
+        // Days before tracking began were not days anybody could be expected
+        // to check in on, so they are not in the denominator either.
+        $start = self::startsOn();
+
+        if ($start !== null && $cursor->lessThan($start)) {
+            $cursor = $start->copy();
+        }
 
         $upTo ??= Carbon::today();
 
@@ -282,8 +322,9 @@ class AttendancePolicy
      *     holiday branches below, because rostering exists precisely to
      *     override them for one person on one date.
      *  4. Approved leave beats absence. The company granted the day.
-     *  5. No check-in on a working day is an absence.
-     *  6. A day shorter than the threshold is a half day. Above it, present.
+     *  5. A day before attendance tracking began is not tracked, not absent.
+     *  6. No check-in on a working day is an absence.
+     *  7. A day shorter than the threshold is a half day. Above it, present.
      *     That is the whole judgement.
      */
     protected static function state(
@@ -314,6 +355,12 @@ class AttendancePolicy
 
             if ($onLeave) {
                 return AttendancePresenter::LEAVE;
+            }
+
+            // Before tracking began there was nothing to check in to. Only an
+            // absence is hidden this way — a record made earlier still counts.
+            if (self::beforeTracking($day)) {
+                return AttendancePresenter::NOT_TRACKED;
             }
 
             // A working day still under way is not yet an absence — marking

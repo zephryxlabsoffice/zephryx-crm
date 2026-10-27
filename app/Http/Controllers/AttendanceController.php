@@ -125,6 +125,7 @@ class AttendanceController extends Controller
             'holidayWorked' => $roll->whereNotNull('id')->count(),
             'holidayAnnouncement' => Holidays::announcementOn($date),
             'mayRoster' => $this->rbac->can($request->user(), 'attendance.roster'),
+            'mayEnter' => $this->rbac->can($request->user(), 'attendance.reject'),
         ] + $filters);
     }
 
@@ -620,6 +621,120 @@ class AttendanceController extends Controller
             ->with('status_tone', 'success');
     }
 
+    /* ══════════════════════════════════════════════════════════════════════
+       A MISSED PAST DAY, ENTERED BY HR
+       ══════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * GET /attendance/add — the form for filling in a day somebody missed.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * WHY THIS EXISTS, AND WHAT IT STILL REFUSES (decided 2026-10-27)
+     *
+     * Somebody who worked a day and could not check in — the system was down,
+     * they were on site, it was before go-live — would otherwise carry an
+     * absence nobody can correct. HR (`attendance.reject`) can now write that
+     * day in, with times and a reason.
+     *
+     * It only CREATES a day that has no record. It never edits one: a recorded
+     * time is still never changed, and a day left open is still not closed by
+     * typing a check-out in. Nobody enters their own day, today or the future —
+     * today belongs to the clock.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function createEntry(Request $request): Response
+    {
+        $actor = $this->employeeFor($request);
+
+        return response()->view('attendance.add', [
+            'activeNav' => 'attendance',
+            'employeeChoices' => Employee::query()
+                ->with('user')
+                ->active()
+                ->get()
+                ->filter(fn (Employee $e) => $e->attendsWork() && $e->id !== $actor?->id)
+                ->sortBy(fn (Employee $e) => $e->user?->name)
+                ->values(),
+            'chosenEmployee' => (string) $request->query('employee', ''),
+            'chosenDate' => (string) $request->query('date', ''),
+            'latest' => Carbon::yesterday()->toDateString(),
+            'policy' => [
+                'start' => AttendancePolicy::workStart(),
+                'end' => AttendancePolicy::workEnd(),
+            ],
+        ]);
+    }
+
+    /**
+     * POST /attendance/add
+     */
+    public function storeEntry(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'employee_id' => ['required', 'integer', 'exists:employees,id'],
+            'date' => ['required', 'date_format:Y-m-d', 'before:today'],
+            'check_in' => ['required', 'date_format:H:i'],
+            'check_out' => ['required', 'date_format:H:i', 'after:check_in'],
+            'reason' => ['required', 'string', 'min:10', 'max:1000'],
+        ], [
+            'date.before' => 'Only a past day can be entered. Today is recorded by checking in.',
+            'check_out.after' => 'The check-out has to be after the check-in.',
+        ]);
+
+        $employee = Employee::with('user')->findOrFail($data['employee_id']);
+        $actor = $this->employeeFor($request);
+
+        if ($actor !== null && $employee->id === $actor->id) {
+            // The same rule as rejecting: nobody corrects their own record.
+            throw ValidationException::withMessages([
+                'employee_id' => 'You cannot enter your own attendance.',
+            ]);
+        }
+
+        if (! $employee->attendsWork()) {
+            throw ValidationException::withMessages([
+                'employee_id' => 'This person does not record attendance.',
+            ]);
+        }
+
+        $existing = AttendanceRecord::where('employee_id', $employee->id)
+            ->whereDate('date', $data['date'])
+            ->exists();
+
+        if ($existing) {
+            throw ValidationException::withMessages([
+                'date' => 'A record already exists for that day. Open it from the roll instead — '
+                    .'a recorded time is never overwritten.',
+            ]);
+        }
+
+        $record = AttendanceRecord::create([
+            'employee_id' => $employee->id,
+            'date' => $data['date'],
+            'check_in' => $data['check_in'],
+            'check_out' => $data['check_out'],
+        ]);
+
+        $reference = $record->fresh('employee.user')->reference();
+
+        $this->audit->record(
+            action: AuditLog::ATTENDANCE_ENTERED,
+            actor: $request->user(),
+            entityType: 'attendance',
+            entityId: $reference,
+            after: 'Entered by HR, '.$data['check_in'].'–'.$data['check_out'].': '.$data['reason'],
+            request: $request,
+        );
+
+        $earned = $this->earnCompOffIfDue($request, $employee, $record->fresh());
+
+        return redirect()
+            ->route('attendance.show', ['record' => $reference])
+            ->with('status', 'Day entered for '.$employee->user?->name.'.'
+                .($earned ? ' A rostered day, worked in full — one comp-off added.' : ''))
+            ->with('status_tone', 'success');
+    }
+
     /**
      * The signed-in person's employment record.
      */
@@ -694,6 +809,10 @@ class AttendanceController extends Controller
                 && ! $own
                 && $found['rejected_at'] !== null
                 && ! $found['auto_rejected'],
+            // A day HR typed in looks like any other row; the log is what says
+            // so, and the page has to say it too.
+            'entered' => $this->audit->entriesFor('attendance', $record)
+                ->firstWhere('action', AuditLog::ATTENDANCE_ENTERED),
             'policy' => [
                 'start' => AttendancePolicy::workStart(),
                 'end' => AttendancePolicy::workEnd(),

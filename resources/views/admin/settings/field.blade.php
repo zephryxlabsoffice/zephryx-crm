@@ -43,6 +43,11 @@
         <input id="{{ $id }}" name="value" type="time" value="{{ $setting['value'] }}">
         @break
 
+    @case('date')
+        <input id="{{ $id }}" name="value" type="date" value="{{ $setting['value'] }}"
+               max="{{ \Illuminate\Support\Carbon::today()->toDateString() }}">
+        @break
+
     @case('hours')
         <input id="{{ $id }}" name="value" type="number" step="0.5" min="0" max="24" value="{{ $setting['value'] }}">
         @break

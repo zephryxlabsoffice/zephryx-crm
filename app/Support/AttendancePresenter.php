@@ -25,6 +25,7 @@ class AttendancePresenter
     public const HOLIDAY = 'holiday';
     public const NOT_MARKED = 'not_marked';
     public const REJECTED = 'rejected';
+    public const NOT_TRACKED = 'not_tracked';
 
     /**
      * ─────────────────────────────────────────────────────────────────────────
@@ -60,6 +61,7 @@ class AttendancePresenter
         // reason, or it was left open past the auto-reject window. The pages
         // tell those apart; the counts do not need to.
         self::REJECTED => ['pill-red', 'Rejected', 'att-dot-rejected', 'Recorded, then rejected — this day does not count'],
+        self::NOT_TRACKED => ['pill-gray', 'Not tracked', 'att-dot-off', 'Before attendance tracking started'],
     ];
 
     /**

@@ -214,6 +214,13 @@ class AuditLog
     public const ATTENDANCE_RESTORED = 'attendance.restored';
 
     /*
+     * A past day HR filled in for somebody who could not check in themselves
+     * (decided 2026-10-27). The record row looks like any other, so this entry
+     * is the only place that says it was typed in, by whom, and why.
+     */
+    public const ATTENDANCE_ENTERED = 'attendance.entered';
+
+    /*
      * Sunday/holiday rostering and comp-off (review round, 2026-09-11).
      * Rostering has no approval step, so this is the only trace of who put
      * somebody on a date — the roster row itself carries `rostered_by`, but

@@ -70,6 +70,15 @@
         ])
     @endif
 
+    @if ($entered)
+        @include('partials.notice', [
+            'tone' => 'info',
+            'title' => 'Entered by '.$entered->actor_label.' on '.P::date($entered->at),
+            'message' => 'Nobody checked in on this day; the times were filled in afterwards. '
+                .\Illuminate\Support\Str::after((string) $entered->after_summary, ': '),
+        ])
+    @endif
+
     <section class="att-detail-grid">
         <div class="att-main">
             @include('attendance.partials.record-card')

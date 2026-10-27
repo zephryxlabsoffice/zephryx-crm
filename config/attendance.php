@@ -76,6 +76,17 @@ return [
     'week_off' => [0],
 
     /*
+    | The first day attendance is tracked at all, as Y-m-d, or null for "always".
+    |
+    | Without it, every working day before the system went live reads as an
+    | absence — nobody could check in to a CRM that did not exist yet. Days
+    | before this date with no record show as "Not tracked" instead. Like a
+    | holiday, it can only ever hide an ABSENCE: a record made before it still
+    | counts exactly as recorded.
+    */
+    'starts_on' => null,
+
+    /*
     | ─────────────────────────────────────────────────────────────────────────
     | WHAT IS DELIBERATELY NOT HERE
     |
