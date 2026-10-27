@@ -35,7 +35,8 @@ class AdminAccountsAndRolesTest extends TestCase
 
         $response = $this->post('/admin/accounts', [
             'name' => 'Priya Nair',
-            'email' => 'priya@zephryxlabs.test',
+            'personal_email' => 'priya@zephryxlabs.test',
+            'phone' => '9800000001',
             'employment_type' => Employee::FULL_TIME,
             'joined_on' => now()->subMonth()->toDateString(),
             'roles' => ['hr'],
@@ -59,7 +60,8 @@ class AdminAccountsAndRolesTest extends TestCase
     {
         $this->post('/admin/accounts', [
             'name' => 'No Roles Ticked',
-            'email' => 'plain@zephryxlabs.test',
+            'personal_email' => 'plain@zephryxlabs.test',
+            'phone' => '9800000002',
             'employment_type' => Employee::INTERN,
             'joined_on' => now()->toDateString(),
         ])->assertRedirect();
@@ -73,17 +75,19 @@ class AdminAccountsAndRolesTest extends TestCase
     {
         $this->post('/admin/accounts', [
             'name' => 'Twice',
-            'email' => 'twice@zephryxlabs.test',
+            'personal_email' => 'twice@zephryxlabs.test',
+            'phone' => '9800000003',
             'employment_type' => Employee::FULL_TIME,
             'joined_on' => now()->toDateString(),
         ]);
 
         $this->post('/admin/accounts', [
             'name' => 'Twice Again',
-            'email' => 'twice@zephryxlabs.test',
+            'personal_email' => 'twice@zephryxlabs.test',
+            'phone' => '9800000003',
             'employment_type' => Employee::FULL_TIME,
             'joined_on' => now()->toDateString(),
-        ])->assertSessionHasErrors('email');
+        ])->assertSessionHasErrors('personal_email');
 
         $this->assertSame(1, User::where('email', 'twice@zephryxlabs.test')->count());
     }

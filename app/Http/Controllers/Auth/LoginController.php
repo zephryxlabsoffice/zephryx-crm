@@ -11,6 +11,7 @@ use App\Support\Auth\OneTimeCode;
 use App\Support\Auth\RememberMe;
 use App\Support\Auth\TrustedDevices;
 use App\Support\Realm;
+use App\Support\StaffEmails;
 use App\Support\SupportContact;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -296,8 +297,10 @@ class LoginController extends Controller
      */
     protected function lookUp(string $identifier): ?User
     {
+        // An email is the sign-in address OR a staff member's personal email
+        // (both sign in since 2026-10-27 — see App\Support\StaffEmails).
         return str_contains($identifier, '@')
-            ? User::where('email', $identifier)->first()
+            ? StaffEmails::findUser($identifier)
             : User::where('user_id', $identifier)->first();
     }
 

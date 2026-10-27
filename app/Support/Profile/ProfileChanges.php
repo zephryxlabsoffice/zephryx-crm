@@ -8,6 +8,7 @@ use App\Models\ProfileChangeRequest;
 use App\Models\User;
 use App\Support\Documents\DocumentStore;
 use App\Support\ProfilePolicy;
+use App\Support\StaffEmails;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -204,6 +205,22 @@ class ProfileChanges
             if ($request->photo_path !== null) {
                 $fill['photo_path'] = $request->photo_path;
                 $applied[] = ProfilePolicy::labelOf('photo');
+            }
+
+            /*
+             * Somebody with no work email signs in with their personal one
+             * (StaffEmails). A new personal email therefore moves their
+             * sign-in with it — unless another account already uses it.
+             */
+            if (isset($fill['personal_email'])) {
+                $user = $employee->user;
+                $new = trim((string) $fill['personal_email']);
+
+                if ($user !== null && $new !== ''
+                    && StaffEmails::workEmailOf($user, $profile->personal_email) === null
+                    && ! StaffEmails::takenByAnother($new, $user->id)) {
+                    $user->forceFill(['email' => $new])->save();
+                }
             }
 
             if ($fill !== []) {

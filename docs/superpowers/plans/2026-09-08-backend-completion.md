@@ -172,6 +172,10 @@ follow-up answer. Nothing here is built yet.
   login uses whichever email the client gives us; who at their end uses it is
   their business. A client is one entity.
   (Employees differ: work email is the sign-in, personal email is record only.)
+  **Changed 2026-10-27 (owner):** personal email REQUIRED, work email OPTIONAL.
+  Until a work email exists the personal email is the sign-in and gets the
+  codes and invites; once added, BOTH sign in and mail goes to the work email.
+  See AppSupportStaffEmails.
 - **No delete**, only Inactive. **One account manager.**
 - **Signed date only.** Agreements and other documents are kept as hardcopy.
 

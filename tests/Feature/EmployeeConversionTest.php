@@ -365,7 +365,7 @@ class EmployeeConversionTest extends TestCase
     {
         $this->post('/employees', $overrides + [
             'name' => 'New Intern',
-            'email' => 'new.intern@example.test',
+            'work_email' => 'new.intern@example.test',
             'employment_type' => Employee::INTERN,
             'department_id' => MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->value('id'),
             'designation_id' => MasterDataItem::inList(MasterDataItem::DESIGNATIONS)->value('id'),

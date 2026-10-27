@@ -55,15 +55,33 @@
                             @enderror
                         </div>
 
+                        {{-- Two addresses (owner, 2026-10-27): personal required,
+                             work optional. See App\Support\StaffEmails. --}}
                         <div class="form-field">
-                            <label class="form-field-lbl" for="emp-email">Email</label>
-                            <input id="emp-email" name="email" type="email" required
+                            <label class="form-field-lbl" for="emp-personal-email">
+                                Personal email @if ($editing)<span class="an-optional">(blank keeps what is on file)</span>@endif
+                            </label>
+                            <input id="emp-personal-email" name="personal_email" type="email" @if (! $editing) required @endif
                                    autocapitalize="none" spellcheck="false"
-                                   value="{{ old('email', $user?->email) }}"
-                                   @if ($errors->has('email')) aria-invalid="true" aria-describedby="emp-email-error" @endif>
-                            <span class="pay-hint">This is what they sign in with, so it has to be theirs alone.</span>
-                            @error('email')
-                                <span class="field-error" id="emp-email-error">{{ $message }}</span>
+                                   value="{{ old('personal_email', $addresses['personal_email'] ?? '') }}"
+                                   @if ($errors->has('personal_email')) aria-invalid="true" aria-describedby="emp-personal-email-error" @endif>
+                            <span class="pay-hint">They sign in with this until they have a work email.</span>
+                            @error('personal_email')
+                                <span class="field-error" id="emp-personal-email-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-work-email">
+                                Work email <span class="an-optional">(optional)</span>
+                            </label>
+                            <input id="emp-work-email" name="work_email" type="email"
+                                   autocapitalize="none" spellcheck="false"
+                                   value="{{ old('work_email', \App\Support\StaffEmails::workEmailOf($user, $employee?->profile?->personal_email)) }}"
+                                   @if ($errors->has('work_email')) aria-invalid="true" aria-describedby="emp-work-email-error" @endif>
+                            <span class="pay-hint">Once added, both emails sign in, and sign-in codes go here.</span>
+                            @error('work_email')
+                                <span class="field-error" id="emp-work-email-error">{{ $message }}</span>
                             @enderror
                         </div>
 
@@ -254,27 +272,6 @@
                                    @if ($errors->has('phone')) aria-invalid="true" aria-describedby="emp-phone-error" @endif>
                             @error('phone')
                                 <span class="field-error" id="emp-phone-error">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        <div class="form-field">
-                            <label class="form-field-lbl" for="emp-personal-email">
-                                Personal email <span class="an-optional">(optional)</span>
-                            </label>
-                            <input id="emp-personal-email" name="personal_email" type="email"
-                                   autocapitalize="none" spellcheck="false"
-                                   value="{{ old('personal_email', $addresses['personal_email'] ?? '') }}"
-                                   @if ($errors->has('personal_email')) aria-invalid="true" aria-describedby="emp-personal-email-error" @endif>
-                            {{-- Says what it is NOT, because the obvious reading
-                                 of a second email box is a second way to sign
-                                 in. --}}
-                            <span class="pay-hint">
-                                A record only — it signs in to nothing. It is how we reach them
-                                after they leave, or when the work account is the thing that
-                                is broken.
-                            </span>
-                            @error('personal_email')
-                                <span class="field-error" id="emp-personal-email-error">{{ $message }}</span>
                             @enderror
                         </div>
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Mail\AccountInviteMail;
 use App\Mail\PasswordResetMail;
 use App\Models\Employee;
+use App\Models\EmployeeProfile;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Admin\AccessDirectory;
@@ -15,6 +16,7 @@ use App\Support\Auth\RememberMe;
 use App\Support\Auth\TrustedDevices;
 use App\Support\Rbac\Rbac;
 use App\Support\Realm;
+use App\Support\StaffEmails;
 use App\Support\StaffId;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,6 +27,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Login accounts and the roles they hold.
@@ -120,12 +123,25 @@ class AccountController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'email', 'max:190', Rule::unique('users', 'email')],
+            // Personal required, work optional — see App\Support\StaffEmails.
+            'personal_email' => ['required', 'email', 'max:190'],
+            'work_email' => ['nullable', 'email', 'max:190'],
+            'phone' => ['required', 'string', 'max:32'],
             'employment_type' => ['required', Rule::in(Employee::TYPES)],
             'joined_on' => ['required', 'date', 'before_or_equal:today'],
             'roles' => ['nullable', 'array'],
             'roles.*' => [Rule::exists('roles', 'role_key')],
         ]);
+
+        $taken = collect(['personal_email', 'work_email'])
+            ->filter(fn (string $f) => trim((string) ($data[$f] ?? '')) !== ''
+                && StaffEmails::takenByAnother((string) $data[$f], null))
+            ->mapWithKeys(fn (string $f) => [$f => 'This email is already used by another account.'])
+            ->all();
+
+        if ($taken !== []) {
+            throw ValidationException::withMessages($taken);
+        }
 
         // Everybody on staff is at least an Employee; the form cannot leave it off.
         $roleKeys = collect($data['roles'] ?? [])->push('employee')->unique()->values();
@@ -134,7 +150,7 @@ class AccountController extends Controller
             $user = User::create([
                 'user_id' => StaffId::forEmployee($data['employment_type']),
                 'name' => $data['name'],
-                'email' => $data['email'],
+                'email' => StaffEmails::mailAddress($data['personal_email'], $data['work_email'] ?? null),
                 // Never used — replaced when they follow the invite link.
                 'password' => Str::random(64),
                 'account_type' => Realm::STAFF,
@@ -150,10 +166,16 @@ class AccountController extends Controller
                     ]])->all()
             );
 
-            Employee::create([
+            $employee = Employee::create([
                 'user_id' => $user->id,
                 'employment_type' => $data['employment_type'],
                 'joined_on' => $data['joined_on'],
+            ]);
+
+            EmployeeProfile::create([
+                'employee_id' => $employee->id,
+                'phone' => trim($data['phone']),
+                'personal_email' => trim($data['personal_email']),
             ]);
 
             return $user;

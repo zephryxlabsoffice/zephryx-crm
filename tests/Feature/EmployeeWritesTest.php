@@ -170,7 +170,7 @@ class EmployeeWritesTest extends TestCase
 
         $this->post('/employees/'.$employee->user->user_id, $this->validPayload([
             'name' => $employee->user->name,
-            'email' => $employee->user->email,
+            'work_email' => $employee->user->email,
             'employment_type' => Employee::FULL_TIME,
         ]))->assertRedirect();
 
@@ -184,8 +184,8 @@ class EmployeeWritesTest extends TestCase
         $existing = $this->anEmployee();
         $this->signInAsStaff(['employee', 'hr']);
 
-        $this->post('/employees', $this->validPayload(['email' => $existing->user->email]))
-            ->assertSessionHasErrors('email');
+        $this->post('/employees', $this->validPayload(['work_email' => $existing->user->email]))
+            ->assertSessionHasErrors('work_email');
 
         $this->assertSame(1, Employee::count());
     }
@@ -242,7 +242,7 @@ class EmployeeWritesTest extends TestCase
 
         $this->post('/employees/'.$employee->user->user_id, $this->validPayload([
             'name' => 'Renamed Person',
-            'email' => $employee->user->email,
+            'work_email' => $employee->user->email,
         ]))->assertRedirect();
 
         $entry = DB::table('audit_log')->where('action', AuditLog::EMPLOYEE_UPDATED)->first();
@@ -266,7 +266,7 @@ class EmployeeWritesTest extends TestCase
 
         $payload = $this->validPayload([
             'name' => $employee->user->name,
-            'email' => $employee->user->email,
+            'work_email' => $employee->user->email,
             'announce_milestones' => '0',
         ]);
 
@@ -348,7 +348,8 @@ class EmployeeWritesTest extends TestCase
     {
         return $overrides + [
             'name' => 'New Person',
-            'email' => 'new.person@example.test',
+            'work_email' => 'new.person@example.test',
+            'personal_email' => 'personal.'.uniqid().'@example.test',
             'department_id' => MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->value('id'),
             'designation_id' => MasterDataItem::inList(MasterDataItem::DESIGNATIONS)->value('id'),
             'employment_type' => Employee::FULL_TIME,

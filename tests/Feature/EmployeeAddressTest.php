@@ -241,7 +241,8 @@ class EmployeeAddressTest extends TestCase
     {
         return $overrides + [
             'name' => 'New Person',
-            'email' => 'new.person@example.test',
+            'work_email' => 'new.person@example.test',
+            'personal_email' => 'personal.'.uniqid().'@example.test',
             'employment_type' => Employee::FULL_TIME,
             'department_id' => MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->value('id'),
             'designation_id' => MasterDataItem::inList(MasterDataItem::DESIGNATIONS)->value('id'),
@@ -282,7 +283,8 @@ class EmployeeAddressTest extends TestCase
     {
         return $overrides + [
             'name' => 'New Person',
-            'email' => 'new.person@example.test',
+            'work_email' => 'new.person@example.test',
+            'personal_email' => 'personal.'.uniqid().'@example.test',
             'department_id' => MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->value('id'),
             'designation_id' => MasterDataItem::inList(MasterDataItem::DESIGNATIONS)->value('id'),
             'joined_on' => Carbon::now()->subMonth()->toDateString(),

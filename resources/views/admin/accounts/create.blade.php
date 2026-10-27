@@ -34,10 +34,23 @@
                 </div>
 
                 <div class="form-field">
-                    <label class="form-field-lbl" for="acc-email">Email</label>
-                    <input id="acc-email" name="email" type="email" required maxlength="190" value="{{ old('email') }}">
-                    <span class="prose-quiet">The invite goes here, and it is what they sign in with.</span>
-                    @error('email') <span class="field-error">{{ $message }}</span> @enderror
+                    <label class="form-field-lbl" for="acc-personal">Personal email</label>
+                    <input id="acc-personal" name="personal_email" type="email" required maxlength="190" value="{{ old('personal_email') }}">
+                    <span class="prose-quiet">They sign in with this, and the invite goes here, until they have a work email.</span>
+                    @error('personal_email') <span class="field-error">{{ $message }}</span> @enderror
+                </div>
+
+                <div class="form-field">
+                    <label class="form-field-lbl" for="acc-work">Work email <span class="an-optional">(optional)</span></label>
+                    <input id="acc-work" name="work_email" type="email" maxlength="190" value="{{ old('work_email') }}">
+                    <span class="prose-quiet">If given, both emails sign in, and the invite and sign-in codes go here.</span>
+                    @error('work_email') <span class="field-error">{{ $message }}</span> @enderror
+                </div>
+
+                <div class="form-field">
+                    <label class="form-field-lbl" for="acc-phone">Phone</label>
+                    <input id="acc-phone" name="phone" type="tel" required maxlength="32" value="{{ old('phone') }}">
+                    @error('phone') <span class="field-error">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="form-field">

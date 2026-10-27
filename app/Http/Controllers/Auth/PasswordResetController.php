@@ -10,6 +10,7 @@ use App\Support\Auth\PasswordResets;
 use App\Support\Auth\RememberMe;
 use App\Support\Auth\TrustedDevices;
 use App\Support\Realm;
+use App\Support\StaffEmails;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -80,8 +81,10 @@ class PasswordResetController extends Controller
 
         $identifier = trim($validated['identifier']);
 
+        // The link always goes to users.email (the work email when there is
+        // one), whichever address was typed. See App\Support\StaffEmails.
         $user = str_contains($identifier, '@')
-            ? User::where('email', $identifier)->first()
+            ? StaffEmails::findUser($identifier)
             : User::where('user_id', $identifier)->first();
 
         /*

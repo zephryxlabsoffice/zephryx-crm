@@ -25,6 +25,7 @@ use App\Support\Realm;
 use App\Support\SalaryDirectory;
 use App\Support\SalaryStructure;
 use App\Support\Sensitive;
+use App\Support\StaffEmails;
 use App\Support\StaffId;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -238,7 +239,7 @@ class EmployeeController extends Controller
             $user = User::create([
                 'user_id' => StaffId::forEmployee($data['employment_type']),
                 'name' => $data['name'],
-                'email' => $data['email'],
+                'email' => $this->mailAddress($data, null),
                 // Never used. Overwritten the moment they follow the link, and
                 // long enough that it cannot be guessed in the meantime.
                 'password' => Str::random(64),
@@ -330,7 +331,7 @@ class EmployeeController extends Controller
         DB::transaction(function () use ($record, $data, $request) {
             $record->user->update([
                 'name' => $data['name'],
-                'email' => $data['email'],
+                'email' => $this->mailAddress($data, $record),
             ]);
 
             $this->writeIdentity($record, $data, $request);
@@ -658,10 +659,9 @@ class EmployeeController extends Controller
              * sign-in identifier (§4.1), so a client and an employee sharing one
              * would be two accounts one credential could mean.
              */
-            'email' => [
-                'required', 'email', 'max:190',
-                Rule::unique('users', 'email')->ignore($existing?->user_id),
-            ],
+            // Optional since 2026-10-27; the personal email (addressRules) is
+            // the required one. Uniqueness across both is checked below.
+            'work_email' => ['nullable', 'email', 'max:190'],
 
             // Master data, and it must be a row from the RIGHT list — otherwise
             // a crafted id could set somebody's department to a leave type.
@@ -710,13 +710,48 @@ class EmployeeController extends Controller
             $rules['employment_type'] = ['required', Rule::in(Employee::TYPES)];
         }
 
-        return $request->validate(
+        $data = $request->validate(
             $rules
                 + $this->identityRules($request, $existing)
                 + $this->addressRules($request, $existing)
                 + $this->salaryRules($request, $existing),
             $this->identityMessages($request),
         );
+
+        /*
+         * Either address can sign in, so neither may belong to anybody else —
+         * as their sign-in OR as their personal email. See StaffEmails.
+         */
+        $errors = [];
+
+        foreach (['personal_email', 'work_email'] as $field) {
+            $value = trim((string) ($data[$field] ?? ''));
+
+            if ($value !== '' && StaffEmails::takenByAnother($value, $existing?->user_id)) {
+                $errors[$field] = 'This email is already used by another account.';
+            }
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return $data;
+    }
+
+    /**
+     * The address that goes on users.email — the work email, or the personal
+     * one until there is a work email. On an edit a blank personal email
+     * keeps the one on file (the form's "blank keeps" rule).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function mailAddress(array $data, ?Employee $existing): string
+    {
+        $personal = trim((string) ($data['personal_email'] ?? '')) ?: (string) $existing?->profile?->personal_email;
+
+        return StaffEmails::mailAddress($personal, $data['work_email'] ?? null)
+            ?: (string) $existing?->user?->email;
     }
 
     /**
@@ -906,12 +941,11 @@ class EmployeeController extends Controller
             'phone' => [$creating ? 'required' : 'nullable', 'string', 'max:32'],
 
             /*
-             * The personal address is optional on purpose. It is how somebody
-             * is reached AFTER they leave, which is worth having and is not
-             * worth refusing a hire over — and a required field somebody does
-             * not have is a field that gets filled with the work address.
+             * Required when somebody is added (owner, 2026-10-27, reversing
+             * "optional"): it is their sign-in until they have a work email.
+             * On an edit, blank keeps the one on file. See StaffEmails.
              */
-            'personal_email' => ['nullable', 'string', 'email', 'max:190'],
+            'personal_email' => [$creating ? 'required' : 'nullable', 'string', 'email', 'max:190'],
         ];
     }
 
