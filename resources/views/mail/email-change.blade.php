@@ -1,7 +1,12 @@
-{{-- Inline styles: see the note at the head of mail/one-time-code.blade.php. --}}
-<div style="font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0F2A1A; line-height: 1.6;">
+{{-- Inline styles and tables: see mail/layout.blade.php. --}}
+@extends('mail.layout')
 
-    <p style="margin: 0 0 20px;">Hello {{ $name }},</p>
+@section('preheader', 'Confirm the change to your sign-in email address.')
+
+@section('heading', 'Confirm your new email address')
+
+@section('content')
+    <p style="margin: 0 0 16px;">Hello {{ $name }},</p>
 
     @if ($half === 'old')
         {{--
@@ -11,34 +16,37 @@
         --}}
         <p style="margin: 0 0 20px;">
             Somebody asked to change the address you sign in to
-            {{ config('zephryx.brand.name') }} {{ config('zephryx.brand.suffix') }} with,
-            from <strong>{{ $fromEmail }}</strong> to <strong>{{ $toEmail }}</strong>.
-        </p>
-
-        <p style="margin: 0 0 20px;">
-            If that was you, confirm it below. The new address has to confirm as well,
-            and nothing changes until both have.
+            {{ config('zephryx.brand.name') }} {{ config('zephryx.brand.suffix') }} with.
         </p>
     @else
         <p style="margin: 0 0 20px;">
-            This address has been given as the new sign-in address for the
-            {{ config('zephryx.brand.name') }} {{ config('zephryx.brand.suffix') }} account
-            that currently signs in as <strong>{{ $fromEmail }}</strong>.
-        </p>
-
-        <p style="margin: 0 0 20px;">
-            Confirm below. The old address has to confirm as well, and nothing changes
-            until both have.
+            This address has been given as the new sign-in address for a
+            {{ config('zephryx.brand.name') }} {{ config('zephryx.brand.suffix') }} account.
         </p>
     @endif
 
-    <p style="margin: 0 0 24px;">
-        <a href="{{ $url }}"
-           style="display: inline-block; background: #0E7A36; color: #ffffff; text-decoration: none;
-                  padding: 13px 26px; border-radius: 10px; font-weight: 700;">Confirm this change</a>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 20px;">
+        <tr>
+            <td style="padding: 14px 18px; background-color: #F2F7F4; border: 1px solid #D6E6DC; border-radius: 10px; font-size: 14px; line-height: 1.8;">
+                <span style="color: #5C6B65;">From</span>&nbsp; <strong>{{ $fromEmail }}</strong><br>
+                <span style="color: #5C6B65;">To</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>{{ $toEmail }}</strong>
+            </td>
+        </tr>
+    </table>
+
+    <p style="margin: 0 0 20px;">
+        @if ($half === 'old')
+            If that was you, confirm it below. The new address has to confirm as well,
+            and nothing changes until both have.
+        @else
+            Confirm below. The old address has to confirm as well, and nothing changes
+            until both have.
+        @endif
     </p>
 
-    <p style="margin: 0 0 20px; color: #5C6B65;">
+    @include('mail.partials.button', ['url' => $url, 'label' => 'Confirm this change'])
+
+    <p style="margin: 0 0 16px; color: #5C6B65;">
         The link expires in {{ $hours }} hours and works once.
     </p>
 
@@ -48,22 +56,25 @@
             not "click here to cancel": a cancel link in an email is another
             thing an attacker can send. Doing nothing genuinely is enough.
         --}}
-        <p style="margin: 0 0 20px; color: #5C6B65;">
-            If you did not ask for this, do nothing — the change cannot go through
-            without this link, and it expires on its own. Then change your password,
-            and tell the owner.
-            @if ($ip)
-                The request came from {{ $ip }}.
-            @endif
-        </p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <td style="padding: 14px 16px; background-color: #FFF8EC; border-left: 3px solid #D98E04; border-radius: 6px;
+                           font-size: 13px; line-height: 1.6; color: #5A4310;">
+                    <strong>Didn't ask for this?</strong> Do nothing. The change cannot go through
+                    without this link, and it expires on its own. Then change your password and
+                    tell the owner.
+                    @if ($ip)
+                        The request came from {{ $ip }}.
+                    @endif
+                </td>
+            </tr>
+        </table>
     @else
-        <p style="margin: 0 0 20px; color: #5C6B65;">
+        <p style="margin: 0; color: #5C6B65;">
             If you were not expecting this, ignore it. Nothing about this address
             changes unless the link is opened.
         </p>
     @endif
 
-    <p style="margin: 0; color: #5C6B65; word-break: break-all; font-size: 13px;">
-        If the button does not work, paste this into your browser:<br>{{ $url }}
-    </p>
-</div>
+    @include('mail.partials.fallback-link', ['url' => $url])
+@endsection

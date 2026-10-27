@@ -44,6 +44,7 @@ class AccountInviteMail extends Mailable
     {
         return new Content(
             view: 'mail.account-invite',
+            text: 'mail.text.account-invite',
             with: [
                 'url' => $this->url,
                 'name' => $this->name,

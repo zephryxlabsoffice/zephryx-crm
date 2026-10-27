@@ -45,6 +45,7 @@ class OneTimeCodeMail extends Mailable
     {
         return new Content(
             view: 'mail.one-time-code',
+            text: 'mail.text.one-time-code',
             with: [
                 'code' => $this->code,
                 'name' => $this->name,

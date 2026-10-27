@@ -49,6 +49,7 @@ class EmailChangeMail extends Mailable
     {
         return new Content(
             view: 'mail.email-change',
+            text: 'mail.text.email-change',
             with: [
                 'half' => $this->half,
                 'url' => $this->url,
