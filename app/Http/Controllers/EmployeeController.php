@@ -1546,6 +1546,9 @@ class EmployeeController extends Controller
             $rules['rate_basis'] = ['nullable', 'required_with:rate', Rule::in(SalaryStructureModel::BASES)];
         }
 
+        // Annual CTC, typed, optional, any engagement (2026-10-27).
+        $rules['ctc'] = ['nullable', 'decimal:0,2', 'min:0', 'max:9999999999'];
+
         return $rules;
     }
 
@@ -1606,6 +1609,10 @@ class EmployeeController extends Controller
             $supplied['rate_basis'] = $data['rate_basis'];
         }
 
+        if (($data['ctc'] ?? '') !== '' && $data['ctc'] !== null) {
+            $supplied['ctc_minor'] = Money::fromMajor($data['ctc'], $currency)->minor;
+        }
+
         if ($supplied === []) {
             return;
         }
@@ -1616,7 +1623,11 @@ class EmployeeController extends Controller
 
         foreach ($supplied as $column => $value) {
             if ($existing === null || (string) $existing->{$column} !== (string) $value) {
-                $changed[] = $column === 'rate_basis' ? 'Rate basis' : SalaryStructure::label($column);
+                $changed[] = match ($column) {
+                    'rate_basis' => 'Rate basis',
+                    'ctc_minor' => 'CTC',
+                    default => SalaryStructure::label($column),
+                };
             }
         }
 
@@ -1706,6 +1717,10 @@ class EmployeeController extends Controller
 
         if ($structure->rate_basis !== null) {
             $fields['rate_basis'] = $structure->rate_basis;
+        }
+
+        if ($structure->ctc_minor !== null) {
+            $fields['ctc'] = Money::of((int) $structure->ctc_minor, $structure->currency ?: Money::DEFAULT_CURRENCY)->plain();
         }
 
         return $fields;

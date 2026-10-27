@@ -13,6 +13,16 @@
         <p>Whether this system is set up the way you meant it to be.</p>
     </div>
 
+    @php $pendingUpdates = \App\Support\Updates::pending(); @endphp
+    @if ($pendingUpdates !== [])
+        @include('partials.notice', [
+            'tone' => 'warning',
+            'title' => 'An update is waiting to be applied',
+            'message' => 'The uploaded version has '.count($pendingUpdates).' database change(s) not yet applied. '
+                .'Open Updates and press "Back up and apply".',
+        ])
+    @endif
+
     {{--
         Not a company dashboard. §2.1 gives this account no operational
         authority and no personal records, and the owner holds a staff account

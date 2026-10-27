@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\IntegrationsController as AdminIntegrationsController;
 use App\Http\Controllers\Admin\MasterDataController as AdminMasterDataController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\UpdatesController as AdminUpdatesController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -186,6 +187,13 @@ Route::post('/backups', [AdminBackupsController::class, 'store'])->name('backups
 Route::get('/backups/{file}', [AdminBackupsController::class, 'download'])
     ->where('file', 'zephryx-crm-db-[0-9-]+\.sql\.gz')
     ->name('backups.download');
+
+/*
+ * Applying database changes after an upload, with no Terminal (2026-10-27).
+ * Backs up first; see UpdatesController.
+ */
+Route::get('/updates', [AdminUpdatesController::class, 'index'])->name('updates');
+Route::post('/updates', [AdminUpdatesController::class, 'store'])->name('updates.store');
 
 /*
  * The audit log. GET only, in both senses — nothing writes to it through

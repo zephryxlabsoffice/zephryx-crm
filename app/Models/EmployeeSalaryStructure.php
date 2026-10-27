@@ -36,6 +36,7 @@ class EmployeeSalaryStructure extends Model
         'pf_minor', 'pt_minor', 'tds_minor',
         'stipend_minor',
         'rate_minor', 'rate_basis',
+        'ctc_minor',
         'updated_by',
     ];
 

@@ -460,6 +460,11 @@ class AuditLog
 
     public const BACKUP_DOWNLOADED = 'admin.backup_downloaded';
 
+    // Database changes applied from Admin → Updates (2026-10-27).
+    public const UPDATE_APPLIED = 'admin.update_applied';
+
+    public const UPDATE_FAILED = 'admin.update_failed';
+
     /**
      * Write one entry.
      *

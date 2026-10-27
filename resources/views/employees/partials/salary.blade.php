@@ -59,6 +59,11 @@
                     <dd>{{ $row['amount'] }}</dd>
                 </div>
             @endforeach
+
+            <div class="lv-field">
+                <dt class="lv-field-lbl">CTC per year</dt>
+                <dd>{{ $card['ctc'] ?? 'Not stated' }}</dd>
+            </div>
         </dl>
 
         <div class="prose prose-quiet">

@@ -103,4 +103,19 @@
             @endif
         </div>
     @endforeach
+
+    <div class="form-grid">
+        <div class="form-field">
+            <label class="form-field-lbl" for="emp-pay-ctc">CTC per year <span class="an-optional">(optional)</span></label>
+            {{-- Typed, never worked out from the boxes above: this application
+                 does not calculate pay. --}}
+            <input id="emp-pay-ctc" name="ctc" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
+                   placeholder="0.00" value="{{ old('ctc', $salaryFields['ctc'] ?? '') }}"
+                   @if ($errors->has('ctc')) aria-invalid="true" aria-describedby="emp-pay-ctc-error" @endif>
+            <span class="pay-hint">As agreed with them. Typed here, not calculated.</span>
+            @error('ctc')
+                <span class="field-error" id="emp-pay-ctc-error">{{ $message }}</span>
+            @enderror
+        </div>
+    </div>
 </div>

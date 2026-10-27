@@ -117,8 +117,9 @@ Do these in order, every time.
 ## B1. On the PC
 
 1. Everything committed. Double-click **`MAKE-UPLOAD.bat`**.
-2. Ask: **does this update add database tables or columns (a migration)?** If
-   yes, stop — it needs the update page, which is not built yet.
+2. If the update adds database tables or columns, that is fine: after
+   uploading (B5) open **Admin → Updates** and press **Back up and apply**.
+   The Admin Overview also warns while a change is waiting.
 
 ## B2. Back up first
 
@@ -147,6 +148,8 @@ is safe; deleting the folder first is not.
 
 ## B5. Check
 
+- [ ] Admin → **Updates**: if it lists changes, press **Back up and apply**
+      first (it says "Up to date" when there is nothing to do)
 - [ ] Open the site in a private window: the home page and `/login` look
       right (a hard refresh, Ctrl+F5, if the old style shows)
 - [ ] Sign in; open a couple of pages

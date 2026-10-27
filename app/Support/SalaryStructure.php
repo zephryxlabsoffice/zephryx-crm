@@ -166,6 +166,10 @@ class SalaryStructure
                 ? (self::basisOptions()[$structure->rate_basis] ?? $structure->rate_basis)
                 : null,
             'currency' => $currency,
+            // Typed by HR, never derived from the rows above (2026-10-27).
+            'ctc' => $structure->ctc_minor === null
+                ? null
+                : Money::of((int) $structure->ctc_minor, $currency)->format(),
         ];
     }
 }
