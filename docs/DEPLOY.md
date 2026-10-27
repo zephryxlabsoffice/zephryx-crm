@@ -166,18 +166,21 @@ and a Download button, and warns if the nightly run stops.
 
 The nightly run is a cPanel Cron Job (cPanel → **Cron Jobs**; no Terminal needed):
 
-1. **Cron Email** at the top of the page: put the owner's address. cPanel
+1. **Cron Email** (if the page has one): put the owner's address. cPanel
    mails the output of every run, so a failure arrives in the inbox.
 2. Common Settings: **Once Per Day**, then set Hour to `2` (2 AM):
    `0 2 * * *`.
 3. Command — replace `<site folder>` with the real path File Manager shows:
 
    ```
-   /usr/local/bin/php <site folder>/zephryx-crm/artisan backup:database
+   /usr/bin/php <site folder>/zephryx-crm/artisan backup:database >> <site folder>/zephryx-crm/storage/logs/cron.log 2>&1
    ```
 
-   If the first email says that php path does not exist, try
-   `/opt/cpanel/ea-php84/root/usr/bin/php` or `/usr/bin/php`.
+   On MilesWeb PHP 8.4 is `/usr/bin/php` (`/usr/local/bin/php` does not
+   exist there). The panel has no Cron Email box, so the output goes to
+   `storage/logs/cron.log` — open it in File Manager to see each run.
+   Live (set up 2026-10-27): site folder
+   `/var/www/411f7520-188d-4c09-8be1-84cf71b3b71b`, daily at `0 2 * * *`.
 4. Next day, open Admin → Backups and check last night's file is listed and
    the page shows no warning.
 
