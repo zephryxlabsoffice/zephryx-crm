@@ -12,12 +12,14 @@ use App\Models\MasterDataItem;
 use App\Models\ProfileChangeRequest;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Admin\AccessDirectory;
 use App\Support\Audit\AuditLog;
 use App\Support\Auth\PasswordResets;
 use App\Support\Documents\DocumentStore;
 use App\Support\EmployeeDirectory;
 use App\Support\EmployeePresenter;
 use App\Support\IdProof;
+use App\Support\Images\PhotoIntake;
 use App\Support\Money;
 use App\Support\ProfileDirectory;
 use App\Support\Rbac\Rbac;
@@ -31,11 +33,13 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -73,7 +77,116 @@ class EmployeeController extends Controller
         protected Rbac $rbac,
         protected AuditLog $audit,
         protected DocumentStore $documents,
+        protected PhotoIntake $photos,
     ) {}
+
+    /**
+     * Roles never handed out from this form: CEO and System Admin come only
+     * from the Admin Panel, Mentor is not an employee's role, and Employee is
+     * always held.
+     */
+    protected const ROLES_NOT_FROM_HR = ['ceo', 'system_admin', 'mentor', 'employee'];
+
+    /**
+     * The roles this person may give, by key (2026-10-27).
+     *
+     * Below their own standing in People — HR (80) can give Team Lead,
+     * Manager or Support but not HR; the CEO (90) can also give HR. A role
+     * nobody can see past cannot be used to make somebody more senior than
+     * the person granting it.
+     *
+     * @return \Illuminate\Support\Collection<string, array<string, mixed>>
+     */
+    protected function assignableRoles(Request $request): Collection
+    {
+        $mine = $this->rbac->rankOf($request->user(), 'people');
+
+        return AccessDirectory::roles()
+            ->keyBy('key')
+            ->reject(fn (array $role, string $key) => in_array($key, self::ROLES_NOT_FROM_HR, true))
+            ->filter(fn (array $role) => ($role['ranks']['people'] ?? 0) < $mine);
+    }
+
+    /**
+     * Apply the ticked roles. Roles this person may not give are left exactly
+     * as they were — HR editing a manager's record cannot strip a CEO role it
+     * could never have granted. Nobody changes their own roles here.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function writeRoles(Employee $employee, array $data, Request $request): void
+    {
+        if (! array_key_exists('roles', $data) && ! $request->has('roles_present')) {
+            return;
+        }
+
+        $user = $employee->user;
+
+        if ($user->id === $request->user()->id) {
+            return;
+        }
+
+        $assignable = $this->assignableRoles($request)->keys();
+        $held = $user->roles()->pluck('role_key');
+
+        $wanted = $held->reject(fn ($k) => $assignable->contains($k))
+            ->merge(collect($data['roles'] ?? [])->filter(fn ($k) => $assignable->contains($k)))
+            ->push('employee')
+            ->unique()
+            ->values();
+
+        if ($wanted->sort()->values()->all() === $held->sort()->values()->all()) {
+            return;
+        }
+
+        $user->roles()->sync(
+            Role::whereIn('role_key', $wanted)->pluck('id')
+                ->mapWithKeys(fn (int $id) => [$id => [
+                    'assigned_by' => $request->user()->id,
+                    'assigned_at' => now(),
+                ]])->all()
+        );
+
+        $this->rbac->forget($user);
+
+        $this->audit->record(
+            action: AuditLog::ACCOUNT_CHANGED,
+            actor: $request->user(),
+            entityType: 'user',
+            entityId: $user->user_id,
+            before: $held->sort()->join(', '),
+            after: $wanted->sort()->join(', ').' (from Employees)',
+            request: $request,
+        );
+    }
+
+    /**
+     * HR's photo upload — straight onto the record, unlike the employee's own
+     * which waits for approval. Cleaned the same way (PhotoIntake).
+     */
+    protected function writePhoto(Employee $employee, Request $request): void
+    {
+        if (! $request->hasFile('photo')) {
+            return;
+        }
+
+        try {
+            $clean = $this->photos->clean($request->file('photo'));
+        } catch (RuntimeException $e) {
+            throw ValidationException::withMessages(['photo' => $e->getMessage()]);
+        }
+
+        $stored = $this->documents->putBytes('employees/'.$employee->id.'/photo', $clean['extension'], $clean['contents']);
+
+        $profile = $employee->profile ?? EmployeeProfile::create(['employee_id' => $employee->id]);
+        $old = $profile->photo_path;
+
+        $profile->forceFill(['photo_path' => $stored['path']])->save();
+
+        if ($old !== null && $old !== $stored['path']) {
+            $this->documents->forget($old);
+        }
+    }
 
     public function index(Request $request): Response
     {
@@ -207,7 +320,29 @@ class EmployeeController extends Controller
              */
             'salaryFields' => [],
             'maySetSalary' => $this->rbac->can($request->user(), 'salary.manage'),
-        ] + $this->formOptions());
+        ] + $this->peopleOptions($request, null) + $this->formOptions());
+    }
+
+    /**
+     * Reports-to choices and the roles this person may give (2026-10-27).
+     *
+     * @return array<string, mixed>
+     */
+    protected function peopleOptions(Request $request, ?Employee $record): array
+    {
+        return [
+            'managers' => Employee::query()
+                ->with('user')
+                ->active()
+                ->when($record !== null, fn ($q) => $q->where('id', '!=', $record->id))
+                ->get()
+                ->sortBy(fn (Employee $e) => $e->user?->name)
+                ->values(),
+            'assignableRoles' => $this->assignableRoles($request),
+            'heldRoles' => $record?->user?->roles()->pluck('role_key')->all() ?? [],
+            // Nobody changes their own roles from here.
+            'mayEditRoles' => $record === null || $record->user_id !== $request->user()->id,
+        ];
     }
 
     /**
@@ -264,6 +399,7 @@ class EmployeeController extends Controller
                 'joined_on' => $data['joined_on'],
                 'date_of_birth' => $data['date_of_birth'] ?? null,
                 'announce_milestones' => $data['announce_milestones'] ?? true,
+                'reports_to' => $data['reports_to'] ?? null,
             ]);
 
             // Inside the same transaction: an account with no identity record
@@ -271,6 +407,8 @@ class EmployeeController extends Controller
             $this->writeIdentity($employee, $data, $request);
             $this->writeAddresses($employee, $data, $request);
             $this->writeSalary($employee, $data, $request);
+            $this->writeRoles($employee->load('user'), $data, $request);
+            $this->writePhoto($employee, $request);
 
             return $employee;
         });
@@ -318,7 +456,7 @@ class EmployeeController extends Controller
             'addresses' => $this->addresses($request, $record),
             'salaryFields' => $this->salaryFields($request, $record),
             'maySetSalary' => $this->rbac->can($request->user(), 'salary.manage'),
-        ] + $this->formOptions());
+        ] + $this->peopleOptions($request, $record) + $this->formOptions());
     }
 
     public function update(Request $request, string $employee): RedirectResponse
@@ -337,8 +475,11 @@ class EmployeeController extends Controller
             $this->writeIdentity($record, $data, $request);
             $this->writeAddresses($record, $data, $request);
             $this->writeSalary($record, $data, $request);
+            $this->writeRoles($record, $data, $request);
+            $this->writePhoto($record, $request);
 
             $record->update([
+                'reports_to' => $data['reports_to'] ?? null,
                 'department_id' => $data['department_id'] ?? null,
                 'designation_id' => $data['designation_id'] ?? null,
                 'joined_on' => $data['joined_on'],
@@ -689,6 +830,20 @@ class EmployeeController extends Controller
             'date_of_birth' => ['nullable', 'date', 'before:-15 years', 'after:-100 years'],
 
             'announce_milestones' => ['nullable', 'boolean'],
+
+            // All optional (owner, 2026-10-27). Reports-to is a record of who
+            // somebody reports to and decides no access.
+            'reports_to' => array_values(array_filter([
+                'nullable', 'integer', Rule::exists('employees', 'id'),
+                $existing !== null ? Rule::notIn([$existing->id]) : null,
+            ])),
+            'roles' => ['nullable', 'array'],
+            'roles.*' => [Rule::exists('roles', 'role_key')],
+            'photo' => [
+                'nullable', 'file',
+                'max:'.(int) (PhotoIntake::MAX_BYTES / 1024),
+                'mimes:'.implode(',', PhotoIntake::ALLOWED),
+            ],
         ];
 
         /*

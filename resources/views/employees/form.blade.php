@@ -30,7 +30,7 @@
         </div>
     </div>
 
-    <form class="an-form" method="POST"
+    <form class="an-form" method="POST" enctype="multipart/form-data"
           action="{{ $editing ? route('employees.update', ['employee' => $user->user_id]) : route('employees.store') }}">
         @csrf
 
@@ -189,8 +189,74 @@
                                 <span class="field-error">{{ $message }}</span>
                             @enderror
                         </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-reports-to">
+                                Reports to <span class="an-optional">(optional)</span>
+                            </label>
+                            <select id="emp-reports-to" name="reports_to">
+                                <option value="">Nobody</option>
+                                @foreach ($managers as $person)
+                                    <option value="{{ $person->id }}"
+                                        @selected((int) old('reports_to', $employee?->reports_to) === $person->id)>
+                                        {{ $person->user?->name }} ({{ $person->user?->user_id }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <span class="pay-hint">A record of who they report to. It grants nothing.</span>
+                            @error('reports_to')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-photo">
+                                Profile photo <span class="an-optional">(optional)</span>
+                            </label>
+                            <input id="emp-photo" name="photo" type="file" accept="image/jpeg,image/png">
+                            <span class="pay-hint">
+                                @if ($editing) Leave empty to keep the current photo. @endif
+                                Anything the camera recorded with the picture is removed before it is stored.
+                            </span>
+                            @error('photo')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
                     </div>
                 </div>
+
+                {{-- Roles (2026-10-27). Only roles below the editor's own level in
+                     People are offered; see EmployeeController::assignableRoles. --}}
+                @if ($mayEditRoles && $assignableRoles->isNotEmpty())
+                    <div class="card">
+                        <div class="section-hd">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                            Roles <span class="an-optional">(optional)</span>
+                        </div>
+
+                        <input type="hidden" name="roles_present" value="1">
+
+                        <p class="pay-hint">
+                            Everybody is an Employee. Tick anything else they do. Roles decide what
+                            they may do; CEO and System Admin are given from the Admin Panel.
+                        </p>
+
+                        <div class="ad-perms">
+                            @foreach ($assignableRoles as $key => $role)
+                                <label class="ad-perm">
+                                    <input type="checkbox" name="roles[]" value="{{ $key }}"
+                                           @checked(in_array($key, (array) old('roles', $heldRoles), true))>
+                                    <span class="ad-perm-body">
+                                        <span class="ad-perm-head"><strong>{{ $role['name'] }}</strong></span>
+                                        <span class="ad-perm-note">{{ $role['description'] }}</span>
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
 
                 <div class="card">
                     <div class="section-hd">

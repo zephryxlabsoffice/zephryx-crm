@@ -103,7 +103,7 @@ class ProfilePolicy
         // ── the company's record of who somebody is ──
         'name' => [self::HR, 'Full name', 'It is on every task, payslip and audit entry you appear in.'],
         'employee_id' => [self::SYSTEM, 'Employee ID', 'Issued when your account was created. It never changes.'],
-        'department' => [self::HR, 'Department', 'Set by HR — it decides what you can see across the application.'],
+        'department' => [self::HR, 'Department', 'Set by HR. A record of where you work — it does not change what you can see or do.'],
         'designation' => [self::HR, 'Designation', 'Set by HR, alongside your role and reporting line.'],
         'reports_to' => [self::HR, 'Reporting to', 'Set by HR.'],
         'joined' => [self::SYSTEM, 'Joined on', 'Your start date, from your employment record.'],
