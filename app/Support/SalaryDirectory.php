@@ -149,6 +149,23 @@ class SalaryDirectory
         return EmployeeBanking::where('employee_id', $employee->id)->first()?->toRecordArray();
     }
 
+    /**
+     * The first month anybody could have been paid for, as Y-m: the earliest
+     * joining date, or the oldest salary record if one is older still.
+     */
+    public static function earliestPeriod(): ?string
+    {
+        $joined = Employee::query()->min('joined_on');
+        $recorded = SalaryRecord::query()->min('period');
+
+        $candidates = array_filter([
+            $joined !== null ? Carbon::parse($joined)->format('Y-m') : null,
+            $recorded,
+        ]);
+
+        return $candidates === [] ? null : min($candidates);
+    }
+
     public static function currentPeriod(): string
     {
         return Carbon::today()->format('Y-m');

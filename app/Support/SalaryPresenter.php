@@ -110,16 +110,37 @@ class SalaryPresenter
     /**
      * The months a period picker offers, most recent first.
      *
+     * Back to `$earliest` (Y-m) — the first month anybody could have been paid
+     * for — rather than a fixed twelve, which hid every payslip older than a
+     * year (fixed 2026-10-27). Never fewer than twelve, so a new company still
+     * gets a usable list. `$include` is the month being viewed: a month reached
+     * by URL that falls outside the list is still shown as selected, rather
+     * than the picker silently claiming a different one.
+     *
      * @return array<string, string>
      */
-    public static function periodOptions(int $months = 12): array
+    public static function periodOptions(?string $earliest = null, ?string $include = null): array
     {
         $options = [];
         $cursor = Carbon::today()->startOfMonth();
+        $stop = $cursor->copy()->subMonths(11);
 
-        for ($i = 0; $i < $months; $i++) {
+        if ($earliest !== null && preg_match('/^\d{4}-\d{2}$/', $earliest) === 1) {
+            $from = Carbon::createFromFormat('Y-m-d', $earliest.'-01')->startOfMonth();
+
+            if ($from->lessThan($stop)) {
+                $stop = $from;
+            }
+        }
+
+        while ($cursor->greaterThanOrEqualTo($stop)) {
             $options[$cursor->format('Y-m')] = $cursor->format('F Y');
             $cursor = $cursor->subMonth();
+        }
+
+        if ($include !== null && ! isset($options[$include]) && preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $include) === 1) {
+            $options[$include] = self::period($include);
+            krsort($options);
         }
 
         return $options;

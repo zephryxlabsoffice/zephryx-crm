@@ -78,7 +78,7 @@ class SalaryController extends Controller
             'activeNav' => 'salary',
             'records' => $this->paginate($this->matching($records, $filters), $request),
             'stats' => SalaryDirectory::stats($records),
-            'periods' => SalaryPresenter::periodOptions(),
+            'periods' => SalaryPresenter::periodOptions(SalaryDirectory::earliestPeriod(), $period),
             'departments' => EmployeeDirectory::departmentsInUse(),
             'missing' => SalaryDirectory::missingFrom($period),
             'withoutBanking' => SalaryDirectory::withoutBanking(),
