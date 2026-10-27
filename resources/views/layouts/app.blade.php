@@ -46,6 +46,20 @@
                     </div>
                 @endif
 
+                {{--
+                    The result of whatever was just done — "Record rejected",
+                    "Settings saved". Controllers have always flashed `status`
+                    (and `status_tone`), but until 2026-10-27 only three pages
+                    printed it, so most actions finished in silence. One place,
+                    every page.
+                --}}
+                @if (session('status'))
+                    @include('partials.notice', [
+                        'tone' => session('status_tone', 'success'),
+                        'message' => session('status'),
+                    ])
+                @endif
+
                 @yield('content')
             </main>
         </div>

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Mail\AccountInviteMail;
 use App\Mail\PasswordResetMail;
+use App\Models\Employee;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Admin\AccessDirectory;
@@ -13,6 +15,7 @@ use App\Support\Auth\RememberMe;
 use App\Support\Auth\TrustedDevices;
 use App\Support\Rbac\Rbac;
 use App\Support\Realm;
+use App\Support\StaffId;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -20,6 +23,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
@@ -77,6 +81,108 @@ class AccountController extends Controller
             'accounts' => AccountDirectory::all(),
             'stats' => AccountDirectory::stats(),
         ]);
+    }
+
+    /**
+     * GET /admin/accounts/new — add a staff account.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * WHY THE ADMIN PANEL CAN ADD PEOPLE (decided 2026-10-27)
+     *
+     * Adding an employee is HR's act, in Employees. But a fresh install has
+     * only the owner, and the owner's realm has no Employees module — so there
+     * was nobody who could create the first HR account. This form is the way
+     * in, and the owner asked for it to stay available, not only for the first
+     * one.
+     *
+     * It asks for the minimum: who, how employed, since when, and which roles.
+     * The person gets the same invite email HR's form sends; HR fills in the
+     * department, documents and salary afterwards in Employees.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function create(): Response
+    {
+        return response()->view('admin.accounts.create', [
+            'activeNav' => 'accounts',
+            'roles' => AccessDirectory::roles()->keyBy('key'),
+            'types' => [
+                Employee::FULL_TIME => 'Full-time',
+                Employee::INTERN => 'Intern',
+                Employee::FREELANCE => 'Freelance',
+            ],
+        ]);
+    }
+
+    /**
+     * POST /admin/accounts
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:190', Rule::unique('users', 'email')],
+            'employment_type' => ['required', Rule::in(Employee::TYPES)],
+            'joined_on' => ['required', 'date', 'before_or_equal:today'],
+            'roles' => ['nullable', 'array'],
+            'roles.*' => [Rule::exists('roles', 'role_key')],
+        ]);
+
+        // Everybody on staff is at least an Employee; the form cannot leave it off.
+        $roleKeys = collect($data['roles'] ?? [])->push('employee')->unique()->values();
+
+        $user = DB::transaction(function () use ($data, $roleKeys, $request) {
+            $user = User::create([
+                'user_id' => StaffId::forEmployee($data['employment_type']),
+                'name' => $data['name'],
+                'email' => $data['email'],
+                // Never used — replaced when they follow the invite link.
+                'password' => Str::random(64),
+                'account_type' => Realm::STAFF,
+                'staff_kind' => 'employee',
+                'status' => 'active',
+            ]);
+
+            $user->roles()->sync(
+                Role::whereIn('role_key', $roleKeys)->pluck('id')
+                    ->mapWithKeys(fn (int $id) => [$id => [
+                        'assigned_by' => $request->user()?->id,
+                        'assigned_at' => now(),
+                    ]])->all()
+            );
+
+            Employee::create([
+                'user_id' => $user->id,
+                'employment_type' => $data['employment_type'],
+                'joined_on' => $data['joined_on'],
+            ]);
+
+            return $user;
+        });
+
+        $token = $this->resets->issue($user, $request);
+
+        Mail::to($user->email)->send(new AccountInviteMail(
+            url: route('password.reset.form', ['token' => $token]),
+            name: $user->name,
+            staffId: $user->user_id,
+            addedBy: $request->user()->name,
+        ));
+
+        $this->audit->record(
+            action: AuditLog::ACCOUNT_CHANGED,
+            actor: $request->user(),
+            entityType: 'user',
+            entityId: $user->user_id,
+            before: 'no account',
+            after: 'created from the Admin Panel · '.$user->email.' · roles '.$roleKeys->join(', '),
+            request: $request,
+        );
+
+        return redirect()
+            ->route('admin.accounts.show', ['account' => $user->user_id])
+            ->with('status', $user->name.' was added as '.$user->user_id.' and emailed a link to set their password. '
+                .'HR can now complete their department, documents and salary in Employees.')
+            ->with('status_tone', 'success');
     }
 
     public function show(Request $request, string $account): Response

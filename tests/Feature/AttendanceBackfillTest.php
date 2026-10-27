@@ -130,6 +130,22 @@ class AttendanceBackfillTest extends TestCase
             ->assertSee('Worked on site at the client office.');
     }
 
+    public function test_the_result_message_is_shown_on_the_next_page(): void
+    {
+        // Controllers flashed `status` for months while most pages never
+        // printed it. The layout prints it now, on every page.
+        $this->signIn(['employee', 'hr'], 'EMP900');
+        $riya = $this->anEmployee('EMP901', 'Riya Sharma');
+
+        $this->followingRedirects()->post('/attendance/add', [
+            'employee_id' => $riya->id,
+            'date' => '2026-10-27',
+            'check_in' => '09:30',
+            'check_out' => '18:30',
+            'reason' => 'Worked on site at the client office.',
+        ])->assertOk()->assertSee('Day entered for Riya Sharma.');
+    }
+
     public function test_an_existing_record_is_never_overwritten(): void
     {
         $this->signIn(['employee', 'hr'], 'EMP900');

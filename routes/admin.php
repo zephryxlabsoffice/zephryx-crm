@@ -48,6 +48,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/dashboard', AdminDashboardController::class)->name('dashboard');
 
 Route::get('/accounts', [AdminAccountController::class, 'index'])->name('accounts.index');
+/*
+ * Adding a staff account (2026-10-27): the only way to create the first HR
+ * account on a fresh install, and kept for any later one. Before
+ * /accounts/{account}, or "new" is read as an account id.
+ */
+Route::get('/accounts/new', [AdminAccountController::class, 'create'])->name('accounts.create');
+Route::post('/accounts', [AdminAccountController::class, 'store'])->name('accounts.store');
 Route::get('/accounts/{account}', [AdminAccountController::class, 'show'])
     ->where('account', '[A-Za-z0-9-]{1,32}')
     ->name('accounts.show');

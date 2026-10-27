@@ -12,13 +12,6 @@
         </p>
     </div>
 
-    @if (session('status'))
-        @include('partials.notice', [
-            'tone' => session('status_tone', 'success'),
-            'message' => session('status'),
-        ])
-    @endif
-
     <section class="dash-grid">
         <div class="dash-main">
             <section class="card">

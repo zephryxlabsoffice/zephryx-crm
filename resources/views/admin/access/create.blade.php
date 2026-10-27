@@ -12,9 +12,27 @@
                 Access control
             </a>
             <h1>New role</h1>
-            <p>The same screen editing a role uses, with nothing ticked yet.</p>
+            <p>Name it, pick its level, and tick what it may do.</p>
         </div>
     </div>
+
+    {{-- A GET form of its own: choosing a starting role reloads the page with
+         that role's permissions ticked. No script — CSP — just data-auto-submit. --}}
+    <form class="card" method="GET" action="{{ route('admin.access.create') }}">
+        <div class="card-body">
+            <div class="form-field">
+                <label class="form-field-lbl" for="role-from">Start from an existing role (optional)</label>
+                <select id="role-from" name="from" data-auto-submit>
+                    <option value="">Nothing ticked</option>
+                    @foreach ($roles as $key => $role)
+                        <option value="{{ $key }}" @selected(($from['key'] ?? null) === $key)>{{ $role['name'] }}</option>
+                    @endforeach
+                </select>
+                <span class="pay-hint">Copies its permissions below as a starting point — change any of them before saving.</span>
+                <noscript><button class="btn btn-outline btn-sm" type="submit">Use this role</button></noscript>
+            </div>
+        </div>
+    </form>
 
     <form method="POST" action="{{ route('admin.access.store') }}">
         @csrf
@@ -33,13 +51,7 @@
                                 <input id="role-name" name="role_name" type="text" required maxlength="100"
                                        placeholder="Support Lead" value="{{ old('role_name') }}">
                                 @error('role_name') <span class="field-error">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="form-field">
-                                <label class="form-field-lbl" for="role-key">Key</label>
-                                <input id="role-key" name="role_key" type="text" required maxlength="32"
-                                       pattern="[a-z_]+" placeholder="support_lead" value="{{ old('role_key') }}">
-                                <span class="pay-hint">Lowercase letters and underscores only. Cannot be changed after this.</span>
+                                {{-- The key is made from the name; its errors read as the name's. --}}
                                 @error('role_key') <span class="field-error">{{ $message }}</span> @enderror
                             </div>
 
@@ -64,7 +76,7 @@
                                 @foreach ($entries as $entry)
                                     <label class="ad-perm">
                                         <input type="checkbox" name="permissions[]" value="{{ $entry['key'] }}"
-                                               @checked(in_array($entry['key'], old('permissions', []), true))>
+                                               @checked(in_array($entry['key'], old('permissions', $ticked), true))>
 
                                         <span class="ad-perm-body">
                                             <span class="ad-perm-head">
@@ -87,23 +99,26 @@
             <aside class="rail">
                 <section class="rail-card">
                     <div class="rail-hd">
-                        <strong>Rank</strong>
+                        <strong>Level</strong>
+                    </div>
+
+                    <div class="form-field">
+                        <label class="form-field-lbl" for="role-level">Same level as</label>
+                        <select id="role-level" name="level_as">
+                            <option value="">Lowest — acts on nobody</option>
+                            @foreach ($roles as $key => $role)
+                                <option value="{{ $key }}" @selected(old('level_as', $from['key'] ?? 'employee') === $key)>{{ $role['name'] }}</option>
+                            @endforeach
+                        </select>
+                        @error('level_as') <span class="field-error">{{ $message }}</span> @enderror
                     </div>
 
                     <p class="dash-note">
-                        Rank never grants a permission (§2.5) — it only answers whether
-                        somebody holding this role may act on somebody else, and which
-                        way an approval routes. 0 means no standing in that domain.
+                        Level decides who this role may act on and where approvals go,
+                        for example a Team Lead approving a team member's leave. It never
+                        grants a permission on its own. Pick the existing role this one
+                        sits beside.
                     </p>
-
-                    @foreach ($domains as $key => $label)
-                        <div class="form-field">
-                            <label class="form-field-lbl" for="rank-{{ $key }}">{{ $label }}</label>
-                            <input id="rank-{{ $key }}" name="ranks[{{ $key }}]" type="number" min="0" max="100"
-                                   value="{{ old('ranks.'.$key, 0) }}">
-                        </div>
-                    @endforeach
-                    @error('ranks') <span class="field-error">{{ $message }}</span> @enderror
                 </section>
 
                 <section class="rail-card">

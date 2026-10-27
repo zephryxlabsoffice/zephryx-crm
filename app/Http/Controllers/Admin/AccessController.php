@@ -87,12 +87,29 @@ class AccessController extends Controller
      * screen from editing one; it is the same screen with nothing ticked yet.
      * ─────────────────────────────────────────────────────────────────────────
      */
+    /**
+     * ─────────────────────────────────────────────────────────────────────────
+     * NO NUMBERS TO TYPE (decided 2026-10-27)
+     *
+     * The owner runs the company and has no time to work out a rank from 0
+     * to 100 in five domains. So a new role is placed "at the same level as"
+     * an existing one, whose ranks it copies, and may START FROM an existing
+     * role's permissions (`?from=`), which are then ticked or unticked here.
+     * The key is made from the name. All three can still be posted directly.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
     public function create(Request $request): Response
     {
+        $roles = AccessDirectory::roles()->keyBy('key');
+        $from = $roles->get((string) $request->query('from', ''));
+
         return response()->view('admin.access.create', [
             'activeNav' => 'access',
             'permissions' => AccessDirectory::permissions(),
             'domains' => AccessDirectory::domains(),
+            'roles' => $roles,
+            'from' => $from,
+            'ticked' => $from['permissions'] ?? [],
         ]);
     }
 
@@ -106,7 +123,15 @@ class AccessController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // The key is made from the name when it is left blank.
+        if (trim((string) $request->input('role_key')) === '') {
+            $request->merge([
+                'role_key' => trim(preg_replace('/[^a-z]+/', '_', strtolower((string) $request->input('role_name'))), '_'),
+            ]);
+        }
+
         $data = $request->validate([
+            'level_as' => ['nullable', Rule::exists('roles', 'role_key')],
             'role_key' => [
                 'required', 'string', 'max:32', 'regex:/^[a-z_]+$/',
                 Rule::notIn(['create']),
@@ -120,7 +145,13 @@ class AccessController extends Controller
             'ranks.*' => ['nullable', 'integer', 'min:0', 'max:100'],
         ], [
             'role_key.regex' => 'Lowercase letters and underscores only, e.g. support_lead.',
+            'role_key.unique' => 'A role with this name already exists. Choose a different name.',
         ]);
+
+        // "Same level as" copies that role's rank in every domain.
+        if (! empty($data['level_as'])) {
+            $data['ranks'] = AccessDirectory::role($data['level_as'])['ranks'] ?? [];
+        }
 
         $role = Role::create([
             'role_key' => $data['role_key'],

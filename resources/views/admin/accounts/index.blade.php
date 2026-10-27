@@ -8,9 +8,15 @@
 @section('title', 'Accounts')
 
 @section('content')
-    <div class="page-hd">
-        <h1>Accounts</h1>
-        <p>Who can sign in, and what they may do once they have.</p>
+    <div class="page-hd-row">
+        <div class="page-hd">
+            <h1>Accounts</h1>
+            <p>Who can sign in, and what they may do once they have.</p>
+        </div>
+
+        <div class="hd-actions">
+            <a class="btn btn-primary" href="{{ route('admin.accounts.create') }}">Add staff account</a>
+        </div>
     </div>
 
     {{--

@@ -21,13 +21,6 @@
         </div>
     </div>
 
-    @if (session('status'))
-        @include('partials.notice', [
-            'tone' => session('status_tone', 'success'),
-            'message' => session('status'),
-        ])
-    @endif
-
     @php
         $lastAt = $last ? \Illuminate\Support\Carbon::parse($last['at']) : null;
         // A nightly job that has not run for two days has stopped, whatever
