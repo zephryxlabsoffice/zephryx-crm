@@ -62,6 +62,71 @@
                 </div>
             </section>
 
+            @if ($employee !== null)
+                <section class="card">
+                    <div class="card-hd">
+                        <span class="card-title">Company details</span>
+                    </div>
+
+                    <div class="card-body">
+                        <p class="ad-group-note">
+                            Who works where. These decide no access — roles do. Documents, bank
+                            and salary stay with HR in Employees.
+                        </p>
+
+                        <form method="POST" action="{{ route('admin.accounts.company', $account['user_id']) }}">
+                            @csrf
+
+                            <div class="form-grid">
+                                <div class="form-field">
+                                    <label class="form-field-lbl" for="co-dept">Department</label>
+                                    <select id="co-dept" name="department_id">
+                                        <option value="">None</option>
+                                        @foreach ($departments as $item)
+                                            <option value="{{ $item->id }}" @selected((int) old('department_id', $employee->department_id) === $item->id)>{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('department_id') <span class="field-error">{{ $message }}</span> @enderror
+                                </div>
+
+                                <div class="form-field">
+                                    <label class="form-field-lbl" for="co-desig">Designation</label>
+                                    <select id="co-desig" name="designation_id">
+                                        <option value="">None</option>
+                                        @foreach ($designations as $item)
+                                            <option value="{{ $item->id }}" @selected((int) old('designation_id', $employee->designation_id) === $item->id)>{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('designation_id') <span class="field-error">{{ $message }}</span> @enderror
+                                </div>
+
+                                <div class="form-field">
+                                    <label class="form-field-lbl" for="co-reports">Reports to</label>
+                                    <select id="co-reports" name="reports_to">
+                                        <option value="">Nobody</option>
+                                        @foreach ($managers as $person)
+                                            <option value="{{ $person->id }}" @selected((int) old('reports_to', $employee->reports_to) === $person->id)>{{ $person->user?->name }} ({{ $person->user?->user_id }})</option>
+                                        @endforeach
+                                    </select>
+                                    @error('reports_to') <span class="field-error">{{ $message }}</span> @enderror
+                                </div>
+
+                                <div class="form-field">
+                                    <label class="form-field-lbl" for="co-joined">Joined on</label>
+                                    <input id="co-joined" name="joined_on" type="date" required max="{{ now()->toDateString() }}"
+                                           value="{{ old('joined_on', $employee->joined_on?->toDateString()) }}">
+                                    @error('joined_on') <span class="field-error">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button class="btn btn-primary" type="submit">Save company details</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            @endif
+
             <section class="card">
                 <div class="card-hd">
                     <span class="card-title">What this account can actually do</span>

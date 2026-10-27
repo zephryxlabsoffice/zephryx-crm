@@ -6,6 +6,7 @@ use App\Mail\AccountInviteMail;
 use App\Mail\PasswordResetMail;
 use App\Models\Employee;
 use App\Models\EmployeeProfile;
+use App\Models\MasterDataItem;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Admin\AccessDirectory;
@@ -226,6 +227,74 @@ class AccountController extends Controller
     }
 
     /**
+     * POST /admin/accounts/{account}/company — department, designation,
+     * reporting line and joining date (2026-10-27).
+     *
+     * The same four facts HR edits in Employees, reachable from the panel too.
+     * They describe who works where and decide no access at all — roles do.
+     * Everything else on the record (documents, bank, salary) stays HR's.
+     */
+    public function company(Request $request, string $account): RedirectResponse
+    {
+        $user = $this->find($account);
+        $employee = Employee::with(['department', 'designation', 'manager.user'])->where('user_id', $user->id)->first();
+
+        abort_if($employee === null, 404);
+
+        $data = $request->validate([
+            'department_id' => ['nullable', Rule::exists('master_data_items', 'id')
+                ->where('list', MasterDataItem::DEPARTMENTS)->where('is_active', true)],
+            'designation_id' => ['nullable', Rule::exists('master_data_items', 'id')
+                ->where('list', MasterDataItem::DESIGNATIONS)->where('is_active', true)],
+            'reports_to' => ['nullable', 'integer', Rule::exists('employees', 'id'), Rule::notIn([$employee->id])],
+            'joined_on' => ['required', 'date', 'before_or_equal:today'],
+        ], [
+            'reports_to.not_in' => 'Somebody cannot report to themselves.',
+        ]);
+
+        $before = $this->companyLine($employee);
+
+        $employee->update([
+            'department_id' => $data['department_id'] ?? null,
+            'designation_id' => $data['designation_id'] ?? null,
+            'reports_to' => $data['reports_to'] ?? null,
+            'joined_on' => $data['joined_on'],
+        ]);
+
+        $after = $this->companyLine($employee->fresh(['department', 'designation', 'manager.user']));
+
+        if ($before === $after) {
+            return redirect()->route('admin.accounts.show', ['account' => $user->user_id])
+                ->with('status', 'Nothing changed.')
+                ->with('status_tone', 'info');
+        }
+
+        $this->audit->record(
+            action: AuditLog::EMPLOYEE_UPDATED,
+            actor: $request->user(),
+            entityType: 'employee',
+            entityId: $user->user_id,
+            before: $before,
+            after: $after.' (from the Admin Panel)',
+            request: $request,
+        );
+
+        return redirect()->route('admin.accounts.show', ['account' => $user->user_id])
+            ->with('status', 'Company details saved.')
+            ->with('status_tone', 'success');
+    }
+
+    protected function companyLine(Employee $employee): string
+    {
+        return implode(' · ', [
+            $employee->department?->name ?? 'no department',
+            $employee->designation?->name ?? 'no designation',
+            'reports to '.($employee->manager?->user?->name ?? 'nobody'),
+            'joined '.$employee->joined_on?->format('d M Y'),
+        ]);
+    }
+
+    /**
      * A normal account: roles and a sign-in, and no employment.
      *
      * `staff_kind` stays null, which is what keeps the Employee base — own
@@ -312,8 +381,25 @@ class AccountController extends Controller
          */
         $effective = collect($this->rbac->permissionsFor($user))->sort()->values();
 
+        $employee = Employee::with(['department', 'designation', 'manager.user'])->where('user_id', $user->id)->first();
+
         return response()->view('admin.accounts.show', [
             'activeNav' => 'accounts',
+            /*
+             * Company details — who works where (2026-10-27). A record, never
+             * access: roles decide what somebody may do. Null for a normal
+             * account, which is nobody's employment.
+             */
+            'employee' => $employee,
+            'departments' => MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->active()->get(),
+            'designations' => MasterDataItem::inList(MasterDataItem::DESIGNATIONS)->active()->get(),
+            'managers' => $employee === null ? collect() : Employee::query()
+                ->with('user')
+                ->active()
+                ->where('id', '!=', $employee->id)
+                ->get()
+                ->sortBy(fn (Employee $e) => $e->user?->name)
+                ->values(),
             'account' => AccountDirectory::row($user),
             'roles' => $roles,
             'held' => $held,

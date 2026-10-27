@@ -166,6 +166,57 @@ class AdminAccountsAndRolesTest extends TestCase
         $this->assertGreaterThan(5, $opened);
     }
 
+    /* ── company details from the panel ── */
+
+    public function test_the_owner_can_set_department_designation_and_reporting_line(): void
+    {
+        foreach (['boss@zephryxlabs.test' => 'Boss Person', 'staff@zephryxlabs.test' => 'Staff Person'] as $email => $name) {
+            $this->post('/admin/accounts', [
+                'name' => $name, 'personal_email' => $email, 'phone' => '9800000009',
+                'employment_type' => Employee::FULL_TIME, 'joined_on' => now()->subYear()->toDateString(),
+            ]);
+        }
+
+        $boss = Employee::whereHas('user', fn ($q) => $q->where('email', 'boss@zephryxlabs.test'))->firstOrFail();
+        $staff = Employee::with('user')->whereHas('user', fn ($q) => $q->where('email', 'staff@zephryxlabs.test'))->firstOrFail();
+
+        $dept = \App\Models\MasterDataItem::inList(\App\Models\MasterDataItem::DEPARTMENTS)->active()->firstOrFail();
+        $desig = \App\Models\MasterDataItem::inList(\App\Models\MasterDataItem::DESIGNATIONS)->active()->firstOrFail();
+
+        $this->get('/admin/accounts/'.$staff->user->user_id)->assertOk()->assertSee('Company details');
+
+        $this->post('/admin/accounts/'.$staff->user->user_id.'/company', [
+            'department_id' => $dept->id,
+            'designation_id' => $desig->id,
+            'reports_to' => $boss->id,
+            'joined_on' => '2025-06-01',
+        ])->assertRedirect('/admin/accounts/'.$staff->user->user_id);
+
+        $staff->refresh();
+
+        $this->assertSame($dept->id, $staff->department_id);
+        $this->assertSame($desig->id, $staff->designation_id);
+        $this->assertSame($boss->id, $staff->reports_to);
+        $this->assertSame('2025-06-01', $staff->joined_on->toDateString());
+
+        // Nobody reports to themselves.
+        $this->post('/admin/accounts/'.$staff->user->user_id.'/company', [
+            'reports_to' => $staff->id, 'joined_on' => '2025-06-01',
+        ])->assertSessionHasErrors('reports_to');
+    }
+
+    public function test_a_normal_account_has_no_company_details(): void
+    {
+        $this->post('/admin/accounts', [
+            'kind' => 'normal', 'name' => 'HR Desk', 'account_email' => 'hr@zephryxlabs.test', 'roles' => ['hr'],
+        ]);
+
+        $user = User::where('email', 'hr@zephryxlabs.test')->firstOrFail();
+
+        $this->get('/admin/accounts/'.$user->user_id)->assertOk()->assertDontSee('Company details');
+        $this->post('/admin/accounts/'.$user->user_id.'/company', ['joined_on' => '2025-01-01'])->assertNotFound();
+    }
+
     /* ── a role at the same level as another ── */
 
     public function test_a_new_role_copies_the_rank_of_the_role_it_sits_beside(): void
