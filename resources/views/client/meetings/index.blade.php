@@ -104,7 +104,7 @@
                                             @if (MP::isJoinable($meeting))
                                                 <span class="dash-link">Link in your calendar</span>
                                             @else
-                                                <span class="dash-quiet-meta">—</span>
+                                                <span class="dash-quiet-meta">-</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -140,7 +140,7 @@
                         There is no Accept or Decline here, and there is not
                         going to be: responses belong to Google Calendar, and a
                         second set of buttons would be a second source of truth
-                        for the same fact — one that could disagree with the
+                        for the same fact - one that could disagree with the
                         organiser's own calendar.
                     --}}
                     <p class="dash-note">

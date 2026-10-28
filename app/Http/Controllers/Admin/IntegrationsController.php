@@ -20,7 +20,7 @@ use Throwable;
  * ═════════════════════════════════════════════════════════════════════════════
  * THE KEY IS WRITE-ONLY, THE SAME RULE THE IDENTITY CARD FOLLOWS
  *
- * `index()` never passes the stored key to the view — not masked, not
+ * `index()` never passes the stored key to the view - not masked, not
  * partial, not in a hidden field. What the screen shows after connecting is
  * the service account's email, the key's fingerprint and when it was
  * connected: everything needed to tell one key from another, nothing that
@@ -30,7 +30,7 @@ use Throwable;
  *
  * The plan doc calls for "CEO and System Administrator" to hold this. The
  * Admin Panel realm has one account today and staff sessions are refused
- * here entirely (routes/admin.php), so that split does not exist yet — see
+ * here entirely (routes/admin.php), so that split does not exist yet - see
  * Rbac::ADMIN_BASE for the decision record. This controller is written
  * against the permission key existing on its own, so nothing here has to
  * change when that split is eventually built.
@@ -49,7 +49,7 @@ class IntegrationsController extends Controller
     }
 
     /**
-     * POST /admin/integrations/connect — paste a key, or replace one.
+     * POST /admin/integrations/connect - paste a key, or replace one.
      */
     public function connect(Request $request): RedirectResponse
     {
@@ -99,7 +99,7 @@ class IntegrationsController extends Controller
     }
 
     /**
-     * POST /admin/integrations/test — creates and deletes a file for real.
+     * POST /admin/integrations/test - creates and deletes a file for real.
      *
      * A "Test connection" that faked success would be exactly the mistake
      * GoogleMeetProvider's header comment refuses to make for meetings: a
@@ -120,7 +120,7 @@ class IntegrationsController extends Controller
                 actor: $request->user(),
                 entityType: 'google_connection',
                 entityId: (string) $connection->id,
-                after: 'fingerprint '.$connection->key_fingerprint.' — '.$e->getMessage(),
+                after: 'fingerprint '.$connection->key_fingerprint.' - '.$e->getMessage(),
                 request: $request,
             );
 
@@ -139,12 +139,12 @@ class IntegrationsController extends Controller
         );
 
         return redirect()->route('admin.integrations')
-            ->with('status', 'Confirmed — a test file was created and deleted in the Shared Drive.')
+            ->with('status', 'Confirmed - a test file was created and deleted in the Shared Drive.')
             ->with('status_tone', 'success');
     }
 
     /**
-     * POST /admin/integrations/disconnect — removes the key, keeps the rest.
+     * POST /admin/integrations/disconnect - removes the key, keeps the rest.
      *
      * `calendar_id`, `impersonate_email` and `shared_drive_id` are left in
      * place: they are not secrets, and reconnecting with a new key should not

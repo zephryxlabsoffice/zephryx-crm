@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
- * Clients — adding, editing, moving an engagement and handing over a login.
+ * Clients - adding, editing, moving an engagement and handing over a login.
  *
  * The same shape Employees settled: the permission is on the route, every act
  * that changes a record is audited, and nothing destructive exists.
@@ -164,7 +164,7 @@ class ClientWritesTest extends TestCase
     {
         /*
          * Somebody whose record was closed last month is not who a client
-         * should be told to contact — and a client account is not staff at all,
+         * should be told to contact - and a client account is not staff at all,
          * so an id from the wrong realm must not be assignable either.
          */
         $closed = User::factory()->create([
@@ -218,8 +218,8 @@ class ClientWritesTest extends TestCase
     public function test_renaming_a_client_does_not_move_its_reference(): void
     {
         /*
-         * Everything that will point at a client — invoices, tickets, projects,
-         * and the portal accounts themselves — points at the reference. If a
+         * Everything that will point at a client - invoices, tickets, projects,
+         * and the portal accounts themselves - points at the reference. If a
          * rename moved it, renaming a company would detach its own records.
          */
         $client = $this->aClient();

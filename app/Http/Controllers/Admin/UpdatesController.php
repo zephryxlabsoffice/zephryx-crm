@@ -20,8 +20,8 @@ use Throwable;
  *
  * The live server is cPanel with no Terminal, so `php artisan migrate` cannot
  * be typed. After uploading a version that adds a table or a column, the owner
- * opens this page and presses one button. It takes a backup FIRST — a
- * half-applied change with no way back is the failure this exists to avoid —
+ * opens this page and presses one button. It takes a backup FIRST - a
+ * half-applied change with no way back is the failure this exists to avoid -
  * then runs the pending migrations and shows what happened.
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -38,7 +38,7 @@ class UpdatesController extends Controller
     }
 
     /**
-     * POST /admin/updates — back up, then apply.
+     * POST /admin/updates - back up, then apply.
      */
     public function store(Request $request): RedirectResponse
     {
@@ -46,7 +46,7 @@ class UpdatesController extends Controller
 
         if ($pending === []) {
             return redirect()->route('admin.updates')
-                ->with('status', 'Nothing to apply — the database is up to date.')
+                ->with('status', 'Nothing to apply - the database is up to date.')
                 ->with('status_tone', 'info');
         }
 
@@ -77,7 +77,7 @@ class UpdatesController extends Controller
 
             return redirect()->route('admin.updates')
                 ->with('status', 'The update failed: '.$e->getMessage().' A backup was taken just before ('
-                    .$backup['file'].') — restore it from Admin → Backups if anything looks wrong.')
+                    .$backup['file'].') - restore it from Admin → Backups if anything looks wrong.')
                 ->with('status_tone', 'danger');
         }
 

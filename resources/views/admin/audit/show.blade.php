@@ -37,14 +37,14 @@
                         An entry recording that a value changed without saying
                         from what to what cannot answer the question anybody
                         arrives here with. And on a settings change the "after"
-                        carries the EFFECT — "reclassified 6 days across 3
-                        people" — because the new value alone does not describe
+                        carries the EFFECT - "reclassified 6 days across 3
+                        people" - because the new value alone does not describe
                         what happened to the records.
                     --}}
                     <div class="ad-change">
                         <div class="ad-change-side">
                             <span class="ad-change-lbl">Before</span>
-                            <strong>{{ $entry['before'] !== '' ? $entry['before'] : '—' }}</strong>
+                            <strong>{{ $entry['before'] !== '' ? $entry['before'] : '-' }}</strong>
                         </div>
 
                         <svg class="ad-change-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -53,7 +53,7 @@
 
                         <div class="ad-change-side is-proposed">
                             <span class="ad-change-lbl">After</span>
-                            <strong>{{ $entry['after'] !== '' ? $entry['after'] : '—' }}</strong>
+                            <strong>{{ $entry['after'] !== '' ? $entry['after'] : '-' }}</strong>
                         </div>
                     </div>
                 </div>

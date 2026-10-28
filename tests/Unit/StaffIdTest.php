@@ -15,7 +15,7 @@ use Tests\TestCase;
  * ═════════════════════════════════════════════════════════════════════════════
  * `ZEPH` + YY + D + NNN, DECIDED IN THE REVIEW ROUND (2026-09-11)
  *
- * YY is the year the record is created — not the joining year, which can be
+ * YY is the year the record is created - not the joining year, which can be
  * backdated. D is what kind of engagement this is: 1 full-time, 2 intern,
  * 3 freelance. NNN restarts at 001 each year, within each type.
  *
@@ -99,7 +99,7 @@ class StaffIdTest extends TestCase
         $this->staffAccount('ZEPH261002');
         $this->staffAccount('ZEPH261003');
 
-        // Somebody's account is removed — which the application never does, but
+        // Somebody's account is removed - which the application never does, but
         // a count-based generator would hand the next person 003 all the same.
         User::where('user_id', 'ZEPH261002')->delete();
 

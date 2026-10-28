@@ -28,7 +28,7 @@ use Illuminate\Support\Carbon;
  * The number of days a request costs is stated by the person making it and
  * agreed by the person approving it. Whether a Saturday counts, whether a
  * public holiday in the middle of a week is skipped, whether half a day is
- * possible — those are judgements the two of them make, and encoding a guess
+ * possible - those are judgements the two of them make, and encoding a guess
  * at them would produce balances that quietly disagree with what people were
  * actually granted.
  *
@@ -40,7 +40,7 @@ use Illuminate\Support\Carbon;
  * ─────────────────────────────────────────────────────────────────────────────
  * THE LEAVE YEAR IS EACH EMPLOYEE'S OWN (decided 2026-09-11)
  *
- * Twelve months from their joining month, not a company-wide calendar year —
+ * Twelve months from their joining month, not a company-wide calendar year -
  * somebody hired in June runs June-to-May, and unused days lapse at the end
  * of THEIR year, not everybody's at once every December.
  *
@@ -49,7 +49,7 @@ use Illuminate\Support\Carbon;
  * privilege and sick are granted in full the day the leave year starts,
  * casual accrues a twelfth of its annual figure per whole month that has
  * elapsed since. Both are arithmetic over the calendar and the policy, the
- * same kind `workingDaysInMonth` already does on the Attendance side — never
+ * same kind `workingDaysInMonth` already does on the Attendance side - never
  * a judgement about what a particular request should cost.
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -97,7 +97,7 @@ class LeavePolicy
     /**
      * The types that carry an annual allowance.
      *
-     * Unpaid leave is excluded because it has none — showing a "balance" for it
+     * Unpaid leave is excluded because it has none - showing a "balance" for it
      * would be inventing an allowance nobody has. The handover's donut gave it
      * two days on the same screen where its own policy card said "As Per
      * Policy".
@@ -124,7 +124,7 @@ class LeavePolicy
 
     /**
      * The most recent anniversary of this employee's joining date, on or
-     * before `$asOf` — the start of their CURRENT leave year.
+     * before `$asOf` - the start of their CURRENT leave year.
      *
      * A joining date of the 29th/30th/31st in a month that `$asOf`'s year
      * does not have that day in (a Feb 29 joiner, most years) clamps to the
@@ -154,7 +154,7 @@ class LeavePolicy
     /**
      * Whole months completed since the leave year began, capped at twelve.
      *
-     * Zero until a full month has actually elapsed — "earned monthly" means a
+     * Zero until a full month has actually elapsed - "earned monthly" means a
      * month passed, not merely started, the same way a check-in does not
      * count as a day worked until the hours are in.
      */
@@ -166,7 +166,7 @@ class LeavePolicy
     }
 
     /**
-     * The entitlement actually available today — privilege and sick in full
+     * The entitlement actually available today - privilege and sick in full
      * from day one of the leave year, casual a twelfth of its annual figure
      * per whole month elapsed since.
      */
@@ -193,12 +193,12 @@ class LeavePolicy
      * against a balance: a pending request has not been granted, and a rejected
      * or cancelled one never was. Pending days are reported separately so
      * somebody can see what would happen if everything outstanding were
-     * approved — which is the number an approver actually needs.
+     * approved - which is the number an approver actually needs.
      *
      * `$leaveYearStart` is optional so this stays callable with plain arrays
      * and no calendar, exactly as before, for anything that genuinely wants
      * the flat annual figures. Every real caller in this application passes
-     * it — see LeaveController — which scopes `$requests` to that leave year
+     * it - see LeaveController - which scopes `$requests` to that leave year
      * and reads each type's ACCRUED entitlement rather than its annual one.
      *
      * @param  iterable<int, array<string, mixed>>  $requests
@@ -215,7 +215,7 @@ class LeavePolicy
             $yearEnd = $leaveYearStart->copy()->addYear();
 
             // Only requests that fall inside the CURRENT leave year count
-            // against it — one still on the books from a year that has
+            // against it - one still on the books from a year that has
             // already lapsed must not eat into a fresh year's entitlement.
             $rows = $rows->filter(function (array $r) use ($leaveYearStart, $yearEnd) {
                 $from = Carbon::parse($r['from'] ?? $r['from_date']);

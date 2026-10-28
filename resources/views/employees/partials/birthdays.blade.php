@@ -17,7 +17,7 @@
             </div>
         @empty
             {{-- Date of birth landed with Announcements (2026-08-28); this list
-                 is now real. It shows a day and a month and never a year — see
+                 is now real. It shows a day and a month and never a year - see
                  App\Support\Milestones. Empty means nobody has one in the next
                  fortnight, or they have opted out of being announced. --}}
             <p class="rail-empty">No birthdays in the next fortnight.</p>

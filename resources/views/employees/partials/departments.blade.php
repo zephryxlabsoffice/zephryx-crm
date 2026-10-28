@@ -16,7 +16,7 @@
                 that is the only source of its own numbers is unreadable to a
                 screen reader and to anyone who cannot separate the colours.
 
-                Arcs are computed from the data, not drawn by hand — the
+                Arcs are computed from the data, not drawn by hand - the
                 handover's SVG had fixed segments that would not have matched
                 real headcounts.
             --}}

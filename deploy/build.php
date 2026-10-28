@@ -73,7 +73,7 @@ function zipDir(string $dir, string $zipPath): void
 
         /*
          * Unix permissions stamped into each entry. A zip made on Windows has
-         * none, and cPanel's Extract then wrote every file as 666 — world
+         * none, and cPanel's Extract then wrote every file as 666 - world
          * writable, which the host's PHP refuses to run (first deploy,
          * 2026-10-14, fixed by hand). With these, Extract writes 644 files and
          * 755 folders, so a re-upload needs no permission fixing.
@@ -94,7 +94,7 @@ if (! class_exists(ZipArchive::class)) {
 
 $dirty = trim((string) shell_exec('git -C '.escapeshellarg($root).' status --porcelain --untracked-files=no'));
 if ($dirty !== '') {
-    echo "WARNING: uncommitted changes are NOT included — the upload is built from the last commit:\n{$dirty}\n";
+    echo "WARNING: uncommitted changes are NOT included - the upload is built from the last commit:\n{$dirty}\n";
 }
 $commit = trim((string) shell_exec('git -C '.escapeshellarg($root).' rev-parse --short HEAD'));
 
@@ -141,7 +141,7 @@ foreach (['hot', 'public.rar', 'storage'] as $junk) {
     is_dir($web.'/'.$junk) ? rrmdir($web.'/'.$junk) : @unlink($web.'/'.$junk);
 }
 if (! is_file($web.'/build/manifest.json')) {
-    fwrite(STDERR, "public/build/manifest.json is not in the commit — run `npm run build` and commit public/build.\n");
+    fwrite(STDERR, "public/build/manifest.json is not in the commit - run `npm run build` and commit public/build.\n");
     exit(1);
 }
 
@@ -151,7 +151,7 @@ zipDir($app, $out.'/zephryx-crm.zip');
 zipDir($web, $out.'/public_html.zip');
 rrmdir($stage);
 
-printf("\nDone — built from commit %s.\n  %s (%.1f MB)\n  %s (%.1f MB)\n",
+printf("\nDone - built from commit %s.\n  %s (%.1f MB)\n  %s (%.1f MB)\n",
     $commit,
     $out.DIRECTORY_SEPARATOR.'zephryx-crm.zip', filesize($out.'/zephryx-crm.zip') / 1048576,
     $out.DIRECTORY_SEPARATOR.'public_html.zip', filesize($out.'/public_html.zip') / 1048576,

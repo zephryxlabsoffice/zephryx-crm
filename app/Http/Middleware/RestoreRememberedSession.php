@@ -19,8 +19,8 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * The two cookies answer different questions and both are asked. Remember-me
  * says WHO; device trust says whether a second factor is still owed. A browser
- * holding a remember-me cookie and no device trust — a copied cookie, or a
- * trust that has expired — is sent to sign in properly.
+ * holding a remember-me cookie and no device trust - a copied cookie, or a
+ * trust that has expired - is sent to sign in properly.
  *
  * Getting this wrong is the difference between remember-me being a convenience
  * and remember-me being a way to skip two-factor authentication permanently by
@@ -46,7 +46,7 @@ class RestoreRememberedSession
         }
 
         /*
-         * Resolving rotates the token — and, if a retired one was presented,
+         * Resolving rotates the token - and, if a retired one was presented,
          * revokes the whole chain and returns null. That happens even though
          * this request is not signing anybody in: a theft signal is worth
          * acting on the moment it arrives.

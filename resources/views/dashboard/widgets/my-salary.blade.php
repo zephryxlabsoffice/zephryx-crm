@@ -1,7 +1,7 @@
 @php use App\Support\SalaryPresenter as SP; @endphp
 
 {{--
-    Your last payslip. Not "your salary" — this module records what was paid, it
+    Your last payslip. Not "your salary" - this module records what was paid, it
     does not calculate what is owed (see the Salary module's own rebuild).
 
     Nothing here shows anybody else's figures: the widget takes the viewer and
@@ -35,7 +35,7 @@
         {{-- The one thing on this card somebody can act on, and the reason
              payroll day goes wrong when it is missing. --}}
         <p class="dash-note dash-note-warn">
-            No bank details on file — payroll cannot pay an account it does not have.
+            No bank details on file - payroll cannot pay an account it does not have.
         </p>
     @endif
 </section>

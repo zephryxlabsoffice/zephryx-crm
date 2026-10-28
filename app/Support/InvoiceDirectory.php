@@ -14,13 +14,13 @@ use Illuminate\Support\Facades\DB;
  * ═════════════════════════════════════════════════════════════════════════════
  * FILTERING BY STATUS HAPPENS IN PHP, AND THAT IS NOT AN OVERSIGHT
  *
- * Status is derived from the lines, the payments and today's date — there is no
+ * Status is derived from the lines, the payments and today's date - there is no
  * column to put in a WHERE clause, deliberately. Writing one in SQL would mean
  * a second implementation of InvoicePresenter::statusOf living in a query, and
  * the two would disagree the first time either changed.
  *
- * So the rows are narrowed in SQL by everything that IS a column — client,
- * search, sent, cancelled — and the status filter is applied to what comes
+ * So the rows are narrowed in SQL by everything that IS a column - client,
+ * search, sent, cancelled - and the status filter is applied to what comes
  * back. At the scale this application bills at that is a few dozen rows; if it
  * ever is not, the fix is a materialised view, not a status column.
  * ═════════════════════════════════════════════════════════════════════════════
@@ -91,7 +91,7 @@ class InvoiceDirectory
      *
      * This method is what the FORM shows, and it is a preview. The real
      * allocation happens in InvoiceController::store, inside a transaction and
-     * against a locked read of the table — two people pressing Create at the
+     * against a locked read of the table - two people pressing Create at the
      * same second must not be handed the same number, and the unique index is
      * the last line of defence rather than the plan.
      * ─────────────────────────────────────────────────────────────────────────
@@ -182,7 +182,7 @@ class InvoiceDirectory
     }
 
     /**
-     * One client's invoices — what the portal reads, scoped by the caller.
+     * One client's invoices - what the portal reads, scoped by the caller.
      *
      * @return Collection<int, array<string, mixed>>
      */

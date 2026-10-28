@@ -13,15 +13,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * An invoice.
  *
  * ═════════════════════════════════════════════════════════════════════════════
- * THE AMOUNT IS TYPED, LIKE A PAYSLIP'S NET FIGURE — NOT SUMMED FROM LINES
+ * THE AMOUNT IS TYPED, LIKE A PAYSLIP'S NET FIGURE - NOT SUMMED FROM LINES
  *
  * Decided 2026-09-11, built 2026-09-21: "invoices are uploaded like payslips,
  * not generated." `amount_minor` is a column now, the same way
- * `SalaryRecord::net_minor` always was — HR types a figure once, and nothing
+ * `SalaryRecord::net_minor` always was - HR types a figure once, and nothing
  * above it treats that as less trustworthy than three fields multiplied
  * together would have been.
  *
- * `status()` is still derived from the dates, the amount and the payments —
+ * `status()` is still derived from the dates, the amount and the payments -
  * that part of the original design was never about where the total came
  * from. Nobody sets an invoice to paid; they record the payment that makes
  * it paid.
@@ -174,7 +174,7 @@ class Invoice extends Model
      * Invoices somebody still owes money on.
      *
      * Not a status filter, because status is derived: this is the SQL
-     * approximation — sent, not cancelled — and the exact answer comes from the
+     * approximation - sent, not cancelled - and the exact answer comes from the
      * presenter once the rows are loaded.
      *
      * @param  Builder<Invoice>  $query

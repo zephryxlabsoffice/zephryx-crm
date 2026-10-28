@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
- * Employees — creating, editing and closing a record.
+ * Employees - creating, editing and closing a record.
  *
  * The first module with real writes, so this file is also where the shape of
  * every later one is settled: the permission is on the route, the act is
@@ -34,7 +34,7 @@ class EmployeeWritesTest extends TestCase
 
     public function test_somebody_without_the_permission_cannot_reach_the_form(): void
     {
-        // An Employee holds the base and nothing else — their own attendance,
+        // An Employee holds the base and nothing else - their own attendance,
         // leave and payslips. Adding a colleague is not part of that.
         $this->signInAsStaff(['employee']);
 
@@ -194,7 +194,7 @@ class EmployeeWritesTest extends TestCase
     {
         /*
          * Both dropdowns are ids from one table. Without the list check, a
-         * crafted request could set somebody's department to a leave type — and
+         * crafted request could set somebody's department to a leave type - and
          * every page reading it would render "Sick Leave" as a department.
          */
         $this->signInAsStaff(['employee', 'hr']);
@@ -257,7 +257,7 @@ class EmployeeWritesTest extends TestCase
     {
         /*
          * An unchecked box sends nothing, so without the hidden field beside it
-         * "turn this off" and "leave it alone" arrive identically — and the
+         * "turn this off" and "leave it alone" arrive identically - and the
          * person's birthday keeps being announced after they asked for it not
          * to be.
          */
@@ -276,7 +276,7 @@ class EmployeeWritesTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       CLOSING A RECORD — AND THERE IS NO DELETE
+       CLOSING A RECORD - AND THERE IS NO DELETE
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_closing_a_record_stops_the_account_and_keeps_everything_else(): void
@@ -356,15 +356,15 @@ class EmployeeWritesTest extends TestCase
             'joined_on' => Carbon::now()->subMonth()->toDateString(),
             'date_of_birth' => '1995-04-11',
 
-            // Required of every engagement since 2026-09-17 — the only field on
+            // Required of every engagement since 2026-09-17 - the only field on
             // the form that is.
             'phone' => '+91 98100 00000',
 
             /*
              * Identity and bank details, required of a full-time hire since
              * 2026-09-14. Carried here rather than in every test because none
-             * of the cases in this file is about them — they are about the
-             * account, the audit entry and the staff ID — and a payload missing
+             * of the cases in this file is about them - they are about the
+             * account, the audit entry and the staff ID - and a payload missing
              * a required field would fail all of them for the wrong reason.
              *
              * What these fields do on their own is EmployeeIdentityWritesTest,

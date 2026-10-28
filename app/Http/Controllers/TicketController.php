@@ -30,7 +30,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 /**
- * Tickets — internal operations and client support.
+ * Tickets - internal operations and client support.
  *
  * Five lists: everything (`/tickets`), raised by me (`/tickets/mine`),
  * assigned to me (`/tickets/assigned`), on my projects (`/tickets/projects`)
@@ -48,7 +48,7 @@ use Throwable;
  *    audience, and adding one would be the bug.
  *
  * 2. OWNERSHIP. Every client ticket carries a client, and the client realm
- *    scopes every read to the signed-in client's own — a client opening
+ *    scopes every read to the signed-in client's own - a client opening
  *    somebody else's ticket is the worst failure this module can have.
  *
  * ESCALATION IS FLAT (decided 2026-08-27): one shared queue, no L1→L2→L3
@@ -68,7 +68,7 @@ class TicketController extends Controller
     }
 
     /**
-     * GET /tickets — every ticket, with a tab per queue.
+     * GET /tickets - every ticket, with a tab per queue.
      */
     public function index(Request $request): Response
     {
@@ -108,7 +108,7 @@ class TicketController extends Controller
     }
 
     /**
-     * GET /tickets/mine — tickets I raised.
+     * GET /tickets/mine - tickets I raised.
      */
     public function mine(Request $request): Response
     {
@@ -122,7 +122,7 @@ class TicketController extends Controller
     }
 
     /**
-     * GET /tickets/assigned — tickets assigned to me.
+     * GET /tickets/assigned - tickets assigned to me.
      */
     public function assigned(Request $request): Response
     {
@@ -136,7 +136,7 @@ class TicketController extends Controller
     }
 
     /**
-     * GET /tickets/projects — tickets raised against projects I work on.
+     * GET /tickets/projects - tickets raised against projects I work on.
      */
     public function projects(Request $request): Response
     {
@@ -150,7 +150,7 @@ class TicketController extends Controller
     }
 
     /**
-     * GET /tickets/escalated — the review queue.
+     * GET /tickets/escalated - the review queue.
      */
     public function escalated(Request $request): Response
     {
@@ -183,7 +183,7 @@ class TicketController extends Controller
                 'kind' => TaskPresenter::fileKind($a->document_name),
                 'size' => TaskPresenter::fileSize($a->document_bytes),
             ])->all(),
-            // Triage is offered when the ticket needs it — unassigned, or
+            // Triage is offered when the ticket needs it - unassigned, or
             // escalated back for someone else to route.
             'needsTriage' => in_array($record['status'], ['unassigned', 'escalated'], true),
             'mayTriage' => $this->rbac->can($request->user(), 'tickets.triage'),
@@ -218,7 +218,7 @@ class TicketController extends Controller
      * `supersedes` is optional and takes a ticket REFERENCE, the same as
      * every other cross-record pointer a form here takes. Closing the old
      * ticket is a side effect of THIS write, not a second visit to
-     * `triage()` — "closed is final" refuses moving a closed ticket any
+     * `triage()` - "closed is final" refuses moving a closed ticket any
      * further, and this is the one place that legitimately moves a ticket
      * TO closed from wherever it was, including already-closed (a no-op).
      * ─────────────────────────────────────────────────────────────────────────
@@ -261,7 +261,7 @@ class TicketController extends Controller
             request: $request,
         );
 
-        // Support and the project manager first — see Notifier::ticketRaised.
+        // Support and the project manager first - see Notifier::ticketRaised.
         // A no-op for an internal ticket.
         $this->notify->ticketRaised($ticket->load('project.manager.user'), $request->user());
 
@@ -276,7 +276,7 @@ class TicketController extends Controller
                 actor: $request->user(),
                 entityType: 'ticket',
                 entityId: $supersedes->reference,
-                after: 'Closed — replaced by '.$ticket->reference,
+                after: 'Closed - replaced by '.$ticket->reference,
                 request: $request,
             );
         }
@@ -295,7 +295,7 @@ class TicketController extends Controller
      *
      * A ticket comment is a REPLY: the normal case is answering the person who
      * asked. A default that hid it would leave a client waiting for a response
-     * that was written days ago — the failure here is silence, not disclosure,
+     * that was written days ago - the failure here is silence, not disclosure,
      * and the internal note is the exception somebody chooses.
      *
      * The author's name and role are copied onto the row, so a thread survives
@@ -307,13 +307,13 @@ class TicketController extends Controller
         $record = $this->find($ticket);
         $model = $record['model'];
 
-        // "Closed is final" (decided 2026-09-21): the same rule as triage —
+        // "Closed is final" (decided 2026-09-21): the same rule as triage -
         // nothing writes to a closed ticket, including a reply. A new ticket
         // referencing it is the only way the conversation continues.
         if ($model->status === 'closed') {
             return redirect()
                 ->route('tickets.show', ['ticket' => $model->reference])
-                ->with('status', 'This ticket is closed. Closed tickets are final — raise a new one and reference this if it continues.')
+                ->with('status', 'This ticket is closed. Closed tickets are final - raise a new one and reference this if it continues.')
                 ->with('status_tone', 'info');
         }
 
@@ -345,7 +345,7 @@ class TicketController extends Controller
         );
 
         // Both staff readers, minus whoever wrote it. The note's text is never
-        // carried — see Notifier::ticketCommented.
+        // carried - see Notifier::ticketCommented.
         $this->notify->ticketCommented($model->load(['assignee.user', 'raiser.user']), $comment, $request->user());
 
         return redirect()
@@ -362,9 +362,9 @@ class TicketController extends Controller
      *
      * "Attachments allowed" (decided 2026-09-21) does not say who uploads
      * them. A client ticket's thread already carries files the far side
-     * might send by email or describe over a call — this is where staff
+     * might send by email or describe over a call - this is where staff
      * attach them. Add-only, no delete route, matching every other module
-     * this round — see TaskController::storeAttachment for the identical
+     * this round - see TaskController::storeAttachment for the identical
      * reasoning.
      * ─────────────────────────────────────────────────────────────────────────
      */
@@ -436,7 +436,7 @@ class TicketController extends Controller
     /**
      * Triage: route it, prioritise it, and say who is picking it up.
      *
-     * One act rather than four separate writes, because it is one decision —
+     * One act rather than four separate writes, because it is one decision -
      * somebody reads the ticket once and answers every question about it. Split
      * into four buttons it becomes four half-triaged tickets.
      */
@@ -447,21 +447,21 @@ class TicketController extends Controller
 
         /*
          * "Closed is final" (decided 2026-09-21). Not a status a ticket
-         * moves out of by any route here — a new ticket referencing this one
+         * moves out of by any route here - a new ticket referencing this one
          * is the only thing that reopens the conversation, and it does so as
          * ITS OWN ticket, never by un-closing this one.
          */
         if ($model->status === 'closed') {
             return redirect()
                 ->route('tickets.show', ['ticket' => $model->reference])
-                ->with('status', 'This ticket is closed. Closed tickets are final — raise a new one and reference this if it continues.')
+                ->with('status', 'This ticket is closed. Closed tickets are final - raise a new one and reference this if it continues.')
                 ->with('status_tone', 'info');
         }
 
         $data = $request->validate([
             'assignee_id' => ['nullable', Rule::exists('employees', 'id')],
             'priority' => ['nullable', Rule::in(Ticket::PRIORITIES)],
-            // Closed lists now (decided 2026-09-21) — both are master data,
+            // Closed lists now (decided 2026-09-21) - both are master data,
             // and a category typed once as "Bug" and once as "bug" is a
             // filter that quietly misses half its rows.
             'category' => ['nullable', Rule::in($this->categoryNames())],
@@ -534,17 +534,17 @@ class TicketController extends Controller
      * ─────────────────────────────────────────────────────────────────────────
      * A LINK, NOT A LIFECYCLE DECISION
      *
-     * This creates a task and points the ticket at it — nothing else. It does
+     * This creates a task and points the ticket at it - nothing else. It does
      * not close the ticket, does not touch its status or its priority, and
      * does not decide what "closed is final" means for a converted one; those
      * are the Tickets module's own decisions, for the step that builds it.
      * What this method answers is only "may this become a task", which is
-     * `tasks.create` — creating one from a ticket is still creating one.
+     * `tasks.create` - creating one from a ticket is still creating one.
      *
      * IDEMPOTENT, LIKE EmployeeController::convert
      *
      * A ticket already carrying `converted_task_id` refuses a second
-     * conversion rather than quietly creating a duplicate task — the same
+     * conversion rather than quietly creating a duplicate task - the same
      * reason a double-submitted form must not issue somebody two staff ids.
      * ─────────────────────────────────────────────────────────────────────────
      */
@@ -593,7 +593,7 @@ class TicketController extends Controller
             actor: $request->user(),
             entityType: 'task',
             entityId: $task->reference,
-            after: $task->name.' — created from ticket '.$model->reference,
+            after: $task->name.' - created from ticket '.$model->reference,
             request: $request,
         );
 
@@ -621,7 +621,7 @@ class TicketController extends Controller
 
     /**
      * A ticket's attachment, scoped to that ticket rather than fetched by id
-     * alone — ownership in the query, the same rule every other read in this
+     * alone - ownership in the query, the same rule every other read in this
      * application follows: an attachment id from a different ticket's page
      * must 404 rather than resolve to a file that is not this ticket's.
      */
@@ -686,11 +686,11 @@ class TicketController extends Controller
      * Options for the triage selects.
      *
      * Both categories and departments are master data now (decided
-     * 2026-09-21) — `MasterDataItem::TICKET_CATEGORIES` is its own list, and
+     * 2026-09-21) - `MasterDataItem::TICKET_CATEGORIES` is its own list, and
      * departments reuse `MasterDataItem::DEPARTMENTS` directly (the full
      * active list a ticket might route to) rather than
      * `EmployeeDirectory::departmentsInUse()`, which only shows a department
-     * once somebody is actually in it — not the question a ticket asks.
+     * once somebody is actually in it - not the question a ticket asks.
      *
      * @return array<string, mixed>
      */

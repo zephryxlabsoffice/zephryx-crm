@@ -21,15 +21,15 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Projects — the managing face (`/projects`), the personal face
+ * Projects - the managing face (`/projects`), the personal face
  * (`/projects/mine`), one project's overview (`/projects/{project}`) and the
  * end-of-day updates. Foundation spec §12.1.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * WHO MAY WRITE AN END-OF-DAY UPDATE
  *
- * Anybody on the project, and nobody else. Not a permission — it is not an
- * authority, it is the ordinary act of reporting your own day — so it is an
+ * Anybody on the project, and nobody else. Not a permission - it is not an
+ * authority, it is the ordinary act of reporting your own day - so it is an
  * ownership check: the viewer's employment record has to manage the project or
  * be in a team assigned to it. Somebody who is on no projects has nothing to
  * submit, and the page says so.
@@ -87,7 +87,7 @@ class ProjectController extends Controller
     }
 
     /**
-     * GET /projects/mine — a separate page, not a filter: §12.1, and this one
+     * GET /projects/mine - a separate page, not a filter: §12.1, and this one
      * needs no `projects.view`.
      */
     public function mine(Request $request): Response
@@ -102,7 +102,7 @@ class ProjectController extends Controller
     }
 
     /**
-     * GET /projects/updates — the end-of-day submission list.
+     * GET /projects/updates - the end-of-day submission list.
      */
     public function updates(Request $request): Response
     {
@@ -125,7 +125,7 @@ class ProjectController extends Controller
             'record' => $record,
             'teams' => ProjectDirectory::teamsOf($record),
             /*
-             * The staff view of the log, internal notes included — that is what
+             * The staff view of the log, internal notes included - that is what
              * the staff side is for. The client portal reads
              * ProjectUpdate::clientVisible and has no route to this.
              */
@@ -258,7 +258,7 @@ class ProjectController extends Controller
      *
      * The visibility field is on the form from the first line of markup rather
      * than bolted on later, and it arrives as `internal` unless somebody who
-     * may publish chose otherwise — the database default says the same thing,
+     * may publish chose otherwise - the database default says the same thing,
      * because a row inserted any other way must be internal too.
      */
     public function storeUpdate(Request $request, string $project): RedirectResponse
@@ -298,7 +298,7 @@ class ProjectController extends Controller
             actor: $request->user(),
             entityType: 'project',
             entityId: $record->reference,
-            after: $update->title.($wantsClient ? ' — shared with the client' : ' — internal'),
+            after: $update->title.($wantsClient ? ' - shared with the client' : ' - internal'),
             request: $request,
         );
 
@@ -388,7 +388,7 @@ class ProjectController extends Controller
     }
 
     /**
-     * The projects the viewer is on — managing, or in an assigned team.
+     * The projects the viewer is on - managing, or in an assigned team.
      *
      * @return Builder<Project>
      */
@@ -430,7 +430,7 @@ class ProjectController extends Controller
             'priority' => ['required', Rule::in(Project::PRIORITIES)],
             'started_on' => ['nullable', 'date'],
             // Required, because every page in this module is built around what
-            // is late — see the head of the migration.
+            // is late - see the head of the migration.
             'deadline' => ['required', 'date'],
             'teams' => ['nullable', 'array'],
             'teams.*' => [Rule::exists('teams', 'id')],
@@ -439,7 +439,7 @@ class ProjectController extends Controller
         if (isset($data['started_on']) && $data['started_on'] > $data['deadline']) {
             // Caught here rather than by `after:started_on` on the deadline,
             // so the message lands on the field somebody is likelier to have
-            // got wrong — the one they typed last.
+            // got wrong - the one they typed last.
             throw ValidationException::withMessages([
                 'deadline' => 'The deadline cannot be before the project started.',
             ]);
@@ -467,7 +467,7 @@ class ProjectController extends Controller
     /**
      * The next project reference.
      *
-     * Year-scoped, and derived from the highest existing one in that year — not
+     * Year-scoped, and derived from the highest existing one in that year - not
      * from a count, which reissues a reference the moment anything is removed.
      */
     protected function nextReference(): string

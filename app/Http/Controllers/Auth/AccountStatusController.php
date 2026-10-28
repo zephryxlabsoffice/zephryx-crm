@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\In;
 
 /**
- * The page somebody lands on when their account is closed — an ex-employee, or
+ * The page somebody lands on when their account is closed - an ex-employee, or
  * a client whose engagement has ended.
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -19,7 +19,7 @@ use Illuminate\Validation\Rules\In;
  *
  * Spec §4.2 step 4 says an inactive account gets the GENERIC failure at the
  * login form: "Invalid credentials", with no detail. That rule is not being
- * softened here, and this page is not a contradiction of it — it is what
+ * softened here, and this page is not a contradiction of it - it is what
  * happens one step later.
  *
  *   At the form, before the password is checked, saying "this account is
@@ -36,7 +36,7 @@ use Illuminate\Validation\Rules\In;
  * So the order is: authenticate first, THEN explain. Which is why this page is
  * not reachable by URL. It renders on a one-shot session value that only the
  * login flow can set, and nothing else. A page that anybody could open would
- * put the enumeration back — "does /account/inactive render for this address?"
+ * put the enumeration back - "does /account/inactive render for this address?"
  * is the same question in a different shape.
  * ─────────────────────────────────────────────────────────────────────────────
  *
@@ -53,7 +53,7 @@ use Illuminate\Validation\Rules\In;
  *    and a shared machine does not show it to the next person.
  *
  * 4. LOG IT. A closed account whose password is still correct and still being
- *    typed is worth seeing in the audit log (§6) — it is either somebody who
+ *    typed is worth seeing in the audit log (§6) - it is either somebody who
  *    has not been told, or somebody using credentials they should no longer
  *    have.
  */
@@ -80,7 +80,7 @@ class AccountStatusController extends Controller
 
         /*
          * No flag, no page. Somebody typing the URL is sent to the login form
-         * exactly as if they had asked for a page that is not there — which,
+         * exactly as if they had asked for a page that is not there - which,
          * for them, it is not.
          */
         if (! in_array($kind, self::KINDS, true)) {
@@ -93,7 +93,7 @@ class AccountStatusController extends Controller
     /**
      * The same page, rendered on demand, for reviewing it.
      *
-     * Registered in local + debug only — see routes/web.php. This page is
+     * Registered in local + debug only - see routes/web.php. This page is
      * almost impossible to see otherwise, which is how a page ships with a
      * broken layout or a sentence nobody read.
      */
@@ -111,7 +111,7 @@ class AccountStatusController extends Controller
             // The subject a reply does not have to begin by asking about. It
             // names the account type and nothing about the person.
             'subject' => config('zephryx.brand.name').' '.config('zephryx.brand.suffix')
-                .' — '.($kind === Realm::CLIENT ? 'client account' : 'account').' closed',
+                .' - '.($kind === Realm::CLIENT ? 'client account' : 'account').' closed',
         ]);
     }
 

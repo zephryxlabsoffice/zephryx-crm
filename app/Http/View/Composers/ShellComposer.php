@@ -32,7 +32,7 @@ class ShellComposer
 
         /*
          * Which sidebar to draw. Read from the path, which is right for a
-         * drawing decision and must never become an authorisation one — see
+         * drawing decision and must never become an authorisation one - see
          * Realm::forRequest for why the two are kept apart.
          */
         $realm = Realm::forRequest($this->request);
@@ -55,7 +55,7 @@ class ShellComposer
      * Who the topbar says is signed in.
      *
      * A client account is an organisation, not a person: the portal greets
-     * "DGL International School", not a contact's name. That is not cosmetic —
+     * "DGL International School", not a contact's name. That is not cosmetic -
      * the account belongs to the company we invoice, several people at the
      * client may share it, and naming an individual in the corner of every page
      * would imply a per-person account that does not exist.
@@ -70,13 +70,13 @@ class ShellComposer
         if ($user !== null) {
             return [
                 'name' => $user->name ?? 'Signed out',
-                'role' => $user->display_role ?? 'Development preview',
+                'role' => $user->display_position ?? 'Development preview',
             ];
         }
 
         if ($realm === Realm::CLIENT) {
             /*
-             * Only reachable signed out — a client with a session is named by
+             * Only reachable signed out - a client with a session is named by
              * the branch above, from `users.name`, which for a portal account
              * holds the ORGANISATION's name (§2.2: a client account is a
              * company, and several people there may share it).
@@ -92,7 +92,7 @@ class ShellComposer
 
         if ($realm === Realm::ADMIN) {
             /*
-             * One account, and it is not a person's — §2.1 makes the Admin
+             * One account, and it is not a person's - §2.1 makes the Admin
              * Panel a configuration surface operated by the owner, with no
              * personal records of its own. Naming an individual here would
              * imply it has some, and imply that a second one could be created.
@@ -104,7 +104,7 @@ class ShellComposer
     }
 
     /**
-     * The bell's contents — the signed-in person's own, newest first.
+     * The bell's contents - the signed-in person's own, newest first.
      *
      * Scoped to one reader by construction: NotificationDirectory has no
      * `all()`, only `bellFor($user)`, so there is no way to fill this panel
@@ -123,7 +123,7 @@ class ShellComposer
          * than an omission.
          *
          * Every row Notifier writes is addressed to a staff account and worded
-         * for one — "Rahul assigned you a task", "your leave was approved".
+         * for one - "Rahul assigned you a task", "your leave was approved".
          * Handing a client the staff bell would leak the lot. There is no
          * client-addressed notification stream yet, and inventing one here
          * would mean deciding what a client gets told about their own

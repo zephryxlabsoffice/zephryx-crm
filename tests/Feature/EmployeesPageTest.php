@@ -7,7 +7,7 @@ use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * Employees — GET /employees.
+ * Employees - GET /employees.
  *
  * Rows come from the `employees` table. Tests that need people call
  * seedDemoWorkforce(); the ones that do not are asserting the empty state on
@@ -23,7 +23,7 @@ class EmployeesPageTest extends TestCase
         /*
          * Every route in the staff realm is behind `realm:staff` now (§3.1), so
          * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
+         * what the page renders rather than about who may see it - the guard
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
@@ -80,7 +80,7 @@ class EmployeesPageTest extends TestCase
          * This replaced a test that the demo SOURCE was inert outside local +
          * debug. That guard mattered while the page read from a fixture; now it
          * reads from a table, and the guarantee worth having is the stronger
-         * one — an empty database renders empty, with no fallback content from
+         * one - an empty database renders empty, with no fallback content from
          * anywhere.
          */
         $this->app->detectEnvironment(fn () => 'production');
@@ -170,12 +170,12 @@ class EmployeesPageTest extends TestCase
     {
         // This card was empty until Announcements landed (2026-08-28) and date
         // of birth arrived with it. It is stored in full; the year never
-        // reaches a page — a colleague needs to know when to say happy
+        // reaches a page - a colleague needs to know when to say happy
         // birthday, not how old somebody is.
         //
         // The clock is frozen on a day one of the demo birthdays is near,
         // because the window is fourteen days and they are spread across the
-        // year — otherwise this test asserted the rail had content on the
+        // year - otherwise this test asserted the rail had content on the
         // strength of today's date. See AnnouncementsPageTest for the long
         // version of the argument.
         Carbon::setTestNow(Carbon::parse('2026-03-05'));

@@ -6,7 +6,7 @@
    the act rather than a confirmation somebody dismisses. Three of these stack
    under the masked card.
 
-   No JavaScript anywhere near it — the CSP forbids inline script, and a
+   No JavaScript anywhere near it - the CSP forbids inline script, and a
    privileged read that writes an audit entry must not need script to work. */
 .reveal-row {
   display: flex;
@@ -31,7 +31,7 @@
 }
 
 /* ============================================================================
-   Employees — GET /employees.
+   Employees - GET /employees.
 
    Shares the table, KPI tiles, rail cards, avatars, person rows and the donut
    chart with other modules (components/). Only the name cell and the email

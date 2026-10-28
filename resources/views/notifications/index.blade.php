@@ -15,7 +15,7 @@
                     @csrf
                     {{-- The reader's own act. The form carries no id, because
                          the route works on the signed-in account's own unread
-                         rows and nothing else — nobody clears anybody else's,
+                         rows and nothing else - nobody clears anybody else's,
                          and nothing marks a row read on behalf of somebody who
                          has not seen it. --}}
                     <button class="btn btn-outline" type="submit">
@@ -107,7 +107,7 @@
                             {{-- One expression: a Blade newline before the full
                                  stop renders as "Go there ." --}}
                             <span>
-                                Things everyone should read — policy, holidays, birthdays.
+                                Things everyone should read - policy, holidays, birthdays.
                                 {!! '<a class="card-link" href="'.e(route('announcements.index')).'">Go there</a>.' !!}
                             </span>
                         </span>

@@ -34,7 +34,7 @@ use Tests\TestCase;
  *
  * So a conversion issues a new identifier and a new account, closes the old
  * record without deleting it, and threads the two together. Everything HR typed
- * comes across — the owner asked for a button, not a second pass at the form —
+ * comes across - the owner asked for a button, not a second pass at the form -
  * and everything that is HISTORY stays where it was earned.
  * ═════════════════════════════════════════════════════════════════════════════
  */
@@ -79,7 +79,7 @@ class EmployeeConversionTest extends TestCase
         /*
          * The email is the sign-in identifier and is unique across every
          * account, so both rows cannot hold it. The closed one keeps an address
-         * built from the one it had — it records which address signed in there,
+         * built from the one it had - it records which address signed in there,
          * cannot collide, and is a valid shape so nothing downstream chokes.
          */
         $this->signInAsStaff(['employee', 'hr']);
@@ -109,7 +109,7 @@ class EmployeeConversionTest extends TestCase
     {
         /*
          * The point of the whole shape. The leave year runs from each person's
-         * own joining month and the balance starts fresh — both read
+         * own joining month and the balance starts fresh - both read
          * `joined_on`, so carrying the intern's date over would hand them a
          * year of accrual they have not earned on this engagement.
          */
@@ -190,7 +190,7 @@ class EmployeeConversionTest extends TestCase
     {
         /*
          * Documents are Drive-backed going forward (see DocumentStore's class
-         * header), so carryDocuments() has to use Drive's own copy endpoint —
+         * header), so carryDocuments() has to use Drive's own copy endpoint -
          * not download the bytes through this application and re-upload
          * them, which is slower and is exactly the two-call shape
          * DriveClient::copyFile() exists to avoid.
@@ -205,7 +205,7 @@ class EmployeeConversionTest extends TestCase
          * One fake for the whole scenario, not one per phase: DriveClient's
          * folder lookup, folder create and file-metadata-create all hit the
          * same URL (differing only by HTTP method), so a second `Http::fake`
-         * call registered later does not replace the first — Laravel checks
+         * call registered later does not replace the first - Laravel checks
          * stubs oldest-first, and an exhausted sequence throws rather than
          * falling through to a newer one. Four calls land on that one URL
          * across this test: three from the initial upload, one more from the
@@ -249,8 +249,8 @@ class EmployeeConversionTest extends TestCase
         $this->assertSame(1024, $copied->bytes);
         $this->assertNotSame($document->path, $copied->path);
 
-        // The download route — the only way bytes actually pass through this
-        // application — was never hit.
+        // The download route - the only way bytes actually pass through this
+        // application - was never hit.
         Http::assertNotSent(fn ($request) => str_contains((string) $request->url(), 'alt=media'));
     }
 
@@ -318,7 +318,7 @@ class EmployeeConversionTest extends TestCase
 
     public function test_the_directory_permission_does_not_carry_the_conversion(): void
     {
-        // It creates an account, so it is `employees.create` — §1's rule about
+        // It creates an account, so it is `employees.create` - §1's rule about
         // who may make one, not a looser one because the person exists already.
         $this->signInAsStaff(['employee', 'hr']);
         $intern = $this->intern();

@@ -40,7 +40,7 @@
                     <div class="table-empty">
                         <strong>Nothing on the board.</strong>
                         @if ($category)
-                            Nothing in this category right now — <a class="card-link" href="{{ route('announcements.index') }}">show everything</a>.
+                            Nothing in this category right now - <a class="card-link" href="{{ route('announcements.index') }}">show everything</a>.
                         @else
                             Announcements appear here while they are live.
                         @endif

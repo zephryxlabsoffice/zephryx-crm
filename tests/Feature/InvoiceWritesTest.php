@@ -21,14 +21,14 @@ use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
- * Invoices — raising one, sending it, recording money, and cancelling it.
+ * Invoices - raising one, sending it, recording money, and cancelling it.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * FIVE RULES, AND EVERY TEST BELOW IS ONE OF THEM
  *
  * Amounts stay integer minor units. The total is typed once, like a payslip's
  * net figure, and it is still a method rather than a column. Numbers are
- * gapless and issued inside the transaction. Nothing is ever deleted — a
+ * gapless and issued inside the transaction. Nothing is ever deleted - a
  * cancelled invoice keeps its number. And an invoice is an uploaded document
  * (decided 2026-09-11): it cannot be sent without one, and the upload goes
  * through the same Drive-backed DocumentStore payslips and profile documents
@@ -104,7 +104,7 @@ class InvoiceWritesTest extends TestCase
 
     public function test_the_amount_is_typed_once_and_is_not_a_separate_total_column(): void
     {
-        // 45,678.90 — chosen so a float would round it wrong. It stays in
+        // 45,678.90 - chosen so a float would round it wrong. It stays in
         // integer paise the whole way through.
         $this->signInAsFinance();
         $this->connectGoogleDrive();
@@ -164,11 +164,11 @@ class InvoiceWritesTest extends TestCase
         /*
          * The number allocation is a short, DB-only transaction; the upload
          * happens after it commits (see InvoiceController::store). If Drive
-         * refuses, the invoice the person just typed up must not vanish —
+         * refuses, the invoice the person just typed up must not vanish -
          * only `send()` has to notice the document is missing.
          */
         $this->signInAsFinance();
-        // Deliberately no connectGoogleDrive() — the upload fails.
+        // Deliberately no connectGoogleDrive() - the upload fails.
 
         $this->post('/invoices', $this->validPayload())->assertRedirect();
 
@@ -234,7 +234,7 @@ class InvoiceWritesTest extends TestCase
     {
         $invoice = $this->anInvoice(document: false);
         $this->signInAsFinance();
-        // No connectGoogleDrive() — Drive is not connected.
+        // No connectGoogleDrive() - Drive is not connected.
 
         $this->post('/invoices/'.$invoice->number.'/document', [
             'document' => UploadedFile::fake()->create('invoice.pdf', 20, 'application/pdf'),
@@ -305,7 +305,7 @@ class InvoiceWritesTest extends TestCase
     public function test_an_invoice_with_no_document_cannot_be_sent(): void
     {
         // An invoice with nothing behind it is not a document to put in
-        // front of a client — the same rule "no lines" used to express.
+        // front of a client - the same rule "no lines" used to express.
         $invoice = $this->anInvoice(document: false);
         $this->signInAsFinance();
 
@@ -361,7 +361,7 @@ class InvoiceWritesTest extends TestCase
     {
         /*
          * Money arriving that nobody expected is a conversation with the
-         * client, not a number to round away — and an invoice showing a
+         * client, not a number to round away - and an invoice showing a
          * negative balance is a page nobody trusts.
          */
         $invoice = $this->anInvoice(sent: true);
@@ -411,7 +411,7 @@ class InvoiceWritesTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       CANCELLING — AND THE NUMBER STAYS
+       CANCELLING - AND THE NUMBER STAYS
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_cancelling_keeps_the_record_and_its_number(): void

@@ -3,14 +3,14 @@
 {{--
     Five tiles, every one of them a count of the roll below.
 
-    The handover had six, and one of them was "Work From Home" — a number
+    The handover had six, and one of them was "Work From Home" - a number
     nothing in the flow could ever produce, because checking in captures a time
     and nothing else. A tile that can only ever read zero, or worse be filled in
     by hand, is a tile that teaches people the strip is decorative. It is gone
     until there is something that records where somebody worked.
 
     Its "Late" tile is gone too (2026-09-03), along with the concept. Three
-    statuses — present, half day, absent — plus the two reasons a day is not
+    statuses - present, half day, absent - plus the two reasons a day is not
     being judged: leave, and rejection.
 --}}
 <section class="kpi-row" aria-label="Attendance summary for the selected day">

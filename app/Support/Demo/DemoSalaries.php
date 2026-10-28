@@ -17,14 +17,14 @@ use Illuminate\Support\Collection;
  *
  * One per person per month, holding three things and no more:
  *
- *   payslip  the document produced by whatever worked the pay out — Excel
+ *   payslip  the document produced by whatever worked the pay out - Excel
  *            today, payroll software over an API later. Uploaded, not generated.
  *   net      the figure that document states, typed once when it is added, so
  *            the payroll page can answer "what did we pay out this month".
  *   paid_on  when the transfer was made, or null.
  *
  * There is deliberately no salary structure, no earnings breakdown and no
- * deductions engine. This application does not calculate payroll — see
+ * deductions engine. This application does not calculate payroll - see
  * App\Support\SalaryPresenter for why holding a second version of somebody
  * else's calculation is a liability rather than a feature.
  *
@@ -44,7 +44,7 @@ class DemoSalaries
     }
 
     /**
-     * Banking details per employee — where their pay goes.
+     * Banking details per employee - where their pay goes.
      *
      * Separate from the monthly records on purpose: this is a standing fact
      * about a person, and it is the only thing about pay that this application
@@ -60,7 +60,7 @@ class DemoSalaries
              * FOUR DOCUMENT TYPES, BECAUSE ONE PROVES NOTHING
              *
              * These were all Aadhaar until 2026-09-14, which made every masked
-             * row on every page read "Aadhaar" — and a broken passport or
+             * row on every page read "Aadhaar" - and a broken passport or
              * driving-licence masking rule would have looked exactly like a
              * working one.
              *
@@ -238,7 +238,7 @@ class DemoSalaries
             $withStatus(SalaryPresenter::PAID)->map(fn (array $r) => $r['net'])
         );
 
-        // Everything with a payslip on file, paid or not — what the month costs.
+        // Everything with a payslip on file, paid or not - what the month costs.
         $onFile = MoneyBag::of(
             $records->reject(fn (array $r) => $r['net'] === null)->map(fn (array $r) => $r['net'])
         );

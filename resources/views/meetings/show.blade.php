@@ -77,7 +77,7 @@
         @include('partials.notice', [
             'tone' => 'info',
             'title' => 'You are not on this invite',
-            'message' => 'The join link is shown only to attendees — a Meet link is effectively a password. Ask the organiser to add you if you should be there.',
+            'message' => 'The join link is shown only to attendees - a Meet link is effectively a password. Ask the organiser to add you if you should be there.',
         ])
     @endif
 

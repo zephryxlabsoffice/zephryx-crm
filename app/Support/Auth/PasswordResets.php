@@ -19,7 +19,7 @@ use Illuminate\Support\Str;
  * THE TOKEN CARRIES THE USER, AND THE FORM DOES NOT DECIDE WHO IS RESET
  *
  * The reset form posts a token and a new password. It also posts an identifier,
- * because the page shows one — and that identifier is used for NOTHING. The
+ * because the page shows one - and that identifier is used for NOTHING. The
  * account being reset is the one the token belongs to.
  *
  * If the identifier were trusted, anybody with a valid token for their own
@@ -36,8 +36,8 @@ class PasswordResets
      * Issue a token, returning the plaintext for the mail.
      *
      * Every earlier live token for the user is retired first. Two working reset
-     * links at once means the older email — often the one forwarded, screenshot
-     * or left in a shared inbox — stays live after somebody has already used
+     * links at once means the older email - often the one forwarded, screenshot
+     * or left in a shared inbox - stays live after somebody has already used
      * the newer.
      */
     public function issue(User $user, Request $request): string
@@ -61,7 +61,7 @@ class PasswordResets
     /**
      * The user a live token belongs to, or null.
      *
-     * Used to render the reset form — a link that is already expired should say
+     * Used to render the reset form - a link that is already expired should say
      * so on arrival rather than after somebody has typed a new password twice.
      */
     public function userFor(string $token): ?User
@@ -118,7 +118,7 @@ class PasswordResets
     /**
      * A fast hash, not bcrypt.
      *
-     * 64 random characters from a CSPRNG — nothing to guess, so a deliberately
+     * 64 random characters from a CSPRNG - nothing to guess, so a deliberately
      * slow hash buys nothing. What matters is that the stored value cannot be
      * reversed into a working link, and sha256 gives that.
      */

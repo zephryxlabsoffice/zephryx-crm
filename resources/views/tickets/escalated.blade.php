@@ -14,7 +14,7 @@
 
     {{--
         The queue depth leads, because it is the number this page exists for.
-        Escalation is flat — one shared queue rather than an L1→L2→L3 ladder
+        Escalation is flat - one shared queue rather than an L1→L2→L3 ladder
         (decided 2026-08-27): with six staff, most rungs of a ladder would be
         empty and a ticket would sit waiting for a level nobody holds.
     --}}

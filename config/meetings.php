@@ -12,7 +12,7 @@
 | Google Calendar API on the company's Workspace account. The CRM organises:
 | it holds who is meeting whom about what, and a reference to the Google
 | event. It does not host, record, or proxy a call, and it never constructs
-| a Meet URL — that comes back from Google or it does not exist.
+| a Meet URL - that comes back from Google or it does not exist.
 |
 | Google Calendar is the source of truth for the event itself, including
 | every attendee's RSVP. We read those back; we do not own them. Holding our
@@ -26,22 +26,22 @@ return [
 
     /*
     | The company Workspace account that owns every event, and where its
-    | credential actually lives — NOT here.
+    | credential actually lives - NOT here.
     |
     | A service account with domain-wide delegation, impersonating one
     | calendar, rather than each person connecting their own Google (decided
     | 2026-08-28). Links then survive somebody leaving, nobody has to
-    | re-consent, and the CRM stores no per-user refresh tokens — credentials
+    | re-consent, and the CRM stores no per-user refresh tokens - credentials
     | it would then have to protect.
     |
     | This used to be a `google` key here, reading `GOOGLE_CALENDAR_ID` /
     | `GOOGLE_SERVICE_ACCOUNT_KEY` / `GOOGLE_IMPERSONATE_EMAIL` out of `.env`
-    | — a file on the server, which is exactly what the owner said they did
+    | - a file on the server, which is exactly what the owner said they did
     | not want to depend on (plan doc, "Connecting it", 2026-09-16). The
     | `google_connection` table supersedes all three: `App\Support\Meetings\
     | GoogleMeetProvider` reads `calendar_id` and `impersonate_email` from
     | App\Models\GoogleConnection at the point of use, the same rule
-    | App\Support\Documents\DocumentStore follows for the Drive key — never
+    | App\Support\Documents\DocumentStore follows for the Drive key - never
     | pushed into config, because `company_settings`' boot-time overlay is
     | exactly how a secret ends up in a stack trace.
     */

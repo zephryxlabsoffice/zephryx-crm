@@ -39,7 +39,7 @@ use Illuminate\Support\Facades\DB;
  * THE FIELD LIST IS CHECKED TWICE
  *
  * On the way in, and again on the way out. The value in `changes` is a field
- * NAME that will later be used to write to the column it names — the same shape
+ * NAME that will later be used to write to the column it names - the same shape
  * as the identifier reveal, and the same treatment: never trusted, always
  * checked against ProfilePolicy::requestable(). A request stored before a field
  * left that list is a request that must not apply it afterwards.
@@ -48,7 +48,7 @@ use Illuminate\Support\Facades\DB;
  *
  * Spent requests are kept: "they asked and it was declined" is the history an
  * argument turns on later. The one exception is the candidate photo file on a
- * declined or withdrawn request — a photograph nobody accepted is not a record
+ * declined or withdrawn request - a photograph nobody accepted is not a record
  * of anything, and keeping every one of them grows the disk forever.
  * ═════════════════════════════════════════════════════════════════════════════
  */
@@ -169,7 +169,7 @@ class ProfileChanges
     /**
      * Move the record, and mark the request applied.
      *
-     * Returns the labels of what moved, for the audit entry and the message —
+     * Returns the labels of what moved, for the audit entry and the message -
      * never the values. Where somebody lives is not something to copy into the
      * one table nobody may edit.
      *
@@ -210,7 +210,7 @@ class ProfileChanges
             /*
              * Somebody with no work email signs in with their personal one
              * (StaffEmails). A new personal email therefore moves their
-             * sign-in with it — unless another account already uses it.
+             * sign-in with it - unless another account already uses it.
              */
             if (isset($fill['personal_email'])) {
                 $user = $employee->user;
@@ -228,7 +228,7 @@ class ProfileChanges
             }
 
             /*
-             * The old photo goes only after the new path is saved — the same
+             * The old photo goes only after the new path is saved - the same
              * order the direct upload used, and for the same reason: the other
              * way round leaves somebody with no photo at all if the write
              * fails.
@@ -303,7 +303,7 @@ class ProfileChanges
      * The before-and-after HR reads, one field at a time.
      *
      * Built here rather than in the view so the values are never assembled by a
-     * template that might print one it was not given — and so "not stated" is a
+     * template that might print one it was not given - and so "not stated" is a
      * single phrase rather than three spellings across three blades.
      *
      * @return list<array{label: string, was: string, now: string}>

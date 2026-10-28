@@ -6,8 +6,8 @@
 {{--
     The project list, shared by the managing face and the personal one.
 
-    `$tools`    — search and filters. My Projects shows a handful of rows.
-    `$progress` — the progress column. The personal list omits it, as the
+    `$tools`    - search and filters. My Projects shows a handful of rows.
+    `$progress` - the progress column. The personal list omits it, as the
                   handover does; it is the managing view's metric.
 --}}
 @php
@@ -110,7 +110,7 @@
                         @if ($progress)
                             <td role="cell" data-label="Progress">
                                 {{-- A native <progress>, not a div sized with an
-                                     inline style — see components/ui.css. --}}
+                                     inline style - see components/ui.css. --}}
                                 <span class="progress-cell {{ P::progressState($item['progress']) }}">
                                     <span class="progress-pct">{{ $item['progress'] }}%</span>
                                     <progress class="progress" max="100" value="{{ $item['progress'] }}">{{ $item['progress'] }}%</progress>

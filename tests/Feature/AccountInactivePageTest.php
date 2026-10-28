@@ -7,7 +7,7 @@ use App\Support\Realm;
 use Tests\TestCase;
 
 /**
- * The closed-account page — ex-employees and former clients.
+ * The closed-account page - ex-employees and former clients.
  *
  * Most of what matters here is about REACHABILITY, not content. The page says
  * something §4.2 forbids the login form from saying, and it is only allowed to
@@ -71,7 +71,7 @@ class AccountInactivePageTest extends TestCase
         /*
          * No "try again", no password reset, no sign-in link. Each of those
          * implies the state is a mistake this page can undo, and none of them
-         * is true — the account is closed, not locked out.
+         * is true - the account is closed, not locked out.
          */
         $this->assertStringNotContainsString(route('login'), $html);
         $this->assertStringNotContainsString(route('password.forgot'), $html);
@@ -88,7 +88,7 @@ class AccountInactivePageTest extends TestCase
 
         $this->assertStringContainsString('mailto:', $html);
 
-        // The theme toggle is a form and is meant to be — it is the layout's,
+        // The theme toggle is a form and is meant to be - it is the layout's,
         // it writes a cookie and nothing else. Nothing on the card itself
         // submits anywhere.
         preg_match_all('/<form[^>]*action="([^"]*)"/i', $html, $forms);

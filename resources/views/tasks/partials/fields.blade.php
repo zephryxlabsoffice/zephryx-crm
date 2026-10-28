@@ -46,7 +46,7 @@
         <div class="field-lbl">Assigned to</div>
         <div class="field-val">
             @if (! empty($task['assignee_records']))
-                {{-- Several assignees per task (decided) — one row per
+                {{-- Several assignees per task (decided) - one row per
                      person, stacked, rather than the single icon+name pair
                      this field used to be the whole of. --}}
                 <div class="task-assignees">

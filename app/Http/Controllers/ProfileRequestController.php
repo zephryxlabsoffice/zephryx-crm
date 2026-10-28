@@ -19,7 +19,7 @@ use Illuminate\Routing\Controller;
  *
  * The requests could have lived only on each employee's record page, which
  * would have been less code. It would also mean HR discovering a request by
- * happening to open the right person — so somebody who brought their documents
+ * happening to open the right person - so somebody who brought their documents
  * in on Monday waits until the next time anybody looks at their record. A
  * pending change with no queue is a pending change forever.
  *
@@ -28,7 +28,7 @@ use Illuminate\Routing\Controller;
  *
  * WHY `employees.edit` AND NOT A NEW PERMISSION
  *
- * Applying one of these IS editing an employment record — the same act as
+ * Applying one of these IS editing an employment record - the same act as
  * typing the correction into the employee form, arrived at from the other
  * side. A separate key would be a second answer to a question §5 has already
  * answered, and the two would drift.
@@ -64,7 +64,7 @@ class ProfileRequestController extends Controller
             /*
              * Field labels, never values. A queue is a list read over somebody's
              * shoulder in an open-plan office, and "Sunita asked to change her
-             * address" is all it has to say to be useful — the address itself is
+             * address" is all it has to say to be useful - the address itself is
              * on the page you have to open on purpose.
              */
             'asks' => $this->changes->summarise($item),
@@ -87,7 +87,7 @@ class ProfileRequestController extends Controller
             'request' => $profileRequest,
             'staffId' => $profileRequest->employee?->user?->user_id,
             'name' => $profileRequest->employee?->user?->name,
-            // Before and after, built in PHP — see ProfileChanges::comparison.
+            // Before and after, built in PHP - see ProfileChanges::comparison.
             'rows' => $this->changes->comparison($profileRequest),
             'hasPhoto' => $profileRequest->photo_path !== null,
             'mine' => $profileRequest->employee?->user_id === $request->user()->id,
@@ -134,7 +134,7 @@ class ProfileRequestController extends Controller
             /*
              * Required, and the reason is the same as the identifier reveal's:
              * the person reads this, possibly weeks later. "Declined" on its
-             * own tells them nothing and sends them to ask somebody — which is
+             * own tells them nothing and sends them to ask somebody - which is
              * the conversation this field exists to save.
              */
             'reason' => ['required', 'string', 'min:3', 'max:300'],
@@ -150,7 +150,7 @@ class ProfileRequestController extends Controller
             entityType: 'user',
             entityId: $profileRequest->employee?->user?->user_id ?? 'unknown',
             // The fields asked for and the stated reason. Never the values.
-            after: 'Declined: '.implode(', ', $summary).' — '.$data['reason'],
+            after: 'Declined: '.implode(', ', $summary).' - '.$data['reason'],
             request: $request,
         );
 
@@ -161,7 +161,7 @@ class ProfileRequestController extends Controller
     }
 
     /**
-     * Two checks, and neither is about the permission — the route did that.
+     * Two checks, and neither is about the permission - the route did that.
      */
     protected function guard(Request $request, ProfileChangeRequest $profileRequest): void
     {

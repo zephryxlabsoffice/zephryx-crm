@@ -7,7 +7,7 @@
 {{--
     Days somebody checked into and never out of.
 
-    This is not an approval queue and there is not going to be one — a check-in
+    This is not an approval queue and there is not going to be one - a check-in
     is a fact, not a request (see the head of AttendanceController). What is
     here is the handful of days a month that are genuinely worth a human
     looking at: a day left open past the window stops counting, and the person

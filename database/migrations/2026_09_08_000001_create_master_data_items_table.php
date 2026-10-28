@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Master data — departments, designations, leave types, document types.
+ * Master data - departments, designations, leave types, document types.
  *
  * ═════════════════════════════════════════════════════════════════════════════
  * ONE TABLE, NOT FOUR
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Schema;
  * These four lists have identical shape and one screen (Admin Panel → Master
  * Data) that is generic over all of them: pick a list, add a row, deactivate a
  * row. Four tables would mean four migrations, four models and a controller
- * that switches between them to do the same thing four ways — and a fifth list
+ * that switches between them to do the same thing four ways - and a fifth list
  * later would mean touching all of it again. `list` is the discriminator.
  *
  * NOTHING IS EVER DELETED, ONLY DEACTIVATED
@@ -40,7 +40,7 @@ return new class extends Migration
 
             /*
              * The short form shown in tables and used in exports. Unique within
-             * its list, not globally — 'DEV' as a department and 'DEV' as a
+             * its list, not globally - 'DEV' as a department and 'DEV' as a
              * designation are different things that may legitimately coexist.
              */
             $table->string('code', 16);

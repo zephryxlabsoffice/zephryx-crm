@@ -4,7 +4,7 @@
     The authenticated shell. Every internal module renders inside this.
 
     `data-theme`, `data-sidebar` and `data-density` are all resolved
-    server-side, so the first paint is already correct — no flash of the wrong
+    server-side, so the first paint is already correct - no flash of the wrong
     palette, and no collapsed-then-expanded jump on every navigation.
 --}}
 <html lang="en"
@@ -47,7 +47,7 @@
                 @endif
 
                 {{--
-                    The result of whatever was just done — "Record rejected",
+                    The result of whatever was just done - "Record rejected",
                     "Settings saved". Controllers have always flashed `status`
                     (and `status_tone`), but until 2026-10-27 only three pages
                     printed it, so most actions finished in silence. One place,

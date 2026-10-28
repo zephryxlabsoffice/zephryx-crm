@@ -17,8 +17,8 @@ use Tests\TestCase;
  * ─────────────────────────────────────────────────────────────────────────────
  * THE ASSERTIONS THAT MATTER ARE ABOUT WHAT IS NOT IN THE STORED FILE
  *
- * This is a strip and not a re-encode — App\Support\Images\PhotoIntake says
- * exactly what that buys — so the tests are written against the thing the rule
+ * This is a strip and not a re-encode - App\Support\Images\PhotoIntake says
+ * exactly what that buys - so the tests are written against the thing the rule
  * was for: a phone photo carries GPS coordinates, and a staff photo that
  * publishes where somebody lives is not a feature. Every test below builds a
  * file with something identifiable hidden in its metadata and asserts it is
@@ -130,7 +130,7 @@ class ProfilePhotoTest extends TestCase
     {
         /*
          * Nothing here decodes the image, so the cap is not protecting this
-         * server — it protects everybody who opens the page. A very large PNG
+         * server - it protects everybody who opens the page. A very large PNG
          * is a few hundred kilobytes on disk and a great deal of memory in a
          * browser.
          */
@@ -142,7 +142,7 @@ class ProfilePhotoTest extends TestCase
 
     public function test_a_format_this_module_does_not_parse_is_refused(): void
     {
-        // GIF, because an animated avatar is a decision nobody made — and
+        // GIF, because an animated avatar is a decision nobody made - and
         // because a parser that is nearly right is worse than no upload.
         $gif = "GIF89a".pack('vv', 1, 1)."\x80\x00\x00\x00\x00\x00\xFF\xFF\xFF"
             ."\x21\xF9\x04\x00\x00\x00\x00\x00\x2C\x00\x00\x00\x00\x01\x00\x01\x00\x00"
@@ -187,8 +187,8 @@ class ProfilePhotoTest extends TestCase
     {
         /*
          * The reversal, at its narrowest. The file is cleaned and stored the
-         * moment it arrives — holding it is safe, because what is held is bytes
-         * this application produced — but the photograph on the record is the
+         * moment it arrives - holding it is safe, because what is held is bytes
+         * this application produced - but the photograph on the record is the
          * one HR last accepted.
          */
         $this->upload($this->pngWithText('x'))->assertRedirect();
@@ -265,7 +265,7 @@ class ProfilePhotoTest extends TestCase
     }
 
     /**
-     * The bytes of the CANDIDATE photo — the one sitting on the request.
+     * The bytes of the CANDIDATE photo - the one sitting on the request.
      *
      * Since 2026-09-14 an upload does not touch the record: it stores the
      * cleaned file and asks HR. The stripping happens before it is written
@@ -284,7 +284,7 @@ class ProfilePhotoTest extends TestCase
     /**
      * HR applies whatever is pending, so the photo reaches the record.
      *
-     * Applied by somebody else, because nobody decides their own — the rule
+     * Applied by somebody else, because nobody decides their own - the rule
      * lives in the controller, and this goes through the service directly.
      */
     protected function applyPending(): void
@@ -335,7 +335,7 @@ class ProfilePhotoTest extends TestCase
             .'AAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q=='
         );
 
-        // After the SOI, before everything else — exactly where a camera writes
+        // After the SOI, before everything else - exactly where a camera writes
         // its APP1.
         $with = substr($jpeg, 0, 2).$injected.substr($jpeg, 2);
 
@@ -366,7 +366,7 @@ class ProfilePhotoTest extends TestCase
      *
      * Hand-built rather than drawn: `getimagesize` reads the header, so the
      * dimension cap is exercised by a header that says 2510 and a picture that
-     * is one pixel — which is also the shape of the file somebody would use to
+     * is one pixel - which is also the shape of the file somebody would use to
      * get past a check that trusted the file size instead.
      */
     protected function pngClaiming(int $width, int $height): UploadedFile

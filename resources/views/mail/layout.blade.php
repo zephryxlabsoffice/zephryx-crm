@@ -14,7 +14,7 @@
     The logo is a coloured cell with a "Z" in it rather than an image. The
     brand marks are SVG, which Gmail and Outlook do not display, and an image
     that is blocked by default shows the recipient a broken square at the top
-    of a security email — the worst place for something to look wrong.
+    of a security email - the worst place for something to look wrong.
     ─────────────────────────────────────────────────────────────────────────────
 
     Sections: `preheader` (the grey preview line in the inbox list), `heading`,

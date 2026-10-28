@@ -8,7 +8,7 @@ use App\Support\TaskDirectory;
 use Tests\TestCase;
 
 /**
- * Tasks — the managing face, the personal face, the team lead's queue and one
+ * Tasks - the managing face, the personal face, the team lead's queue and one
  * task. Foundation spec §12.1.
  */
 class TasksPageTest extends TestCase
@@ -21,7 +21,7 @@ class TasksPageTest extends TestCase
         /*
          * Every route in the staff realm is behind `realm:staff` now (§3.1), so
          * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
+         * what the page renders rather than about who may see it - the guard
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
@@ -200,7 +200,7 @@ class TasksPageTest extends TestCase
         /*
          * The page printed the same paragraph about wireframes and brand
          * guidelines on all fourteen demo tasks. It read as real, which is what
-         * made it worth removing — a blank is honest and a filled-in field is
+         * made it worth removing - a blank is honest and a filled-in field is
          * the task's.
          */
         $this->withDemoData();

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * One day's comp-off, earned by working a rostered Sunday or holiday in
  * full.
  *
- * `status` has no `lapsed` value — see App\Support\CompOffPolicy, which
+ * `status` has no `lapsed` value - see App\Support\CompOffPolicy, which
  * derives it from `expires_on` the same way AttendancePolicy derives an
  * auto-rejection from the ten-hour window: because the clock passed it, not
  * because anything stamped it.

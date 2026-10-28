@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use Tests\TestCase;
 
 /**
- * POST /login and POST /login/verify — the inline validation states.
+ * POST /login and POST /login/verify - the inline validation states.
  *
  * Authentication itself is not implemented; these pin the field-level
  * behaviour the login page's design depends on.

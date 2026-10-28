@@ -20,7 +20,7 @@ use Illuminate\Support\Carbon;
  * update at an employee and a project.
  *
  * The demo updates are reproduced INCLUDING their internal ones, because those
- * are the point — a seed where every note is client-visible would hide the
+ * are the point - a seed where every note is client-visible would hide the
  * whole reason the visibility column exists.
  */
 class ProjectSeeder extends Seeder
@@ -43,7 +43,7 @@ class ProjectSeeder extends Seeder
 
             if ($clientId === null) {
                 // A project with no client is not a project this schema can
-                // hold — see the migration. Skipped rather than invented.
+                // hold - see the migration. Skipped rather than invented.
                 continue;
             }
 
@@ -103,7 +103,7 @@ class ProjectSeeder extends Seeder
             /*
              * The timestamps are set after the fact because `created_at` is
              * what the log orders by, and Eloquent would otherwise stamp every
-             * demo update with the moment the seeder ran — a log where
+             * demo update with the moment the seeder ran - a log where
              * everything happened at once.
              */
             $update->forceFill(['created_at' => $postedAt, 'updated_at' => $postedAt])->saveQuietly();

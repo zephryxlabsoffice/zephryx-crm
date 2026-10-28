@@ -2,7 +2,7 @@
     One setting's input, by type.
 
     Kept as its own partial so the settings screen and the confirmation screen
-    cannot disagree about what a value looks like — the confirmation re-renders
+    cannot disagree about what a value looks like - the confirmation re-renders
     the same field, disabled, beside the proposed one.
 --}}
 @switch($setting['type'])

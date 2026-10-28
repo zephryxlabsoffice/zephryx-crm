@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * `audience` (everyone / department / managers) answers "which of OUR staff",
  * and every value in it is a way of narrowing the internal board. A client is
- * not a narrower slice of staff — it is a second, unrelated board this same
+ * not a narrower slice of staff - it is a second, unrelated board this same
  * post can also appear on. Folding it into `audience` would make "everyone"
  * and "clients" mutually exclusive, when a policy notice is routinely both.
  *

@@ -16,8 +16,8 @@ use Illuminate\Support\Collection;
  * employment behind them, so a developer's database contains these twelve
  * people rather than this class pretending to be a database.
  *
- * The demo modules that still have no tables — teams, tasks, salaries, RBAC
- * previews — also draw their people from here, which is why they agree with the
+ * The demo modules that still have no tables - teams, tasks, salaries, RBAC
+ * previews - also draw their people from here, which is why they agree with the
  * directory. Each of them stops as its own module lands, and this class goes
  * when the last one has.
  *
@@ -76,7 +76,7 @@ class DemoEmployees
     }
 
     /**
-     * Headcount per department, largest first — the donut's data.
+     * Headcount per department, largest first - the donut's data.
      *
      * @return list<array{name: string, count: int, share: float}>
      */
@@ -124,7 +124,7 @@ class DemoEmployees
      * Upcoming birthdays.
      *
      * `dob` landed with Announcements (2026-08-28). It is stored in full and
-     * **only ever displayed as a day and a month** — see App\Support\Milestones:
+     * **only ever displayed as a day and a month** - see App\Support\Milestones:
      * a colleague needs to know when to say happy birthday, not how old
      * somebody is, and putting everyone's age on an internal page permanently
      * is harder to take back than to not do.

@@ -122,7 +122,7 @@
                             <label class="form-field-lbl" for="task-assignees">Assigned to <span class="an-optional">(optional)</span></label>
                             {{-- A multiple select, not checkboxes or a script: it
                                  works with no JavaScript and submits an array the
-                                 controller validates and syncs onto the pivot —
+                                 controller validates and syncs onto the pivot -
                                  see App\Models\Task::assignees(). --}}
                             <select id="task-assignees" name="assignee_ids[]" multiple size="6">
                                 @foreach ($employeeChoices as $employee)

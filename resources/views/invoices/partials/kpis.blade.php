@@ -1,7 +1,7 @@
 {{--
     Five tiles. Every figure comes from `$stats`; the handover hardcoded
     28 / 16 / 8 / 4 / ₹12,45,000 and an invented "18.6%" month-on-month delta.
-    Its counts also did not add up — 16 paid + 8 pending + 4 overdue is the
+    Its counts also did not add up - 16 paid + 8 pending + 4 overdue is the
     whole 28, leaving no room for the "Partial" row its own table showed.
 
     Money leads, counts follow. "28 invoices" is trivia; "₹4,05,000 outstanding"

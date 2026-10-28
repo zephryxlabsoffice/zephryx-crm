@@ -5,7 +5,7 @@
     The handover hardcoded 15 projects, 128 tasks, 42 tickets, "22 / 22"
     attendance and 12 days of leave. A profile is a summary of other pages, and
     a summary that disagrees with the page it summarises is worse than no
-    summary — the first time somebody notices, they stop trusting all five.
+    summary - the first time somebody notices, they stop trusting all five.
 
     So each row links. A number somebody disputes is one click from the page
     that produced it, which is also what stops this card quietly becoming a

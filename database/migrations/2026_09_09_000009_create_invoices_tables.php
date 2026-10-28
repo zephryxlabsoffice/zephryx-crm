@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Schema;
  * FOUR RULES, AND THE SCHEMA IS SHAPED BY ALL FOUR
  *
  * 1. AMOUNTS ARE INTEGERS OF MINOR UNITS. Paise for INR, cents for USD. No
- *    column here is a float or a decimal — see App\Support\Money.
+ *    column here is a float or a decimal - see App\Support\Money.
  *
  * 2. THERE IS NO `total` COLUMN, AND NO `amount_paid` COLUMN. A total is the
  *    sum of the lines and the paid figure is the sum of the payments. Stored,
@@ -19,14 +19,14 @@ use Illuminate\Support\Facades\Schema;
  *    time it does the argument is with a client about money.
  *
  * 3. THERE IS NO `status` COLUMN EITHER. Draft, sent, partial, paid, overdue
- *    and cancelled are derived from the dates, the lines and the payments —
+ *    and cancelled are derived from the dates, the lines and the payments -
  *    nobody sets an invoice to "paid", they record the payment that makes it
  *    paid. The two things that ARE stored are the two that cannot be derived:
  *    when it was sent, and whether it was cancelled.
  *
  * 4. NUMBERS ARE GAPLESS AND NOTHING IS EVER DELETED. A cancelled invoice keeps
  *    its number. A missing number in a sequence is the first thing an auditor
- *    asks about and "we deleted it" is the wrong answer in every jurisdiction —
+ *    asks about and "we deleted it" is the wrong answer in every jurisdiction -
  *    which is why there is no delete route anywhere above this file, and why
  *    the number is issued inside the transaction that writes the row.
  * ═════════════════════════════════════════════════════════════════════════════
@@ -51,7 +51,7 @@ return new class extends Migration
             /*
              * Per invoice, not per company. A client billed in USD gets an
              * invoice in USD, and a set of invoices in two currencies has no
-             * single total — see App\Support\MoneyBag, which is why the KPI
+             * single total - see App\Support\MoneyBag, which is why the KPI
              * tiles carry bags rather than numbers.
              */
             $table->string('currency', 3)->default('INR');
@@ -92,7 +92,7 @@ return new class extends Migration
             $table->string('description', 300);
 
             /*
-             * Quantity is an integer. Fractional quantities — 2.5 hours — would
+             * Quantity is an integer. Fractional quantities - 2.5 hours - would
              * need a rate and a rounding rule, and rounding a rate against a
              * quantity is where an invoice stops agreeing with itself by a
              * paisa. Hours are billed as a line saying so.

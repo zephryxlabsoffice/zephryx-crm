@@ -27,7 +27,7 @@ use Tests\TestCase;
  * THE VIEWER IS A SEEDED PERSON, NOT A BARE ACCOUNT
  *
  * These pages are the one place where "the signed-in person" has to be somebody
- * with an employment record, a department, a manager and some history — a fresh
+ * with an employment record, a department, a manager and some history - a fresh
  * User with no Employee behind it now gets a 403 (§2.1), which is correct and
  * would make every assertion below assert the error page.
  *
@@ -79,7 +79,7 @@ class ProfilePageTest extends TestCase
     {
         /*
          * A Mentor and the owner hold no Employee base (§2.1). They have no
-         * profile — not an empty one — so this is a 403 rather than a page of
+         * profile - not an empty one - so this is a 403 rather than a page of
          * blanks claiming they have a record that says nothing.
          */
         $this->signInAsMentor();
@@ -92,7 +92,7 @@ class ProfilePageTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       WHO OWNS WHICH FIELD — THE DECISION THIS MODULE IS ABOUT
+       WHO OWNS WHICH FIELD - THE DECISION THIS MODULE IS ABOUT
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_nothing_hr_owns_is_an_input_on_any_profile_page(): void
@@ -115,7 +115,7 @@ class ProfilePageTest extends TestCase
                 $this->assertStringNotContainsString(
                     'name="'.$field.'"',
                     $html,
-                    "{$field} is submittable on {$url} — it is not the person's to change",
+                    "{$field} is submittable on {$url} - it is not the person's to change",
                 );
             }
         }
@@ -136,8 +136,8 @@ class ProfilePageTest extends TestCase
     {
         /*
          * The assertion the whole module rests on. `disabled` stops nobody, so
-         * this posts the HR fields directly — a name, a department, a
-         * designation, a date of birth and a reporting line — alongside a
+         * this posts the HR fields directly - a name, a department, a
+         * designation, a date of birth and a reporting line - alongside a
          * legitimate change.
          *
          * The legitimate one becomes a REQUEST (2026-09-14) and nothing else
@@ -224,7 +224,7 @@ class ProfilePageTest extends TestCase
          * The counterpart to the locked fields: these are not read-only boxes
          * with an explanation, they are inputs somebody fills in. What changed
          * on 2026-09-14 is where the submission GOES, not whether the field is
-         * theirs to fill in — so the page must still offer every one of them.
+         * theirs to fill in - so the page must still offer every one of them.
          */
         $html = $this->get('/profile')->getContent();
 
@@ -249,7 +249,7 @@ class ProfilePageTest extends TestCase
         $pending = ProfileChangeRequest::query()->pending()->firstOrFail();
 
         // Empties dropped and duplicates removed BEFORE the comparison:
-        // "English, Hindi,  , English" is a typo, not four languages — and a
+        // "English, Hindi,  , English" is a typo, not four languages - and a
         // list compared as a raw string would look like a change every time.
         $this->assertSame(['English', 'Hindi'], $pending->changes['languages']);
         $this->assertSame(['Laravel', 'Testing'], $pending->changes['skills']);
@@ -343,7 +343,7 @@ class ProfilePageTest extends TestCase
          * the record is an account-takeover primitive.
          *
          * The email-change form has an input, and it is `new_email` on a route
-         * that mails both addresses — deliberately not `email`, and deliberately
+         * that mails both addresses - deliberately not `email`, and deliberately
          * not on the details form under one Save button.
          */
         foreach (self::PAGES as $url) {
@@ -369,7 +369,7 @@ class ProfilePageTest extends TestCase
     {
         /*
          * The property this flow exists for. Confirming only the old address
-         * leaves the account signing in with the address it always had — which
+         * leaves the account signing in with the address it always had - which
          * is what stops a typo, or somebody's borrowed session, locking an
          * account to a mailbox its owner cannot read.
          */
@@ -475,7 +475,7 @@ class ProfilePageTest extends TestCase
         /*
          * Resolved from the session, so there is no identifier to change to
          * somebody else's. The two parameters that exist are a document
-         * reference — scoped to the signed-in person's own inside the query —
+         * reference - scoped to the signed-in person's own inside the query -
          * and an email-change token, which carries its own authority.
          */
         foreach (app('router')->getRoutes() as $route) {
@@ -492,7 +492,7 @@ class ProfilePageTest extends TestCase
     public function test_somebody_elses_document_is_not_found(): void
     {
         /*
-         * Not forbidden — not found. The lookup happens WITHIN this person's
+         * Not forbidden - not found. The lookup happens WITHIN this person's
          * own documents, so there is no branch that could be written the wrong
          * way round, and no reference that tells somebody a document exists.
          */
@@ -524,7 +524,7 @@ class ProfilePageTest extends TestCase
 
     public function test_viewing_your_own_document_opens_it_inline_and_is_logged(): void
     {
-        // Same route, opened rather than saved — plan doc, "In-browser
+        // Same route, opened rather than saved - plan doc, "In-browser
         // viewing is ours, not Drive's".
         $document = $this->viewer->documents()->firstOrFail();
 
@@ -569,7 +569,7 @@ class ProfilePageTest extends TestCase
 
     public function test_uploading_a_document_stores_it_on_drive(): void
     {
-        // Documents are Drive-backed going forward — see DocumentStore's
+        // Documents are Drive-backed going forward - see DocumentStore's
         // class header.
         $this->connectGoogleDrive();
         $this->fakeDriveUpload();
@@ -588,7 +588,7 @@ class ProfilePageTest extends TestCase
 
     public function test_a_document_upload_that_cannot_reach_drive_is_a_validation_error_not_a_500(): void
     {
-        // No connectGoogleDrive() — the singleton row does not exist, so
+        // No connectGoogleDrive() - the singleton row does not exist, so
         // DocumentStore::put() throws before anything is saved.
         $this->post('/profile/documents', [
             'document' => UploadedFile::fake()->create('resume.pdf', 30, 'application/pdf'),
@@ -600,7 +600,7 @@ class ProfilePageTest extends TestCase
     {
         /*
          * Scoped by entity as well as by actor, so it carries what happened TO
-         * this account — including a sign-in they did not make, which is the
+         * this account - including a sign-in they did not make, which is the
          * entry the page exists for. What it must never carry is a colleague's.
          */
         $colleague = $this->signInAsSeeded('EMP004');
@@ -623,7 +623,7 @@ class ProfilePageTest extends TestCase
 
     public function test_the_activity_log_claims_no_location(): void
     {
-        // The handover's read "New login from Kolkata, IN" — IP geolocation that
+        // The handover's read "New login from Kolkata, IN" - IP geolocation that
         // does not exist and was never decided. This is the screen somebody
         // checks when they think their account has been used by someone else,
         // and a wrong city sends them chasing nothing.
@@ -639,7 +639,7 @@ class ProfilePageTest extends TestCase
 
     public function test_the_birth_year_never_reaches_the_page(): void
     {
-        // The same rule the birthday board holds to — a day and a month, never
+        // The same rule the birthday board holds to - a day and a month, never
         // the year. It applies on a person's own profile too, because a
         // screenshot of this page is still a screenshot.
         $dob = $this->viewer->date_of_birth;
@@ -711,7 +711,7 @@ class ProfilePageTest extends TestCase
     {
         /*
          * An unchecked checkbox sends nothing at all, so the write reads the
-         * ABSENCE of the key as off. Written the obvious way — `?? true` — the
+         * ABSENCE of the key as off. Written the obvious way - `?? true` - the
          * opt-out would be unsettable, which turns a per-person opt-out back
          * into a column that is always on.
          */
@@ -820,7 +820,7 @@ class ProfilePageTest extends TestCase
     public function test_every_summary_row_links_to_the_page_it_came_from(): void
     {
         // A number somebody disputes should be one click from the page that
-        // produced it — which is also what stops this card becoming a second
+        // produced it - which is also what stops this card becoming a second
         // source of truth.
         $html = $this->get('/profile')->getContent();
 
@@ -864,7 +864,7 @@ class ProfilePageTest extends TestCase
     public function test_the_tabs_are_links_with_their_own_urls(): void
     {
         // The handover's were <button>s switched by an inline <script>, which
-        // our CSP blocks — they would not have switched at all.
+        // our CSP blocks - they would not have switched at all.
         $html = $this->get('/profile')->getContent();
 
         foreach (['profile.show', 'profile.preferences', 'profile.password', 'profile.activity'] as $route) {
@@ -903,7 +903,7 @@ class ProfilePageTest extends TestCase
      * The plaintext token for one half of a change.
      *
      * The tokens are only ever returned to the controller, so a test cannot
-     * read one back out of the row — it is stored hashed, which is the point.
+     * read one back out of the row - it is stored hashed, which is the point.
      * This re-issues by writing a known hash instead, which exercises the same
      * lookup `confirm()` does without weakening the storage to make a test
      * convenient.

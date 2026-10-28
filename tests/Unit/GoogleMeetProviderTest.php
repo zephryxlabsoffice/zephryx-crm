@@ -11,7 +11,7 @@ use Tests\TestCase;
  * GoogleMeetProvider's own Calendar-calling logic.
  *
  * MeetingWritesTest exercises MeetingController against a fake MeetingProvider
- * and never touches this class — that is deliberate there, the same way it is
+ * and never touches this class - that is deliberate there, the same way it is
  * deliberate here: this file is the one place that proves the real Google
  * REST calls are shaped correctly, so the controller-level tests can keep
  * assuming "the provider behaves" without re-proving it every time.
@@ -81,7 +81,7 @@ class GoogleMeetProviderTest extends TestCase
                 return true; // not the event-insert call, ignore
             }
 
-            // `conferenceDataVersion=1` — an insert without it produces an
+            // `conferenceDataVersion=1` - an insert without it produces an
             // event with no way to join (MeetingProvider's own point 2).
             $this->assertStringContainsString('conferenceDataVersion=1', $request->url());
             $this->assertStringContainsString('sendUpdates=all', $request->url());
@@ -94,7 +94,7 @@ class GoogleMeetProviderTest extends TestCase
                 ['manager@zephryxlabs.in', 'client@example.com'],
                 array_column($body['attendees'], 'email'),
             );
-            // Times carry UTC explicitly onto the wire — point 6.
+            // Times carry UTC explicitly onto the wire - point 6.
             $this->assertSame('2026-10-15T05:30:00+00:00', $body['start']['dateTime']);
             $this->assertSame('UTC', $body['start']['timeZone']);
 
@@ -105,7 +105,7 @@ class GoogleMeetProviderTest extends TestCase
     public function test_create_throws_when_google_returns_no_meet_link(): void
     {
         // An event with no way to join is exactly the failure this module
-        // is shaped to avoid — treated as a failure, not returned.
+        // is shaped to avoid - treated as a failure, not returned.
         $this->connectGoogleCalendar();
 
         Http::fake([
@@ -125,7 +125,7 @@ class GoogleMeetProviderTest extends TestCase
 
     public function test_create_throws_a_clear_message_when_google_is_not_connected(): void
     {
-        // No connectGoogleCalendar() — the singleton row does not exist.
+        // No connectGoogleCalendar() - the singleton row does not exist.
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Google is not connected');
 
@@ -135,7 +135,7 @@ class GoogleMeetProviderTest extends TestCase
     public function test_create_throws_when_connected_for_drive_but_not_for_calendar(): void
     {
         // Drive needs no impersonation at all and can be connected on its
-        // own — see CalendarClient's header comment. A key that uploads
+        // own - see CalendarClient's header comment. A key that uploads
         // payslips fine may still be missing what Calendar specifically
         // needs.
         $this->connectGoogleDrive();

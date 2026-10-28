@@ -18,7 +18,7 @@ use Illuminate\Routing\Controller;
  * WHAT THIS PAGE IS NOT
  *
  * It is not a company dashboard. No headcount trend, no revenue, no project
- * status — §2.1 gives this account no operational authority and no personal
+ * status - §2.1 gives this account no operational authority and no personal
  * records, and the owner holds a staff account for exactly that view. A second
  * copy of it here would be a page maintained twice and read once.
  *
@@ -104,7 +104,7 @@ class DashboardController extends Controller
          *
          * Staff only. A client account holds no roles by construction (§2.2),
          * so counting them would report a loose end for every client the
-         * company has — and the page would be permanently, uselessly amber.
+         * company has - and the page would be permanently, uselessly amber.
          */
         $noRoles = AccountDirectory::stats()['no_roles'];
 
@@ -132,7 +132,7 @@ class DashboardController extends Controller
         }
 
         /*
-         * Not a fault — a standing caution. These settings re-judge records
+         * Not a fault - a standing caution. These settings re-judge records
          * that already exist, and the person who edits them once a year should
          * be reminded of that before they open the page, not after.
          */

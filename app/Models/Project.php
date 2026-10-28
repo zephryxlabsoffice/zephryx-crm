@@ -14,13 +14,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * ─────────────────────────────────────────────────────────────────────────────
  * `progress` IS DERIVED, AND NO LONGER A COLUMN
  *
- * It used to be typed in — a tinyint somebody kept honestly because Tasks had
+ * It used to be typed in - a tinyint somebody kept honestly because Tasks had
  * no table yet, and a percentage derived from an empty one would have reported
  * every project as 0%. Tasks landed
  * (2026_09_09_000004_create_tasks_table.php), and
  * 2026_09_21_000027_derive_project_progress_drop_column.php dropped the
- * column. `ProjectDirectory::row()` computes it now — completed tasks over
- * total tasks for the project — the same place `due_in` is computed rather
+ * column. `ProjectDirectory::row()` computes it now - completed tasks over
+ * total tasks for the project - the same place `due_in` is computed rather
  * than stored, for the same reason: a typed number can disagree with the
  * facts beside it, and a derived one cannot.
  * ─────────────────────────────────────────────────────────────────────────────
@@ -92,7 +92,7 @@ class Project extends Model
     }
 
     /**
-     * Still being worked on — the four states that are not an ending.
+     * Still being worked on - the four states that are not an ending.
      *
      * @param  Builder<Project>  $query
      * @return Builder<Project>
@@ -105,8 +105,8 @@ class Project extends Model
     /**
      * Past its deadline and not finished.
      *
-     * A completed project that landed late is not an outstanding problem — it
-     * is history — which is why this is not simply "deadline in the past".
+     * A completed project that landed late is not an outstanding problem - it
+     * is history - which is why this is not simply "deadline in the past".
      *
      * @param  Builder<Project>  $query
      * @return Builder<Project>
@@ -130,7 +130,7 @@ class Project extends Model
     public function scopeForEmployee(Builder $query, ?Employee $employee): Builder
     {
         if ($employee === null) {
-            // Somebody with no employment record — a Mentor, the owner — is on
+            // Somebody with no employment record - a Mentor, the owner - is on
             // no projects. An empty list, not an error.
             return $query->whereRaw('1 = 0');
         }

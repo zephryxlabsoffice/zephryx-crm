@@ -22,7 +22,7 @@ class LeavePageTest extends TestCase
         /*
          * Every route in the staff realm is behind `realm:staff` now (§3.1), so
          * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
+         * what the page renders rather than about who may see it - the guard
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
@@ -35,7 +35,7 @@ class LeavePageTest extends TestCase
      *
      * `/leave/mine` and the "nobody decides their own request" rule both turn
      * on who is signed in, and the CEO the suite signs in as by default has an
-     * account but no employment record — so no leave, and nothing to fail to
+     * account but no employment record - so no leave, and nothing to fail to
      * decide. This signs in as EMP002 with HR alongside Employee: their own
      * leave, and the permission to decide everybody else's.
      */
@@ -205,7 +205,7 @@ class LeavePageTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       WHO ELSE IS OFF — THE THING THE HANDOVER LEFT OUT
+       WHO ELSE IS OFF - THE THING THE HANDOVER LEFT OUT
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_the_request_shows_who_else_is_off_across_those_dates(): void
@@ -272,7 +272,7 @@ class LeavePageTest extends TestCase
     {
         // "Fever, seeing a doctor tomorrow" is health information, and a phone
         // number is personal data (§6). Both belong on the request, for the
-        // person deciding it — not on a page listing twelve people.
+        // person deciding it - not on a page listing twelve people.
         $this->withDemoData();
 
         foreach (['/leave', '/leave?tab=all', '/leave/mine'] as $url) {
@@ -438,7 +438,7 @@ class LeavePageTest extends TestCase
     public function test_the_pages_render_nothing_the_content_security_policy_would_block(): void
     {
         // The handover wired its tabs with an inline <script> and coloured its
-        // donut with style="--dot:#3B82F6" — none of it would have worked.
+        // donut with style="--dot:#3B82F6" - none of it would have worked.
         $this->withDemoData();
 
         foreach (['/leave', '/leave/mine', '/leave/request', '/leave/LV-2026-039'] as $url) {

@@ -5,7 +5,7 @@
 
     This is the ledger the status is derived from, so it is shown in full rather
     than summarised. If somebody disputes that an invoice is settled, this is
-    the screen that answers it — which is why each row carries its method and
+    the screen that answers it - which is why each row carries its method and
     reference, not just an amount and a date.
 --}}
 <div class="card">

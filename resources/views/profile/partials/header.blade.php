@@ -7,7 +7,7 @@
 {{--
     Identity, and the two columns of things the person does not control.
 
-    The layout is the handover's and it is a good one — who you are on the left,
+    The layout is the handover's and it is a good one - who you are on the left,
     what the company records about you on the right. What changed is that the
     right-hand columns now say they are read-only and why, rather than sitting
     silently next to editable fields and leaving somebody to work out which is
@@ -21,7 +21,7 @@
             Initials are the permanent fallback rather than a placeholder image:
             they are always available, always legible, and never a broken icon.
             The photo is served through a route because it lives on the private
-            disk — there is no public URL for it and there is not meant to be.
+            disk - there is no public URL for it and there is not meant to be.
         --}}
         @if ($profile['photo_path'])
             <img class="avatar avatar-xl pf-photo" src="{{ route('profile.photo.show') }}"
@@ -94,7 +94,7 @@
             </div>
             <div class="stat-row">
                 <span class="stat-label">{{ ProfilePolicy::labelOf('dob') }}</span>
-                {{-- A day and a month. Never the year — the same rule the
+                {{-- A day and a month. Never the year - the same rule the
                      birthday board holds to, and a screenshot of this page is
                      still a screenshot. --}}
                 <span class="stat-value">{{ P::dayAndMonth($profile['dob']) }}</span>

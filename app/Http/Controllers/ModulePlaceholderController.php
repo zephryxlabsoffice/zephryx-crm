@@ -18,7 +18,7 @@ use Illuminate\Routing\Controller;
  * rather than here.
  *
  * The difference between the two is worth keeping straight. This controller
- * says "being built" — it is for a module whose page is coming shortly, and it
+ * says "being built" - it is for a module whose page is coming shortly, and it
  * invites somebody to check back. `missing()` says "planned, not next", which is
  * the honest answer for a module nobody is working on. Pointing the second kind
  * at a placeholder is how a roadmap turns into a set of pages that never change.
@@ -36,7 +36,7 @@ class ModulePlaceholderController extends Controller
     }
 
     /**
-     * Deferred to v2 — the navigation entry exists, the page does not.
+     * Deferred to v2 - the navigation entry exists, the page does not.
      */
     public function missing(): never
     {

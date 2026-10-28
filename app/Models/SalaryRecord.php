@@ -71,8 +71,8 @@ class SalaryRecord extends Model
             'net' => $this->net(),
             /*
              * Keyed on the NAME, not the stored path. A record can say a
-             * payslip was added and have no file behind it — a demo row, or a
-             * month imported from wherever pay was recorded before this — and
+             * payslip was added and have no file behind it - a demo row, or a
+             * month imported from wherever pay was recorded before this - and
              * that is a truthful state rather than a broken one. `file` is what
              * decides whether a download link is drawn.
              */
@@ -89,7 +89,7 @@ class SalaryRecord extends Model
     }
 
     /**
-     * `68 KB`. Rounded for a person, not for arithmetic — nothing sums these.
+     * `68 KB`. Rounded for a person, not for arithmetic - nothing sums these.
      */
     public function payslipSize(): ?string
     {
@@ -103,7 +103,7 @@ class SalaryRecord extends Model
     }
 
     /**
-     * Records with a payslip and no payment yet — what a payroll run acts on.
+     * Records with a payslip and no payment yet - what a payroll run acts on.
      *
      * @param  Builder<SalaryRecord>  $query
      * @return Builder<SalaryRecord>

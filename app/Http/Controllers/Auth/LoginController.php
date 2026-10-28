@@ -29,13 +29,13 @@ use Illuminate\Support\Facades\Mail;
  * ═════════════════════════════════════════════════════════════════════════════
  * THE ORDER OF §4.2 IS THE SECURITY MODEL, NOT A SUGGESTION
  *
- *   1. Rate-limit check          — before the database is touched at all
- *   2. Look up, verify password  — in constant time, whether or not the
+ *   1. Rate-limit check          - before the database is touched at all
+ *   2. Look up, verify password  - in constant time, whether or not the
  *                                  account exists
- *   3. Failure                   — ONE message, always the same one
- *   4. Inactive                  — the same message again, no detail
- *   5. Success, trusted device   — session issued
- *   6. Success, untrusted device — code emailed, NO SESSION until it verifies
+ *   3. Failure                   - ONE message, always the same one
+ *   4. Inactive                  - the same message again, no detail
+ *   5. Success, trusted device   - session issued
+ *   6. Success, untrusted device - code emailed, NO SESSION until it verifies
  *
  * Step 3 is the one that gets softened in practice, and softening it is how an
  * attacker learns who works here. "No account with that email" and "wrong
@@ -44,7 +44,7 @@ use Illuminate\Support\Facades\Mail;
  *
  * Step 6 is the one that gets implemented wrongly: a session must not exist
  * before the code is verified. Signing somebody in and then asking for a code
- * makes the code decorative — anything holding a session cookie is already in.
+ * makes the code decorative - anything holding a session cookie is already in.
  * The pending state lives in the session as an id and a timestamp, and nothing
  * else.
  * ═════════════════════════════════════════════════════════════════════════════
@@ -94,7 +94,7 @@ class LoginController extends Controller
     }
 
     /**
-     * GET /login/verify — the one-time code step.
+     * GET /login/verify - the one-time code step.
      */
     public function showVerify(Request $request): Response|RedirectResponse
     {
@@ -118,7 +118,7 @@ class LoginController extends Controller
     }
 
     /**
-     * POST /login — §4.2 steps 1 to 6.
+     * POST /login - §4.2 steps 1 to 6.
      */
     public function attempt(Request $request): RedirectResponse
     {
@@ -146,7 +146,7 @@ class LoginController extends Controller
          *
          * When there is no account we still hash something. Otherwise the
          * response for an unknown address returns in a millisecond and the
-         * response for a known one takes as long as bcrypt does — which is the
+         * response for a known one takes as long as bcrypt does - which is the
          * enumeration §4.2 forbids, leaking through the clock instead of
          * through the message.
          */
@@ -173,7 +173,7 @@ class LoginController extends Controller
         /*
          * Step 4. The password was right and the account cannot sign in.
          *
-         * The FORM says nothing about why — that is still the generic refusal,
+         * The FORM says nothing about why - that is still the generic refusal,
          * because saying more here would let anybody who guesses an address
          * learn whether it belongs to a closed account.
          *
@@ -206,7 +206,7 @@ class LoginController extends Controller
 
         $wantsRemember = $request->boolean('remember') && $user->account_type !== Realm::ADMIN;
 
-        // Step 5. A trusted device skips the code — never the password.
+        // Step 5. A trusted device skips the code - never the password.
         if ($this->devices->trusts($user, $request)) {
             return $this->establish($user, $request, $wantsRemember);
         }
@@ -216,7 +216,7 @@ class LoginController extends Controller
     }
 
     /**
-     * POST /login/verify — §4.3.
+     * POST /login/verify - §4.3.
      */
     public function verify(Request $request): RedirectResponse
     {
@@ -247,7 +247,7 @@ class LoginController extends Controller
             );
 
             /*
-             * One message for wrong, expired and exhausted — the same reasoning
+             * One message for wrong, expired and exhausted - the same reasoning
              * as the sign-in form. "That code has expired" tells somebody
              * holding a stolen password that they had the right account and
              * only needed to be faster.
@@ -263,7 +263,7 @@ class LoginController extends Controller
     }
 
     /**
-     * POST /login/resend — §4.3, rate-limited, invalidates the previous code.
+     * POST /login/resend - §4.3, rate-limited, invalidates the previous code.
      */
     public function resend(Request $request): RedirectResponse
     {
@@ -293,12 +293,12 @@ class LoginController extends Controller
        ══════════════════════════════════════════════════════════════════════ */
 
     /**
-     * §4.1 — one field, an `@` decides how it is read.
+     * §4.1 - one field, an `@` decides how it is read.
      */
     protected function lookUp(string $identifier): ?User
     {
         // An email is the sign-in address OR a staff member's personal email
-        // (both sign in since 2026-10-27 — see App\Support\StaffEmails).
+        // (both sign in since 2026-10-27 - see App\Support\StaffEmails).
         return str_contains($identifier, '@')
             ? StaffEmails::findUser($identifier)
             : User::where('user_id', $identifier)->first();
@@ -337,7 +337,7 @@ class LoginController extends Controller
         $code = $this->codes->issue($user, $request);
 
         /*
-         * §4.3 accepts that a mail failure blocks sign-in — there are no backup
+         * §4.3 accepts that a mail failure blocks sign-in - there are no backup
          * codes, deliberately. So the send is not swallowed: if SMTP is down,
          * this throws and somebody sees a 500 rather than a verify page that
          * will never accept anything.
@@ -361,7 +361,7 @@ class LoginController extends Controller
     }
 
     /**
-     * Issue the session — the only place in the application that does.
+     * Issue the session - the only place in the application that does.
      */
     protected function establish(User $user, Request $request, bool $remember, bool $trustDevice = false): RedirectResponse
     {
@@ -369,7 +369,7 @@ class LoginController extends Controller
 
         auth()->login($user);
 
-        // §4.4 — regenerated on login. Without this the pre-auth session id
+        // §4.4 - regenerated on login. Without this the pre-auth session id
         // survives, which is session fixation.
         $request->session()->regenerate();
 
@@ -403,7 +403,7 @@ class LoginController extends Controller
             );
         }
 
-        // §4.5 — never the admin account. Checked here as well as in the
+        // §4.5 - never the admin account. Checked here as well as in the
         // service, because a second reader of this code should not have to go
         // and look.
         if ($remember && $user->account_type !== Realm::ADMIN) {
@@ -462,7 +462,7 @@ class LoginController extends Controller
 
     protected function supportMailto(): string
     {
-        return SupportContact::mailto('ZephryxLabs CRM — account access');
+        return SupportContact::mailto('ZephryxLabs CRM - account access');
     }
 
     /**

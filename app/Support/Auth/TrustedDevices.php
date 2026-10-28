@@ -41,7 +41,7 @@ class TrustedDevices
      * Whether this request arrives from a device this user has trusted.
      *
      * Looked up by hash, never by plaintext. The cookie's value is hashed the
-     * same way it was stored, which is why the column can be indexed at all —
+     * same way it was stored, which is why the column can be indexed at all -
      * see the head of the auth migration.
      */
     public function trusts(User $user, Request $request): bool
@@ -68,7 +68,7 @@ class TrustedDevices
      *
      * Password hashes are deliberately slow, which is right for something a
      * human chose and an attacker can guess. This token is 40 random bytes from
-     * a CSPRNG — there is nothing to guess, so slowness buys nothing and costs
+     * a CSPRNG - there is nothing to guess, so slowness buys nothing and costs
      * a bcrypt verification on every page load. The property that matters is
      * that the stored value cannot be reversed, and a fast hash gives that.
      * ─────────────────────────────────────────────────────────────────────────
@@ -122,7 +122,7 @@ class TrustedDevices
      *
      * Called on a password change and on a reset (§4.6). Somebody changing
      * their password because they think it is compromised expects that to end
-     * every other session and every remembered device — a change that left an
+     * every other session and every remembered device - a change that left an
      * attacker's laptop trusted would be worse than useless, because it would
      * feel like it worked.
      */

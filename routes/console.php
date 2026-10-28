@@ -9,7 +9,7 @@ Artisan::command('inspire', function () {
 
 /*
  * The daily database backup (2026-10-27). Run by a cPanel Cron Job once a
- * day — see docs/DEPLOY.md. Also available as Admin → Backups → Back up now.
+ * day - see docs/DEPLOY.md. Also available as Admin → Backups → Back up now.
  * Exit code 1 on failure so cPanel's cron email reports it.
  */
 Artisan::command('backup:database', function (App\Support\Backups\Backups $backups) {

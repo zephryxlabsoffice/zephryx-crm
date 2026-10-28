@@ -1,7 +1,7 @@
 @extends('errors.layout')
 
 {{--
-    Shown while `php artisan down` is in effect — during a deploy, or a
+    Shown while `php artisan down` is in effect - during a deploy, or a
     database restore from the cPanel backups (§11.2).
 --}}
 @section('title', 'Back shortly')
@@ -18,7 +18,7 @@
 
 @section('message')
     The workspace is briefly unavailable while we finish an update. Nothing has
-    been lost — try again in a few minutes.
+    been lost - try again in a few minutes.
 @endsection
 
 @section('actions')

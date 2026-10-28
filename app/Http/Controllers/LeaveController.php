@@ -23,7 +23,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Leave — requesting time off, and deciding on it.
+ * Leave - requesting time off, and deciding on it.
  *
  * Four pages: the approval queue (`/leave`), a person's own leave
  * (`/leave/mine`), the request form (`/leave/request`) and one request
@@ -37,7 +37,7 @@ use Illuminate\Validation\ValidationException;
  * the approver agrees it. What is computed is the sum of what was recorded.
  * See App\Support\LeavePolicy.
  *
- * The policy itself — which leave types exist and how many days each carries —
+ * The policy itself - which leave types exist and how many days each carries -
  * belongs to the Admin Panel (§12) and is only read here.
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -48,7 +48,7 @@ use Illuminate\Validation\ValidationException;
  *    leave makes the whole record meaningless.
  *
  * 2. A DECISION IS ONLY VALID ON A PENDING REQUEST, and the status is checked
- *    INSIDE the transaction — two approvers opening the same request must not
+ *    INSIDE the transaction - two approvers opening the same request must not
  *    both be able to decide it, and a check before the transaction is a race
  *    that shows up as one decision silently overwriting another.
  *
@@ -68,7 +68,7 @@ class LeaveController extends Controller
     }
 
     /**
-     * GET /leave — the approval queue.
+     * GET /leave - the approval queue.
      */
     public function index(Request $request): Response
     {
@@ -99,7 +99,7 @@ class LeaveController extends Controller
     }
 
     /**
-     * GET /leave/mine — the signed-in person's own leave.
+     * GET /leave/mine - the signed-in person's own leave.
      */
     public function mine(Request $request): Response
     {
@@ -136,7 +136,7 @@ class LeaveController extends Controller
     }
 
     /**
-     * GET /leave/request — the request form.
+     * GET /leave/request - the request form.
      */
     public function create(Request $request): Response
     {
@@ -155,7 +155,7 @@ class LeaveController extends Controller
     }
 
     /**
-     * GET /leave/{request} — one request, and the decision on it.
+     * GET /leave/{request} - one request, and the decision on it.
      */
     public function show(Request $request, string $leaveRequest): Response
     {
@@ -178,7 +178,7 @@ class LeaveController extends Controller
                 LeavePolicy::leaveYearStart($record['model']->employee->joined_on),
             ),
             /*
-             * Nobody decides their own request — not even the owner, and not
+             * Nobody decides their own request - not even the owner, and not
              * even with the permission. Both halves are checked again on the
              * write; this only decides whether the buttons are drawn.
              */
@@ -197,8 +197,8 @@ class LeaveController extends Controller
     /**
      * Ask for time off.
      *
-     * The days are the requester's number. Nothing here recalculates it — see
-     * the head of this class — but the dates have to make sense as a range, and
+     * The days are the requester's number. Nothing here recalculates it - see
+     * the head of this class - but the dates have to make sense as a range, and
      * a request cannot cost more days than the range could contain.
      */
     public function store(Request $request): RedirectResponse
@@ -222,7 +222,7 @@ class LeaveController extends Controller
             /*
              * The one arithmetic check in a module that deliberately does not
              * do arithmetic. It is not deciding how many days the range is
-             * worth — a week with a holiday in it may well cost four — it is
+             * worth - a week with a holiday in it may well cost four - it is
              * refusing a figure the range cannot contain at all, which is a
              * typo rather than a judgement.
              */
@@ -279,7 +279,7 @@ class LeaveController extends Controller
     /**
      * Withdraw a request you made.
      *
-     * The requester's own act — pending, or approved and not yet started, per
+     * The requester's own act - pending, or approved and not yet started, per
      * LeavePresenter::isCancellable. Leave already under way is a conversation,
      * not a button.
      */
@@ -290,7 +290,7 @@ class LeaveController extends Controller
 
         $viewer = $this->employeeFor($request);
 
-        // Only the person who asked. Not the approver — refusing somebody's
+        // Only the person who asked. Not the approver - refusing somebody's
         // leave is a rejection, with a reason, and calling it a withdrawal
         // would put words in their mouth.
         abort_unless($viewer !== null && $model->employee_id === $viewer->id, 403);
@@ -346,7 +346,7 @@ class LeaveController extends Controller
             /*
              * The rule that cannot be delegated away. Checked here as well as
              * hidden in the view, because a button that is not drawn is not a
-             * control — and this is the one somebody would think to try.
+             * control - and this is the one somebody would think to try.
              */
             throw ValidationException::withMessages([
                 'note' => 'You cannot decide your own leave request.',
@@ -406,7 +406,7 @@ class LeaveController extends Controller
         /*
          * Outside the transaction, and after the "already decided" return
          * above. A second approver whose write lost the race gets the message
-         * and sends nothing — one decision, one notification, however many
+         * and sends nothing - one decision, one notification, however many
          * people pressed the button.
          */
         $this->notify->leaveDecided($decided->load('employee.user'), $request->user());
@@ -436,7 +436,7 @@ class LeaveController extends Controller
 
     /**
      * A Mentor and the owner hold no Employee base, so they have no leave to
-     * ask for (§2.1). A freelancer has one but no leave either — paid
+     * ask for (§2.1). A freelancer has one but no leave either - paid
      * against work, not time (decided 2026-09-11).
      */
     protected function requireEmployee(Request $request): Employee

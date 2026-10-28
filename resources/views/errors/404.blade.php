@@ -43,7 +43,7 @@
     @endsection
 
     {{-- The path is echoed as escaped text inside a <code>, never used to build
-         a link or a message — a 404 page is a classic place to reflect
+         a link or a message - a 404 page is a classic place to reflect
          attacker-controlled input straight back at the browser. --}}
     @section('meta')
         You asked for <code>/{{ request()->path() }}</code>

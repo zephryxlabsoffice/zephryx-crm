@@ -22,7 +22,7 @@ class SalaryPageTest extends TestCase
         /*
          * Every route in the staff realm is behind `realm:staff` now (§3.1), so
          * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
+         * what the page renders rather than about who may see it - the guard
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
@@ -34,7 +34,7 @@ class SalaryPageTest extends TestCase
      * The demo pay as real rows, read as somebody who has some.
      *
      * `/salary/mine` and `/salary/payslip/{period}` resolve the person from the
-     * session — that is the whole design of the route — so a test about
+     * session - that is the whole design of the route - so a test about
      * somebody's own pay has to be somebody with pay. EMP002 with HR alongside
      * Employee: their own payslips, and the permission to run payroll for
      * everybody else.
@@ -64,7 +64,7 @@ class SalaryPageTest extends TestCase
      * Every record across the months the demo covers.
      *
      * Walked period by period rather than read straight off the table, because
-     * a payroll month is a list of PEOPLE with records looked up against them —
+     * a payroll month is a list of PEOPLE with records looked up against them -
      * the rows for somebody with no record are the ones worth seeing.
      *
      * @return \Illuminate\Support\Collection<int, array<string, mixed>>
@@ -82,7 +82,7 @@ class SalaryPageTest extends TestCase
      * POST with a real CSRF token.
      *
      * `withDemoData()` moves the environment to `local`, which switches CSRF
-     * verification back on — Laravel only skips it while the app reports it is
+     * verification back on - Laravel only skips it while the app reports it is
      * running tests. Rather than disabling the middleware, these posts carry a
      * token, so the tests exercise the same path a browser does and a form that
      * forgot `@csrf` would fail here.
@@ -272,7 +272,7 @@ class SalaryPageTest extends TestCase
         $response->assertSee('About to be marked paid', false);
         // The commit button is on the confirmation, not on the list.
         $response->assertSee('Yes, mark', false);
-        // And it can be pressed — it shipped disabled after the write worked.
+        // And it can be pressed - it shipped disabled after the write worked.
         $response->assertDontSee('not built yet', false);
     }
 
@@ -380,7 +380,7 @@ class SalaryPageTest extends TestCase
         /*
          * Read from the banking table itself, not from a salary row.
          *
-         * The row shape no longer carries identifiers at all — it used to, and
+         * The row shape no longer carries identifiers at all - it used to, and
          * that was the demo source handing every page a full account number and
          * trusting the template not to print it. The values still have to come
          * from somewhere in order to be searched for, and the only honest
@@ -399,7 +399,7 @@ class SalaryPageTest extends TestCase
 
     public function test_the_payroll_list_contains_no_bank_pan_or_id_proof_at_all(): void
     {
-        // Not masked — absent. A masked value on a list of everybody still
+        // Not masked - absent. A masked value on a list of everybody still
         // confirms an account exists and hands over twelve people's last four
         // digits at once.
         $this->withDemoData();
@@ -430,7 +430,7 @@ class SalaryPageTest extends TestCase
 
     public function test_the_confirmation_page_shows_no_bank_details_either(): void
     {
-        // It is a list of people about to be paid — precisely the screen where
+        // It is a list of people about to be paid - precisely the screen where
         // somebody might think account numbers belong.
         $this->withDemoData();
 
@@ -566,7 +566,7 @@ class SalaryPageTest extends TestCase
          * a table now, and in production real records SHOULD be shown.
          *
          * What survives is the guarantee underneath it: no figure is invented.
-         * With no employees there is no payroll — not a payroll of zeroes.
+         * With no employees there is no payroll - not a payroll of zeroes.
          */
         $this->assertTrue($this->allRecords()->isEmpty());
         $this->assertTrue(SalaryDirectory::missingFrom(now()->format('Y-m'))->isEmpty());
@@ -577,7 +577,7 @@ class SalaryPageTest extends TestCase
     public function test_no_figure_is_written_into_the_markup(): void
     {
         // The handover hardcoded 28 paid and 12 pending against a table headed
-        // "All Salary Records (40)" — for a company of twelve.
+        // "All Salary Records (40)" - for a company of twelve.
         $this->withDemoData();
 
         $response = $this->get('/salary');

@@ -1,9 +1,9 @@
 /* ============================================================================
-   Teams — /teams, /teams/mine, /teams/{team}.
+   Teams - /teams, /teams/mine, /teams/{team}.
 
    The handover shipped three stylesheets (team.css, team-overview.css,
    my-teams.css) that between them re-derived the table, KPI tiles, search
-   field, filter buttons, pagination and rail cards under new names —
+   field, filter buttons, pagination and rail cards under new names -
    `.tm-table`, `.to-table`, `.tm-kpi`, `.to-kpi`, `.tm-search`, `.tm-foot`.
    Those all map onto components/ui.css, which is where they stay. What is
    left here is genuinely specific to teams.

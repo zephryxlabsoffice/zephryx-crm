@@ -24,14 +24,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * §9 makes this the one screen where the staff view and the client view must
  * show the same thing, and the reason is practical: this is the page that gets
  * argued about on a call. Since an invoice is an uploaded PDF now (decided
- * 2026-09-11), that requirement is met by construction — there is exactly one
+ * 2026-09-11), that requirement is met by construction - there is exactly one
  * file, wherever it lives, and both realms stream the same bytes back through
  * App\Support\Documents\DocumentStore. Nothing here re-derives a figure and
  * nothing re-renders the document as a second copy of itself.
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * Drafts never appear. An unsent invoice is a document somebody here is still
- * writing — figures that may change, and a number not yet committed to the
+ * writing - figures that may change, and a number not yet committed to the
  * sequence. That filter lives in ClientPortal::invoices, so it applies to
  * the tiles and the detail lookup as well as the table.
  */
@@ -91,7 +91,7 @@ class InvoiceController extends PortalController
     }
 
     /**
-     * GET /client/invoices/{invoice}/document/view — the uploaded PDF, opened
+     * GET /client/invoices/{invoice}/document/view - the uploaded PDF, opened
      * rather than saved.
      */
     public function viewDocument(Request $request, string $invoice): StreamedResponse
@@ -109,16 +109,16 @@ class InvoiceController extends PortalController
      * ─────────────────────────────────────────────────────────────────────────
      * THE REAL FILE, THROUGH A ROUTE THAT CHECKS OWNERSHIP AND AUDITS IT
      *
-     * Never a static path — the same rule as profile documents, for the same
+     * Never a static path - the same rule as profile documents, for the same
      * reason: an invoice names what a company pays and for what. Ownership is
-     * the query — `ClientPortal::invoice` cannot fetch somebody else's — and
+     * the query - `ClientPortal::invoice` cannot fetch somebody else's - and
      * the access is audited before anything is streamed, because an entry
      * written after a `return` is an entry that does not exist.
      *
      * Until 2026-09-21 this route generated a printable HTML page instead: the
      * host had no PDF library, so a real PDF could not be produced here.
      * Invoices becoming an upload rather than a generated document removed
-     * that problem along with the question that caused it — the file this
+     * that problem along with the question that caused it - the file this
      * route now serves is the one somebody in Finance attached, not something
      * built on the fly.
      * ─────────────────────────────────────────────────────────────────────────
@@ -164,7 +164,7 @@ class InvoiceController extends PortalController
      *
      * Resolved through ClientPortal rather than InvoiceDirectory, so it is
      * scoped like everything else. An invoice referencing a project that is not
-     * this client's would render without the name instead of fetching it —
+     * this client's would render without the name instead of fetching it -
      * which should never happen, and if it does, is a data problem worth seeing
      * rather than papering over.
      *
@@ -179,7 +179,7 @@ class InvoiceController extends PortalController
 
         // `array_merge`, not `+`: the invoice row already carries a
         // `project_record` built for the staff page, and the union operator
-        // keeps the left side's value for a key that exists — so this would
+        // keeps the left side's value for a key that exists - so this would
         // have been a no-op that looked like a scope.
         return array_merge($invoice, ['project_record' => $project]);
     }

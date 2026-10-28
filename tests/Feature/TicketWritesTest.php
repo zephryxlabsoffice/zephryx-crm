@@ -18,14 +18,14 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * Tickets — raising one, replying on it, and triaging it.
+ * Tickets - raising one, replying on it, and triaging it.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * THE COLUMN THIS FILE IS REALLY ABOUT IS `visibility` AGAIN
  *
  * It defaults to public here and to internal on a project update, and the
  * difference is the point: a ticket comment is a REPLY, so the failure mode is
- * silence — a client waiting for an answer written days ago. An internal note
+ * silence - a client waiting for an answer written days ago. An internal note
  * is the exception somebody chooses, and the client audience cannot reach one.
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -261,7 +261,7 @@ class TicketWritesTest extends TestCase
 
     public function test_category_and_department_are_a_closed_list(): void
     {
-        // Master data now (decided 2026-09-21) — a triage cannot invent a
+        // Master data now (decided 2026-09-21) - a triage cannot invent a
         // category nobody set up in the Admin Panel.
         $ticket = $this->aTicket();
         $this->signInAsEmployee(['employee', 'support'], 'EMP897');

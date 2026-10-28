@@ -17,8 +17,8 @@ use Tests\TestCase;
  * particular number, for a stated reason, and it leaves a permanent record of
  * having done so. Three properties follow, and each one is a test below:
  *
- *   IT IS A POST. A GET would be a link — prefetched by a browser, sitting in
- *   history, retried on a back button — and every one of those would write an
+ *   IT IS A POST. A GET would be a link - prefetched by a browser, sitting in
+ *   history, retried on a back button - and every one of those would write an
  *   audit entry for a look nobody took, which makes the log useless in exactly
  *   the situation it exists for.
  *

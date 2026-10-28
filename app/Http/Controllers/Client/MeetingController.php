@@ -28,7 +28,7 @@ use Throwable;
  * REQUESTING IS NOT SCHEDULING
  *
  * A client cannot put an event in anybody's calendar. What they can do is ask,
- * which produces a record with no Google Calendar event behind it — a project
+ * which produces a record with no Google Calendar event behind it - a project
  * manager or the system admin creates the actual meeting, and that act is what
  * sends the invitations.
  *
@@ -90,7 +90,7 @@ class MeetingController extends PortalController
      * Client\ProjectController applies to a project's manager.
      *
      * `organiser_record` off ClientPortal::meeting is a full EmployeeDirectory
-     * row — email, department, designation, joining date. The client needs to
+     * row - email, department, designation, joining date. The client needs to
      * know who called the meeting, not read their personnel file, so this
      * REPLACES the key with a merge rather than adding to it: `$project +
      * [...]` would keep the left side's value for a key that already exists.
@@ -132,7 +132,7 @@ class MeetingController extends PortalController
     }
 
     /**
-     * POST /client/meetings/request — ask for a meeting.
+     * POST /client/meetings/request - ask for a meeting.
      *
      * ─────────────────────────────────────────────────────────────────────────
      * THIS PRODUCES A RECORD, NOT AN EVENT
@@ -143,7 +143,7 @@ class MeetingController extends PortalController
      * everybody's calendar is the thing this shape exists to prevent.
      *
      * The project is re-checked against the signed-in client rather than
-     * trusted from the select — §6, and the reason this method resolves the
+     * trusted from the select - §6, and the reason this method resolves the
      * client from the session and then filters on it.
      * ─────────────────────────────────────────────────────────────────────────
      */
@@ -173,7 +173,7 @@ class MeetingController extends PortalController
             }
         }
 
-        // Typed in the display zone, stored UTC — the same conversion the staff
+        // Typed in the display zone, stored UTC - the same conversion the staff
         // side does, in the same one place.
         $start = Carbon::parse($data['date'].' '.$data['time'], MeetingPresenter::zone())->utc();
         $minutes = (int) ($data['duration'] ?? config('meetings.default_duration', 30));
@@ -219,14 +219,14 @@ class MeetingController extends PortalController
      * THE SAME ORDER AS THE STAFF SIDE, FOR THE SAME REASON
      *
      * Google is told first. A meeting called off here but still live on the
-     * calendar is worse than one left alone — the client believes it is off
+     * calendar is worse than one left alone - the client believes it is off
      * and whoever is on the other end still turns up. If the provider throws,
      * the meeting stays scheduled and the client is told why, exactly as
      * MeetingController::cancel does for staff.
      *
      * Ownership runs through ClientPortal::meetingModel, which applies the
      * same "requested by them or on their own project" filter as every other
-     * read in this realm — there is no meeting id a client can hand this
+     * read in this realm - there is no meeting id a client can hand this
      * route that resolves to somebody else's meeting.
      * ─────────────────────────────────────────────────────────────────────────
      */
@@ -264,7 +264,7 @@ class MeetingController extends PortalController
 
                 throw ValidationException::withMessages([
                     'reason' => 'The calendar could not be updated, so the meeting has NOT been cancelled. '
-                        .'Everybody still has the invite — try again, or contact us to cancel it.',
+                        .'Everybody still has the invite - try again, or contact us to cancel it.',
                 ]);
             }
         }

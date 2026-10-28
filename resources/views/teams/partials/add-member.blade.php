@@ -2,10 +2,10 @@
     Adding somebody to this team.
 
     On the page rather than behind a modal: it is one field and a button, and a
-    dialog would need JavaScript to open — which puts a routine act behind a
+    dialog would need JavaScript to open - which puts a routine act behind a
     script that can fail to load.
 
-    Only shown to somebody who may actually do it here — which is not the same
+    Only shown to somebody who may actually do it here - which is not the same
     as holding the permission. A Team Lead may manage their own team and no
     other (§2.6), and TeamController::canManageMembers is the one place that is
     decided.

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * TYPED, NEVER DERIVED. The foundation spec keeps this application out of
  * calculating pay, and a CTC worked out from the components would be exactly
- * that — so it is its own figure, stated by whoever agreed it, in minor units
+ * that - so it is its own figure, stated by whoever agreed it, in minor units
  * like every other amount. Nullable: not every agreement states one.
  */
 return new class extends Migration

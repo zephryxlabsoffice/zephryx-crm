@@ -8,11 +8,11 @@ use Tests\TestCase;
 /**
  * The Support page (plan doc §Support).
  *
- * One page, two buttons — raise a ticket, or email us. Nothing here owns a
+ * One page, two buttons - raise a ticket, or email us. Nothing here owns a
  * write of its own: Tickets already owns raising one, and SupportContact
  * already owns the mailto address. What is worth testing is that both links
  * are actually wired to the real thing, and that the page is reachable by
- * both an ordinary employee and a Mentor — the one role with no Employee
+ * both an ordinary employee and a Mentor - the one role with no Employee
  * base (§2.1), which is exactly the case a permission gate could get wrong.
  */
 class SupportPageTest extends TestCase
@@ -26,7 +26,7 @@ class SupportPageTest extends TestCase
 
     public function test_the_page_renders_for_a_mentor(): void
     {
-        // Mentor holds no Employee base at all — everything it can reach is
+        // Mentor holds no Employee base at all - everything it can reach is
         // granted explicitly, the same way dashboard.view is. support.view
         // follows that exact precedent (RbacSeeder's mentor definition).
         $this->signInAsMentor();

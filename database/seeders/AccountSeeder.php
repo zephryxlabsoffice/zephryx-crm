@@ -18,7 +18,7 @@ use RuntimeException;
  * ═════════════════════════════════════════════════════════════════════════════
  * WHAT THIS SEEDS IN PRODUCTION: ONE ACCOUNT, AND NOT ITS PASSWORD
  *
- * The owner account has to exist, or there is no way to configure the system —
+ * The owner account has to exist, or there is no way to configure the system -
  * no roles to assign, nobody to assign them. Everything else is created by an
  * administrator through the Admin Panel, because §1 says there is no public
  * sign-up and every account is created by one.
@@ -62,7 +62,7 @@ class AccountSeeder extends Seeder
     }
 
     /**
-     * The single admin account (§2.1) — a configuration surface, not a person.
+     * The single admin account (§2.1) - a configuration surface, not a person.
      */
     protected function owner(): void
     {
@@ -72,7 +72,7 @@ class AccountSeeder extends Seeder
             if (app()->environment('production')) {
                 throw new RuntimeException(
                     'ZEPHRYX_OWNER_PASSWORD is not set. The owner account will not be seeded with a '
-                    .'default password — see database/seeders/AccountSeeder.'
+                    .'default password - see database/seeders/AccountSeeder.'
                 );
             }
 
@@ -99,7 +99,7 @@ class AccountSeeder extends Seeder
      * Staff accounts, from the same demo people the pages already show.
      *
      * Drawn from DemoEmployees rather than invented so the seeded accounts and
-     * the demo directory agree — a signed-in Amit Verma seeing somebody else's
+     * the demo directory agree - a signed-in Amit Verma seeing somebody else's
      * name on his own attendance page would be a confusing thing to review.
      */
     protected function staff(): void
@@ -115,7 +115,7 @@ class AccountSeeder extends Seeder
                     'password' => self::DEV_PASSWORD,
                     'account_type' => Realm::STAFF,
                     // Everyone here is an employee. A Mentor account would set
-                    // this to `mentor` and lose the Employee base with it —
+                    // this to `mentor` and lose the Employee base with it -
                     // that single column is the whole difference (§2.1).
                     'staff_kind' => 'employee',
                     'status' => $employee['status'] === 'inactive' ? 'inactive' : 'active',
@@ -139,8 +139,8 @@ class AccountSeeder extends Seeder
     /**
      * Who holds which roles.
      *
-     * Deliberately shows stacking (§2.4) — Pooja is HR and an Employee, Rahul
-     * is a Manager and an Employee — because a seed where everybody has exactly
+     * Deliberately shows stacking (§2.4) - Pooja is HR and an Employee, Rahul
+     * is a Manager and an Employee - because a seed where everybody has exactly
      * one role hides the union rule until it bites in production.
      *
      * @return list<string>
@@ -165,7 +165,7 @@ class AccountSeeder extends Seeder
      * `client_ref` HOLDS THE CLIENT'S REFERENCE, NOT ITS NAME
      *
      * It is the column every ownership check in the portal resolves through
-     * (§6), which makes it an identifier — and a name is not one. Two companies
+     * (§6), which makes it an identifier - and a name is not one. Two companies
      * can share a name, and renaming one would silently detach its portal from
      * its own invoices, tickets and projects.
      *

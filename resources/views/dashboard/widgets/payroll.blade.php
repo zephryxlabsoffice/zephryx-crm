@@ -4,7 +4,7 @@
     This month's payroll run, as a state of play rather than a total.
 
     "Paid out" is only what has actually gone out. A figure that folds in rows
-    nobody has paid yet describes an intention, not a payment — the distinction
+    nobody has paid yet describes an intention, not a payment - the distinction
     the Salary module was rebuilt around.
 
     No individual amounts and no names: this card says how many, never how much

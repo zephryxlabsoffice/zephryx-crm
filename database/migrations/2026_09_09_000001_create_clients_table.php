@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
  * ═════════════════════════════════════════════════════════════════════════════
  * A CLIENT IS NOT AN ACCOUNT
  *
- * `users` already holds client accounts — the people who sign into the portal.
+ * `users` already holds client accounts - the people who sign into the portal.
  * This is the organisation behind them, and the two are different lifecycles: a
  * client exists from the moment somebody signs a contract, whether or not
  * anybody has been given a login, and one organisation can hand the portal to
@@ -30,14 +30,14 @@ use Illuminate\Support\Facades\Schema;
  *
  * The handover's table drew both as columns of a client. Neither is one.
  *
- * Payment is the state of that client's invoices — stored here it would be a
+ * Payment is the state of that client's invoices - stored here it would be a
  * field somebody has to remember to change every time an invoice is raised or
  * settled, and it would be wrong the morning one falls overdue. The project is
  * the Projects module's row, and a client with three projects has no single
  * value to put in the column at all.
  *
- * Both are derived once those modules land. Until then the page shows "—"
- * rather than a stored guess — the same decision, for the same reason, as
+ * Both are derived once those modules land. Until then the page shows "-"
+ * rather than a stored guess - the same decision, for the same reason, as
  * `on_leave` on employees.
  * ═════════════════════════════════════════════════════════════════════════════
  */
@@ -59,7 +59,7 @@ return new class extends Migration
             /*
              * Unique, because the whole application refers to clients by name on
              * screen and two identical ones on a list are indistinguishable to
-             * the person reading it. Not an identifier for all that — see the
+             * the person reading it. Not an identifier for all that - see the
              * head of this file.
              */
             $table->string('name', 160)->unique();
@@ -76,7 +76,7 @@ return new class extends Migration
             /*
              * The engagement, not the account. A client can be `completed` and
              * still have people who sign in to read their old invoices, so this
-             * says nothing about whether anybody may log in — `users.status`
+             * says nothing about whether anybody may log in - `users.status`
              * does that, per account.
              */
             $table->enum('status', ['active', 'pending', 'review', 'on_hold', 'completed'])

@@ -26,7 +26,7 @@ class Avatar
     }
 
     /**
-     * One letter — for an organisation, where the name is a single thing.
+     * One letter - for an organisation, where the name is a single thing.
      */
     public static function letter(string $name): string
     {
@@ -34,7 +34,7 @@ class Avatar
     }
 
     /**
-     * Two letters — for a person, where first and last name distinguish people
+     * Two letters - for a person, where first and last name distinguish people
      * a single initial would not.
      */
     public static function initials(string $name): string

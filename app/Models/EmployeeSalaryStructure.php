@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * The standing agreement about somebody's pay.
  *
  * An INPUT to the payslip HR prepares in a spreadsheet, never an output of this
- * application — see the migration for why that distinction is the whole design.
+ * application - see the migration for why that distinction is the whole design.
  * Nothing here is added up into a monthly figure, and no page shows it beside a
  * payslip: the two would disagree in any month with a deduction in it.
  */

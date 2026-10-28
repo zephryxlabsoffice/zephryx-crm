@@ -3,7 +3,7 @@
 
     Server-rendered from the `notifications` table (foundation spec §8). The
     handover populated this by cloning the host page's "Recent Activity" list
-    in JavaScript — that was a design-time trick: it made the panel a mirror of
+    in JavaScript - that was a design-time trick: it made the panel a mirror of
     whatever happened to be on screen rather than of the viewer's own unread
     notifications, and it showed nothing at all on pages with no activity list.
 --}}
@@ -14,7 +14,7 @@
 <div class="notif-wrap" data-notifications data-open="false">
     <button class="tb-bell" type="button" data-notif-toggle aria-expanded="false" aria-haspopup="true">
         <span class="sr-only">
-            Notifications{{ $unread > 0 ? ' — '.$unread.' unread' : '' }}
+            Notifications{{ $unread > 0 ? ' - '.$unread.' unread' : '' }}
         </span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>

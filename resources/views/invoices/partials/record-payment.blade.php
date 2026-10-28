@@ -3,7 +3,7 @@
 @if (($mayManage ?? false) && $invoice['status'] !== P::CANCELLED && ! $invoice['balance']->isZero() && $invoice['status'] !== P::DRAFT)
     {{--
         Recording a payment is the ONLY way an invoice becomes paid. There is no
-        "mark as paid" control anywhere in this module, deliberately — status is
+        "mark as paid" control anywhere in this module, deliberately - status is
         derived from this ledger, so marking without recording would be marking
         without evidence.
 
@@ -24,7 +24,7 @@
                 {{-- inputmode="decimal" rather than type="number": a number
                      spinner on a money field invites somebody to nudge an
                      amount with an arrow key. The server parses this into
-                     integer minor units — see App\Support\Money. --}}
+                     integer minor units - see App\Support\Money. --}}
                 <input id="pay-amount" name="amount" type="text" inputmode="decimal"
                        value="{{ old('amount', $invoice['balance']->plain()) }}" required>
                 @error('amount')
@@ -54,7 +54,7 @@
 
             {{-- A financial write: audited with who recorded it (§6), behind
                  `invoices.manage`, and a payment larger than the balance is
-                 REFUSED rather than absorbed — an overpayment is a conversation
+                 REFUSED rather than absorbed - an overpayment is a conversation
                  with the client, and an invoice showing a negative balance is a
                  page nobody trusts. --}}
             <button class="btn btn-primary" type="submit">

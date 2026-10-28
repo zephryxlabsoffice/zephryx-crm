@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * `clientVisible` is the only scope, and the client portal has no way to read
  * an update except through it. That is the same shape as ClientPortal's:
- * the rule §6 names — "enforced at the query layer, not in the view" — is kept
+ * the rule §6 names - "enforced at the query layer, not in the view" - is kept
  * by not providing the call that could break it.
  *
  * The staff side reads the relation directly, because internal notes are the
@@ -69,8 +69,8 @@ class ProjectUpdate extends Model
      * Whether this has ever been in front of the client.
      *
      * Not the same question as "is it client-visible now". Turning visibility
-     * back to internal is housekeeping, not a recall — if they have read it,
-     * they have read it — and no screen may imply otherwise.
+     * back to internal is housekeeping, not a recall - if they have read it,
+     * they have read it - and no screen may imply otherwise.
      */
     public function wasPublished(): bool
     {
@@ -84,7 +84,7 @@ class ProjectUpdate extends Model
      * `posted_at` IS WHEN IT WAS PUBLISHED, NOT WHEN IT WAS WRITTEN
      *
      * An update is written internally and may be published to the client
-     * later — the two are different moments, and the one that matters on the
+     * later - the two are different moments, and the one that matters on the
      * client's page is when it reached them. Showing the authoring time would
      * put a timestamp in front of a client for a period during which they could
      * not see the update, which reads as though it was hidden from them.

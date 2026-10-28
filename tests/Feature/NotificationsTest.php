@@ -21,7 +21,7 @@ use ReflectionMethod;
 use Tests\TestCase;
 
 /**
- * Notifications — the bell, and the six events that fill it.
+ * Notifications - the bell, and the six events that fill it.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * WHAT THIS FILE IS REALLY GUARDING
@@ -91,7 +91,7 @@ class NotificationsTest extends TestCase
     {
         /*
          * `User` carried Laravel's `Notifiable` trait from the scaffold, unused
-         * — and it claimed the `notifications` table for `DatabaseNotification`,
+         * - and it claimed the `notifications` table for `DatabaseNotification`,
          * whose shape is nothing like the one §8 specifies. That collision
          * returns wrong rows rather than throwing, so it is pinned here: the
          * relation has to come back as OUR model.
@@ -112,7 +112,7 @@ class NotificationsTest extends TestCase
     {
         /*
          * The bell is drawn by a view composer on the layout, not by the
-         * notifications controller — so scoping it is a second decision made in
+         * notifications controller - so scoping it is a second decision made in
          * a second place, and one that leaks onto every page in the
          * application rather than onto one.
          */
@@ -155,7 +155,7 @@ class NotificationsTest extends TestCase
     {
         /*
          * `read_at` says when somebody SAW a thing. Pressing the button a
-         * second time, about something else, must not rewrite that — a log of
+         * second time, about something else, must not rewrite that - a log of
          * when people read things, where every entry says "just now", records
          * nothing.
          */
@@ -181,7 +181,7 @@ class NotificationsTest extends TestCase
         /*
          * Deliberate, and the one module with no §5 gate on it. A permission
          * here would be a control over whether somebody may read something
-         * addressed to them, and one nobody could ever safely revoke — it would
+         * addressed to them, and one nobody could ever safely revoke - it would
          * silently stop leave decisions reaching people.
          */
         $employee = $this->signInWith([], 'EMP957');
@@ -330,7 +330,7 @@ class NotificationsTest extends TestCase
     {
         /*
          * There is no switch for it, and this asserts that turning the other
-         * two off does not quietly take it with them — a decision somebody is
+         * two off does not quietly take it with them - a decision somebody is
          * waiting for must not be lost to a preference about task assignments.
          */
         $this->signInWith(['employee', 'hr'], 'EMP942');
@@ -363,7 +363,7 @@ class NotificationsTest extends TestCase
     {
         /*
          * Never opened My Profile. A missing row must not read as "switched
-         * off" — that failure is silent and looks exactly like notifications
+         * off" - that failure is silent and looks exactly like notifications
          * not working.
          */
         $this->signInWith(['employee', 'manager'], 'EMP944');
@@ -389,7 +389,7 @@ class NotificationsTest extends TestCase
          * The one surface that could carry a private thread out to somebody the
          * visibility column was hiding it from. Asserted on the PUBLIC reply as
          * well as the internal note: the rule is that the text never leaves the
-         * thread, not that internal text does — a rule with an exception is one
+         * thread, not that internal text does - a rule with an exception is one
          * somebody eventually gets the wrong way round.
          */
         $author = $this->signInWith(['employee', 'ceo'], 'EMP970');
@@ -426,7 +426,7 @@ class NotificationsTest extends TestCase
         /*
          * Triage is one write covering four decisions. Correcting the category
          * a week later must not tell the person on the ticket that it has been
-         * assigned to them — they know; they have had it since the first save.
+         * assigned to them - they know; they have had it since the first save.
          */
         $this->signInWith(['employee', 'ceo'], 'EMP972');
         $onIt = $this->makeEmployee('EMP973');
@@ -459,7 +459,7 @@ class NotificationsTest extends TestCase
         /*
          * The reason this notification exists at all. Every provider method
          * throws today (see GoogleMeetProvider) and will throw again on the day
-         * Google is down — so the row written here is the only thing that tells
+         * Google is down - so the row written here is the only thing that tells
          * an attendee anything.
          */
         $organiser = $this->signInWith(['employee', 'ceo'], 'EMP980');
@@ -585,7 +585,7 @@ class NotificationsTest extends TestCase
     /**
      * @param  array<string, mixed>  $overrides  an 'assignees' key (a list of
      *                                           employee ids) is synced onto the pivot rather than passed to
-     *                                           Task::create — assignee_id is not a column any more.
+     *                                           Task::create - assignee_id is not a column any more.
      */
     protected function makeTask(array $overrides = []): Task
     {

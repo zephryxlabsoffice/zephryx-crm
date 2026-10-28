@@ -11,8 +11,8 @@
  * the application with THEIR owner password:
  *
  *   1. A setup code. The first visit writes a random code to
- *      zephryx-crm/storage/install-token.txt — outside the web root, so only
- *      somebody with cPanel File Manager can read it — and the form refuses
+ *      zephryx-crm/storage/install-token.txt - outside the web root, so only
+ *      somebody with cPanel File Manager can read it - and the form refuses
  *      to do anything without it.
  *   2. A lock. Success writes zephryx-crm/storage/installed.lock, and while it
  *      exists this file does nothing at all, even if the delete below failed.
@@ -111,11 +111,11 @@ if ($appDir) {
         }
     }
     if (! is_file($appDir.'/.env.production.example')) {
-        $problems[] = '<code>zephryx-crm/.env.production.example</code> is missing — re-upload <code>zephryx-crm.zip</code>.';
+        $problems[] = '<code>zephryx-crm/.env.production.example</code> is missing - re-upload <code>zephryx-crm.zip</code>.';
     }
 }
 if ($problems) {
-    page('Install — fix these first', '<h1>Fix these first</h1><ul><li>'.implode('</li><li>', $problems).'</li></ul>'
+    page('Install - fix these first', '<h1>Fix these first</h1><ul><li>'.implode('</li><li>', $problems).'</li></ul>'
         .'<p>Then reload this page.</p>');
 }
 
@@ -193,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $envFile = $appDir.'/.env';
 
         // Keep the key from an earlier, failed attempt rather than minting a
-        // second one — harmless now, but never a habit worth having.
+        // second one - harmless now, but never a habit worth having.
         $key = '';
         if (is_file($envFile) && preg_match('/^APP_KEY=(base64:\S+)$/m', (string) file_get_contents($envFile), $m)) {
             $key = $m[1];
@@ -252,14 +252,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     .($deleted ? '' : '<li><strong>Delete <code>public_html/install.php</code> now</strong> in File Manager. (It is locked and harmless, but should not stay.)</li>')
                     .'<li>Sign in at <a href="'.$adminUrl.'">'.$adminUrl.'</a> with <code>'.h($f['admin_email']).'</code> (or user ID <code>OWNER</code>) and the owner password.</li>'
                     .'<li>The sign-in sends a code by email. If it does not arrive (check spam), the SMTP settings in '
-                    .'<code>zephryx-crm/.env</code> are wrong — fix them in File Manager; no reinstall needed.</li>'
+                    .'<code>zephryx-crm/.env</code> are wrong - fix them in File Manager; no reinstall needed.</li>'
                     .'<li>Change the owner password after the first sign-in.</li>'
                     .'<li>Back up <code>zephryx-crm/.env</code> somewhere safe. Its <code>APP_KEY</code> unlocks every encrypted '
-                    .'record — if it is lost or changed, ID numbers, PANs and bank details become unreadable forever.</li>'
+                    .'record - if it is lost or changed, ID numbers, PANs and bank details become unreadable forever.</li>'
                     .'</ol><details><summary>Technical log</summary><pre>'.h($log).'</pre></details>');
             } catch (Throwable $e) {
                 $errors[] = 'Setup stopped: '.h($e->getMessage())
-                    .'<br>Nothing is lost — fix the cause and submit again. The details are also in '
+                    .'<br>Nothing is lost - fix the cause and submit again. The details are also in '
                     .'<code>zephryx-crm/storage/logs</code>.';
                 $log = isset($kernel) ? $kernel->output() : '';
             }

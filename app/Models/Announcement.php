@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * One authored post on the board.
  *
- * Milestones share the board and are not rows here — see the migration.
+ * Milestones share the board and are not rows here - see the migration.
  */
 class Announcement extends Model
 {
@@ -112,7 +112,7 @@ class Announcement extends Model
     }
 
     /**
-     * Published, started, and not yet expired — what is on the board today.
+     * Published, started, and not yet expired - what is on the board today.
      *
      * @param  Builder<Announcement>  $query
      * @return Builder<Announcement>
@@ -130,7 +130,7 @@ class Announcement extends Model
      * Live, and marked for the client board too.
      *
      * `audience`/`audience_department_id` narrow which STAFF see a post and
-     * mean nothing to a client account, so this reads `for_clients` alone —
+     * mean nothing to a client account, so this reads `for_clients` alone -
      * a post can be both "everyone" internally and on the client board, or
      * "managers only" internally and still on it.
      *

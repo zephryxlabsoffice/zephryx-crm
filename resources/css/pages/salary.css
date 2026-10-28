@@ -3,13 +3,13 @@
 
    The handover's salary.css and my-salary.css came to ~14KB re-deriving the KPI
    tile (.sl-kpi, .ms-kpi), the table (.sl-table), the filter row (.sl-filter)
-   and the detail row (.sd-row, .ms-row) — components that already exist. Only
+   and the detail row (.sd-row, .ms-row) - components that already exist. Only
    what is specific to payroll is here.
    ─────────────────────────────────────────────────────────────────────────── */
 
 .ms-grid {
   display: grid;
-  /* minmax(0, …), never 1fr — a bare 1fr track is forced open by a wide child
+  /* minmax(0, …), never 1fr - a bare 1fr track is forced open by a wide child
      and the whole page scrolls sideways. */
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: var(--density-gap);

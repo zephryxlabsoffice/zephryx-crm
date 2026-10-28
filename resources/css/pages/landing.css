@@ -1,5 +1,5 @@
 /* ============================================================================
-   Landing — GET / (public). Foundation spec §9.1.
+   Landing - GET / (public). Foundation spec §9.1.
 
    Layout and responsive behaviour are taken unchanged from the handover
    (refference/Landing Page.html). The design-time variants are baked to the
@@ -320,7 +320,7 @@
   }
   .hero-copy { order: 1; }
 
-  /* The floating-card composition costs ~360px — more than everything the
+  /* The floating-card composition costs ~360px - more than everything the
      page actually needs to say. It is decorative and already aria-hidden, so
      on a phone it gives way to the copy, the calls to action and the feature
      strip, which is the whole job of this page. The tagline card below stays;
@@ -403,7 +403,7 @@
    ONE SCREEN, NO SCROLL (2026-10-27)
 
    The owner's rule: the landing page never scrolls, at any size. It is one
-   screen with one job — get somebody to Login — so it is fitted to the
+   screen with one job - get somebody to Login - so it is fitted to the
    viewport's HEIGHT as well as its width.
 
    The hero used to be a fixed 580px of artwork plus padding, which needed
@@ -439,7 +439,7 @@
 }
 
 /* Shorter desktop screens: the two cards no longer fit stacked, so the
-   second one and the badge give way — they are decoration. */
+   second one and the badge give way - they are decoration. */
 @media (min-width: 761px) and (max-height: 640px) {
   .hero-card-activity,
   .float-badge { display: none; }

@@ -17,10 +17,10 @@ class AnnouncementPresenter
 
     /** @var array<string, array{0: string, 1: string, 2: string}> tone, label, meaning */
     protected const STATUSES = [
-        self::DRAFT => ['pill-gray', 'Draft', 'Written, not published — nobody else can see it'],
+        self::DRAFT => ['pill-gray', 'Draft', 'Written, not published - nobody else can see it'],
         self::SCHEDULED => ['pill-blue', 'Scheduled', 'Goes up on its publish date'],
         self::ACTIVE => ['pill-green', 'Active', 'On the board now'],
-        self::EXPIRED => ['pill-gray', 'Expired', 'Past its end date — kept, but off the board'],
+        self::EXPIRED => ['pill-gray', 'Expired', 'Past its end date - kept, but off the board'],
     ];
 
     /**
@@ -73,7 +73,7 @@ class AnnouncementPresenter
     /* ─────────────────────────  categories  ───────────────────────── */
 
     /**
-     * Tone and icon per category — presentation only, kept here rather than
+     * Tone and icon per category - presentation only, kept here rather than
      * on the master data row because MasterDataItem carries no such columns
      * (§7: a category must not borrow a feedback colour, so these are picked
      * by hand). A category added later that is not in this map gets the
@@ -92,7 +92,7 @@ class AnnouncementPresenter
     ];
 
     /**
-     * Categories are master data now (decided 2026-09-21) — the key is the
+     * Categories are master data now (decided 2026-09-21) - the key is the
      * master data CODE lowercased, the same convention LeavePolicy's types
      * use, and the one that keeps `HOLIDAY` and `isAuthorable()`'s
      * `'milestone'` check working unchanged across the move.
@@ -136,8 +136,8 @@ class AnnouncementPresenter
     /**
      * The categories a person may actually choose when writing.
      *
-     * Milestones are generated from employee records — birthdays and work
-     * anniversaries — so the compose form must not offer the category. A
+     * Milestones are generated from employee records - birthdays and work
+     * anniversaries - so the compose form must not offer the category. A
      * hand-written "milestone" would sit in the feed looking identical to a
      * computed one and be wrong the following year.
      *
@@ -203,19 +203,19 @@ class AnnouncementPresenter
 
     public static function date(Carbon|string|null $when): string
     {
-        return $when === null ? '—' : Carbon::parse($when)->format('d M Y');
+        return $when === null ? '-' : Carbon::parse($when)->format('d M Y');
     }
 
     public static function dateTime(Carbon|string|null $when): string
     {
-        return $when === null ? '—' : Carbon::parse($when)->format('d M Y, g:i A');
+        return $when === null ? '-' : Carbon::parse($when)->format('d M Y, g:i A');
     }
 
     /**
      * How long an active announcement has left.
      *
      * An announcement with no end date does not expire, and says so rather than
-     * showing a blank — "no end date" is a decision somebody made.
+     * showing a blank - "no end date" is a decision somebody made.
      *
      * @param  array<string, mixed>  $announcement
      * @return array{label: string, tone: string}

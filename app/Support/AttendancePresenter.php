@@ -50,7 +50,7 @@ class AttendancePresenter
         self::PRESENT => ['pill-green', 'Present', 'att-dot-present', 'A full day’s hours'],
         self::HALF_DAY => ['pill-amber', 'Half day', 'att-dot-half', 'Under the half-day threshold'],
         self::ABSENT => ['pill-red', 'Absent', 'att-dot-absent', 'A working day with no check-in'],
-        self::LEAVE => ['pill-purple', 'On leave', 'att-dot-leave', 'Approved leave — not an absence'],
+        self::LEAVE => ['pill-purple', 'On leave', 'att-dot-leave', 'Approved leave - not an absence'],
         self::WEEK_OFF => ['pill-gray', 'Weekly off', 'att-dot-off', 'Not a working day'],
         self::HOLIDAY => ['pill-indigo', 'Holiday', 'att-dot-holiday', 'A company holiday'],
         self::NOT_MARKED => ['pill-gray', 'Not marked', 'att-dot-pending', 'Today, and nobody has checked in yet'],
@@ -60,7 +60,7 @@ class AttendancePresenter
         // One state, two ways to reach it: a person rejected the record with a
         // reason, or it was left open past the auto-reject window. The pages
         // tell those apart; the counts do not need to.
-        self::REJECTED => ['pill-red', 'Rejected', 'att-dot-rejected', 'Recorded, then rejected — this day does not count'],
+        self::REJECTED => ['pill-red', 'Rejected', 'att-dot-rejected', 'Recorded, then rejected - this day does not count'],
         self::NOT_TRACKED => ['pill-gray', 'Not tracked', 'att-dot-off', 'Before attendance tracking started'],
     ];
 
@@ -100,7 +100,7 @@ class AttendancePresenter
      * The share of the company that has to turn up on a "holiday" before the
      * holiday itself is the thing in doubt.
      *
-     * A third. One or two people working a closure is ordinary — somebody
+     * A third. One or two people working a closure is ordinary - somebody
      * finishing a release, somebody who prefers the empty office. A third of
      * the company is not a dedicated few, it is a day that was not actually a
      * holiday.
@@ -115,9 +115,9 @@ class AttendancePresenter
      *
      * Holidays come from the announcements (App\Support\Holidays), which means a
      * mis-typed date on a notice closes the office on a day it was open. The
-     * damage is contained — a wrong holiday can only hide ABSENCES, never touch
+     * damage is contained - a wrong holiday can only hide ABSENCES, never touch
      * a recorded time, because the holiday branch in AttendancePolicy::state()
-     * only runs when there is no check-in at all — but hidden absences are
+     * only runs when there is no check-in at all - but hidden absences are
      * exactly the thing nobody notices.
      *
      * Rather than a second holiday list to reconcile against, the data checks
@@ -138,7 +138,7 @@ class AttendancePresenter
     /**
      * Counts per state, as donut segments.
      *
-     * One implementation for both donuts — the day's roll and a person's month —
+     * One implementation for both donuts - the day's roll and a person's month -
      * so the arcs in a chart and the figures in its legend cannot come from two
      * different sums. Empty states are dropped: a zero-width arc is invisible
      * and a legend entry reading "Rejected 0 (0%)" is noise.
@@ -188,7 +188,7 @@ class AttendancePresenter
     public static function time(?string $date, ?string $time): string
     {
         if ($time === null) {
-            return '—';
+            return '-';
         }
 
         return Carbon::parse(($date ?? Carbon::today()->toDateString()).' '.$time)->format('h:i A');
@@ -200,7 +200,7 @@ class AttendancePresenter
     public static function hours(?int $minutes): string
     {
         if ($minutes === null) {
-            return '—';
+            return '-';
         }
 
         return intdiv($minutes, 60).'h '.str_pad((string) ($minutes % 60), 2, '0', STR_PAD_LEFT).'m';
@@ -209,7 +209,7 @@ class AttendancePresenter
     /**
      * How long a day has been open, for a record nobody has closed.
      *
-     * Rounded to hours past the first one — the point of the sentence is "this
+     * Rounded to hours past the first one - the point of the sentence is "this
      * has been open a long time", and minutes make it read like a measurement
      * of work, which it is not.
      */
@@ -226,16 +226,16 @@ class AttendancePresenter
 
     public static function date(Carbon|string|null $when): string
     {
-        return $when === null ? '—' : Carbon::parse($when)->format('d M Y');
+        return $when === null ? '-' : Carbon::parse($when)->format('d M Y');
     }
 
     public static function dateTime(Carbon|string|null $when): string
     {
-        return $when === null ? '—' : Carbon::parse($when)->format('d M Y, g:i A');
+        return $when === null ? '-' : Carbon::parse($when)->format('d M Y, g:i A');
     }
 
     /**
-     * `Thursday, 03 Sep 2026` — the heading on one day's record.
+     * `Thursday, 03 Sep 2026` - the heading on one day's record.
      */
     public static function longDate(Carbon|string $when): string
     {
@@ -254,7 +254,7 @@ class AttendancePresenter
      *
      * The handover's calendar was 35 hand-written <div>s for May 2024 with the
      * dots typed in, and its month arrows were wired to an inline <script> our
-     * CSP blocks — so it showed the wrong month, for the wrong year, and could
+     * CSP blocks - so it showed the wrong month, for the wrong year, and could
      * not be moved off it. This builds the grid from the records, and the month
      * arrows are links carrying `?month=YYYY-MM`, so they work with JavaScript
      * switched off and every month is a URL somebody can bookmark.
@@ -262,7 +262,7 @@ class AttendancePresenter
      *
      * Weeks start on Sunday to match how the office reads a calendar. Leading
      * and trailing cells belong to the neighbouring months and are marked
-     * `in_month => false` so they can be drawn quiet rather than left blank —
+     * `in_month => false` so they can be drawn quiet rather than left blank -
      * a blank cell reads as a missing day.
      *
      * @param  Collection<int, array<string, mixed>>  $records  one person's records, keyed by nothing in particular

@@ -1,8 +1,8 @@
 @extends('layouts.public')
 
-@section('title', 'ZephryxLabs CRM — Build Stronger Relationships')
+@section('title', 'ZephryxLabs CRM - Build Stronger Relationships')
 @section('body-class', 'landing-body')
-@section('description', 'The ZephryxLabs workspace — projects, teams, invoices and support in one place.')
+@section('description', 'The ZephryxLabs workspace - projects, teams, invoices and support in one place.')
 
 @php
     $supportMailto = \App\Support\SupportContact::mailto();
@@ -19,7 +19,7 @@
             </h1>
 
             <p class="hero-lede">
-                The ZephryxLabs workspace — projects, teams, invoices and support in one
+                The ZephryxLabs workspace - projects, teams, invoices and support in one
                 place, for our people and the clients we build with.
             </p>
 
@@ -37,7 +37,7 @@
 
             {{-- Feature strip. The handover's `stats` variant (50+ Happy Clients, 30%
                  More Productivity, 100% Data Secure) and the "GDPR Compliant" claim
-                 are deliberately absent — see foundation spec §9.1. --}}
+                 are deliberately absent - see foundation spec §9.1. --}}
             <div class="info-strip" aria-label="What the workspace provides">
                 <div class="info-item">
                     <div class="info-ic">
@@ -93,7 +93,7 @@
             </svg>
         </div>
         <p>
-            One workspace for projects, people and clients — so the work stays
+            One workspace for projects, people and clients - so the work stays
             together instead of scattered across inboxes and spreadsheets.
         </p>
     </aside>

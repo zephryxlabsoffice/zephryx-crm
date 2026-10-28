@@ -12,7 +12,7 @@ namespace App\Support;
  * number must never be written into the HTML and hidden with CSS, never sent in
  * a data attribute, never included in a JSON payload the page filters
  * client-side. Anything the browser receives has already been read by whoever
- * is sitting at the browser — "hidden" markup is not a control, it is a
+ * is sitting at the browser - "hidden" markup is not a control, it is a
  * decoration over a leak.
  *
  * A controller therefore hands the view the MASKED string. There is deliberately
@@ -25,8 +25,8 @@ namespace App\Support;
  *    Laravel's `encrypted` cast, not as plaintext columns. A database backup
  *    downloaded from cPanel is a file somebody can email.
  *
- * 2. REVEALING IS A REQUEST, NOT A RENDER. If the full number is ever needed —
- *    verifying a bank transfer, filing a return — it comes from a dedicated
+ * 2. REVEALING IS A REQUEST, NOT A RENDER. If the full number is ever needed -
+ *    verifying a bank transfer, filing a return - it comes from a dedicated
  *    route that checks the permission, writes an audit entry naming who looked
  *    at whose record and when, and returns the one value asked for. It is not
  *    something a page renders because the viewer happens to be an admin.
@@ -40,7 +40,7 @@ namespace App\Support;
  *
  * Kept at the owner's explicit decision (2026-08-27), against the
  * recommendation to drop it: payroll runs on PAN and bank details, and holding
- * Aadhaar brings the Aadhaar Act 2016 and the UIDAI regulations with it —
+ * Aadhaar brings the Aadhaar Act 2016 and the UIDAI regulations with it -
  * consent and purpose limitation, encryption, breach reporting, and penalties
  * that apply to private companies.
  *
@@ -76,7 +76,7 @@ class Sensitive
      * An identity document's number, masked by the rule that document's own
      * issuer sets.
      *
-     * Aadhaar keeps UIDAI's grouping — that rule is a regulation, not a
+     * Aadhaar keeps UIDAI's grouping - that rule is a regulation, not a
      * preference. The other three are masked to their last four characters,
      * which is enough for a person to recognise their own and not enough to
      * quote anywhere it matters.
@@ -108,7 +108,7 @@ class Sensitive
     /**
      * PAN, masked to the last four characters: `XXXXXX234F`.
      *
-     * A PAN is ten characters — five letters, four digits, a check letter.
+     * A PAN is ten characters - five letters, four digits, a check letter.
      * Enough is shown to confirm which record is on screen, and not enough to
      * quote the number anywhere it matters.
      */
@@ -142,7 +142,7 @@ class Sensitive
     }
 
     /**
-     * An IFSC code, in full and unmasked — deliberately.
+     * An IFSC code, in full and unmasked - deliberately.
      *
      * It identifies a bank branch, not a person. It is published by the RBI and
      * printed on every cheque. Masking it would suggest the other fields on the
@@ -187,8 +187,8 @@ class Sensitive
      * Three routes out, in the order they should be reached for:
      *
      * 1. THE BANK FILE (the normal path). The system generates the NEFT/RTGS
-     *    bulk-transfer file for a period — account number, IFSC, amount, one
-     *    row per person — and hands it over as a download. It is produced by
+     *    bulk-transfer file for a period - account number, IFSC, amount, one
+     *    row per person - and hands it over as a download. It is produced by
      *    `salary.disburse`, written to an audit entry, and never rendered to
      *    the screen. The person running payroll uploads it to the bank portal
      *    without ever having read it. This is what the disabled "Bank transfer
@@ -201,13 +201,13 @@ class Sensitive
      *    that check will live. It is not a page that shows twelve accounts
      *    because of who is logged in.
      *
-     * 3. AADHAAR IS NOT ON EITHER PATH. It is not needed to pay anybody — banks
+     * 3. AADHAAR IS NOT ON EITHER PATH. It is not needed to pay anybody - banks
      *    settle on account number and IFSC. It would be needed for EPF or ESI
      *    filings, and ZephryxLabs makes neither (decided 2026-08-27). So it
      *    stays visible to the person themselves alone, whatever anyone's role.
      *
      * When the automated payroll portal lands and pays over an API, that is
-     * path 1 with the download removed — the numbers go machine to machine and
+     * path 1 with the download removed - the numbers go machine to machine and
      * still never appear on a screen. Building it this way now means that
      * change is a swap of one step, not a rework of who can see what.
      * ─────────────────────────────────────────────────────────────────────────
@@ -216,7 +216,7 @@ class Sensitive
      * PATH 2 EXISTS NOW, AND IT IS NOT IN THIS CLASS (2026-09-14)
      *
      * `revealFor()` stood here as a deliberate throw while the two things a
-     * reveal needs — a permission to check and a log to write to — did not yet
+     * reveal needs - a permission to check and a log to write to - did not yet
      * exist. Both do, so it has been replaced rather than filled in:
      * EmployeeController::reveal is the whole of it.
      *

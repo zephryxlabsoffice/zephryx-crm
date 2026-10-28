@@ -27,7 +27,7 @@ namespace App\Support;
  *   straight to the record is an account-takeover primitive: anyone with a
  *   borrowed session points the account at their own address, and the real
  *   owner is locked out of a system that no longer knows how to reach them. It
- *   is still the person's to change — but through a flow that proves they hold
+ *   is still the person's to change - but through a flow that proves they hold
  *   both addresses, never through a field with a Save button.
  *
  *   DATE OF BIRTH drives the birthday announcements (App\Support\Milestones)
@@ -49,7 +49,7 @@ namespace App\Support;
  * So the descriptive fields, the contact details, the emergency contact and the
  * photo are now REQUESTED: the person fills the form in, a pending row is
  * written, the live record does not move, and HR applies it when the paperwork
- * arrives. What did NOT move is the preferences — theme, density, sidebar and
+ * arrives. What did NOT move is the preferences - theme, density, sidebar and
  * the two notification toggles still save on the spot, because they are
  * settings rather than a record of anything, and an approval queue full of
  * dark-mode requests would bury the ones that matter.
@@ -63,7 +63,7 @@ namespace App\Support;
  *
  * The rule has to be inspectable in one place, testable without rendering a
  * page, and identical on the form and on the write that accepts it. Scattered
- * across templates it becomes a rule nobody can state — and the failure is
+ * across templates it becomes a rule nobody can state - and the failure is
  * silent, because a field wrongly left editable looks exactly like one that is
  * meant to be.
  *
@@ -87,7 +87,7 @@ class ProfilePolicy
      */
     public const REQUESTED = 'requested';
 
-    /** Theirs to change, but only by proving it — never a text box. */
+    /** Theirs to change, but only by proving it - never a text box. */
     public const VERIFIED = 'verified';
 
     /** Employment data. Read-only here; correcting it is a request to HR. */
@@ -103,7 +103,7 @@ class ProfilePolicy
         // ── the company's record of who somebody is ──
         'name' => [self::HR, 'Full name', 'It is on every task, payslip and audit entry you appear in.'],
         'employee_id' => [self::SYSTEM, 'Employee ID', 'Issued when your account was created. It never changes.'],
-        'department' => [self::HR, 'Department', 'Set by HR. A record of where you work — it does not change what you can see or do.'],
+        'department' => [self::HR, 'Department', 'Set by HR. A record of where you work - it does not change what you can see or do.'],
         'designation' => [self::HR, 'Designation', 'Set by HR, alongside your role and reporting line.'],
         'reports_to' => [self::HR, 'Reporting to', 'Set by HR.'],
         'joined' => [self::SYSTEM, 'Joined on', 'Your start date, from your employment record.'],
@@ -125,7 +125,7 @@ class ProfilePolicy
          * about somebody that the company holds a paper record of, and the
          * paper record is what settles it.
          *
-         * The `why` line is empty on all of them because they are not LOCKED —
+         * The `why` line is empty on all of them because they are not LOCKED -
          * the page renders them as ordinary inputs, and the explanation belongs
          * once above the form rather than repeated twelve times beside fields
          * the person is being invited to fill in.
@@ -205,7 +205,7 @@ class ProfilePolicy
      * other half of the form: the submission validates against this and ignores
      * every other key, and applying a stored request checks the field against
      * it a second time. Two checks because the value crosses a table boundary
-     * in between — a field name written into a JSON column and later used to
+     * in between - a field name written into a JSON column and later used to
      * name a column to write is only safe while both ends agree on the list.
      *
      * `photo` is in here and has no rule alongside the others: it is a file, it
@@ -227,7 +227,7 @@ class ProfilePolicy
      * The allow-list a write validates against.
      *
      * The backend takes THIS and ignores every other key in the request. A form
-     * that renders a field as disabled has not protected anything — `disabled`
+     * that renders a field as disabled has not protected anything - `disabled`
      * is a rendering instruction, and the browser is not where the rule lives.
      *
      * @return list<string>
@@ -256,7 +256,7 @@ class ProfilePolicy
      *
      * `null` is a real answer on every one of them and is listed first. A person
      * who does not want to state their gender or marital status must not have to
-     * pick the least wrong option from a list somebody else wrote — and a
+     * pick the least wrong option from a list somebody else wrote - and a
      * required field here would collect worse data than an optional one.
      *
      * @return array<string, list<string>>
@@ -273,7 +273,7 @@ class ProfilePolicy
      * What HR is asked for when a locked field is wrong.
      *
      * A read-only field with no route to changing it is a dead end. This module
-     * does not own the fix — HR does — so it names the surface that does rather
+     * does not own the fix - HR does - so it names the surface that does rather
      * than growing a request form of its own.
      */
     public static function correctionRoute(): string

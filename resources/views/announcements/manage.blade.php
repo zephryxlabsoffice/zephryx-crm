@@ -104,7 +104,7 @@
                                 <span class="an-chip {{ $cat['tone'] }}">{{ $cat['label'] }}</span>
                             </td>
 
-                            <td role="cell" data-label="Posted by">{{ $item['author_record']['name'] ?? '—' }}</td>
+                            <td role="cell" data-label="Posted by">{{ $item['author_record']['name'] ?? '-' }}</td>
 
                             <td role="cell" data-label="Audience">{{ P::audienceLabel($item) }}</td>
 

@@ -32,7 +32,7 @@
 
         <div class="hd-actions">
             {{--
-                Both are the same write — a triage — with one field pre-filled,
+                Both are the same write - a triage - with one field pre-filled,
                 rather than two endpoints that could disagree about what
                 resolving means. They are shown to whoever holds the triage
                 permission; everybody else reads the ticket and replies to it.
@@ -76,7 +76,7 @@
         @include('partials.notice', [
             'tone' => 'info',
             'title' => 'This ticket is closed',
-            'message' => 'Closed is final — raise a new ticket and reference this one if it continues.',
+            'message' => 'Closed is final - raise a new ticket and reference this one if it continues.',
         ])
     @endif
 

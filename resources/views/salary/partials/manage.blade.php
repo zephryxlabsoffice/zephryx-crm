@@ -5,7 +5,7 @@
     mark the transfer done.
 
     They are separate on purpose and in that order. There is no way to mark
-    somebody paid without a payslip on file — nothing to check the amount
+    somebody paid without a payslip on file - nothing to check the amount
     against, and nothing to give them if they ask what they were paid for.
 --}}
 <div class="card">
@@ -23,7 +23,7 @@
                 <strong>{{ $record['payslip']['name'] }}</strong> was added on
                 {{ P::date($record['payslip']['added_on']) }} by {{ $record['payslip']['added_by'] }}.
                 Uploading another replaces it, and the replacement is recorded
-                against whoever makes it — the audit log keeps what the figure
+                against whoever makes it - the audit log keeps what the figure
                 was before, which is the part somebody would need to check.
             </p>
         </div>
@@ -32,7 +32,7 @@
             <p>
                 Upload the payslip your payroll produced and type the net figure
                 it states. The figure is typed once, here, and every other screen
-                reads it — so it can never disagree with the document beside it.
+                reads it - so it can never disagree with the document beside it.
             </p>
         </div>
     @endif
@@ -56,7 +56,7 @@
             <label class="form-field-lbl" for="payslip-net">Net pay ({{ $record['currency'] }})</label>
             {{-- inputmode="decimal", not type="number": a spinner on a money
                  field invites somebody to nudge an amount with an arrow key.
-                 The server parses this into integer minor units — see
+                 The server parses this into integer minor units - see
                  App\Support\Money. --}}
             <input id="payslip-net" name="net" type="text" inputmode="decimal"
                    value="{{ old('net', $record['net']?->plain()) }}" placeholder="0.00" required>
@@ -103,7 +103,7 @@
         <div class="prose">
             <p>
                 This records that the transfer has been made. It does not move
-                any money — the bank does that, from the transfer file.
+                any money - the bank does that, from the transfer file.
             </p>
         </div>
 
@@ -125,7 +125,7 @@
     @else
         <div class="prose">
             <p>
-                Nobody can be marked paid without a payslip on file — there would
+                Nobody can be marked paid without a payslip on file - there would
                 be nothing to check the amount against, and nothing to give them
                 if they ask what they were paid for.
             </p>

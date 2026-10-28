@@ -54,7 +54,7 @@
     {{--
         The bulk flow.
 
-        Ticking rows and pressing the button does NOT mark anybody paid — it
+        Ticking rows and pressing the button does NOT mark anybody paid - it
         posts to a confirmation page that names who is about to be paid and asks.
         Marking twelve people paid by mis-click is hard to notice and awkward to
         undo, so the destructive step is always the second one.

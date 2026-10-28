@@ -32,7 +32,7 @@ class LeaveDirectory
      *
      * Attendance's whole knowledge of leave. Expanded from ranges here rather
      * than stored per day, because a stored day-per-row copy would be a second
-     * version of the same fact — and the version that is wrong the moment
+     * version of the same fact - and the version that is wrong the moment
      * somebody withdraws a request.
      *
      * @return list<string>

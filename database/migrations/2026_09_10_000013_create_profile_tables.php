@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * My Profile — the fields a person owns, the files held against them, and the
+ * My Profile - the fields a person owns, the files held against them, and the
  * one HR column the header was already drawing.
  *
  * ═════════════════════════════════════════════════════════════════════════════
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Schema;
  * page. The Employees directory does not show them, no other module joins on
  * them, and every list in the application already selects from `employees`.
  * Putting them there would mean the team page, the task assignee dropdown and
- * the payroll run each carrying somebody's home address for no reason — which
+ * the payroll run each carrying somebody's home address for no reason - which
  * is a privacy question as much as a width one.
  *
  * One row per employee, created on first save. A person who has never opened
@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Schema;
  * invites have no switch: they are how a decision reaches the person waiting
  * for it, and the preferences page says so.
  *
- * The form's third toggle — "also send these by email" — has no column, because
+ * The form's third toggle - "also send these by email" - has no column, because
  * nothing in this application emails a notification. A switch that turns on a
  * thing that does not exist is worse than no switch: it is a promise, and the
  * person who set it stops watching the bell.
@@ -40,7 +40,7 @@ use Illuminate\Support\Facades\Schema;
  * `path` is a key into the private disk (App\Support\Documents\DocumentStore),
  * never a URL, and there is no column that could hold one. §6 requires the
  * files be unreachable except through a route that has checked who is asking
- * and written an audit entry — a PAN scan at a guessable public path is a link
+ * and written an audit entry - a PAN scan at a guessable public path is a link
  * that works for anyone who tries it, forever, with no session involved.
  * ═════════════════════════════════════════════════════════════════════════════
  */
@@ -53,7 +53,7 @@ return new class extends Migration
 
             /*
              * Unique: one profile per person. Cascading, unlike almost
-             * everything else that points at `employees` — attendance, pay and
+             * everything else that points at `employees` - attendance, pay and
              * team history are the company's record and outlive somebody
              * leaving, but their emergency contact is not a record anybody has
              * a reason to keep once the employment is gone.
@@ -66,7 +66,7 @@ return new class extends Migration
             /*
              * Free strings against a list the policy offers, not enums. "Prefer
              * not to say" is a real stored answer on both, and an enum here
-             * would make widening the list a migration — which is the wrong
+             * would make widening the list a migration - which is the wrong
              * cost to attach to somebody asking for an option that describes
              * them.
              */
@@ -106,7 +106,7 @@ return new class extends Migration
 
             $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
 
-            // The name it was uploaded with. Data, displayed — never used to
+            // The name it was uploaded with. Data, displayed - never used to
             // compose the path. See DocumentStore.
             $table->string('name', 190);
 
@@ -131,7 +131,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // "This person's documents, newest first" — the only query.
+            // "This person's documents, newest first" - the only query.
             $table->index(['employee_id', 'id']);
         });
 
@@ -142,7 +142,7 @@ return new class extends Migration
          * Self-referencing and nullable: the owner reports to nobody, and a new
          * person may not have been placed under anybody yet. Null on delete
          * rather than restricted, so closing a manager's record does not lock
-         * every report's row — it leaves them reporting to nobody, which is
+         * every report's row - it leaves them reporting to nobody, which is
          * true and visible, rather than to a record that is gone.
          */
         Schema::table('employees', function (Blueprint $table) {

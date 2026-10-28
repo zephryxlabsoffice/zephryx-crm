@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
- * Deleting an account made by mistake — and only that (2026-10-27).
+ * Deleting an account made by mistake - and only that (2026-10-27).
  * See App\Support\Admin\AccountRemoval.
  */
 class AccountRemovalTest extends TestCase

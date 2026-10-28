@@ -1,5 +1,5 @@
 /* ============================================================================
-   Error pages — 403, 404, 419, 429, 500, 503.
+   Error pages - 403, 404, 419, 429, 500, 503.
 
    Deliberately self-contained: no sidebar, no topbar, no navigation data. An
    error page is what renders when something has already gone wrong, so it
@@ -37,7 +37,7 @@
 
 /* The status code, set large and quiet. It is the least useful thing on the
    page for the person reading it, and the most useful thing to quote when
-   they report the problem — so it is present but not shouting. */
+   they report the problem - so it is present but not shouting. */
 .error-code {
   display: inline-block;
   font-size: 13px;

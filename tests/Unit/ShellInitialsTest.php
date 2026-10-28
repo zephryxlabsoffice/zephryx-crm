@@ -21,7 +21,7 @@ class ShellInitialsTest extends TestCase
     public function test_it_tolerates_untidy_input(): void
     {
         $this->assertSame('SD', Shell::initials('  santanu   dev  '));
-        $this->assertSame('—', Shell::initials(''));
-        $this->assertSame('—', Shell::initials('   '));
+        $this->assertSame('-', Shell::initials(''));
+        $this->assertSame('-', Shell::initials('   '));
     }
 }

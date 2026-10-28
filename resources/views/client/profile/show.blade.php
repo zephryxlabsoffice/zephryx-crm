@@ -62,8 +62,8 @@
                         <span class="pay-hint">
                             {{-- Said before the upload, not after. --}}
                             JPEG or PNG, up to 2 MB and {{ \App\Support\Images\PhotoIntake::MAX_SIDE }} pixels a side.
-                            Anything recorded alongside the picture — where it was taken, when, and on
-                            what — is removed before the file is stored. It appears on this portal and
+                            Anything recorded alongside the picture - where it was taken, when, and on
+                            what - is removed before the file is stored. It appears on this portal and
                             on nothing we send you.
                         </span>
                         @error('photo')
@@ -79,7 +79,7 @@
                 Two groups, and the split is the point of the page.
 
                 What a client may change is a short list: how to reach them.
-                Not the company name — invoices, projects and tickets reference
+                Not the company name - invoices, projects and tickets reference
                 a client by it, so letting the far side rewrite it would rename
                 their own invoice history. Not the industry, and nothing about
                 projects or what is owed.
@@ -141,7 +141,7 @@
 
             {{--
                 Additional contacts, beyond the one main contact in the form
-                above. A client organisation is one login, not one person —
+                above. A client organisation is one login, not one person -
                 the accounts payable contact who wants invoice copies is
                 rarely the one who raises tickets. See
                 App\Http\Controllers\Client\ContactController.

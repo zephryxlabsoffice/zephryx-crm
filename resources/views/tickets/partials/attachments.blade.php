@@ -19,7 +19,7 @@
                 Files on a client ticket are uploaded by someone outside the
                 company. §6: validated by type and size, stored outside the web
                 root, and served through a controller that checks the viewer may
-                have them — never linked straight at a public path, and never
+                have them - never linked straight at a public path, and never
                 rendered inline.
             --}}
             <div class="attachment-grid">

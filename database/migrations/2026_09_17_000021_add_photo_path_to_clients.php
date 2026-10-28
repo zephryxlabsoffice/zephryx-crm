@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Schema;
  * THE QUESTION THAT BLOCKED THIS IS GONE (settled 2026-09-17)
  *
  * `Client\ProfileController::photo` refused with a 501 and said why: a client
- * account is an ORGANISATION, so what it would upload is a company logo — and a
+ * account is an ORGANISATION, so what it would upload is a company logo - and a
  * logo appears on invoices, which made "may a client set the logo on their own
  * invoice" a question nobody had answered.
  *
@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Schema;
  * NOT IN THE WEBROOT, LIKE EVERY OTHER FILE HERE
  *
  * A key into the private disk, served through an authorising route. §6 applies
- * to a client's file exactly as it does to an employee's — see
+ * to a client's file exactly as it does to an employee's - see
  * App\Support\Documents\DocumentStore.
  * ═════════════════════════════════════════════════════════════════════════════
  */

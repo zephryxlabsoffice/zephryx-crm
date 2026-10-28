@@ -12,7 +12,7 @@ use Illuminate\Validation\Rule;
 class ThemeController extends Controller
 {
     /**
-     * POST /theme — persist the light/dark preference (foundation spec §3.2).
+     * POST /theme - persist the light/dark preference (foundation spec §3.2).
      *
      * CSRF-protected like every state-changing request (§6). The submitted
      * value is validated against the allow-list rather than trusted, because it

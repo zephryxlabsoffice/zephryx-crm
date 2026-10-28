@@ -19,9 +19,9 @@ class SupportContactTest extends TestCase
     {
         // Subjects carry an em dash and spaces; unencoded they break the link
         // in some mail clients.
-        $link = SupportContact::mailto('Access — request');
+        $link = SupportContact::mailto('Access - request');
 
-        $this->assertStringContainsString(rawurlencode('Access — request'), $link);
+        $this->assertStringContainsString(rawurlencode('Access - request'), $link);
         $this->assertStringNotContainsString(' ', $link);
     }
 

@@ -8,13 +8,13 @@ use Illuminate\Support\Facades\Schema;
  * Leave requests (foundation spec §12).
  *
  * ═════════════════════════════════════════════════════════════════════════════
- * `days` IS STATED, NOT COMPUTED — AND THAT IS THE MODULE'S WHOLE DESIGN
+ * `days` IS STATED, NOT COMPUTED - AND THAT IS THE MODULE'S WHOLE DESIGN
  *
  * Decided 2026-08-28. This module counts; it does not decide. There is no
  * working-day calculator and no automatic deduction: the requester says how
  * many days it costs and the approver agrees it. Whether a Saturday counts,
  * whether a holiday in the middle of a week is skipped, whether half a day is
- * possible — those are judgements two people make, and encoding a guess at them
+ * possible - those are judgements two people make, and encoding a guess at them
  * produces balances that quietly disagree with what people were actually
  * granted.
  *
@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Schema;
  * THE REASON AND THE CONTACT NUMBER ARE PERSONAL DATA
  *
  * "Fever, seeing a doctor" is health information. It reaches the approver and
- * nobody else — no page listing many people at once shows either column. The
+ * nobody else - no page listing many people at once shows either column. The
  * schema cannot enforce that; the queries do, and this note is here so nobody
  * adds them to a report by accident.
  *
@@ -41,14 +41,14 @@ return new class extends Migration
         Schema::create('leave_requests', function (Blueprint $table) {
             $table->id();
 
-            // LV-2026-041 — the reference in every URL and quoted in email.
+            // LV-2026-041 - the reference in every URL and quoted in email.
             $table->string('reference', 32)->unique();
 
             // Restricted: somebody's leave history is part of their record.
             $table->foreignId('employee_id')->constrained()->restrictOnDelete();
 
             /*
-             * The policy's key — `casual`, `sick`, `privilege`, `unpaid` — and
+             * The policy's key - `casual`, `sick`, `privilege`, `unpaid` - and
              * a plain string rather than an enum on purpose. Leave types are
              * company policy configured in the Admin Panel (§12), so the set
              * changes without a migration; App\Support\LeavePolicy is what
@@ -75,7 +75,7 @@ return new class extends Migration
 
             /*
              * The decision: who, when, and what they said. A rejection with no
-             * note is one the person has to come and ask about — the handover's
+             * note is one the person has to come and ask about - the handover's
              * reject button captured nothing at all.
              *
              * Nullable because a pending request has none, and a withdrawn one
@@ -97,7 +97,7 @@ return new class extends Migration
             $table->timestamps();
 
             /*
-             * "Who is off between these dates" — asked by the approver's clash
+             * "Who is off between these dates" - asked by the approver's clash
              * panel, by the absence rail, and by Attendance on every single day
              * it draws for every person.
              */

@@ -22,14 +22,14 @@
 
                     And it does NOT say where anything was done from. The
                     handover's read "New login from Kolkata, IN", which means IP
-                    geolocation — a lookup service, a stored location per
+                    geolocation - a lookup service, a stored location per
                     sign-in, none of which exists or was decided. This is the
                     screen somebody checks when they think their account has been
                     used by someone else, and a wrong city sends them chasing
                     nothing.
                 --}}
                 Your sign-ins, your changes, and anything HR changed on your record.
-                Only yours — nobody else's activity appears here, and yours does not
+                Only yours - nobody else's activity appears here, and yours does not
                 appear on anybody else's page.
             </p>
         </div>

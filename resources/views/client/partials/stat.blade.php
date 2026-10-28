@@ -2,7 +2,7 @@
     One stat tile in the client portal.
 
     A link when there is a page behind the number, a plain div when there is
-    not — a figure somebody wants to act on is a figure they will try to click.
+    not - a figure somebody wants to act on is a figure they will try to click.
 
     No percentage delta, here or anywhere in this portal. See the head of
     config/dashboard.php for the argument; it applies identically on this side,

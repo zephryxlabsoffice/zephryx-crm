@@ -14,7 +14,7 @@ use Illuminate\Database\Seeder;
 /**
  * The demo tickets and their threads. Local + debug only.
  *
- * The internal notes are reproduced as internal — they are the point. A seed
+ * The internal notes are reproduced as internal - they are the point. A seed
  * where every comment is public would hide the whole reason the visibility
  * column exists, and the fixture's notes are exactly the sentences that must
  * not reach a client.

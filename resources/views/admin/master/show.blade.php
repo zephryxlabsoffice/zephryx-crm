@@ -49,7 +49,7 @@
                                                 Counted from the records
                                                 themselves, not stored, so this
                                                 number cannot disagree with the
-                                                module behind it — and it is the
+                                                module behind it - and it is the
                                                 number that makes deactivating
                                                 something a real decision rather
                                                 than a click.
@@ -115,7 +115,7 @@
                                 <input id="md-code" name="code" type="text" maxlength="16" required
                                        value="{{ old('code') }}">
                                 <span class="pay-hint">
-                                    Short, and permanent — other records will reference it.
+                                    Short, and permanent - other records will reference it.
                                     {{-- Said here because it is the one
                                          behaviour somebody would not guess: a
                                          code that was retired comes back rather
@@ -145,7 +145,7 @@
                 --}}
                 <p class="dash-note">
                     There is no delete. A row here is referenced by records that already
-                    exist, and removing it would leave those records pointing at nothing —
+                    exist, and removing it would leave those records pointing at nothing -
                     a blank cell nobody can ever resolve.
                 </p>
 

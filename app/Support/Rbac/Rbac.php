@@ -45,7 +45,7 @@ use Illuminate\Support\Facades\DB;
 class Rbac
 {
     /**
-     * The Employee base (§2.2) — my attendance, my leave, my payslip, my
+     * The Employee base (§2.2) - my attendance, my leave, my payslip, my
      * tasks, my profile.
      *
      * In code and not in the database on purpose. These are the permissions
@@ -72,7 +72,7 @@ class Rbac
      *
      * §2.1: "a Mentor is staff and has none of it." The base is granted by
      * `staff_kind` and never by a role, so this constant is NOT how the engine
-     * decides anything — `permissionsFor` reads the column, as it must.
+     * decides anything - `permissionsFor` reads the column, as it must.
      *
      * It exists because a role NAME is sometimes used to stand for the kind of
      * account that holds it: the dashboard's development preview builds "what
@@ -88,7 +88,7 @@ class Rbac
      * Implicit for the same reason as the Employee base: these are not a
      * capability pack somebody is given, they are what the account IS. There
      * are no client roles, no client permission screen, and nothing in the
-     * Admin Panel that grants or removes any of this — a client either has a
+     * Admin Panel that grants or removes any of this - a client either has a
      * portal or does not have an account.
      *
      * Which RECORDS they see is a different question entirely, answered by
@@ -112,7 +112,7 @@ class Rbac
      * ─────────────────────────────────────────────────────────────────────────
      * §2.1: the Admin Panel is "not a role and not assignable".
      *
-     * So its capabilities cannot come from `role_permissions` — that table is
+     * So its capabilities cannot come from `role_permissions` - that table is
      * exactly the mechanism for assigning things to people, and putting
      * `admin.settings.view` in it would make the panel's authority something a
      * person could be given a piece of. It comes from being the admin account,
@@ -133,7 +133,7 @@ class Rbac
         'admin.audit.view',
         /*
          * The Google connection screen. Its own key rather than folded into
-         * `admin.settings.view` — a Drive key must not be reachable by the
+         * `admin.settings.view` - a Drive key must not be reachable by the
          * same grant that changes the brand name (plan doc, "Connecting it",
          * rule 3). It still lives in ADMIN_BASE like everything else here:
          * the realm has one account today, so this is the ceiling until a
@@ -155,7 +155,7 @@ class Rbac
     public function can(?Authenticatable $user, string $permission): bool
     {
         if (! $user instanceof User) {
-            // Nobody is not somebody. A null user holds nothing — the shell
+            // Nobody is not somebody. A null user holds nothing - the shell
             // renders an empty sidebar rather than the whole application.
             return false;
         }
@@ -164,7 +164,7 @@ class Rbac
     }
 
     /**
-     * Every permission an account holds — the union across its roles, plus the
+     * Every permission an account holds - the union across its roles, plus the
      * Employee base if it has one (§2.4).
      *
      * @return list<string>
@@ -185,7 +185,7 @@ class Rbac
         }
 
         /*
-         * The realm base — what an account can reach by virtue of what it is
+         * The realm base - what an account can reach by virtue of what it is
          * (§2.1, §2.2). None of it is grantable, and none of it comes from a
          * role. Clients and the admin account hold nothing else.
          */
@@ -218,7 +218,7 @@ class Rbac
      * Two HR executives do not get to overrule each other, and two Managers do
      * not get to reassign each other's teams. Peers acting on peers is the
      * situation this check exists to prevent as much as juniors acting on
-     * seniors — "no upward action" (§2.6) read literally would permit sideways
+     * seniors - "no upward action" (§2.6) read literally would permit sideways
      * action, which is not what anybody means by it.
      * ─────────────────────────────────────────────────────────────────────────
      */
@@ -265,7 +265,7 @@ class Rbac
      * oneself (§2.6).
      *
      * Offered as one call because the three are always asked together and
-     * forgetting the third is the classic version of this bug — the queue that
+     * forgetting the third is the classic version of this bug - the queue that
      * lets somebody approve their own leave.
      */
     public function mayActOn(?Authenticatable $actor, ?Authenticatable $target, string $permission, string $domain): bool
@@ -299,7 +299,7 @@ class Rbac
     /**
      * Forget what has been resolved.
      *
-     * Only needed when roles change inside a single request — the Admin Panel
+     * Only needed when roles change inside a single request - the Admin Panel
      * saving a permission, or a test. The cache is per-request, so nothing
      * needs clearing between them.
      */

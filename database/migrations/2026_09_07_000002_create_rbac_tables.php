@@ -46,7 +46,7 @@ return new class extends Migration
             $table->id();
             $table->string('permission_key', 128)->unique();
             $table->string('permission_name');
-            // `leave`, `salary`, `client`, … — what the Access Control screen
+            // `leave`, `salary`, `client`, … - what the Access Control screen
             // groups by, stored so the grouping does not depend on parsing.
             $table->string('module', 64)->index();
             $table->string('description')->nullable();

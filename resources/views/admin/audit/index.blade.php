@@ -13,7 +13,7 @@
     {{--
         No delete, no clear, no bulk actions, and no export that quietly drops
         rows. An audit log with a delete button is not an audit log, and this
-        is the account whose actions most need the record — its own log being
+        is the account whose actions most need the record - its own log being
         unalterable by it is the point.
     --}}
     <nav class="tabs" aria-label="Audit filters">

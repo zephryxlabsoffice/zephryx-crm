@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
  * ─────────────────────────────────────────────────────────────────────────────
  * A BIRTHDAY IS A DAY AND A MONTH
  *
- * Date of birth is stored in full — it belongs on an employee record — but this
+ * Date of birth is stored in full - it belongs on an employee record - but this
  * class never lets the year out. A colleague needs to know when to say happy
  * birthday, not how old somebody is, and once everyone's age is on an internal
  * page it is much harder to take back than to have not put it there.
@@ -27,7 +27,7 @@ use Illuminate\Support\Carbon;
  *
  * `announce_milestones` on the employee record. Not everyone wants their
  * birthday on a company board, and finding out you cannot turn it off is a bad
- * way to learn that. Opting out removes them from the feed entirely — it does
+ * way to learn that. Opting out removes them from the feed entirely - it does
  * not post a quieter version.
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -180,7 +180,7 @@ class Milestones
     }
 
     /**
-     * `14 Mar` — never the year.
+     * `14 Mar` - never the year.
      */
     public static function dayAndMonth(string $date): string
     {
@@ -203,7 +203,7 @@ class Milestones
     }
 
     /**
-     * Milestones happening today — the ones that become board posts.
+     * Milestones happening today - the ones that become board posts.
      *
      * @return list<array<string, mixed>>
      */

@@ -18,14 +18,14 @@ use Illuminate\Support\Facades\Schema;
  *
  * A HOLIDAY HAS TWO DATE RANGES AND THEY ARE NOT THE SAME
  *
- * `starts_on`/`ends_on` is how long the NOTICE stays on the board — a week's
+ * `starts_on`/`ends_on` is how long the NOTICE stays on the board - a week's
  * warning about one Friday. `observed_from`/`observed_to` is when the OFFICE IS
  * SHUT, and it is what Attendance reads. Confusing them closes the office for
  * the whole week the notice was up.
  *
  * That is why the observed columns exist here rather than in an admin holiday
  * list: one list cannot disagree with itself. HR posts the notice people read
- * and the same row decides who was not absent — see App\Support\Holidays for
+ * and the same row decides who was not absent - see App\Support\Holidays for
  * what that costs and what pays for it.
  *
  * A DRAFT CLOSES NOTHING
@@ -48,7 +48,7 @@ return new class extends Migration
             $table->text('body');
 
             /*
-             * The board's own categories — holiday, policy, hr, training and
+             * The board's own categories - holiday, policy, hr, training and
              * the rest. A string against config rather than a table for the
              * same reason ticket categories are: nothing points at one.
              */
@@ -62,7 +62,7 @@ return new class extends Migration
             $table->foreignId('author_id')->constrained('employees')->restrictOnDelete();
 
             /*
-             * Who it is for. `everyone`, or one department — the value is the
+             * Who it is for. `everyone`, or one department - the value is the
              * master data row when it is narrowed, and null when it is not.
              */
             $table->string('audience', 32)->default('everyone');
@@ -75,7 +75,7 @@ return new class extends Migration
 
             /*
              * The days the office is shut, on a holiday notice. Null on every
-             * other kind — and null on a holiday notice that is a reminder
+             * other kind - and null on a holiday notice that is a reminder
              * rather than a closure, which Holidays skips rather than guesses
              * at.
              */
@@ -89,7 +89,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // "What is on the board today" — the one query this table has.
+            // "What is on the board today" - the one query this table has.
             $table->index(['published_at', 'starts_on']);
         });
     }

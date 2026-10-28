@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * Announcements — posting to the board, and closing the office by doing it.
+ * Announcements - posting to the board, and closing the office by doing it.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * THE HALF OF THIS FILE THAT IS REALLY ABOUT ATTENDANCE
@@ -37,7 +37,7 @@ class AnnouncementWritesTest extends TestCase
     public function test_posting_is_its_own_permission(): void
     {
         // A board nobody can post to is a board nobody reads, so posting is
-        // broad — but it is not everybody.
+        // broad - but it is not everybody.
         $this->signInAsEmployee();
 
         $this->get('/announcements')->assertOk();
@@ -111,7 +111,7 @@ class AnnouncementWritesTest extends TestCase
     {
         /*
          * One list, and this is it. HR posts the notice people read and the
-         * same row decides who was not absent — the alternative is a holiday
+         * same row decides who was not absent - the alternative is a holiday
          * calendar in the Admin Panel that goes stale against the board.
          */
         $this->signInAsHr();
@@ -156,7 +156,7 @@ class AnnouncementWritesTest extends TestCase
         /*
          * The dates are dropped, not the post. Refusing the whole thing would
          * lose what somebody wrote over a field they did not know they could
-         * not use — and what must not happen is the attendance record changing
+         * not use - and what must not happen is the attendance record changing
          * underneath the notice.
          */
         $this->signInAsPoster();
@@ -205,7 +205,7 @@ class AnnouncementWritesTest extends TestCase
 
     public function test_a_closure_longer_than_a_fortnight_is_refused(): void
     {
-        // Not a holiday notice — a typo somebody would otherwise find in next
+        // Not a holiday notice - a typo somebody would otherwise find in next
         // month's attendance report.
         $this->signInAsHr();
 
@@ -251,7 +251,7 @@ class AnnouncementWritesTest extends TestCase
 
     public function test_an_unknown_category_is_refused(): void
     {
-        // Categories are master data now (decided 2026-09-21) — a category
+        // Categories are master data now (decided 2026-09-21) - a category
         // nobody set up in the Admin Panel cannot be posted against.
         $this->signInAsHr();
 

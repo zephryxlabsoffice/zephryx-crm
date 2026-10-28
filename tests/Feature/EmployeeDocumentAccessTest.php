@@ -19,7 +19,7 @@ use Tests\TestCase;
  *
  * ProfileController::documentFor's own header comment named this route before
  * it existed: "§6 says two parties reach these, the person and HR". This file
- * is the test for the second party — the person's own read is
+ * is the test for the second party - the person's own read is
  * ProfilePageTest, and the two are deliberately parallel: same ownership-in-
  * the-query shape, same audit obligation, different entity on the entry.
  * ─────────────────────────────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ class EmployeeDocumentAccessTest extends TestCase
     {
         // Same split as the identity reveal: looking somebody up is
         // employees.view, opening what they filed is employees.identifiers.
-        // EMP001 is seeded as team_lead — holds the first, not the second.
+        // EMP001 is seeded as team_lead - holds the first, not the second.
         $this->signInAsSeeded('EMP001');
         $document = $this->theirDocument();
 
@@ -99,12 +99,12 @@ class EmployeeDocumentAccessTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       SCOPE — THE QUERY, NOT A CHECK AFTER IT
+       SCOPE - THE QUERY, NOT A CHECK AFTER IT
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_a_document_reference_belonging_to_someone_else_is_not_found(): void
     {
-        // Asked for through EMP002's URL, filed under a different employee —
+        // Asked for through EMP002's URL, filed under a different employee -
         // the lookup happens WITHIN the named employee's own set, so this is
         // the same 404 an imaginary reference gets, not a 403.
         $this->signInAsSeeded('EMP005');
@@ -144,7 +144,7 @@ class EmployeeDocumentAccessTest extends TestCase
 
         $this->assertNotNull($entry);
         $this->assertSame('employee', $entry->entity_type);
-        // The SUBJECT, not whoever clicked — "who looked at whose documents"
+        // The SUBJECT, not whoever clicked - "who looked at whose documents"
         // has to be answerable by reading this row alone.
         $this->assertSame(self::SUBJECT, $entry->entity_id);
         $this->assertSame($hr->id, $entry->actor_user_id);

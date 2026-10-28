@@ -106,7 +106,7 @@
                                  team changes something, and a GET that changes
                                  something is one a link prefetcher can fire on
                                  its own. Only rendered for whoever may do it
-                                 here — see TeamController::canManageMembers. --}}
+                                 here - see TeamController::canManageMembers. --}}
                             @if ($mayManageMembers && $member['user_id'] !== $team['lead'])
                                 <form method="POST" action="{{ route('teams.members.remove', ['team' => $team['id']]) }}">
                                     @csrf

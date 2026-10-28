@@ -9,11 +9,11 @@ use Illuminate\Support\Facades\Schema;
  * Tasks get the decided shape (review round, 2026-09-11; built 2026-09-21).
  *
  * ═════════════════════════════════════════════════════════════════════════════
- * SEVERAL ASSIGNEES — A PIVOT, NOT A SECOND FOREIGN KEY
+ * SEVERAL ASSIGNEES - A PIVOT, NOT A SECOND FOREIGN KEY
  *
  * `assignee_id` was a single nullable foreign key. "A task can go to a team and
  * flow to its members" (decided) means more than one person can be on it at
- * once — two developers pairing on the same piece of work is the ordinary
+ * once - two developers pairing on the same piece of work is the ordinary
  * case this is for. `task_assignees` is exactly `team_members`'s shape for
  * exactly the same reason: a JSON list of ids cannot be joined against, cannot
  * carry its own foreign key, and would keep pointing at somebody after their
@@ -32,20 +32,20 @@ use Illuminate\Support\Facades\Schema;
  * explicitly, in order, before the column.
  *
  * ═════════════════════════════════════════════════════════════════════════════
- * COMMENTS AND ATTACHMENTS — STAFF ONLY, SO NEITHER NEEDS AN AUDIENCE COLUMN
+ * COMMENTS AND ATTACHMENTS - STAFF ONLY, SO NEITHER NEEDS AN AUDIENCE COLUMN
  *
  * `ticket_comments` carries a `visibility` column because a ticket has two
- * readerships — staff and the client who raised it. A task has one: nobody
+ * readerships - staff and the client who raised it. A task has one: nobody
  * outside this realm ever reads a task page, so `task_comments` has no such
  * column to get wrong. The author's name is still copied at write time, for
  * the same reason the audit log and ticket threads do it: a thread whose
  * author's account was later removed must not read "somebody said".
  *
  * `task_attachments` is `document_path`/`document_name`/`document_bytes` per
- * row rather than the single-document columns Invoices carries — a task can
+ * row rather than the single-document columns Invoices carries - a task can
  * hold several files at once, an invoice only ever the one PDF behind it.
  * Storage goes through App\Support\Documents\DocumentStore::put(), which is
- * always Google Drive for an uploaded file (decided 2026-09-16) — nothing
+ * always Google Drive for an uploaded file (decided 2026-09-16) - nothing
  * here is a local path.
  * ═════════════════════════════════════════════════════════════════════════════
  */
@@ -60,16 +60,16 @@ return new class extends Migration
 
             // Restricted, same as team_members: somebody's task history is
             // part of their record and must not be silently detached by a
-            // removed employment record — which in practice never happens.
+            // removed employment record - which in practice never happens.
             $table->foreignId('employee_id')->constrained()->restrictOnDelete();
 
             $table->timestamps();
 
-            // One row per person per task — the same double-submit guard
+            // One row per person per task - the same double-submit guard
             // team_members carries.
             $table->unique(['task_id', 'employee_id']);
 
-            // "What is on my plate" — the query this table exists to answer.
+            // "What is on my plate" - the query this table exists to answer.
             $table->index('employee_id');
         });
 
@@ -155,7 +155,7 @@ return new class extends Migration
             ->each(fn ($rows, $taskId) => DB::table('tasks')
                 ->where('id', $taskId)
                 // Only one seat on the way back down. The first person
-                // assigned is as good a choice as any — down() is a rollback
+                // assigned is as good a choice as any - down() is a rollback
                 // path, not a fact anybody reads afterwards.
                 ->update(['assignee_id' => $rows->first()->employee_id]));
 

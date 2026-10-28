@@ -4,13 +4,13 @@
 
 @section('content')
     {{--
-        The personal face of Teams (§12.1). Reachable by anyone signed in —
+        The personal face of Teams (§12.1). Reachable by anyone signed in -
         it needs no `teams.view`, because it shows only the viewer's own
         memberships.
 
         The handover put a back button here that called history.back(). This
         page is a destination in its own right, not a step in a flow, and
-        history.back() from a fresh tab leaves the application entirely — so
+        history.back() from a fresh tab leaves the application entirely - so
         there is no back button, and the link to the managing face is where a
         person with the rights for it would expect: in the actions row.
     --}}

@@ -28,7 +28,7 @@ use Illuminate\Validation\Rules\Password;
  *
  * 1. VARY ITS ANSWER. `request()` returns the same confirmation whether or not
  *    the account exists. Anything else turns a public form into a way to
- *    discover who works here — type an address, read the response, repeat.
+ *    discover who works here - type an address, read the response, repeat.
  *
  *    That means the send happens inside a branch and the response outside it,
  *    which looks odd until you remember why. It also means an unknown address
@@ -37,7 +37,7 @@ use Illuminate\Validation\Rules\Password;
  *
  * 2. TRUST THE IDENTIFIER FIELD. The form posts one because the page shows one,
  *    and it is used for nothing. The account being reset is whichever account
- *    the TOKEN belongs to — see the head of App\Support\Auth\PasswordResets.
+ *    the TOKEN belongs to - see the head of App\Support\Auth\PasswordResets.
  * ═════════════════════════════════════════════════════════════════════════════
  *
  * §4.6: applying a reset invalidates the token, all sessions, all remember-me
@@ -200,7 +200,7 @@ class PasswordResetController extends Controller
          * Only possible on the database driver. On `file` or `cookie` there is
          * no way to reach another session, so a reset would leave an attacker
          * signed in for up to seven more days AFTER the password they stole
-         * stopped working — and the person who reset it would have no way to
+         * stopped working - and the person who reset it would have no way to
          * know, because the reset appears to succeed.
          *
          * That is silent, which is why it is logged as an error rather than
@@ -213,7 +213,7 @@ class PasswordResetController extends Controller
             Log::error('Password reset could not invalidate other sessions.', [
                 'driver' => config('session.driver'),
                 'user_id' => $user->user_id,
-                'why' => 'SESSION_DRIVER must be `database` for §4.6 — other sessions cannot be '
+                'why' => 'SESSION_DRIVER must be `database` for §4.6 - other sessions cannot be '
                     .'reached on this driver and remain signed in with the old password.',
             ]);
 
@@ -227,7 +227,7 @@ class PasswordResetController extends Controller
 
     /**
      * Spec §4.7: minimum 12 characters, checked against a common-password
-     * blocklist, and no composition rules — both forced complexity and forced
+     * blocklist, and no composition rules - both forced complexity and forced
      * rotation are known to produce weaker passwords in practice.
      *
      * Laravel's `uncompromised()` is deliberately not used: it calls the

@@ -21,7 +21,7 @@ class AnnouncementsPageTest extends TestCase
         /*
          * Every route in the staff realm is behind `realm:staff` now (§3.1), so
          * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
+         * what the page renders rather than about who may see it - the guard
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
@@ -29,7 +29,7 @@ class AnnouncementsPageTest extends TestCase
     /**
      * Announcements still come from DemoAnnouncements, which needs the
      * environment flip. The birthday and anniversary rails do not: they go
-     * through Milestones, which reads the `employees` table now — so the people
+     * through Milestones, which reads the `employees` table now - so the people
      * have to be seeded as well as the environment flipped.
      */
     /**
@@ -39,14 +39,14 @@ class AnnouncementsPageTest extends TestCase
      * WHY THE CLOCK IS FROZEN AND THE FIXTURE IS NOT CHANGED
      *
      * The milestone window is fourteen days, and the twelve demo birthdays are
-     * spread across the year — so for most of it none of them is inside it, and
+     * spread across the year - so for most of it none of them is inside it, and
      * a test asserting the rail has content passed or failed on today's date
      * rather than on anything in the application. It went red for the first
      * time in September 2026, having been "green" purely by luck of the review
      * dates before that.
      *
      * Adding a birthday near today would fix it until next month. Freezing the
-     * clock on a date a demo birthday IS near — Riya Sharma's, nine days out —
+     * clock on a date a demo birthday IS near - Riya Sharma's, nine days out -
      * makes the test say the same thing every day of the year.
      *
      * Carbon::setTestNow is undone in tearDown, or every test after this one in
@@ -67,7 +67,7 @@ class AnnouncementsPageTest extends TestCase
 
     protected function withDemoData(): void
     {
-        // The people, as rows — the birthday and anniversary rails go through
+        // The people, as rows - the birthday and anniversary rails go through
         // Milestones, which reads the `employees` table now.
         $this->seedDemoWorkforce();
 
@@ -181,7 +181,7 @@ class AnnouncementsPageTest extends TestCase
 
         // A bare four-digit search is useless here: "2000" matches
         // `w3.org/2000/svg` in every inline icon. What matters is the birth
-        // DATE never appearing — raw, or formatted the way this app formats
+        // DATE never appearing - raw, or formatted the way this app formats
         // dates elsewhere.
         $forbidden = DemoEmployees::all()
             ->pluck('dob')

@@ -3,7 +3,7 @@
 {{--
     A centred, self-contained page: brand, a card, nothing else.
 
-    For the surfaces that are neither the app shell nor the sign-in form — the
+    For the surfaces that are neither the app shell nor the sign-in form - the
     end of a journey rather than a step in one. Like the error layout it pulls
     in no navigation, no view composer and no viewer data, because the pages
     that use it render for people the application has decided not to let in.

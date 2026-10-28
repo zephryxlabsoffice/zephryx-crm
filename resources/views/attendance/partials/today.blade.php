@@ -16,7 +16,7 @@
     Not a form. There is nothing to fill in: no date, no time, no reason, no
     "mark attendance for" dropdown. The person is the session and the clock is
     the server's, so the entire act is a POST with a CSRF token and nothing else
-    — which is also why there is no field for anybody to tamper with.
+    - which is also why there is no field for anybody to tamper with.
 
     Which button shows is decided by the record, not by the time of day: check in
     if there is no record, check out if there is an open one, and neither once
@@ -52,7 +52,7 @@
             @elseif ($checkedIn)
                 <span class="stat-value-quiet">Still in</span>
             @else
-                <span class="stat-value-quiet">—</span>
+                <span class="stat-value-quiet">-</span>
             @endif
         </span>
     </div>
@@ -75,7 +75,7 @@
         @if (! ($attends ?? true))
             {{-- A freelancer, paid against work rather than time (decided
                  2026-09-11): there is no clock for them, so there is no
-                 button — not a disabled one, none at all. --}}
+                 button - not a disabled one, none at all. --}}
             <p class="att-today-note">
                 Freelance engagements are not tracked by attendance. There is nothing to check in to here.
             </p>
@@ -113,7 +113,7 @@
                     so it no longer counts. Checking out now will not bring it back.
                 @else
                     Left open more than {{ (int) AttendancePolicy::autoRejectAfterHours() }} hours, the day
-                    stops counting — there is no way to fill a check-out in later.
+                    stops counting - there is no way to fill a check-out in later.
                 @endif
             </p>
         @else

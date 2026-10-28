@@ -64,7 +64,7 @@ class InvoicePresenterTest extends TestCase
 
     public function test_paid_outranks_overdue(): void
     {
-        // Money that arrived late is history, not an outstanding debt — the
+        // Money that arrived late is history, not an outstanding debt - the
         // same rule Projects and Tasks use for late-but-finished work.
         $this->assertSame(P::PAID, P::statusOf($this->invoice([
             'paid' => Money::of(100000),
@@ -104,7 +104,7 @@ class InvoicePresenterTest extends TestCase
 
     public function test_an_invoice_due_today_is_not_yet_overdue(): void
     {
-        // Due-date arithmetic run to the end of the day, not the start — an
+        // Due-date arithmetic run to the end of the day, not the start - an
         // invoice due today is not late at 9am.
         $this->assertSame(P::SENT, P::statusOf($this->invoice([
             'due_date' => Carbon::today()->toDateString(),
@@ -138,7 +138,7 @@ class InvoicePresenterTest extends TestCase
 
     public function test_a_settled_invoice_is_never_coloured_as_a_problem(): void
     {
-        // Colouring every past date red — which the handover did — means the
+        // Colouring every past date red - which the handover did - means the
         // colour stops meaning anything.
         $due = P::dueState($this->invoice([
             'paid' => Money::of(100000),

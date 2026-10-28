@@ -2,7 +2,7 @@
     Five tiles, shared by the managing and personal faces. Every figure comes
     from `$stats`; the handover hardcoded 32 / 18 / 12 / 2 / 4.
 
-    "Overdue" counts projects past their deadline that are *not* finished — a
+    "Overdue" counts projects past their deadline that are *not* finished - a
     completed project that landed late is history, not an outstanding problem.
 --}}
 @php $scope = $scope ?? 'company'; @endphp

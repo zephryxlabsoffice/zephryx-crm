@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Change request — '.$name)
+@section('title', 'Change request - '.$name)
 
 @section('content')
     <div class="page-hd-row">
@@ -24,7 +24,7 @@
         @include('partials.notice', [
             'tone' => 'info',
             'title' => 'This has already been decided',
-            'message' => 'It was '.$request->outcome().'. Nothing on this page will change it — decisions are kept, not reopened.',
+            'message' => 'It was '.$request->outcome().'. Nothing on this page will change it - decisions are kept, not reopened.',
         ])
     @endunless
 
@@ -53,7 +53,7 @@
                             <dt class="lv-field-lbl">{{ $row['label'] }}</dt>
                             <dd>
                                 {{-- Both halves. Deciding needs the comparison,
-                                     not the new value on its own — the common
+                                     not the new value on its own - the common
                                      case is a typo somebody is correcting, and
                                      only the pair shows that. --}}
                                 <span class="an-optional">{{ $row['was'] }}</span>
@@ -76,7 +76,7 @@
                         {{-- The point of the whole flow, on the screen where the
                              decision is made. --}}
                         Applying this moves their record. Check it against the document they
-                        brought in first — that is what this step is for.
+                        brought in first - that is what this step is for.
                     </p>
                 </div>
             </div>
@@ -103,7 +103,7 @@
                     <div class="prose">
                         <p>
                             They see the reason on their profile, so write something they can act
-                            on — which document is missing, or what to bring in.
+                            on - which document is missing, or what to bring in.
                         </p>
                     </div>
 

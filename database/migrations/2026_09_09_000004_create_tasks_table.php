@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Schema;
  * WHY `created_by` IS NOT A COLUMN
  *
  * The demo timeline said who created a task and who changed it. Those are audit
- * questions, and the audit log already answers them for every module — a
+ * questions, and the audit log already answers them for every module - a
  * `created_by` here would be a second, partial copy of the same fact that could
  * disagree with the log, and it would still not answer "who reassigned this
  * last Tuesday".
@@ -57,7 +57,7 @@ return new class extends Migration
             /*
              * Null means nobody has picked it up. nullOnDelete rather than
              * restrict: if an employment record ever were removed, an
-             * unassigned task is a correct outcome — the work still exists and
+             * unassigned task is a correct outcome - the work still exists and
              * somebody else has to do it.
              */
             $table->foreignId('assignee_id')->nullable()
@@ -77,7 +77,7 @@ return new class extends Migration
             $table->date('due_on')->index();
 
             /*
-             * When it was finished — the fact behind "completed", kept
+             * When it was finished - the fact behind "completed", kept
              * separately from the status so that reopening a task does not
              * erase that it was once delivered, and so a report can ask how
              * long things actually take.
@@ -86,7 +86,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // "What is on my plate" and "what does this team still hold" — the
+            // "What is on my plate" and "what does this team still hold" - the
             // two queries this table exists to answer.
             $table->index('assignee_id');
             $table->index('team_id');

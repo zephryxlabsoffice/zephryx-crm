@@ -15,7 +15,7 @@
 
         §9 makes this the one screen where our view and the client's must show
         the same thing, because it is the screen that gets argued about on a
-        call. Rebuilding the layout here — even faithfully — would guarantee
+        call. Rebuilding the layout here - even faithfully - would guarantee
         that the two drift apart the first time somebody edits one of them.
 
         What is NOT reused is the rail. The staff summary links into
@@ -37,7 +37,7 @@
         @if ($invoice['has_document'])
             <div class="hd-actions">
                 {{-- The real uploaded PDF, opened in the browser rather than
-                     downloaded by default — see invoices.partials.document
+                     downloaded by default - see invoices.partials.document
                      for the same choice made in the body of the page.
                      Ownership is re-checked and the access is audited. See
                      Client\InvoiceController. --}}

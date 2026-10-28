@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * A request to work a Sunday already covered by approved leave.
  *
- * Asked BEFORE working the day (decided 2026-09-11) — there is no route that
+ * Asked BEFORE working the day (decided 2026-09-11) - there is no route that
  * creates one of these after the fact. Approving it reduces the linked leave
- * request's `days` by one and rosters the employee for the date — see
+ * request's `days` by one and rosters the employee for the date - see
  * AttendanceController::decideSundayAgainstLeave.
  */
 class SundayAgainstLeaveRequest extends Model

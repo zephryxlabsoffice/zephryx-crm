@@ -14,13 +14,13 @@ use Illuminate\Http\Request;
  * ─────────────────────────────────────────────────────────────────────────────
  * SEVERAL PEOPLE, ONE LOGIN
  *
- * A client organisation is one account, not one person — the accounts payable
+ * A client organisation is one account, not one person - the accounts payable
  * contact who wants invoice copies is rarely the person who raises tickets.
  * `contact_name`/`contact_email`/`contact_phone` on the client record stay the
  * MAIN contact, editable through Client\ProfileController exactly as before;
  * this controller adds a table of the rest, self-served.
  *
- * There is no edit here, only add and remove — a wrong entry is cheaper to
+ * There is no edit here, only add and remove - a wrong entry is cheaper to
  * delete and re-add than to build a second edit form for.
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -48,7 +48,7 @@ class ContactController extends PortalController
             actor: $request->user(),
             entityType: 'client',
             entityId: $client->reference,
-            after: 'Contact added: '.$contact->name.' — added by the client',
+            after: 'Contact added: '.$contact->name.' - added by the client',
             request: $request,
         );
 
@@ -62,7 +62,7 @@ class ContactController extends PortalController
      * DELETE /client/contacts/{contact}
      *
      * `$contact` is looked up scoped to THIS client's own row, not just by id
-     * — the same ownership-in-the-query rule ClientPortal enforces for reads,
+     * - the same ownership-in-the-query rule ClientPortal enforces for reads,
      * applied here to the one write this controller makes. A contact id
      * belonging to another client's account 404s exactly as one that does not
      * exist does.
@@ -83,7 +83,7 @@ class ContactController extends PortalController
             actor: $request->user(),
             entityType: 'client',
             entityId: $client->reference,
-            after: 'Contact removed: '.$name.' — removed by the client',
+            after: 'Contact removed: '.$name.' - removed by the client',
             request: $request,
         );
 

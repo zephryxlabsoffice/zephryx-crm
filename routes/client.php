@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Route;
 | TWO BARRIERS, AND THIS FILE IS INSIDE THE FIRST.
 |
 | The realm check refuses a staff session before any data is read. The second
-| is ownership (§6) — "a client requesting invoice 47 must be verified as the
+| is ownership (§6) - "a client requesting invoice 47 must be verified as the
 | owner of invoice 47", named there as the most common real-world leak in
 | applications of this shape.
 |
@@ -57,11 +57,11 @@ Route::get('/invoices/{invoice}', [ClientInvoiceController::class, 'show'])
 
 /*
  * The document, through a route that checks ownership and audits the
- * access — never a static file under a guessable path, for the same reason
+ * access - never a static file under a guessable path, for the same reason
  * profile documents are not. An invoice names what a company pays and for
  * what.
  *
- * The real uploaded PDF, not a page built to look like one — invoices became
+ * The real uploaded PDF, not a page built to look like one - invoices became
  * an upload rather than a generated document on 2026-09-21, which is what
  * makes this possible at all. `view` opens it in the browser; `download`
  * saves it. See Client\InvoiceController.
@@ -83,7 +83,7 @@ Route::get('/tickets/{ticket}', [ClientTicketController::class, 'show'])
 /*
  * `tickets.store` sets the ticket's client from the SESSION and there is no
  * `client_id` in its validated set, so a posted one is dropped before it can
- * be read — not overwritten afterwards, which is the version that breaks the
+ * be read - not overwritten afterwards, which is the version that breaks the
  * day somebody reorders two lines. Same rule as the check-in routes taking
  * no employee.
  *
@@ -103,7 +103,7 @@ Route::get('/meetings/request', [ClientMeetingController::class, 'create'])->nam
 /*
  * A request is not a meeting. It produces a record with no Google Calendar
  * event behind it, which a project manager or the system admin then creates
- * — the client cannot put anything in anybody's calendar directly, and
+ * - the client cannot put anything in anybody's calendar directly, and
  * there is deliberately no route here that would let them.
  */
 Route::post('/meetings/request', [ClientMeetingController::class, 'store'])->name('meetings.request');
@@ -114,7 +114,7 @@ Route::get('/meetings/{meeting}', [ClientMeetingController::class, 'show'])
 
 /*
  * The one write a client may make against a meeting: calling it off. Google
- * is told first — see Client\MeetingController::cancel — and ownership runs
+ * is told first - see Client\MeetingController::cancel - and ownership runs
  * through ClientPortal::meetingModel, the same filter every other read in
  * this realm uses.
  */
@@ -123,7 +123,7 @@ Route::post('/meetings/{meeting}/cancel', [ClientMeetingController::class, 'canc
     ->name('meetings.cancel');
 
 /*
- * The client board — see Client\AnnouncementController. Read-only: nothing
+ * The client board - see Client\AnnouncementController. Read-only: nothing
  * here writes anything, so there is no `store` alongside these two.
  */
 Route::get('/announcements', [ClientAnnouncementController::class, 'index'])->name('announcements.index');
@@ -136,14 +136,14 @@ Route::get('/profile', [ClientProfileController::class, 'show'])->name('profile.
 /*
  * What a client may change about their own record is a short list: how to
  * reach them. Not their company name, not their industry, and nothing
- * about their projects or what they owe — those are ours, and a form
+ * about their projects or what they owe - those are ours, and a form
  * letting a client edit them would make the record meaningless.
  */
 Route::post('/profile', [ClientProfileController::class, 'update'])->name('profile.update');
 
 /*
  * Refused as a 501 until 2026-09-17, on the grounds that a client account is an
- * ORGANISATION and what it uploads is a company LOGO — which appears on
+ * ORGANISATION and what it uploads is a company LOGO - which appears on
  * invoices, and whether a client may set the image on their own invoice was a
  * question nobody had answered.
  *
@@ -159,10 +159,10 @@ Route::post('/profile/photo', [ClientProfileController::class, 'photo'])->name('
 Route::get('/profile/photo', [ClientProfileController::class, 'showPhoto'])->name('profile.photo.show');
 
 /*
- * The additional contacts beyond the one main contact on the profile above —
+ * The additional contacts beyond the one main contact on the profile above -
  * several people, one login. No edit route: a wrong entry is cheaper to
  * delete and re-add than a second edit form is worth building. Ownership on
- * the delete runs through the query itself, not a check afterwards — see
+ * the delete runs through the query itself, not a check afterwards - see
  * Client\ContactController::destroy.
  */
 Route::post('/contacts', [ClientContactController::class, 'store'])->name('contacts.store');

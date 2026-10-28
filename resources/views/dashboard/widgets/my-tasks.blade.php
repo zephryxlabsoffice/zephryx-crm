@@ -1,7 +1,7 @@
 @php use App\Support\TaskPresenter as TP; @endphp
 
 {{--
-    The viewer's own open tasks, soonest first — so overdue sorts to the top,
+    The viewer's own open tasks, soonest first - so overdue sorts to the top,
     because a late task is a negative number of days left.
 
     Completed tasks are not here. A lifetime "128 completed" is the handover's

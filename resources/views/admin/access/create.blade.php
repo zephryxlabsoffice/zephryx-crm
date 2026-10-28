@@ -17,7 +17,7 @@
     </div>
 
     {{-- A GET form of its own: choosing a starting role reloads the page with
-         that role's permissions ticked. No script — CSP — just data-auto-submit. --}}
+         that role's permissions ticked. No script - CSP - just data-auto-submit. --}}
     <form class="card" method="GET" action="{{ route('admin.access.create') }}">
         <div class="card-body">
             <div class="form-field">
@@ -28,7 +28,7 @@
                         <option value="{{ $key }}" @selected(($from['key'] ?? null) === $key)>{{ $role['name'] }}</option>
                     @endforeach
                 </select>
-                <span class="pay-hint">Copies its permissions below as a starting point — change any of them before saving.</span>
+                <span class="pay-hint">Copies its permissions below as a starting point - change any of them before saving.</span>
                 <noscript><button class="btn btn-outline btn-sm" type="submit">Use this role</button></noscript>
             </div>
         </div>
@@ -105,7 +105,7 @@
                     <div class="form-field">
                         <label class="form-field-lbl" for="role-level">Same level as</label>
                         <select id="role-level" name="level_as">
-                            <option value="">Lowest — acts on nobody</option>
+                            <option value="">Lowest - acts on nobody</option>
                             @foreach ($roles as $key => $role)
                                 <option value="{{ $key }}" @selected(old('level_as', $from['key'] ?? 'employee') === $key)>{{ $role['name'] }}</option>
                             @endforeach
@@ -127,7 +127,7 @@
                     </div>
 
                     <p class="dash-note">
-                        Nobody holds it yet — assign it to somebody from their account
+                        Nobody holds it yet - assign it to somebody from their account
                         page once it exists.
                     </p>
                 </section>

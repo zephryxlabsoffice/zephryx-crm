@@ -3,7 +3,7 @@
 @if (($mayManage ?? false) && $invoice['status'] !== P::CANCELLED)
     {{--
         Attaching or replacing the document. Offered right up to cancellation
-        — even a sent invoice may need its PDF corrected before payment
+        - even a sent invoice may need its PDF corrected before payment
         arrives, and `send()` is what actually stops nothing reaching a
         client without one, not this form being hidden.
     --}}

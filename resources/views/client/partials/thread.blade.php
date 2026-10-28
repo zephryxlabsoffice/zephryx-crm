@@ -15,7 +15,7 @@
       - the sentence "An internal note is never shown to them", about them;
       - a "Client can see" badge on every comment.
 
-    None of that leaked a comment — the audience filter held, and the internal
+    None of that leaked a comment - the audience filter held, and the internal
     note was correctly absent. It leaked the MECHANISM, which is nearly as bad:
     it tells the client there is a private channel on their own ticket, on the
     page where they are least likely to take it well.
@@ -27,7 +27,7 @@
     ─────────────────────────────────────────────────────────────────────────────
 
     Composing a reply lives on the page itself, as one button with one meaning.
-    A client comment is client-visible by construction — they wrote it — so
+    A client comment is client-visible by construction - they wrote it - so
     there is no visibility choice to offer and no default to get wrong.
 --}}
 <div class="card">

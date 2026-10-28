@@ -23,16 +23,16 @@
         </div>
 
         {{-- Only when there is actually a file behind the record. A month can
-             say a payslip was added and have none stored — an imported month,
-             or one recorded before this application held the documents — and a
+             say a payslip was added and have none stored - an imported month,
+             or one recorded before this application held the documents - and a
              download button that 404s is worse than no button. --}}
         @if ($record['payslip'] && ($record['payslip']['file'] ?? false))
             <div class="hd-actions">
                 {{-- A real route. §6: the file is stored outside the web root
                      and streamed by a controller that checks the viewer may
-                     have it — never linked at a public path.
+                     have it - never linked at a public path.
 
-                     Opens in the browser's own viewer, not as a download —
+                     Opens in the browser's own viewer, not as a download -
                      it lands on the document itself, the way a site backed
                      by an object store behaves. A "Save" button is already
                      in that viewer's own toolbar. --}}
@@ -56,7 +56,7 @@
         @include('partials.notice', [
             'tone' => 'info',
             'title' => 'Bank, PAN and Aadhaar are not shown here',
-            'message' => 'Paying somebody does not need them on screen — the bank transfer file on the payroll page carries account number, IFSC and amount straight to the bank. If a transfer bounces and one account has to be checked, that is a separate, logged reveal of that one record.',
+            'message' => 'Paying somebody does not need them on screen - the bank transfer file on the payroll page carries account number, IFSC and amount straight to the bank. If a transfer bounces and one account has to be checked, that is a separate, logged reveal of that one record.',
         ])
     @endif
 

@@ -24,13 +24,13 @@ class ErrorPageTest extends TestCase
     public function test_a_deferred_module_says_it_is_not_built_rather_than_missing(): void
     {
         // Leads, Calendar and Reports are staff routes, so reaching them at all
-        // now needs a staff session with the permission — the deferred 404 is
+        // now needs a staff session with the permission - the deferred 404 is
         // what a person who CAN see the entry gets when they click it.
         $this->signInAsStaff(['ceo', 'manager']);
 
         // §12 keeps Leads, Calendar and Reports in the navigation until v2.
         // Someone who clicked a link we chose to show them should not be told
-        // the page does not exist — that reads as a broken application, not a
+        // the page does not exist - that reads as a broken application, not a
         // decision.
         //
         // Every deferred entry, from the configuration: adding one and
@@ -55,7 +55,7 @@ class ErrorPageTest extends TestCase
         /*
          * "Go to dashboard" was hardcoded to /dashboard, the staff one. A
          * client who mistyped a URL was therefore offered a button into a realm
-         * their session will be refused from — making the way out of an error
+         * their session will be refused from - making the way out of an error
          * page a second error page.
          */
         $this->get('/client/nothing-here')
@@ -91,7 +91,7 @@ class ErrorPageTest extends TestCase
 
     /**
      * Rendered directly rather than through the preview route, which exists
-     * only in local + debug — see the last test in this file.
+     * only in local + debug - see the last test in this file.
      */
     protected function render(int $code): string
     {
@@ -191,7 +191,7 @@ class ErrorPageTest extends TestCase
         /*
          * The whole reason it is gated. Registered in production it would let
          * anyone show staff a convincing "session expired" or "maintenance"
-         * page at a URL of their choosing — a ready-made phishing surface.
+         * page at a URL of their choosing - a ready-made phishing surface.
          *
          * The suite runs as `testing`, so its absence here is the gate working.
          */

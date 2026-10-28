@@ -23,7 +23,7 @@
             @endif
 
             {{-- TODO (backend phase): streams a file, so it needs the
-                 `clients.export` permission and an audit-log entry — an export
+                 `clients.export` permission and an audit-log entry - an export
                  is the fastest way a whole table leaves the building. --}}
             <button class="btn btn-outline" type="button" disabled title="Export is not built yet">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

@@ -14,9 +14,9 @@ use Tests\TestCase;
  *
  * Three properties carry the weight, matching the plan doc's "Connecting it":
  *
- *   1. The key is write-only — stored encrypted, never rendered back, only
+ *   1. The key is write-only - stored encrypted, never rendered back, only
  *      its derived fingerprint and email shown.
- *   2. "Test connection" is real — it goes over HTTP (faked here) and can
+ *   2. "Test connection" is real - it goes over HTTP (faked here) and can
  *      fail, and a failure is recorded, not swallowed.
  *   3. Connecting, reconnecting and disconnecting are all audited by
  *      fingerprint, never by key value.
@@ -31,7 +31,7 @@ class GoogleIntegrationTest extends TestCase
     }
 
     // fakeServiceAccountKey() and the two fixture keys it uses live on the
-    // base Tests\TestCase now — DocumentStoreTest needs them too.
+    // base Tests\TestCase now - DocumentStoreTest needs them too.
 
     protected function postWithToken(string $url, array $payload = []): TestResponse
     {
@@ -68,7 +68,7 @@ class GoogleIntegrationTest extends TestCase
         $this->assertSame('drive-abc123', $connection->shared_drive_id);
         $this->assertNotNull($connection->connected_at);
 
-        // At rest, encrypted — the raw column is not the JSON that was posted.
+        // At rest, encrypted - the raw column is not the JSON that was posted.
         $raw = DB::table('google_connection')->value('service_account_key');
         $this->assertStringNotContainsString('BEGIN PRIVATE KEY', $raw);
         $this->assertStringNotContainsString('test-project.iam.gserviceaccount.com', $raw);
@@ -86,7 +86,7 @@ class GoogleIntegrationTest extends TestCase
 
     public function test_a_key_of_the_wrong_type_is_refused(): void
     {
-        // A user's OAuth client secret, say — valid JSON, wrong shape.
+        // A user's OAuth client secret, say - valid JSON, wrong shape.
         $this->postWithToken('/admin/integrations/connect', [
             'service_account_key' => json_encode(['type' => 'authorized_user']),
             'shared_drive_id' => 'drive-abc123',
@@ -140,14 +140,14 @@ class GoogleIntegrationTest extends TestCase
         $reconnected = DB::table('audit_log')->where('action', AuditLog::GOOGLE_RECONNECTED)->latest('id')->first();
         $this->assertNotNull($reconnected);
 
-        // Names the OLD fingerprint in "before" and the NEW one in "after" —
+        // Names the OLD fingerprint in "before" and the NEW one in "after" -
         // never the key itself, in either column.
         $this->assertStringContainsString($first, $reconnected->before_json);
         $this->assertStringContainsString($second, $reconnected->after_json);
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       TEST CONNECTION — REAL, NOT FAKED SUCCESS
+       TEST CONNECTION - REAL, NOT FAKED SUCCESS
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_a_successful_test_creates_and_deletes_a_file_and_is_audited(): void
@@ -249,7 +249,7 @@ class GoogleIntegrationTest extends TestCase
 
     public function test_the_integrations_permission_is_not_offered_to_any_staff_role(): void
     {
-        // Same rule every other admin.* key follows (§2.1) — proven generally
+        // Same rule every other admin.* key follows (§2.1) - proven generally
         // by AdminPanelTest::test_admin_permissions_are_not_offered_to_any_role,
         // this asserts the specific key exists and is seeded.
         $this->assertDatabaseHas('permissions', ['permission_key' => 'admin.integrations.view']);

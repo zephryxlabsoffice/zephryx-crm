@@ -27,7 +27,7 @@ use Illuminate\Validation\ValidationException;
  * Ownership decides whether there is a ticket to open at all. Audience decides
  * which comments on it exist. They are separate questions and both have to be
  * answered, because an internal note on a client's OWN ticket is still not
- * theirs to read — "spoke to Rahul, this is going to slip a week, don't tell
+ * theirs to read - "spoke to Rahul, this is going to slip a week, don't tell
  * them yet" is written on the ticket the client raised.
  *
  * The audience filter is not this controller's cleverness. TicketDirectory has no
@@ -35,7 +35,7 @@ use Illuminate\Validation\ValidationException;
  * argument, so forgetting to pass one is a syntax error rather than a client
  * reading an internal note. This class reaches it through
  * ClientPortal::ticketComments, which applies ownership first and then
- * pins the audience to AUDIENCE_CLIENT — a caller here cannot ask for the
+ * pins the audience to AUDIENCE_CLIENT - a caller here cannot ask for the
  * staff thread even by mistake.
  * ─────────────────────────────────────────────────────────────────────────────
  *
@@ -127,7 +127,7 @@ class TicketController extends PortalController
      * THE CLIENT COMES FROM THE SESSION, AND THE FORM CANNOT SEND ONE
      *
      * There is no `client_id` in the validated set, so a posted one is dropped
-     * before it can be read — not overwritten afterwards, which is the version
+     * before it can be read - not overwritten afterwards, which is the version
      * that breaks the day somebody reorders two lines. The same rule as the
      * check-in routes taking no employee.
      *
@@ -138,7 +138,7 @@ class TicketController extends PortalController
      *
      * IT ARRIVES UNASSIGNED AND UNPRIORITISED, like every other ticket. A
      * priority the person raising it sets makes every ticket high, which is the
-     * same as none of them being — see the staff TicketController.
+     * same as none of them being - see the staff TicketController.
      * ─────────────────────────────────────────────────────────────────────────
      */
     public function store(Request $request): RedirectResponse
@@ -156,7 +156,7 @@ class TicketController extends PortalController
             : ClientPortal::project($client, $data['project']);
 
         if (($data['project'] ?? null) !== null && $project === null) {
-            // Not "that project does not exist" — the same message either way,
+            // Not "that project does not exist" - the same message either way,
             // so the response cannot be used to find out which references are
             // real. Refused rather than silently filed against nothing.
             throw ValidationException::withMessages([
@@ -187,7 +187,7 @@ class TicketController extends PortalController
             request: $request,
         );
 
-        // Support and the project manager first — see Notifier::ticketRaised.
+        // Support and the project manager first - see Notifier::ticketRaised.
         // No actor: the client is not a staff account and has no bell to be
         // excluded from, the same reasoning as the comment route below.
         $this->notify->ticketRaised($ticket->load('project.manager.user'), null);
@@ -206,7 +206,7 @@ class TicketController extends PortalController
      *
      * `visibility` is not in the validated set and is not read from the request
      * at all. The client wrote it; it cannot be an internal note, whatever the
-     * payload says — and there is no branch here that could be made to say
+     * payload says - and there is no branch here that could be made to say
      * otherwise, which is stronger than a check that forces the value.
      *
      * The author's name and role are copied onto the row, as they are on the
@@ -221,7 +221,7 @@ class TicketController extends PortalController
 
         abort_if($record === null, 404);
 
-        // "Closed is final" (decided 2026-09-21) — same rule as the staff
+        // "Closed is final" (decided 2026-09-21) - same rule as the staff
         // side: a closed ticket takes no further reply, from either side.
         if ($record['model']->status === 'closed') {
             return redirect()
@@ -244,7 +244,7 @@ class TicketController extends PortalController
         ]);
 
         // The thread moving is what makes a ticket recently touched, and the
-        // staff queue is ordered on it — a client's reply has to count.
+        // staff queue is ordered on it - a client's reply has to count.
         $record['model']->touch();
 
         $this->audit->record(
@@ -260,7 +260,7 @@ class TicketController extends PortalController
             $record['model']->load(['assignee.user', 'raiser.user']),
             $record['model']->comments()->latest('id')->first(),
             // No actor: the client is not a staff account, so nobody is
-            // excluded by the "nothing tells you what you just did" rule — and
+            // excluded by the "nothing tells you what you just did" rule - and
             // the client does not have a bell to be excluded from.
             null,
         );

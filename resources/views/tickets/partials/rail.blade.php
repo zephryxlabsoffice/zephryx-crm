@@ -83,13 +83,13 @@
 
         @if ($ticket['converted_task'])
             <p class="dash-note">
-                Already converted — see
+                Already converted - see
                 <a class="dash-link" href="{{ route('tasks.show', ['task' => $ticket['converted_task']]) }}">{{ $ticket['converted_task'] }}</a>.
             </p>
         @else
             {{-- A link, not a lifecycle decision: this creates a task and
                  points the ticket at it. It does not close, escalate or
-                 otherwise decide this ticket's own status — see
+                 otherwise decide this ticket's own status - see
                  TicketController::convertToTask. --}}
             <form method="POST" action="{{ route('tickets.convertToTask', ['ticket' => $ticket['id']]) }}">
                 @csrf

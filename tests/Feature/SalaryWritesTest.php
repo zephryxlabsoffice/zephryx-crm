@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
- * Salary — adding a payslip, marking people paid, and handing a file over.
+ * Salary - adding a payslip, marking people paid, and handing a file over.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * THE MODULE WHERE A MISTAKE IS SOMEBODY'S PAY
@@ -102,7 +102,7 @@ class SalaryWritesTest extends TestCase
 
         $this->assertSame(7500050, $record->net_minor);
         // Grouped the Indian way when it is read, ungrouped when it goes back
-        // into the form — a field prefilled with "75,000.50" would be refused
+        // into the form - a field prefilled with "75,000.50" would be refused
         // by the validator that wrote it.
         $this->assertSame('75,000.50', $record->net()->decimal());
         $this->assertSame('75000.50', $record->net()->plain());
@@ -132,7 +132,7 @@ class SalaryWritesTest extends TestCase
         /*
          * An uploaded name reaching storage is how "../../.env" and
          * "payslip.pdf.php" become a problem. The original is kept in the
-         * database for display and never used as a path — nor, now that this
+         * database for display and never used as a path - nor, now that this
          * goes to Drive, as the stored file's own name.
          */
         $this->anEmployee('EMP872', 'Their Person');
@@ -311,7 +311,7 @@ class SalaryWritesTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       THE DOWNLOAD — THE ONE WAY A STORED FILE LEAVES
+       THE DOWNLOAD - THE ONE WAY A STORED FILE LEAVES
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_somebody_may_download_their_own_payslip(): void
@@ -355,7 +355,7 @@ class SalaryWritesTest extends TestCase
 
     public function test_a_record_with_no_stored_file_is_a_404_rather_than_an_error(): void
     {
-        // A month can say a payslip was added and have no file behind it — an
+        // A month can say a payslip was added and have no file behind it - an
         // imported month, or one recorded before this application held them.
         $me = $this->signInAsEmployee();
         $this->aRecord($me, ['net_minor' => 5000000, 'payslip_name' => 'legacy.pdf']);
@@ -365,7 +365,7 @@ class SalaryWritesTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       THE VIEWER — THE SAME FILE, OPENED RATHER THAN SAVED
+       THE VIEWER - THE SAME FILE, OPENED RATHER THAN SAVED
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_somebody_may_view_their_own_payslip_inline(): void
@@ -408,7 +408,7 @@ class SalaryWritesTest extends TestCase
     public function test_the_payslip_viewer_carries_a_locked_down_content_security_policy(): void
     {
         /*
-         * The whole reason inline viewing of an upload is safe at all — see
+         * The whole reason inline viewing of an upload is safe at all - see
          * App\Http\Middleware\SecurityHeaders and DocumentStore::viewInline().
          * An uploaded PDF must not be able to act inside our origin, whatever
          * it contains.

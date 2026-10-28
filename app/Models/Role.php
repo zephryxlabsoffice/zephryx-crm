@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 /**
  * A capability pack (foundation spec §2.4).
  *
- * Roles layer on top of the Employee base and stack as a union — nothing is
+ * Roles layer on top of the Employee base and stack as a union - nothing is
  * ever lost by gaining one. That is why there is no precedence or priority
  * column here: with only additive grants, resolution needs no ordering.
  */

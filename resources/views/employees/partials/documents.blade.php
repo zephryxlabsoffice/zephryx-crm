@@ -6,7 +6,7 @@
     documents to employees.identifiers holders … without this, HR can log
     that a photocopy arrived but never actually check it against the
     record"). Same file, same route shape, same two-party rule as
-    resources/views/profile/partials/documents.blade.php — this is the
+    resources/views/profile/partials/documents.blade.php - this is the
     second party, not a new capability.
 
     Read-only on purpose: nothing here uploads on the employee's behalf.

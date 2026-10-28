@@ -21,14 +21,14 @@ use Illuminate\Support\Str;
  * `send()` drops the row when the reader is the actor. It is the one rule every
  * method here relies on, and it is enforced in one place rather than at six
  * call sites, because the call site that forgets it is the one that assigns a
- * task to yourself — the most common thing anybody does with the task form —
+ * task to yourself - the most common thing anybody does with the task form -
  * and the result is a bell that is permanently unread with nothing in it worth
  * reading.
  *
  * AND TWO OF THE FOUR KINDS CAN BE SWITCHED OFF
  *
  * Tasks and tickets, from My Profile's preferences page. Leave decisions and
- * meeting invites cannot be — see `wants()`.
+ * meeting invites cannot be - see `wants()`.
  *
  * NAMED EVENTS, NOT A MESSAGE BUS
  *
@@ -43,7 +43,7 @@ use Illuminate\Support\Str;
  * omission:
  *
  *   - **Invoices.** "Payment received" has no addressee. Nothing in the
- *     invoices table records whose invoice it is — it belongs to the company —
+ *     invoices table records whose invoice it is - it belongs to the company -
  *     so the only honest recipient is "the finance team", which is a broadcast,
  *     and broadcasts go on the board.
  *
@@ -51,7 +51,7 @@ use Illuminate\Support\Str;
  *     today, not events, and the answer changes on its own overnight. A row
  *     written when the project was created would be wrong by the time it was
  *     read, and there is no scheduler here to write one on the day. Like
- *     milestones on the board, they belong to whatever computes them — which is
+ *     milestones on the board, they belong to whatever computes them - which is
  *     nothing, yet.
  *
  * A FAILED NOTIFICATION IS NOT CAUGHT
@@ -119,7 +119,7 @@ class Notifier
      * the preferences page says so rather than offering a control that quietly
      * loses them.
      *
-     * A reader with no profile row — never opened the page — wants everything.
+     * A reader with no profile row - never opened the page - wants everything.
      * The default belongs in EmployeeProfile::blank(), not here, but the null
      * case is handled explicitly because a missing row must never read as
      * "switched off": the failure would be silent and would look like the
@@ -148,7 +148,7 @@ class Notifier
     /**
      * Somebody was put on a task.
      *
-     * `$newlyAssigned` is the delta, not the full roster — several assignees
+     * `$newlyAssigned` is the delta, not the full roster - several assignees
      * per task (decided 2026-09-21) means a sync can add one person to a task
      * two others are already on, and re-notifying the two who were already
      * there about work they have had for a week is the same mistake
@@ -165,7 +165,7 @@ class Notifier
                 reader: $user,
                 kind: 'task',
                 title: ($actor?->name ?? 'Somebody').' assigned you a task',
-                body: $task->name.' — due '.$task->due_on->format('D j M').'.',
+                body: $task->name.' - due '.$task->due_on->format('D j M').'.',
                 route: 'tasks.show',
                 params: ['task' => $task->reference],
                 actor: $actor,
@@ -183,7 +183,7 @@ class Notifier
      * by a colleague who can walk over and mention it; a client ticket lands
      * with nobody watching it until somebody in Support notices the queue, and
      * the project manager is the one person who already has context on
-     * whatever the client is describing. Both are told the moment it arrives —
+     * whatever the client is describing. Both are told the moment it arrives -
      * `ticketAssigned` below covers the assignee once triage actually happens,
      * which may be one of these same people or somebody else entirely.
      *
@@ -213,7 +213,7 @@ class Notifier
                 reader: $reader,
                 kind: 'ticket',
                 title: 'A client raised a new ticket',
-                body: $ticket->reference.' — '.$ticket->subject,
+                body: $ticket->reference.' - '.$ticket->subject,
                 route: 'tickets.show',
                 params: ['ticket' => $ticket->reference],
                 actor: $actor,
@@ -241,7 +241,7 @@ class Notifier
             reader: $ticket->assignee?->user,
             kind: 'ticket',
             title: $escalated ? 'Ticket escalated to you' : 'A ticket was assigned to you',
-            body: $ticket->reference.' — '.$ticket->subject,
+            body: $ticket->reference.' - '.$ticket->subject,
             route: 'tickets.show',
             params: ['ticket' => $ticket->reference],
             actor: $actor,
@@ -254,14 +254,14 @@ class Notifier
      * ─────────────────────────────────────────────────────────────────────────
      * THE INTERNAL NOTE IS THE REASON THIS TAKES THE COMMENT AND NOT THE BODY
      *
-     * A ticket has two staff readers — whoever raised it and whoever is on it —
+     * A ticket has two staff readers - whoever raised it and whoever is on it -
      * and both are told, minus the author. But an internal note is invisible to
      * the person who raised a CLIENT ticket, and a notification quoting one
      * would put it in front of them anyway, in an email-shaped surface, which is
      * exactly the leak the visibility column exists to prevent.
      *
-     * So the raiser of a client ticket is not a reader here at all — they have
-     * no account on this side — and the note's text never leaves the thread:
+     * So the raiser of a client ticket is not a reader here at all - they have
+     * no account on this side - and the note's text never leaves the thread:
      * the body says a reply arrived and the link goes to the ticket, where the
      * ordinary visibility rules apply again.
      * ─────────────────────────────────────────────────────────────────────────
@@ -280,7 +280,7 @@ class Notifier
                     ? 'Internal note on a ticket you are on'
                     : 'New reply on a ticket you are on',
                 // Never the comment text. See the head of this method.
-                body: $ticket->reference.' — '.$ticket->subject,
+                body: $ticket->reference.' - '.$ticket->subject,
                 route: 'tickets.show',
                 params: ['ticket' => $ticket->reference],
                 actor: $actor,
@@ -305,7 +305,7 @@ class Notifier
             title: $approved ? 'Your leave was approved' : 'Your leave was not approved',
             body: Str::ucfirst(str_replace('_', ' ', (string) $leave->type))
                 .', '.$leave->days.' '.Str::plural('day', (float) $leave->days)
-                .($approved ? '.' : ' — '.$leave->decision_note),
+                .($approved ? '.' : ' - '.$leave->decision_note),
             route: 'leave.show',
             params: ['leaveRequest' => $leave->reference],
             actor: $actor,
@@ -327,7 +327,7 @@ class Notifier
                 reader: $reader,
                 kind: 'meeting',
                 title: 'You were invited to a meeting',
-                body: $meeting->title.' — '.$meeting->starts_at->format('D j M, H:i').'.',
+                body: $meeting->title.' - '.$meeting->starts_at->format('D j M, H:i').'.',
                 route: 'meetings.show',
                 params: ['meeting' => $meeting->reference],
                 actor: $actor,
@@ -349,7 +349,7 @@ class Notifier
                 reader: $reader,
                 kind: 'meeting',
                 title: 'A meeting was cancelled',
-                body: $meeting->title.', '.$meeting->starts_at->format('D j M, H:i').' — '.$reason,
+                body: $meeting->title.', '.$meeting->starts_at->format('D j M, H:i').' - '.$reason,
                 route: 'meetings.show',
                 params: ['meeting' => $meeting->reference],
                 actor: $actor,

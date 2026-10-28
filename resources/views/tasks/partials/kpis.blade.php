@@ -4,7 +4,7 @@
     beside them.
 
     The percentage sub-labels are computed here rather than written in, so they
-    cannot contradict the number above them — the handover's did not add up.
+    cannot contradict the number above them - the handover's did not add up.
 --}}
 @php
     $share = fn (int $n) => $stats['total'] > 0

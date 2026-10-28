@@ -7,7 +7,7 @@ use App\Support\TicketDirectory;
 use Tests\TestCase;
 
 /**
- * Tickets — five lists and one overview.
+ * Tickets - five lists and one overview.
  *
  * The comment-visibility tests below are the important ones in this file. A
  * client reading an internal note is the worst failure this module can have,
@@ -23,7 +23,7 @@ class TicketsPageTest extends TestCase
         /*
          * Every route in the staff realm is behind `realm:staff` now (§3.1), so
          * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
+         * what the page renders rather than about who may see it - the guard
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
@@ -88,7 +88,7 @@ class TicketsPageTest extends TestCase
 
     public function test_the_client_audience_never_receives_the_internal_wording(): void
     {
-        // Not just the flag — the actual text must be absent, in case a future
+        // Not just the flag - the actual text must be absent, in case a future
         // change filters on the wrong field.
         $this->withDemoData();
 

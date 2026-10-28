@@ -18,7 +18,7 @@ use Tests\TestCase;
  *
  * Two properties carry most of the weight here, and neither is about layout:
  *
- *   1. §2.1 — this realm has NO OPERATIONAL AUTHORITY. It configures who may
+ *   1. §2.1 - this realm has NO OPERATIONAL AUTHORITY. It configures who may
  *      approve leave and can never approve any. Enforced by absence, so the
  *      test is about routes that must not exist.
  *
@@ -34,7 +34,7 @@ class AdminPanelTest extends TestCase
 
         /*
          * The panel is behind `realm:admin` (§3.1), and the owner account holds
-         * no roles at all — its capabilities are implicit in the account type,
+         * no roles at all - its capabilities are implicit in the account type,
          * because §2.1 makes the Admin Panel "not a role and not assignable"
          * (Rbac::ADMIN_BASE).
          */
@@ -65,7 +65,7 @@ class AdminPanelTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       §2.1 — SETS THE RULES, DOES NOT PARTICIPATE IN THEM
+       §2.1 - SETS THE RULES, DOES NOT PARTICIPATE IN THEM
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_no_admin_route_performs_an_operational_act(): void
@@ -161,7 +161,7 @@ class AdminPanelTest extends TestCase
          * These four are derived on read by AttendancePolicy and LeavePolicy,
          * so changing one re-judges records that already exist. If a future
          * edit drops the flag, the warning and the preview both disappear
-         * silently — which is exactly the failure this catalogue exists to
+         * silently - which is exactly the failure this catalogue exists to
          * prevent.
          */
         foreach ([
@@ -204,7 +204,7 @@ class AdminPanelTest extends TestCase
         /*
          * The preview evaluates the history twice, once with the proposed value
          * pushed into config. If it failed to restore, the very page about to
-         * render the warning would already be using the new rule — and every
+         * render the warning would already be using the new rule - and every
          * other request in the process with it.
          */
         $this->assertSame($before, AttendancePolicy::halfDayHours());
@@ -232,7 +232,7 @@ class AdminPanelTest extends TestCase
 
         $body = $this->bodyOf($response->getContent(), '/admin/settings/preview');
 
-        // The effect, not just the value — the whole point of the two-step.
+        // The effect, not just the value - the whole point of the two-step.
         $this->assertStringContainsString('What this does to existing records', $body);
         $this->assertStringContainsString('re-judged', $body);
 
@@ -278,7 +278,7 @@ class AdminPanelTest extends TestCase
         /*
          * The examples have to look like the summary. Taken in natural order
          * they came out as eight consecutive Saturdays belonging to one person,
-         * under a heading claiming eleven people were affected — which reads as
+         * under a heading claiming eleven people were affected - which reads as
          * though the number is wrong.
          */
         $this->assertGreaterThan(
@@ -333,7 +333,7 @@ class AdminPanelTest extends TestCase
         /*
          * Written to `company_settings`, not to a config file. A deployed
          * application cannot edit its own source, and a value in a file is one
-         * the next deploy silently reverts — so the assertion is on the row as
+         * the next deploy silently reverts - so the assertion is on the row as
          * well as on the running value.
          */
         $this->seedDemoWorkforce();
@@ -392,7 +392,7 @@ class AdminPanelTest extends TestCase
         /*
          * The figures somebody read were computed on the previous request. If
          * they have moved, the second step is agreement to a number nobody ever
-         * saw — so it sends them back to look at the new one rather than
+         * saw - so it sends them back to look at the new one rather than
          * writing against the old.
          */
         $this->withDemoData();
@@ -435,7 +435,7 @@ class AdminPanelTest extends TestCase
         /*
          * The weekly off is a list of integers and the policy compares with a
          * strict in_array. Flattened to a string on the way in and parsed back
-         * as strings on the way out, it would match no day at all — and the
+         * as strings on the way out, it would match no day at all - and the
          * symptom is a weekly off that silently stops applying.
          */
         $this->withDemoData();
@@ -469,7 +469,7 @@ class AdminPanelTest extends TestCase
          * that is invisible to everyone with no explanation.
          *
          * Checked against the two staff-facing sidebars and the dashboard
-         * registry — not navigation-admin, which is the realm base and is
+         * registry - not navigation-admin, which is the realm base and is
          * deliberately ungrantable (see the test below).
          */
         foreach (['navigation', 'navigation-client'] as $file) {
@@ -497,7 +497,7 @@ class AdminPanelTest extends TestCase
         /*
          * The gap the table closed. Derivation could only see keys some sidebar
          * or widget mentioned, so every permission gating a write route and
-         * nothing else — the whole of RbacSeeder::MODULE_WRITES — was invisible
+         * nothing else - the whole of RbacSeeder::MODULE_WRITES - was invisible
          * to the screen that assigns it.
          */
         $keys = collect(AccessDirectory::permissions())->flatten(1)->pluck('key');
@@ -514,8 +514,8 @@ class AdminPanelTest extends TestCase
          * account type in its own realm.
          *
          * Offering `admin.settings.view` as a toggle on the HR page would grant
-         * nothing — realm middleware refuses /admin to a staff session whatever
-         * keys it holds — and would imply the panel's authority is something a
+         * nothing - realm middleware refuses /admin to a staff session whatever
+         * keys it holds - and would imply the panel's authority is something a
          * person can be given a piece of.
          */
         $keys = collect(AccessDirectory::permissions())->flatten(1)->pluck('key');
@@ -567,8 +567,8 @@ class AdminPanelTest extends TestCase
         $this->seedDemoWorkforce();
 
         /*
-         * Roles stack as a union (§2.4). Granting salary.view to Employee — a
-         * role everybody holds — must not count the HR staff who already have
+         * Roles stack as a union (§2.4). Granting salary.view to Employee - a
+         * role everybody holds - must not count the HR staff who already have
          * it, or the number overstates the change.
          */
         $everyone = AccessDirectory::whoWouldHold('salary.view', 'employee');
@@ -607,7 +607,7 @@ class AdminPanelTest extends TestCase
         $this->assertGreaterThan($hr['ranks']['system'], $hr['ranks']['people']);
         $this->assertGreaterThan(0, $ceo['ranks']['finance']);
 
-        // A Mentor has no standing anywhere — read-only, no Employee base.
+        // A Mentor has no standing anywhere - read-only, no Employee base.
         $this->assertSame(0, array_sum(AccessDirectory::role('mentor')['ranks']));
     }
 
@@ -726,7 +726,7 @@ class AdminPanelTest extends TestCase
         /*
          * It is the only account that can open this page, so one click would
          * lock the company out of its own configuration. Excluded from the
-         * directory's query rather than refused by the write — a row nobody may
+         * directory's query rather than refused by the write - a row nobody may
          * act on is a row that invites the attempt.
          */
         $owner = \App\Models\User::where('account_type', \App\Support\Realm::ADMIN)->firstOrFail();
@@ -774,7 +774,7 @@ class AdminPanelTest extends TestCase
         /*
          * §2.2: everything a client can reach comes from the realm base.
          * Granting it a staff role would put keys on an account realm
-         * middleware refuses anyway — a grant that reads as real and does
+         * middleware refuses anyway - a grant that reads as real and does
          * nothing.
          */
         $this->seedDemoWorkforce();
@@ -819,7 +819,7 @@ class AdminPanelTest extends TestCase
         $this->assertSame(0, \Illuminate\Support\Facades\DB::table('trusted_devices')
             ->where('user_id', $user->id)->whereNull('revoked_at')->count());
 
-        // The password itself is untouched — only a live reset link and a
+        // The password itself is untouched - only a live reset link and a
         // clean slate of sessions/devices. Forcing a reset is not the same
         // act as performing one.
         $this->assertSame(1, \Illuminate\Support\Facades\DB::table('audit_log')
@@ -843,7 +843,7 @@ class AdminPanelTest extends TestCase
         $this->postWithToken('/admin/accounts/EMP002/sign-out', [])
             ->assertRedirect();
 
-        // Device trust is a different problem and is not touched here — see
+        // Device trust is a different problem and is not touched here - see
         // the untrust-devices test below.
         $this->assertSame(1, \Illuminate\Support\Facades\DB::table('trusted_devices')
             ->where('user_id', $user->id)->whereNull('revoked_at')->count());
@@ -928,7 +928,7 @@ class AdminPanelTest extends TestCase
 
     public function test_a_new_role_may_be_created_with_nothing_ticked(): void
     {
-        // A blank role is a valid save — refusing it would push somebody to
+        // A blank role is a valid save - refusing it would push somebody to
         // tick something just to get past validation.
         $this->postWithToken('/admin/access', [
             'role_key' => 'observer',
@@ -956,7 +956,7 @@ class AdminPanelTest extends TestCase
     public function test_a_role_cannot_be_created_with_an_admin_or_client_permission(): void
     {
         // Both are realm bases, held by account type and never by a role
-        // (§2.1, §2.2) — the same rule AccessController::update() enforces
+        // (§2.1, §2.2) - the same rule AccessController::update() enforces
         // on an existing role.
         $this->postWithToken('/admin/access', [
             'role_key' => 'sneaky',
@@ -1067,7 +1067,7 @@ class AdminPanelTest extends TestCase
     {
         /*
          * The four lists share a table because they share a shape and a screen.
-         * They are still four lists — refusing a document type its code because
+         * They are still four lists - refusing a document type its code because
          * a department has one would be the table leaking onto the screen.
          */
         $department = MasterDataItem::query()->inList('departments')->firstOrFail();
@@ -1141,7 +1141,7 @@ class AdminPanelTest extends TestCase
     {
         /*
          * The demo source named five kinds, because those are the five §6 calls
-         * out and the log held nothing else. It holds every module write now —
+         * out and the log held nothing else. It holds every module write now -
          * and a five-entry filter over sixty action types is worse than no
          * filter: most of the page would be unreachable through it, and the tab
          * counts would not add up to the total.
@@ -1182,7 +1182,7 @@ class AdminPanelTest extends TestCase
         /*
          * And the writing class offers one write and no way to unwrite. Named
          * individually rather than by counting methods: the class is allowed to
-         * grow readers — the audit page itself uses one — and a test that broke
+         * grow readers - the audit page itself uses one - and a test that broke
          * when it did would be deleted rather than fixed.
          */
         foreach (['update', 'delete', 'truncate', 'prune', 'forget', 'clear'] as $method) {

@@ -24,7 +24,7 @@
 
                 Arcs are computed from the counts. The handover's were fixed
                 stroke-dasharray values typed in by hand, so they would not have
-                matched a real day since the moment they were written — and it
+                matched a real day since the moment they were written - and it
                 coloured them with style="--dot:#15A848", which our CSP blocks.
             --}}
             <div class="donut">

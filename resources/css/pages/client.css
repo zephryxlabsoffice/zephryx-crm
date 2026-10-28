@@ -3,8 +3,8 @@
 
    Almost nothing new. The portal reuses the staff shell (the designer's
    client-shell.js injects the same .sidebar / .topbar markup) and the same
-   primitives every module uses — .kpi, .card, .rail-card, .data-table,
-   .stat-row, .form-field — plus the dashboard's two-column .dash-grid.
+   primitives every module uses - .kpi, .card, .rail-card, .data-table,
+   .stat-row, .form-field - plus the dashboard's two-column .dash-grid.
 
    That is deliberate beyond saving work: a client and an account manager
    looking at the same invoice should be looking at the same thing. Divergence
@@ -16,7 +16,7 @@
 /* ----------------------------------------------------------------------------
    The client switcher.
 
-   Development only — DemoClientPortal::switchable() is empty outside local +
+   Development only - DemoClientPortal::switchable() is empty outside local +
    debug. Styled as scaffolding rather than product, like the dashboard's role
    preview, so nobody mistakes it for a feature or screenshots it into a demo.
    -------------------------------------------------------------------------- */
@@ -67,7 +67,7 @@
 /* ----------------------------------------------------------------------------
    Quick actions.
 
-   Two tiles, not the handover's four navigation cards — those repeated the
+   Two tiles, not the handover's four navigation cards - those repeated the
    sidebar entry for entry. These are the two things a client arrives to do and
    cannot do from the sidebar in one click.
    -------------------------------------------------------------------------- */
@@ -84,7 +84,7 @@
    Daily updates.
 
    The centre of this portal: what a client opens it to read. Set as a log
-   rather than a table — these are sentences somebody wrote, and a table cell
+   rather than a table - these are sentences somebody wrote, and a table cell
    is the wrong shape for a paragraph.
 
    Every update on screen was published deliberately; the internal ones never
@@ -193,7 +193,7 @@
 }
 
 /* A field that should run the full width of the form grid rather than sharing
-   a row — subjects, descriptions, addresses. */
+   a row - subjects, descriptions, addresses. */
 .cl-form-wide { grid-column: 1 / -1; }
 
 /* ----------------------------------------------------------------------------

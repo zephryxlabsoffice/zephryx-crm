@@ -1,11 +1,11 @@
 /* ============================================================================
-   Tasks — /tasks, /tasks/mine, /tasks/team, /tasks/{task}.
+   Tasks - /tasks, /tasks/mine, /tasks/team, /tasks/{task}.
 
    The handover shipped four stylesheets (tasks.css alone was 23KB) that again
    re-derived the table, KPI tiles, filters, pagination and rail cards under new
    prefixes: `.tk-*`, `.tt-*`, `.to-*`, `.kpi-row-6`. Those map onto
    components/ui.css. The due-date cell, timeline, field grid and attachment
-   cards were genuinely new and went into components too — Attendance, Leave
+   cards were genuinely new and went into components too - Attendance, Leave
    and Tickets will all want them.
    ========================================================================= */
 
@@ -106,7 +106,7 @@
 /* The written description. Styled here rather than left to browser defaults,
    because it is the one place in the application with prose in it. */
 /* `.prose` and `.section-hd` moved to components/ui.css when Tickets and then
-   Invoices needed them — they belong to any card with a heading or a paragraph
+   Invoices needed them - they belong to any card with a heading or a paragraph
    in it, not to Tasks. */
 
 /* ── rail actions ── */

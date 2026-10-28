@@ -42,11 +42,11 @@
                         @foreach ($requests as $row)
                             <tr>
                                 <td>
-                                    <strong>{{ $row['employee_record']['name'] ?? '—' }}</strong>
+                                    <strong>{{ $row['employee_record']['name'] ?? '-' }}</strong>
                                     <span class="dash-sub">{{ $row['employee_record']['department'] ?? '' }}</span>
                                 </td>
                                 <td class="cell-tight">{{ Carbon::parse($row['earned_on'])->format('d M Y') }}</td>
-                                <td class="cell-tight">{{ $row['take_date'] ? Carbon::parse($row['take_date'])->format('d M Y') : '—' }}</td>
+                                <td class="cell-tight">{{ $row['take_date'] ? Carbon::parse($row['take_date'])->format('d M Y') : '-' }}</td>
                                 <td>
                                     <form method="POST" action="{{ route('compoffs.approve', ['compOff' => $row['id']]) }}">
                                         @csrf

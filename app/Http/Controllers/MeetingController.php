@@ -28,7 +28,7 @@ use Illuminate\Validation\ValidationException;
 use Throwable;
 
 /**
- * Meetings — organising Google Meets. This server hosts none of them.
+ * Meetings - organising Google Meets. This server hosts none of them.
  *
  * Three pages: the list (`/meetings`), one meeting (`/meetings/{meeting}`) and
  * the scheduling form (`/meetings/schedule`).
@@ -39,7 +39,7 @@ use Throwable;
  * Decided 2026-08-28. Every meeting is a Google Calendar event with a Meet
  * conference. This application holds who is meeting whom about what, and a
  * reference to that event. It never hosts, records or proxies a call, and it
- * never constructs a Meet URL — the link comes back from Google or there is no
+ * never constructs a Meet URL - the link comes back from Google or there is no
  * link.
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -171,7 +171,7 @@ class MeetingController extends Controller
      * THE RECORD IS SAVED BEFORE THE NETWORK CALL, ON PURPOSE
      *
      * If Google is asked first and this application then fails to save, an event
-     * exists that nothing here knows about — invites are out for a meeting with
+     * exists that nothing here knows about - invites are out for a meeting with
      * no record. The other way round, a failed create leaves a requested
      * meeting somebody can retry, which is a state the pages already draw.
      * ─────────────────────────────────────────────────────────────────────────
@@ -243,7 +243,7 @@ class MeetingController extends Controller
 
             $model->update([
                 'event_id' => $event['event_id'],
-                // Whatever came back. Never assembled here — see the head of
+                // Whatever came back. Never assembled here - see the head of
                 // MeetingProvider.
                 'join_url' => $event['join_url'],
                 'html_link' => $event['html_link'],
@@ -293,7 +293,7 @@ class MeetingController extends Controller
      * A meeting called off in this application but still live on Google is
      * worse than one not cancelled at all: the organiser believes it is off and
      * the attendees turn up. So the local record is only marked cancelled once
-     * the provider has confirmed — and if it throws, the meeting stays
+     * the provider has confirmed - and if it throws, the meeting stays
      * scheduled and says why.
      * ─────────────────────────────────────────────────────────────────────────
      */
@@ -328,7 +328,7 @@ class MeetingController extends Controller
 
                 throw ValidationException::withMessages([
                     'reason' => 'The calendar could not be updated, so the meeting has NOT been cancelled. '
-                        .'Everybody still has the invite — try again, or cancel it in Google Calendar.',
+                        .'Everybody still has the invite - try again, or cancel it in Google Calendar.',
                 ]);
             }
         }
@@ -401,7 +401,7 @@ class MeetingController extends Controller
         /*
          * Typed in the display zone, stored in UTC. The conversion happens once,
          * here, because a meeting is the one record where getting a timezone
-         * wrong means people miss it — see App\Support\MeetingPresenter.
+         * wrong means people miss it - see App\Support\MeetingPresenter.
          */
         $start = Carbon::parse($data['date'].' '.$data['time'], MeetingPresenter::zone())->utc();
 
@@ -421,7 +421,7 @@ class MeetingController extends Controller
         /*
          * The organiser is always on the invite. They called the meeting, and
          * an organiser who cannot see the join link is somebody locked out of
-         * their own meeting — see Meeting::isAttendedBy, which is the other
+         * their own meeting - see Meeting::isAttendedBy, which is the other
          * half of the same rule.
          */
         if ($organiser?->user_id !== null) {
@@ -431,7 +431,7 @@ class MeetingController extends Controller
         foreach ($ids->unique()->filter() as $userId) {
             MeetingAttendee::firstOrCreate(
                 ['meeting_id' => $meeting->id, 'user_id' => $userId],
-                // `awaiting`, because nobody has replied yet — and this
+                // `awaiting`, because nobody has replied yet - and this
                 // application never sets a response to anything else. That is
                 // Google's to report.
                 ['response' => MeetingPresenter::AWAITING],

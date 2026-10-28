@@ -10,7 +10,7 @@
 
     The handover showed CTC ₹12,60,000, net ₹85,800 and a management figure of
     ₹80,000 for one person with nothing connecting them. The salary structure
-    that would produce a CTC is gone (decided 2026-08-27) — pay is worked out in
+    that would produce a CTC is gone (decided 2026-08-27) - pay is worked out in
     Excel, and holding our own version of somebody else's calculation is how two
     numbers for one salary come to exist.
 --}}

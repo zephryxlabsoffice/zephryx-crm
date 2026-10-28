@@ -29,7 +29,7 @@
                 <form method="POST" action="{{ route('leave.cancel', ['leaveRequest' => $request['id']]) }}">
                     @csrf
                     {{-- The requester's own act. Pending, or approved and not
-                         yet started — leave already under way is a conversation,
+                         yet started - leave already under way is a conversation,
                          not a button. --}}
                     <button class="btn btn-outline" type="submit">
                         Withdraw request
@@ -53,7 +53,7 @@
         ])
     @elseif ($request['status'] === P::PENDING && $own)
         {{-- The one rule that cannot be delegated away. Shown on your OWN
-             pending request — somebody who simply lacks the permission is not
+             pending request - somebody who simply lacks the permission is not
              being told about a rule that has nothing to do with them. --}}
         @include('partials.notice', [
             'tone' => 'info',
@@ -74,7 +74,7 @@
 
             @if ($own && $request['status'] === P::APPROVED)
                 {{--
-                    "Working a Sunday against leave already taken" — asked
+                    "Working a Sunday against leave already taken" - asked
                     BEFORE working it (decided 2026-09-11), not after. Manager
                     approval returns that one day to the balance and rosters
                     the date; see CompOffController::requestSundayAgainstLeave.
@@ -90,7 +90,7 @@
 
                     <div class="prose prose-quiet">
                         <p>
-                            Want to work one of these days after all? Ask before you do —
+                            Want to work one of these days after all? Ask before you do -
                             once approved, that day returns to your balance. Has to be
                             asked for in the same month.
                         </p>

@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
  *
  * Local + debug only, like the login page's `?preview=` states. Everywhere else
  * this returns nothing, so a deployed site shows real (currently empty) data
- * and its empty states — never invented clients, projects or rupee figures.
+ * and its empty states - never invented clients, projects or rupee figures.
  *
  * Deleted when the Clients module gets its migration and model. Nothing in the
  * controller or the views depends on it: they consume plain arrays either way.

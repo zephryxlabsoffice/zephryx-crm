@@ -1,5 +1,5 @@
 {{--
-    KPI strip. Every figure comes from `$stats` — none is written into the
+    KPI strip. Every figure comes from `$stats` - none is written into the
     markup. Three of the four are sourced from modules that do not exist yet
     (Invoices, Tickets), so they read zero until those land rather than
     carrying the handover's invented numbers into the application.

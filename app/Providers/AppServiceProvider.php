@@ -46,7 +46,7 @@ class AppServiceProvider extends ServiceProvider
          *
          * GoogleMeetProvider (built 2026-09-21) calls the real Calendar API,
          * reading the credential from App\Models\GoogleConnection at the
-         * point of use rather than from this binding or from config — see
+         * point of use rather than from this binding or from config - see
          * its own header comment. Before it was built, this bound to a
          * version where every method raised, on purpose: a stub returning a
          * plausible event id and a fabricated meet.google.com link would
@@ -54,7 +54,7 @@ class AppServiceProvider extends ServiceProvider
          * does not exist.
          *
          * That is still exactly how an unconnected Google, or a real Google
-         * outage, behaves now — MeetingController treats any throw from this
+         * outage, behaves now - MeetingController treats any throw from this
          * binding the same way regardless of cause: the meeting stays
          * requested and the page says the invite did not go out.
          * ─────────────────────────────────────────────────────────────────────
@@ -73,7 +73,7 @@ class AppServiceProvider extends ServiceProvider
          *
          * First, and before anything reads a policy value. Everything
          * downstream keeps calling `config()` and knows nothing about the
-         * table — which is the only shape this could take safely, because
+         * table - which is the only shape this could take safely, because
          * twenty-odd call sites read these values and a version where each had
          * to remember to ask a settings service is a version where one forgot.
          *

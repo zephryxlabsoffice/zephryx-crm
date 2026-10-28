@@ -21,7 +21,7 @@ use Tests\TestCase;
  *
  * The edit form cannot pre-fill these. A page that loads the real numbers into
  * inputs has put every one of them into the HTML, which is exactly what the
- * masking layer exists to prevent — and "it is only shown to HR" is not a
+ * masking layer exists to prevent - and "it is only shown to HR" is not a
  * control, because the markup reaches the browser either way.
  *
  * So the inputs are empty, with the masked value beside them as a hint. Empty
@@ -75,7 +75,7 @@ class EmployeeIdentityWritesTest extends TestCase
         $this->assertNotSame('ABCDE1234F', $row->pan);
         $this->assertNotSame('50100234567890', $row->account_number);
 
-        // The branch code is not identifying — it is printed on every cheque —
+        // The branch code is not identifying - it is printed on every cheque -
         // so it is stored plainly on purpose.
         $this->assertSame('HDFC0001234', $row->ifsc);
     }
@@ -92,7 +92,7 @@ class EmployeeIdentityWritesTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       EDITING IT — BLANK KEEPS, TYPED REPLACES
+       EDITING IT - BLANK KEEPS, TYPED REPLACES
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_the_edit_form_shows_the_mask_and_never_the_number(): void

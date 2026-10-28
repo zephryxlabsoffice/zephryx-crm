@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * One more person at a client, beyond the main contact.
  *
- * The main contact stays `clients.contact_*` — the one that has always been
+ * The main contact stays `clients.contact_*` - the one that has always been
  * editable from the client's own portal (`Client\ProfileController::
  * EDITABLE`). This table is "several contacts, one login" (decided
  * 2026-09-11): the client adds and removes rows here themselves; the login

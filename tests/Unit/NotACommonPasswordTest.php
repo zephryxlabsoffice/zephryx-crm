@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
 
 /**
- * The common-password blocklist — foundation spec §4.7.
+ * The common-password blocklist - foundation spec §4.7.
  *
  * The point of the rule is that a short list catches a long tail of variants,
  * so most of these cases are about normalisation rather than the list itself.

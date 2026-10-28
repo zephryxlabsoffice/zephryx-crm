@@ -21,7 +21,7 @@
     @if (! $attends)
         {{-- A freelancer, paid against work rather than time (decided
              2026-09-11): there is no leave balance for them, so there is no
-             form — not a disabled one, none at all. --}}
+             form - not a disabled one, none at all. --}}
         @include('partials.notice', [
             'tone' => 'info',
             'title' => 'Nothing to request here',
@@ -48,7 +48,7 @@
                             <select id="leave-type-field" name="type" required>
                                 @foreach ($types as $key => $meta)
                                     <option value="{{ $key }}">
-                                        {{ $meta['label'] }}@if ($meta['days'] !== null) — {{ collect($balance['types'])->firstWhere('key', $key)['remaining'] ?? $meta['days'] }} days left @endif
+                                        {{ $meta['label'] }}@if ($meta['days'] !== null) - {{ collect($balance['types'])->firstWhere('key', $key)['remaining'] ?? $meta['days'] }} days left @endif
                                     </option>
                                 @endforeach
                             </select>
@@ -63,7 +63,7 @@
                                 Decided 2026-08-28: this is a portal for
                                 requesting and counting, not a rules engine. It
                                 does not know which days are weekends or public
-                                holidays, so it does not pretend to — the person
+                                holidays, so it does not pretend to - the person
                                 asking states the cost and the person approving
                                 agrees it. Half days are allowed, hence 0.5
                                 steps.

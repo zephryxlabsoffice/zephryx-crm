@@ -17,30 +17,30 @@ use RuntimeException;
  *
  * 1. AUTHENTICATION. A service account with domain-wide delegation,
  *    impersonating `GoogleConnection::impersonate_email` via the JWT `sub`
- *    claim — see App\Support\Google\GoogleAuth::token() and CalendarClient's
+ *    claim - see App\Support\Google\GoogleAuth::token() and CalendarClient's
  *    header comment for why this is the one Google job that impersonates at
- *    all. The key never touches `config()` — see `client()` below, which
+ *    all. The key never touches `config()` - see `client()` below, which
  *    reads it at the point of use and nowhere else, the same rule
  *    App\Support\Documents\DocumentStore follows for Drive.
  *
  * 2. THE CONFERENCE IS REQUESTED, NOT ASSUMED. `CalendarClient::insertEvent()`
- *    always carries `conferenceDataVersion=1` and a `createRequest` — see its
+ *    always carries `conferenceDataVersion=1` and a `createRequest` - see its
  *    own header comment.
  *
- * 3. EXTERNAL GUESTS. Every attendee on the invite — staff or client — is
+ * 3. EXTERNAL GUESTS. Every attendee on the invite - staff or client - is
  *    added by email; whether they can actually join the Meet without
  *    friction is a Workspace Admin Console policy (Meet safety settings),
  *    not a per-event API field this application can set. Nothing here
  *    restricts attendees to the domain.
  *
  * 4. FAILURE IS A STATE, NOT AN EXCEPTION TO SWALLOW. Every method throws
- *    rather than returning a plausible-looking fake — MeetingController
+ *    rather than returning a plausible-looking fake - MeetingController
  *    already treats a throw as "the invite did not go out" and says so; that
  *    contract does not change now that the throw can come from a real
  *    network call instead of a deliberate stub.
  *
  * 5. CANCELLING PROPAGATES. `cancel()` calls Google and lets a failure
- *    bubble — MeetingController only marks a meeting cancelled after this
+ *    bubble - MeetingController only marks a meeting cancelled after this
  *    method returns without throwing.
  *
  * 6. TIMES GO OVER THE WIRE AS UTC WITH AN EXPLICIT TIMEZONE. `Meeting::
@@ -50,7 +50,7 @@ use RuntimeException;
  *
  * 7. IDEMPOTENCE. `conferenceData.createRequest.requestId` is deterministic
  *    per meeting (`zephryx-{reference}`), so a request that reaches Google
- *    but whose response is lost — a timeout, not a rate limit — returns the
+ *    but whose response is lost - a timeout, not a rate limit - returns the
  *    existing conference on any retry rather than a second one. The
  *    stronger guard is `MeetingController::createEvent()`'s own check that a
  *    meeting with an `event_id` is never asked to create again; this is
@@ -90,7 +90,7 @@ class GoogleMeetProvider implements MeetingProvider
         $joinUrl = $event['hangoutLink'] ?? null;
 
         if ($joinUrl === null) {
-            // The event exists but carries no way to join it — precisely the
+            // The event exists but carries no way to join it - precisely the
             // state point 2 above exists to prevent. Treated as a failure
             // rather than returned, so the caller's failure path (a
             // requested meeting, not a broken scheduled one) handles it.
@@ -114,7 +114,7 @@ class GoogleMeetProvider implements MeetingProvider
         $eventId = $meeting['event_id'] ?? null;
 
         if ($eventId === null) {
-            // Nothing on Google to call off — MeetingController never
+            // Nothing on Google to call off - MeetingController never
             // reaches this branch in practice (it only calls cancel() when
             // an event_id exists), but a provider should not assume its
             // caller's guard is the only one that will ever exist.
@@ -166,7 +166,7 @@ class GoogleMeetProvider implements MeetingProvider
     }
 
     /**
-     * A Calendar client built from the current connection. Fresh per call —
+     * A Calendar client built from the current connection. Fresh per call -
      * the connection can change between requests, and this class is
      * resolved new per request anyway (see the container binding in
      * AppServiceProvider).
@@ -185,8 +185,8 @@ class GoogleMeetProvider implements MeetingProvider
         }
 
         if ($connection->calendar_id === null || $connection->impersonate_email === null) {
-            // Drive can be connected on its own — it needs no impersonation
-            // at all (see CalendarClient's header comment) — so a key that
+            // Drive can be connected on its own - it needs no impersonation
+            // at all (see CalendarClient's header comment) - so a key that
             // works for uploads may still be missing what Calendar needs.
             throw new RuntimeException(
                 'Google is connected, but no Calendar ID or impersonation address has been set in the Admin Panel.'
@@ -217,7 +217,7 @@ class GoogleMeetProvider implements MeetingProvider
      * `Meeting::toRecordArray()` hands over a UTC "Y-m-d H:i:s" string with
      * no timezone marker; Google's API wants RFC 3339. Parsed as UTC
      * explicitly rather than left to whatever the server's default zone
-     * happens to be — see point 6 above.
+     * happens to be - see point 6 above.
      */
     protected function rfc3339(string $when): string
     {

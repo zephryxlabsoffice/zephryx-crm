@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * A ticket — somebody here asking for something, or a client asking us.
+ * A ticket - somebody here asking for something, or a client asking us.
  */
 class Ticket extends Model
 {
@@ -112,7 +112,7 @@ class Ticket extends Model
      * THIS RELATION IS THE STAFF VIEW AND ONLY THE STAFF VIEW
      *
      * The client portal must never reach it. What the portal calls is
-     * `publicComments()`, which cannot return an internal note — the same shape
+     * `publicComments()`, which cannot return an internal note - the same shape
      * as ProjectUpdate::clientVisible, and for the same reason: the rule in §6
      * is kept by not providing the call that could break it.
      * ─────────────────────────────────────────────────────────────────────────
@@ -140,7 +140,7 @@ class Ticket extends Model
     }
 
     /**
-     * Nobody has picked it up — the triage queue.
+     * Nobody has picked it up - the triage queue.
      *
      * @param  Builder<Ticket>  $query
      * @return Builder<Ticket>
@@ -160,7 +160,7 @@ class Ticket extends Model
     }
 
     /**
-     * Still needing somebody — not resolved, not closed.
+     * Still needing somebody - not resolved, not closed.
      *
      * @param  Builder<Ticket>  $query
      * @return Builder<Ticket>

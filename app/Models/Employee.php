@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
 /**
  * The employment record behind a staff account.
  *
- * Identity — name, email, whether the account may sign in — lives on `users`.
+ * Identity - name, email, whether the account may sign in - lives on `users`.
  * This holds what is true of somebody's employment and nothing else, which is
  * why there is no `name` here to fall out of step with the one people log in
  * with.
@@ -24,9 +24,9 @@ class Employee extends Model
      * The kind of engagement, decided 2026-09-11.
      *
      * Named constants rather than loose strings because three separate rules
-     * turn on this value — the staff ID's type digit, whether attendance and
+     * turn on this value - the staff ID's type digit, whether attendance and
      * leave apply at all, and which fields are required when somebody is added
-     * — and a typo in any one of them fails silently towards the wrong answer.
+     * - and a typo in any one of them fails silently towards the wrong answer.
      */
     public const FULL_TIME = 'full_time';
 
@@ -41,7 +41,7 @@ class Employee extends Model
     /**
      * Who the time-and-attendance rules apply to.
      *
-     * Freelancers are out by decision, not by oversight — they have no clock,
+     * Freelancers are out by decision, not by oversight - they have no clock,
      * no leave balance and no comp-off.
      *
      * @var list<string>
@@ -79,7 +79,7 @@ class Employee extends Model
     }
 
     /**
-     * The single-record version of the scope above — for the controllers
+     * The single-record version of the scope above - for the controllers
      * that already have one Employee in hand (checking in, requesting
      * leave) rather than a list to filter.
      */
@@ -125,7 +125,7 @@ class Employee extends Model
      * The teams this person belongs to.
      *
      * Membership, not leadership. Somebody can lead a team they are not a
-     * member of — unusual, and a real state the data allows — so `/teams/mine`
+     * member of - unusual, and a real state the data allows - so `/teams/mine`
      * asks this and the ownership check on a write asks Team::isLedBy.
      *
      * @return BelongsToMany<Team, $this>
@@ -139,7 +139,7 @@ class Employee extends Model
      * The fields this person owns about themselves.
      *
      * A person who has never opened My Profile has no row here, and that is a
-     * real state rather than a missing one — see EmployeeProfile::blank().
+     * real state rather than a missing one - see EmployeeProfile::blank().
      *
      * @return HasOne<EmployeeProfile, $this>
      */
@@ -169,7 +169,7 @@ class Employee extends Model
     /**
      * The intern record this full-time one was converted from.
      *
-     * Null for almost everybody. Set once, at conversion, and never edited —
+     * Null for almost everybody. Set once, at conversion, and never edited -
      * see the migration for why the two records are separate at all.
      *
      * @return BelongsTo<Employee, $this>
@@ -190,7 +190,7 @@ class Employee extends Model
     }
 
     /**
-     * Employees whose account is active — the directory's default.
+     * Employees whose account is active - the directory's default.
      *
      * Joined rather than filtered in PHP so the count on the page and the rows
      * under it come from one query and cannot disagree.
@@ -214,7 +214,7 @@ class Employee extends Model
         /*
          * Bounded by instants, not by date strings. A `date` cast writes
          * 'Y-m-d H:i:s', so a row saved from endOfMonth() holds
-         * '2026-09-30 23:59:59' — which compares GREATER than the string
+         * '2026-09-30 23:59:59' - which compares GREATER than the string
          * '2026-09-30' and drops anybody who joined on the last day of the
          * month out of the count, silently and only in some months.
          */

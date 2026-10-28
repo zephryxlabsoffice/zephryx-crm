@@ -1,11 +1,11 @@
 /* ============================================================================
-   Comment thread — tickets today, anything with a discussion later.
+   Comment thread - tickets today, anything with a discussion later.
 
    The whole component exists to make one distinction impossible to miss: a
    reply the client reads, versus a note only staff read. A support agent
    writing "this client is being difficult" into the wrong box is the failure
    mode this module has, so an internal note does not merely carry a small
-   label — it changes background, gains a rail, and says so in words.
+   label - it changes background, gains a rail, and says so in words.
 
    Visual difference is the second line of defence. The first is that the
    client realm filters internal notes out server-side and never renders them
@@ -66,7 +66,7 @@
   white-space: nowrap;
 }
 
-/* The word, not just the colour — colour alone fails for anyone who cannot
+/* The word, not just the colour - colour alone fails for anyone who cannot
    distinguish it, and this is not a distinction to get wrong. */
 .thread-tag {
   display: inline-flex;

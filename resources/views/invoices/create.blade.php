@@ -47,7 +47,7 @@
                                  against a project. A retainer or an ad-hoc
                                  piece of work still needs an invoice. --}}
                             <select id="inv-project" name="project_id">
-                                <option value="">No project — bill directly</option>
+                                <option value="">No project - bill directly</option>
                                 @foreach ($projectOptions as $project)
                                     <option value="{{ $project['id'] }}" @selected((int) old('project_id') === $project['id'])>{{ $project['name'] }} · {{ $project['client'] }}</option>
                                 @endforeach
@@ -58,7 +58,7 @@
                             <label class="form-field-lbl" for="inv-currency">Currency</label>
                             {{--
                                 Chosen once, at the top, and fixed for the whole
-                                invoice. Per-line currency is not a feature —
+                                invoice. Per-line currency is not a feature -
                                 it is a bug waiting to be discovered by a total
                                 that cannot be computed.
                             --}}
@@ -75,7 +75,7 @@
                             {{--
                                 Shown, never typed. The number is issued by the
                                 database inside the transaction that writes the
-                                invoice — if the form chose it, two people
+                                invoice - if the form chose it, two people
                                 clicking Create at the same moment would get the
                                 same one, and the sequence has to be gapless.
                             --}}
@@ -110,7 +110,7 @@
                             {{-- inputmode="decimal" rather than type="number":
                                  a spinner on a money field invites somebody to
                                  nudge an amount with an arrow key. The server
-                                 parses this into integer minor units — see
+                                 parses this into integer minor units - see
                                  App\Support\Money. Typed once, the way a
                                  payslip's net figure is; there is no GST here
                                  to compute from a rate and a quantity. --}}
@@ -156,7 +156,7 @@
                     </div>
 
                     <p class="pay-hint pay-hint-block">
-                        Typed once, in the field on the left — not itemised, and
+                        Typed once, in the field on the left - not itemised, and
                         not taxed. ZephryxLabs is not GST-registered, and this
                         module records what was agreed rather than generating an
                         invoice from a rate card.
@@ -171,7 +171,7 @@
                     <div class="inv-next">
                         {{-- Saving and sending are two steps, not one button.
                              An invoice sent by accident has to be chased,
-                             apologised for, and cancelled — and the cancellation
+                             apologised for, and cancelled - and the cancellation
                              stays in the sequence forever. --}}
                         <button class="btn btn-primary" type="submit">
                             Save as draft

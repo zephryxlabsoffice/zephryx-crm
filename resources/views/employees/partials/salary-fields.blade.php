@@ -5,15 +5,15 @@
     /*
         Which boxes to draw.
 
-        On an EDIT the engagement is settled — it cannot be changed by this form
-        at all — so exactly one group is rendered and the person sees only the
+        On an EDIT the engagement is settled - it cannot be changed by this form
+        at all - so exactly one group is rendered and the person sees only the
         components that apply to them.
 
         On a CREATE the engagement is a dropdown three cards above this one, and
         its value is not known until the form is posted. So all three groups are
         drawn, each labelled with the engagement it belongs to, and the validator
         accepts only the group matching what was chosen. The alternative is
-        JavaScript that shows and hides them — and this application's forms work
+        JavaScript that shows and hides them - and this application's forms work
         with JavaScript off, which is the same reason the languages field on My
         Profile is a comma-separated text box rather than chips.
     */
@@ -36,7 +36,7 @@
                  sentence the obvious reading is that the CRM will calculate a
                  payslip from these, and it never will. --}}
             The standing agreement, kept so whoever prepares the payslip has the figures to
-            start from. <strong>Nothing here is calculated or shown on the Salary page</strong> —
+            start from. <strong>Nothing here is calculated or shown on the Salary page</strong> -
             the payslip HR uploads is what somebody was actually paid, and a breakdown printed
             beside it would argue with it in any month carrying a deduction.
         </p>

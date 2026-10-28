@@ -23,7 +23,7 @@ class EmployeePresenter
     /**
      * The engagement types, and how they read on a page.
      *
-     * Full-time carries no chip anywhere it is the norm — a directory where
+     * Full-time carries no chip anywhere it is the norm - a directory where
      * every second row says "Full-time" has taught the reader to skip the
      * column the interns and freelancers are in.
      *
@@ -79,7 +79,7 @@ class EmployeePresenter
     }
 
     /**
-     * Donut geometry and palette are shared with Teams — see App\Support\Chart.
+     * Donut geometry and palette are shared with Teams - see App\Support\Chart.
      *
      * @return array{dash: string, offset: string}
      */

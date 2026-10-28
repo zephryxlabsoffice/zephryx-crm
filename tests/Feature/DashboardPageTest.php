@@ -13,7 +13,7 @@ use Tests\TestCase;
 /**
  * The dashboard.
  *
- * The thing worth testing here is not that a card renders — it is that the page
+ * The thing worth testing here is not that a card renders - it is that the page
  * is COMPOSED, and that composition can only ever subtract. Five hand-written
  * per-role pages would need five sets of these assertions and would still not
  * answer what a Manager + HR sees.
@@ -33,7 +33,7 @@ class DashboardPageTest extends TestCase
          * page test has to be somebody. It now has to be somebody with an
          * EMPLOYMENT RECORD as well: the personal widgets read the viewer's own
          * tasks, leave, attendance and pay, and a `User` with no `employees`
-         * row would render every one of them empty — passing the assertions
+         * row would render every one of them empty - passing the assertions
          * about what is hidden and proving nothing about what is shown.
          *
          * The dashboard used to paper over exactly this with a fallback to a
@@ -45,7 +45,7 @@ class DashboardPageTest extends TestCase
 
         /*
          * A CEO, because this file is about what the page RENDERS rather than
-         * about who may see it — the guard and the permission filtering have
+         * about who may see it - the guard and the permission filtering have
          * their own tests, and the preview below can only narrow what this
          * account already holds.
          *
@@ -87,7 +87,7 @@ class DashboardPageTest extends TestCase
     public function test_it_greets_the_viewer_by_their_first_name(): void
     {
         // The name comes from the ACCOUNT, not the employment record, so a
-        // Mentor — who has no record — is still greeted properly.
+        // Mentor - who has no record - is still greeted properly.
         $this->signInAsSeeded('EMP002');
 
         $body = $this->pageBody('/dashboard');
@@ -106,7 +106,7 @@ class DashboardPageTest extends TestCase
         $this->assertNotEmpty($roles);
 
         // Driven off the roles table, so a role added there cannot skip the
-        // check — the preview reads the real definitions now.
+        // check - the preview reads the real definitions now.
         foreach ($roles as $role) {
             $this->get('/dashboard?as='.$role)->assertOk();
         }
@@ -125,7 +125,7 @@ class DashboardPageTest extends TestCase
         $this->assertStringNotContainsString('Leave to decide', $employee);
 
         /*
-         * Both hold the Employee base, so both get the punch card — HR has
+         * Both hold the Employee base, so both get the punch card - HR has
          * their own attendance too, which is precisely why they cannot correct
          * their own record (§2.6).
          *
@@ -162,12 +162,12 @@ class DashboardPageTest extends TestCase
         $body = $this->pageBody('/dashboard?as=mentor');
 
         /*
-         * §2.1 — a Mentor has no Employee base and no personal records at all.
+         * §2.1 - a Mentor has no Employee base and no personal records at all.
          * Every widget below is one this application would otherwise head with
          * the word "Your", and a Mentor has no such thing to show.
          *
          * If any of these appears, a widget has been given a `*.view` key where
-         * it needed a `*.self` one — the distinction config/dashboard.php turns
+         * it needed a `*.self` one - the distinction config/dashboard.php turns
          * on.
          */
         foreach (['Hours so far', 'Your pay', 'Your leave', 'Your tasks', 'Your meetings', 'Your team'] as $personal) {
@@ -188,7 +188,7 @@ class DashboardPageTest extends TestCase
         /*
          * The gate in development allows everything, so the unfiltered page is
          * the widest the dashboard can ever be. Every role must be a subset of
-         * it — a preview that added a widget would be a privilege-escalation
+         * it - a preview that added a widget would be a privilege-escalation
          * query parameter.
          */
         foreach (Role::all() as $role) {

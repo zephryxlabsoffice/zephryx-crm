@@ -6,7 +6,7 @@
     /*
      * "Go to dashboard" has to mean the reader's OWN dashboard.
      *
-     * It was hardcoded to /dashboard, which is the staff one — so a client who
+     * It was hardcoded to /dashboard, which is the staff one - so a client who
      * mistyped a URL was offered a button into a realm their session will be
      * refused from, and the way out of an error page was a second error page.
      *
@@ -24,7 +24,7 @@
 {{--
     The shell for every error page.
 
-    Deliberately standalone — no sidebar, no topbar, no navigation query, no
+    Deliberately standalone - no sidebar, no topbar, no navigation query, no
     view composer. This is what renders when something has already gone wrong,
     including when the thing that went wrong is the app shell itself, so it
     depends on as little as possible.
@@ -83,7 +83,7 @@
                              yieldContent is safe here. --}}
                         @php
                             $supportSubject = config('zephryx.brand.name').' '.config('zephryx.brand.suffix')
-                                .' — error '.trim($__env->yieldContent('code'));
+                                .' - error '.trim($__env->yieldContent('code'));
                         @endphp
                         <a class="btn btn-primary" href="{{ url($home) }}">Go to dashboard</a>
                         <a class="btn btn-outline" href="{{ SupportContact::mailto($supportSubject) }}">Contact Support</a>

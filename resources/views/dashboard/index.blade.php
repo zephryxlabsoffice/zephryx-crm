@@ -66,7 +66,7 @@
             {{--
                 The rail is the Employee base (§2.2): my day, my leave, my
                 payslip. A Mentor has no Employee base (§2.1) and so renders
-                this column empty — which is the intended result, not a bug, and
+                this column empty - which is the intended result, not a bug, and
                 the fastest way to spot a rail widget carrying the wrong
                 permission key.
             --}}

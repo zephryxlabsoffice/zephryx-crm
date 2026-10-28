@@ -15,8 +15,8 @@ use Illuminate\Support\Collection;
  * ═════════════════════════════════════════════════════════════════════════════
  * WHY THE ROWS ARE ARRAYS AND NOT MODELS
  *
- * This returns the same row shape DemoEmployees did — name, user_id,
- * department, designation, email, status, joined, dob, announce_milestones —
+ * This returns the same row shape DemoEmployees did - name, user_id,
+ * department, designation, email, status, joined, dob, announce_milestones -
  * because the views and App\Support\Milestones already read it and are already
  * tested against it. Handing them models instead would have meant editing every
  * template in the module to prove nothing, and turning a data-source change
@@ -28,7 +28,7 @@ use Illuminate\Support\Collection;
  *
  * WHERE `status` COMES FROM, AND WHERE `on_leave` WENT
  *
- * `status` is the ACCOUNT's status — active, inactive, suspended — because that
+ * `status` is the ACCOUNT's status - active, inactive, suspended - because that
  * is what decides whether somebody can sign in and whether they still work
  * here. The demo rows also carried `on_leave`, which is not a stored state at
  * all but a question about today that an approved leave request answers. It
@@ -70,7 +70,7 @@ class EmployeeDirectory
             /*
              * By staff ID, which is the order the page has always been in.
              * Sorting by name would arguably read better and is a decision
-             * about the page, not about where its rows come from — making it
+             * about the page, not about where its rows come from - making it
              * here would have smuggled a UI change into a data-source swap.
              * Raised for the review round instead.
              */
@@ -87,7 +87,7 @@ class EmployeeDirectory
         return [
             /*
              * The employment record's own key, for the places that write
-             * against it — team membership is one. `user_id` is the staff ID
+             * against it - team membership is one. `user_id` is the staff ID
              * people read and quote; this is what a form posts back, and the
              * two are deliberately not the same value.
              */
@@ -139,14 +139,14 @@ class EmployeeDirectory
             'total' => Employee::count(),
             'active' => Employee::active()->count(),
             // Derived from Leave once that module has a table. Reported as zero
-            // rather than guessed at — see the note at the top of this class.
+            // rather than guessed at - see the note at the top of this class.
             'on_leave' => 0,
             'new_this_month' => Employee::joinedIn(Carbon::now())->count(),
         ];
     }
 
     /**
-     * Headcount per department, largest first — the donut's data.
+     * Headcount per department, largest first - the donut's data.
      *
      * Grouped in SQL so the total under the chart and the segments in it come
      * from one query and cannot disagree.
@@ -177,7 +177,7 @@ class EmployeeDirectory
     }
 
     /**
-     * The departments a filter may offer — the ones somebody is actually in.
+     * The departments a filter may offer - the ones somebody is actually in.
      *
      * Not every active department: a filter that returns nothing is a dead end
      * somebody has to discover by trying it.
@@ -215,7 +215,7 @@ class EmployeeDirectory
     }
 
     /**
-     * Upcoming birthdays — day and month only, never the year (see Milestones).
+     * Upcoming birthdays - day and month only, never the year (see Milestones).
      *
      * @return list<array<string, string>>
      */

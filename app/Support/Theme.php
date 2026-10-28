@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Cookie as SymfonyCookie;
  * Resolves and persists the light/dark preference (foundation spec §7).
  *
  * Pre-login the preference lives in a cookie. Once the Employees module lands,
- * an authenticated user's `theme_preference` column takes precedence — see
+ * an authenticated user's `theme_preference` column takes precedence - see
  * `forRequest()`, which is the single place that ordering is expressed.
  */
 class Theme

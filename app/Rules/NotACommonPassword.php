@@ -8,7 +8,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 /**
  * Rejects passwords built from a well-known base word (foundation spec §4.7).
  *
- * The list is matched against a *normalised* form of the candidate — lower
+ * The list is matched against a *normalised* form of the candidate - lower
  * cased, with common letter/digit substitutions undone and trailing digits and
  * punctuation stripped. That is what makes a short list useful: "Password123!",
  * "p@ssw0rd" and "PASSWORD" all reduce to "password" and are all caught by one
@@ -60,7 +60,7 @@ class NotACommonPassword implements ValidationRule
     /**
      * Reduce a candidate to the base word an attacker would actually try.
      *
-     * Order matters. Trailing padding is stripped first — otherwise the digits
+     * Order matters. Trailing padding is stripped first - otherwise the digits
      * in "password123" get substituted into letters and the word no longer
      * reduces to anything on the list.
      */

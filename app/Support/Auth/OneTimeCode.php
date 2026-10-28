@@ -10,14 +10,14 @@ use Illuminate\Support\Facades\Hash;
 /**
  * The email one-time code (foundation spec §4.3).
  *
- * Six digits, ten minutes, five attempts, single use — and it applies to every
+ * Six digits, ten minutes, five attempts, single use - and it applies to every
  * account type including the owner's.
  *
  * ═════════════════════════════════════════════════════════════════════════════
  * THE ARITHMETIC THAT MAKES SIX DIGITS SAFE
  *
  * A six-digit code is one of a million. Five guesses is a 1-in-200,000 chance,
- * which is fine. Five guesses PER CODE with unlimited resends is not — a
+ * which is fine. Five guesses PER CODE with unlimited resends is not - a
  * hundred resends buys five hundred guesses at a fresh target each time.
  *
  * So `issue()` invalidates every live code for the user before writing a new
@@ -41,7 +41,7 @@ class OneTimeCode
      * Issue a code, returning the plaintext for the mailer.
      *
      * The only place the plaintext exists. It is returned rather than mailed
-     * here so that sending is the caller's decision — and so a test can verify
+     * here so that sending is the caller's decision - and so a test can verify
      * the code without reading mail.
      */
     public function issue(User $user, Request $request): string
@@ -78,7 +78,7 @@ class OneTimeCode
     /**
      * Check a code. Consumes it on success; counts the attempt on failure.
      *
-     * Returns false for every kind of failure — wrong, expired, exhausted, none
+     * Returns false for every kind of failure - wrong, expired, exhausted, none
      * issued. The verify page says only that the code was not accepted, for the
      * same reason the sign-in form says only "invalid credentials": the
      * differences are useful to an attacker and to nobody else.
@@ -169,7 +169,7 @@ class OneTimeCode
      * The address a code was sent to, masked for the verify page.
      *
      * Shown so somebody can tell which of their addresses to check. Masked
-     * because the page is reachable with only a password — revealing the full
+     * because the page is reachable with only a password - revealing the full
      * address there would leak it to anybody who got that far.
      */
     public static function maskEmail(string $email): string

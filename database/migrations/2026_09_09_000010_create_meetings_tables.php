@@ -22,8 +22,8 @@ use Illuminate\Support\Facades\Schema;
  *
  * `join_url` IS EFFECTIVELY A PASSWORD
  *
- * Anybody holding it can join. It is withheld per viewer in PHP — not rendered
- * and hidden with CSS — because whatever reaches the browser has been read by
+ * Anybody holding it can join. It is withheld per viewer in PHP - not rendered
+ * and hidden with CSS - because whatever reaches the browser has been read by
  * whoever is at it.
  *
  * ATTENDEE RESPONSES ARE GOOGLE'S
@@ -56,7 +56,7 @@ return new class extends Migration
 
             /*
              * Who called it. Nullable because a client REQUEST has no organiser
-             * until somebody here picks it up — that is the difference between
+             * until somebody here picks it up - that is the difference between
              * a requested meeting and a scheduled one.
              */
             $table->foreignId('organiser_id')->nullable()
@@ -72,7 +72,7 @@ return new class extends Migration
 
             /*
              * Google's. Both null until the event is created, and neither is
-             * ever composed by this application — see the head of this file.
+             * ever composed by this application - see the head of this file.
              */
             $table->string('event_id')->nullable();
             $table->text('join_url')->nullable();
@@ -93,7 +93,7 @@ return new class extends Migration
             $table->foreignId('meeting_id')->constrained()->cascadeOnDelete();
 
             /*
-             * An attendee is an ACCOUNT, staff or client — `users`, not
+             * An attendee is an ACCOUNT, staff or client - `users`, not
              * `employees`, because a client has no employment record at all
              * (§2.1) and both kinds of attendee sit in one invite.
              */
@@ -101,7 +101,7 @@ return new class extends Migration
 
             /*
              * Google's answer, cached. `awaiting` is the state of somebody who
-             * has not replied, which is different from somebody who declined —
+             * has not replied, which is different from somebody who declined -
              * and a column that could not tell them apart would make the
              * attendee list useless for the one thing it is read for.
              */

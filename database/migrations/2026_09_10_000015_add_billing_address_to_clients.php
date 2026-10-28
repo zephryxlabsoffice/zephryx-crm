@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * `client/profile` has had an Address field on its form since the page existed,
  * disabled, above a note saying the write lands with the backend. There has
- * never been a column behind it — the client record carries `notes`, which is
+ * never been a column behind it - the client record carries `notes`, which is
  * ours and is not an address.
  *
  * It is `billing_address` and not `address`, because that is the one thing it
@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * IT IS THE CLIENT'S TO CHANGE, WHICH ALMOST NOTHING ELSE ON THAT RECORD IS
  *
- * Not the company name — invoices, projects and tickets reference a client by
+ * Not the company name - invoices, projects and tickets reference a client by
  * it, and letting the far side rewrite it would rename their own history. Not
  * the industry, not the status. How to reach them and where to bill them is the
  * whole list, and this column is the last part of it that had nowhere to go.

@@ -121,7 +121,7 @@ class RbacTest extends TestCase
     public function test_a_mentor_is_staff_and_has_no_employee_base(): void
     {
         /*
-         * §2.1 — read-only, no personal records at all. One column does the
+         * §2.1 - read-only, no personal records at all. One column does the
          * whole job: `staff_kind`. A Mentor holding the mentor role still gets
          * nothing personal.
          */
@@ -142,7 +142,7 @@ class RbacTest extends TestCase
         $client = User::factory()->create([
             'account_type' => Realm::CLIENT,
             'staff_kind' => null,
-            // A reference, not a name — see the `clients` migration.
+            // A reference, not a name - see the `clients` migration.
             'client_ref' => 'CLT001',
         ]);
 
@@ -160,7 +160,7 @@ class RbacTest extends TestCase
         /*
          * §2.1: the Admin Panel is "not a role and not assignable". Its keys
          * come from being the admin account, exactly as the Employee base comes
-         * from being an employee — so no role may carry one.
+         * from being an employee - so no role may carry one.
          */
         $adminKeys = Permission::whereIn('permission_key', Rbac::ADMIN_BASE)->pluck('id');
 
@@ -188,7 +188,7 @@ class RbacTest extends TestCase
         /*
          * The row that makes rank a table rather than a `hierarchy_level`
          * column. HR outranks the System Administrator in people and finance
-         * and is outranked in system — one integer cannot say that.
+         * and is outranked in system - one integer cannot say that.
          */
         $hr = $this->staff(['employee', 'hr']);
         $sysadmin = $this->staff(['employee', 'system_admin']);
@@ -271,7 +271,7 @@ class RbacTest extends TestCase
     public function test_rank_without_permission_is_not_enough_either(): void
     {
         // A Manager outranks an employee in people and does not hold
-        // attendance.reject — rank never grants anything (§2.5).
+        // attendance.reject - rank never grants anything (§2.5).
         $manager = $this->staff(['employee', 'manager']);
         $employee = $this->staff(['employee']);
 
@@ -309,7 +309,7 @@ class RbacTest extends TestCase
     {
         /*
          * A client holding a staff key by whatever mistake still does not
-         * belong to the staff realm — the two questions are answered by
+         * belong to the staff realm - the two questions are answered by
          * different things, and EnsureRealm asks this one before any data is
          * read.
          */
@@ -324,7 +324,7 @@ class RbacTest extends TestCase
         /*
          * The seeder derives the permission table from the sidebars and the
          * dashboard registry, so a key cannot be used by a page and missing
-         * from the table that grants it — the failure that would otherwise make
+         * from the table that grants it - the failure that would otherwise make
          * a module silently invisible to everybody.
          */
         $seeded = Permission::pluck('permission_key');
@@ -366,7 +366,7 @@ class RbacTest extends TestCase
          * after that, so a change to RbacSeeder alone never reaches it. The
          * 2026-10-28 migration carries the owner's decisions: System
          * Administrator schedules meetings, Manager triages, HR manages
-         * invoices — and only HR and the CEO approve leave.
+         * invoices - and only HR and the CEO approve leave.
          */
         $grants = [
             ['system_admin', 'meetings.schedule'],

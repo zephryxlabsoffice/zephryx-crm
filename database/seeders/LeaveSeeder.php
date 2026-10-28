@@ -10,7 +10,7 @@ use Illuminate\Database\Seeder;
 /**
  * The demo leave requests, as real rows. Local + debug only.
  *
- * Runs after EmployeeSeeder and before AttendanceSeeder is READ — approved
+ * Runs after EmployeeSeeder and before AttendanceSeeder is READ - approved
  * leave is what stops a day being drawn as an absence, so a seed without it
  * makes the calendar wrong in exactly the way this module exists to prevent.
  *

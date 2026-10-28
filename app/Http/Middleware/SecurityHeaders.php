@@ -46,7 +46,7 @@ class SecurityHeaders
      * The app's own policy, or a locked one for a rendered document.
      *
      * App\Support\Documents\DocumentStore::viewInline() renders an UPLOADED
-     * PDF in the browser — a payslip, an identity scan — which is content
+     * PDF in the browser - a payslip, an identity scan - which is content
      * this application did not produce and cannot vouch for the inside of.
      * That page still has to load at our own origin, so it cannot get
      * "no `default-src`" for free; it gets a policy that denies everything a
@@ -69,7 +69,7 @@ class SecurityHeaders
 
     /**
      * Nothing, not even same-origin (plan doc, "In-browser viewing is ours,
-     * not Drive's" — point 4: "a CSP that allows the document nothing — no
+     * not Drive's" - point 4: "a CSP that allows the document nothing - no
      * scripts, no network"). This is the condition
      * App\Support\Documents\DocumentStore::viewInline()'s own header comment
      * points back to.
@@ -96,7 +96,7 @@ class SecurityHeaders
 
     /**
      * Everything is same-origin: fonts, styles and scripts are all built into
-     * public/build by Vite (§6 — no third-party CDN assets in production).
+     * public/build by Vite (§6 - no third-party CDN assets in production).
      *
      * The Vite dev server is the one exception, and it is granted only when the
      * application is running locally in debug mode.

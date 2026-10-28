@@ -66,7 +66,7 @@
                                                 page unless something puts them there.
 
                                                 People who already hold the permission
-                                                through another role are excluded —
+                                                through another role are excluded -
                                                 roles stack as a union (§2.4), so they
                                                 would gain nothing and counting them
                                                 overstates the change.
@@ -149,13 +149,13 @@
                     {{--
                         §2.1: not a role, and not assignable. Said here because
                         its absence from the list is otherwise read as an
-                        oversight — and because the alternative, a toggle that
+                        oversight - and because the alternative, a toggle that
                         grants nothing, would be worse than saying nothing.
                     --}}
                     <p class="dash-note">
                         Not on this list, and not on any other. The panel is an account
                         type in its own realm, not authority a role can be given a piece
-                        of — there is nothing to grant here.
+                        of - there is nothing to grant here.
                     </p>
                 </section>
 
@@ -165,7 +165,7 @@
                     </div>
 
                     {{--
-                        §5: not a role, and not editable — granted implicitly to
+                        §5: not a role, and not editable - granted implicitly to
                         every staff account of kind `employee` precisely so a
                         role edit cannot take it away. Said here because its
                         absence from the list above is otherwise a puzzle.

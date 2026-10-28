@@ -14,7 +14,7 @@ use App\Models\EmployeeSalaryStructure as Structure;
  * The form decides which boxes to draw, the validator decides which fields to
  * accept, and the record card decides which lines to print. Written out three
  * times, the day an intern stops being paid a flat stipend is the day two of
- * the three change — and the one that did not is a form that collects a figure
+ * the three change - and the one that did not is a form that collects a figure
  * nothing ever reads.
  *
  * WHY EARNINGS AND DEDUCTIONS ARE SEPARATE LISTS
@@ -118,7 +118,7 @@ class SalaryStructure
     }
 
     /**
-     * The card's rows, ready to print — or null when there is nothing on file.
+     * The card's rows, ready to print - or null when there is nothing on file.
      *
      * NO TOTAL IS RETURNED, and that is deliberate. A "gross" here would be
      * this application's own arithmetic sitting next to a payslip produced by

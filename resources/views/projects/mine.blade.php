@@ -4,7 +4,7 @@
 
 @section('content')
     {{--
-        The personal face of Projects (§12.1). No `projects.view` needed — it
+        The personal face of Projects (§12.1). No `projects.view` needed - it
         shows only what the viewer is on.
 
         The handover's back button (to Project Management) is not carried over:

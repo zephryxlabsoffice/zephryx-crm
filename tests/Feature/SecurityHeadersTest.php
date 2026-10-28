@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Tests\TestCase;
 
 /**
- * Response hardening — foundation spec §6.
+ * Response hardening - foundation spec §6.
  */
 class SecurityHeadersTest extends TestCase
 {
@@ -44,7 +44,7 @@ class SecurityHeadersTest extends TestCase
         /*
          * App\Support\Documents\DocumentStore::viewInline() renders an
          * uploaded PDF in the browser. That response must not inherit the
-         * ordinary same-origin policy above — see SalaryWritesTest and
+         * ordinary same-origin policy above - see SalaryWritesTest and
          * ProfilePageTest for it exercised through an actual viewer route;
          * this proves the middleware's own rule directly, against a response
          * it did not have to build a whole payslip to produce.

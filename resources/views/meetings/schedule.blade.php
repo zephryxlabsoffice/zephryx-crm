@@ -76,7 +76,7 @@
                         <div class="form-field">
                             <label class="form-field-lbl" for="mt-project">Project <span class="mt-optional">(optional)</span></label>
                             <select id="mt-project" name="project_id">
-                                <option value="">Internal — no project</option>
+                                <option value="">Internal - no project</option>
                                 @foreach ($projects as $option)
                                     <option value="{{ $option['key'] }}" @selected((int) old('project_id') === $option['key'])>{{ $option['name'] }}</option>
                                 @endforeach
@@ -88,7 +88,7 @@
 
                         <div class="form-field mt-form-wide">
                             <label class="form-field-lbl" for="mt-agenda">What it is about</label>
-                            <textarea id="mt-agenda" name="agenda" rows="3" maxlength="2000" placeholder="A line is enough — it goes into the invite.">{{ old('agenda') }}</textarea>
+                            <textarea id="mt-agenda" name="agenda" rows="3" maxlength="2000" placeholder="A line is enough - it goes into the invite.">{{ old('agenda') }}</textarea>
                             @error('agenda')
                                 <span class="field-error">{{ $message }}</span>
                             @enderror
@@ -114,12 +114,12 @@
                                  it works without a script, submits an array the
                                  backend can validate, and is operable from a
                                  keyboard by default. Both selects post into the
-                                 same `attendees[]` — an invite is to a person,
+                                 same `attendees[]` - an invite is to a person,
                                  staff or client alike. --}}
                             <select id="mt-staff" name="attendees[]" multiple size="6">
                                 @foreach ($employees as $person)
                                     @continue($person['id'] === null)
-                                    <option value="{{ $person['id'] }}" @selected(in_array($person['id'], $picked, true))>{{ $person['name'] }} — {{ $person['detail'] }}</option>
+                                    <option value="{{ $person['id'] }}" @selected(in_array($person['id'], $picked, true))>{{ $person['name'] }} - {{ $person['detail'] }}</option>
                                 @endforeach
                             </select>
                             <span class="pay-hint">Ctrl or Cmd to pick more than one. You are always on the invite.</span>
@@ -132,12 +132,12 @@
                             <label class="form-field-lbl" for="mt-clients">Clients <span class="mt-optional">(optional)</span></label>
                             <select id="mt-clients" name="attendees[]" multiple size="6">
                                 @foreach ($clients as $person)
-                                    <option value="{{ $person['id'] }}" @selected(in_array($person['id'], $picked, true))>{{ $person['name'] }} — {{ $person['detail'] }}</option>
+                                    <option value="{{ $person['id'] }}" @selected(in_array($person['id'], $picked, true))>{{ $person['name'] }} - {{ $person['detail'] }}</option>
                                 @endforeach
                             </select>
                             {{-- Clients join from outside the Workspace, which
                                  is a setting on the Google event rather than
-                                 something this form controls — recorded in
+                                 something this form controls - recorded in
                                  config/meetings.php so it is not forgotten. --}}
                             <span class="pay-hint">They get the invite by email and can join without a Google account.</span>
                         </div>
@@ -151,7 +151,7 @@
 
                     <ol class="mt-steps">
                         <li>A Google Calendar event is created on the company account.</li>
-                        <li>Google generates the Meet link — this application never invents one.</li>
+                        <li>Google generates the Meet link - this application never invents one.</li>
                         <li>Invites go out; people accept or decline in their own calendar.</li>
                         <li>The link appears here for attendees only.</li>
                     </ol>
@@ -165,7 +165,7 @@
                         </button>
                         <p class="pay-hint pay-hint-block">
                             If Google refuses the request, the meeting is saved as
-                            <strong>Requested</strong> and nothing is sent — you will
+                            <strong>Requested</strong> and nothing is sent - you will
                             not be told it worked when it did not.
                         </p>
                     </div>

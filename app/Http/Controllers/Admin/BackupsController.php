@@ -34,7 +34,7 @@ class BackupsController extends Controller
     }
 
     /**
-     * POST /admin/backups — take one now.
+     * POST /admin/backups - take one now.
      */
     public function store(Request $request): RedirectResponse
     {
@@ -67,7 +67,7 @@ class BackupsController extends Controller
     }
 
     /**
-     * GET /admin/backups/{file} — download one.
+     * GET /admin/backups/{file} - download one.
      */
     public function download(Request $request, string $file): BinaryFileResponse
     {

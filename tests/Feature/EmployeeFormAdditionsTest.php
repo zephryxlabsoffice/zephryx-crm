@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
- * HR's employee form, 2026-10-27: reports-to, a profile photo and roles —
+ * HR's employee form, 2026-10-27: reports-to, a profile photo and roles -
  * all optional, and roles only below the editor's own standing.
  */
 class EmployeeFormAdditionsTest extends TestCase

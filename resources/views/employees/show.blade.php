@@ -57,7 +57,7 @@
                 : 'This record is closed',
             'message' => $user->status === 'suspended'
                 ? 'They cannot sign in, and hold no permissions while this lasts. Everything they recorded is untouched.'
-                : 'They cannot sign in. Their attendance, leave and payslips stay exactly as they were — this is why records are closed rather than deleted.',
+                : 'They cannot sign in. Their attendance, leave and payslips stay exactly as they were - this is why records are closed rather than deleted.',
         ])
     @endif
 
@@ -99,7 +99,7 @@
                     <div class="lv-field">
                         <dt class="lv-field-lbl">Birthday</dt>
                         {{-- Day and month. The year is on the record and never
-                             reaches a page — a colleague needs to know when to
+                             reaches a page - a colleague needs to know when to
                              say happy birthday, not how old somebody is. --}}
                         <dd>
                             {{ $record->date_of_birth
@@ -183,7 +183,7 @@
                         <p>
                             @if ($user->status === 'active')
                                 Closing it stops them signing in. Nothing they recorded is
-                                removed — attendance, leave and payslips all still point at
+                                removed - attendance, leave and payslips all still point at
                                 this person, which is why there is no delete here at all.
                             @else
                                 Reopening lets them sign in again with the password they
@@ -223,7 +223,7 @@
                     @if ($entry->after_summary)
                         <p class="att-rail-note">
                             {{ $entry->after_summary }}
-                            <span class="an-optional">— {{ $entry->actor_label }}</span>
+                            <span class="an-optional">- {{ $entry->actor_label }}</span>
                         </p>
                     @endif
                 @empty

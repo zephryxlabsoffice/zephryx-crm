@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * The row is the record; the file is on the private disk and is reachable only
  * through App\Support\Documents\DocumentStore. There is no `url()` on this
- * model and there must never be one — see the migration and §6.
+ * model and there must never be one - see the migration and §6.
  */
 class EmployeeDocument extends Model
 {

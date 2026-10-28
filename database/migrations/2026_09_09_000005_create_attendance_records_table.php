@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
  * ═════════════════════════════════════════════════════════════════════════════
  * ONE PERSON, ONE DATE, TWO TIMES. THERE IS NO STATUS COLUMN.
  *
- * Present, half day and absent are DERIVED from the two times and the policy —
+ * Present, half day and absent are DERIVED from the two times and the policy -
  * see App\Support\AttendancePolicy. Stored, a status is a number that drifts
  * away from the facts underneath it: change the half-day threshold and every
  * historical row would disagree with the rule that produced it, and attendance
@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Schema;
  * THE UNIQUE KEY IS THE IDEMPOTENCY
  *
  * (employee_id, date) is unique, so checking in twice is one row whatever the
- * button does — §12's rule that a double submit must not produce two records is
+ * button does - §12's rule that a double submit must not produce two records is
  * kept by the database and not by the interface hiding a button.
  *
  * NO WRITE EVER CHANGES A TIME
@@ -57,7 +57,7 @@ return new class extends Migration
             $table->date('date');
 
             /*
-             * Not nullable. A record exists because somebody checked in — that
+             * Not nullable. A record exists because somebody checked in - that
              * is the event it records. A row with no check-in would be an
              * absence written down, which is the thing this table deliberately
              * does not do.
@@ -70,7 +70,7 @@ return new class extends Migration
             $table->time('check_out')->nullable();
 
             /*
-             * A rejection is stamped, attributed and explained — all three, or
+             * A rejection is stamped, attributed and explained - all three, or
              * it is not auditable (§6). A rejection nobody explained is one the
              * person has to come and ask about, and this is their record.
              */

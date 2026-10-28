@@ -59,7 +59,7 @@ abstract class TestCase extends BaseTestCase
      * EVERY PAGE TEST NOW SIGNS IN, AND THAT IS THE POINT.
      *
      * Before realm middleware existed these tests just asked for a URL. They
-     * passed because nothing was guarded — which is exactly the state §3.1
+     * passed because nothing was guarded - which is exactly the state §3.1
      * describes as unsafe, and exactly why the guard is now on the route group
      * rather than on individual routes.
      *
@@ -86,7 +86,7 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * Sign in as a mentor — staff, and deliberately without an Employee base
+     * Sign in as a mentor - staff, and deliberately without an Employee base
      * (§2.1). The one account type where that column does the whole job.
      */
     protected function signInAsMentor(): User
@@ -107,7 +107,7 @@ abstract class TestCase extends BaseTestCase
      * Sign in as a client.
      *
      * Takes the client's NAME, because that is what a test asserting on the
-     * portal reads on the page — and creates the `clients` row behind it, since
+     * portal reads on the page - and creates the `clients` row behind it, since
      * `client_ref` holds a reference now and an account pointing at a client
      * that does not exist is a session scoped to nothing.
      */
@@ -130,7 +130,7 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * Sign in as the owner. Holds no roles — the Admin Panel's capabilities are
+     * Sign in as the owner. Holds no roles - the Admin Panel's capabilities are
      * implicit in the account type, because §2.1 makes it "not a role and not
      * assignable" (see Rbac::ADMIN_BASE).
      */
@@ -158,7 +158,7 @@ abstract class TestCase extends BaseTestCase
      * to find, and a test that "passes" against an empty page is asserting the
      * empty state while claiming to assert the list.
      *
-     * So the demo people are seeded properly here — accounts by AccountSeeder,
+     * So the demo people are seeded properly here - accounts by AccountSeeder,
      * employment by EmployeeSeeder, the same two that populate a developer's
      * machine. The environment flip is still needed because both seeders
      * deliberately do nothing outside local + debug.
@@ -176,7 +176,7 @@ abstract class TestCase extends BaseTestCase
          * has to move for a moment. Leaving it there breaks POST tests in a way
          * that takes an hour to find: Laravel skips CSRF verification only when
          * the environment is `testing`, so a test that seeds and then posts
-         * gets a 419 and no validation errors — which reads like the form
+         * gets a 419 and no validation errors - which reads like the form
          * silently doing nothing.
          * ─────────────────────────────────────────────────────────────────────
          */
@@ -216,8 +216,8 @@ abstract class TestCase extends BaseTestCase
      * ─────────────────────────────────────────────────────────────────────────
      * ONE PLACE, BECAUSE EVERY NEW MODULE ADDS A ROW TO IT
      *
-     * Almost everything an employee touches is restricted on delete — team
-     * history, written updates, attendance, leave, pay — because all of it is
+     * Almost everything an employee touches is restricted on delete - team
+     * history, written updates, attendance, leave, pay - because all of it is
      * part of their record and none of it should vanish with them. That makes
      * "there are no employees" a state a test has to build deliberately, and
      * doing it inline meant the same test breaking every time a module landed.
@@ -245,8 +245,8 @@ abstract class TestCase extends BaseTestCase
      * ─────────────────────────────────────────────────────────────────────────
      * WHY THIS EXISTS
      *
-     * The shell is on every page: sidebar, topbar, and — since Announcements
-     * landed (2026-08-28) — the notification bell, which links to whatever the
+     * The shell is on every page: sidebar, topbar, and - since Announcements
+     * landed (2026-08-28) - the notification bell, which links to whatever the
      * viewer has been notified about. A notification reading "Website Redesign
      * is due in 5 days" puts `/projects/WD-2024-001` into the HTML of every
      * page in the application.
@@ -280,14 +280,14 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * A fixed, test-only RSA key — never used outside this suite, not tied
+     * A fixed, test-only RSA key - never used outside this suite, not tied
      * to any real Google account.
      *
      * Not generated with `openssl_pkey_new()` at test time: it needs an
      * `openssl.cnf` to do that, and not every machine running this suite has
      * one on its `OPENSSL_CONF` path (Windows PHP builds commonly do not).
      * `openssl_sign()`, which App\Support\Google\GoogleAuth actually calls in
-     * production, needs no such file — only generating a fresh key does — so
+     * production, needs no such file - only generating a fresh key does - so
      * a fixed fixture key exercises the real code path without that
      * dependency.
      */
@@ -323,7 +323,7 @@ abstract class TestCase extends BaseTestCase
     PEM;
 
     /**
-     * A second, distinct test-only key — same reasoning as the first — for
+     * A second, distinct test-only key - same reasoning as the first - for
      * tests that prove a rotation actually changed the fingerprint rather
      * than both "keys" hashing to the same value.
      */
@@ -372,7 +372,7 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * Connect Google directly, bypassing the Admin Panel's HTTP form — for
+     * Connect Google directly, bypassing the Admin Panel's HTTP form - for
      * tests where being connected is a precondition, not the thing under
      * test. See GoogleIntegrationTest for the connect FLOW itself.
      */
@@ -395,7 +395,7 @@ abstract class TestCase extends BaseTestCase
 
     /**
      * Connect Google with the two fields Calendar specifically needs on top
-     * of what `connectGoogleDrive()` already sets — one connection row
+     * of what `connectGoogleDrive()` already sets - one connection row
      * serves both jobs, the same way it does in the Admin Panel.
      */
     protected function connectGoogleCalendar(
@@ -418,7 +418,7 @@ abstract class TestCase extends BaseTestCase
      * (assumed not to exist yet, so it is created), the file metadata create,
      * and the content write. Doesn't fake the token endpoint's URL under a
      * query string, so this composes with a caller's own `Http::fake()` for
-     * anything more specific — see DocumentStoreTest for that shape instead.
+     * anything more specific - see DocumentStoreTest for that shape instead.
      */
     protected function fakeDriveUpload(): void
     {

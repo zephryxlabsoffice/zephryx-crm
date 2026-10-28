@@ -20,15 +20,15 @@ use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Comp-offs — earned automatically at check-out (see AttendanceController),
+ * Comp-offs - earned automatically at check-out (see AttendanceController),
  * spent through a request a Manager or Team Lead approves.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * TWO KINDS OF REQUEST, ONE PERMISSION DECIDES BOTH
  *
  * Taking an earned comp-off, and working a Sunday already covered by
- * approved leave, are different facts about the same subject — Sunday work
- * — so both are decided behind `attendance.roster`, the same permission that
+ * approved leave, are different facts about the same subject - Sunday work
+ * - so both are decided behind `attendance.roster`, the same permission that
  * gates rostering itself, and both narrow a Team Lead to their own team the
  * same way (§2.6). See AttendanceController::canRoster, which this class
  * reuses rather than re-deriving the same rule twice.
@@ -39,7 +39,7 @@ class CompOffController extends Controller
     public function __construct(protected Rbac $rbac, protected AuditLog $audit) {}
 
     /**
-     * GET /comp-offs — the signed-in person's own ledger.
+     * GET /comp-offs - the signed-in person's own ledger.
      */
     public function mine(Request $request): Response
     {
@@ -54,7 +54,7 @@ class CompOffController extends Controller
     }
 
     /**
-     * GET /comp-offs/requests — the queue a Manager or Team Lead works.
+     * GET /comp-offs/requests - the queue a Manager or Team Lead works.
      */
     public function index(Request $request): Response
     {
@@ -70,7 +70,7 @@ class CompOffController extends Controller
     }
 
     /**
-     * POST /comp-offs/{compOff}/take — ask to spend one.
+     * POST /comp-offs/{compOff}/take - ask to spend one.
      */
     public function requestTake(Request $request, int $compOff): RedirectResponse
     {
@@ -145,7 +145,7 @@ class CompOffController extends Controller
 
         $decider = $this->employeeFor($request);
 
-        // A rejection is not lost — the comp-off goes back to available so it
+        // A rejection is not lost - the comp-off goes back to available so it
         // can still be taken before it lapses, the same reason a rejected
         // leave request is not the only chance somebody had to ask.
         $record->update([
@@ -178,7 +178,7 @@ class CompOffController extends Controller
     /**
      * POST /leave/{leaveRequest}/sunday-against-leave
      *
-     * Asked BEFORE working the Sunday (decided 2026-09-11) — there is no
+     * Asked BEFORE working the Sunday (decided 2026-09-11) - there is no
      * route that creates one of these once the day has already passed, and
      * `date` must fall inside the leave it is asking to partly reverse.
      */
@@ -202,7 +202,7 @@ class CompOffController extends Controller
             ]);
         }
 
-        // "Must be in the same month" — asked in the same calendar month as
+        // "Must be in the same month" - asked in the same calendar month as
         // the Sunday itself, not chased up weeks later.
         if (! $date->isSameMonth(Carbon::today())) {
             throw ValidationException::withMessages([
@@ -248,7 +248,7 @@ class CompOffController extends Controller
      * POST /sunday-against-leave/{sundayRequest}/approve
      *
      * Reduces the linked leave request's days by one and rosters the
-     * employee for the date — the whole of what "the leave day returns to
+     * employee for the date - the whole of what "the leave day returns to
      * the balance" and "may now work it" mean in this schema.
      */
     public function approveSundayAgainstLeave(Request $request, int $sundayRequest): RedirectResponse
@@ -285,7 +285,7 @@ class CompOffController extends Controller
             actor: $request->user(),
             entityType: 'sunday_against_leave',
             entityId: (string) $record->id,
-            after: 'Approved — 1 day returned to '.$leave->reference.', '.$record->date->format('d M Y').' rostered',
+            after: 'Approved - 1 day returned to '.$leave->reference.', '.$record->date->format('d M Y').' rostered',
             request: $request,
         );
 
@@ -359,7 +359,7 @@ class CompOffController extends Controller
     }
 
     /**
-     * A comp-off scoped to the signed-in employee's own — ownership in the
+     * A comp-off scoped to the signed-in employee's own - ownership in the
      * query, the same rule every other module in this application follows.
      */
     protected function ownedBy(int $compOffId, Employee $employee): CompOff
@@ -371,7 +371,7 @@ class CompOffController extends Controller
 
     /**
      * The same rule AttendanceController::canRoster applies to rostering
-     * itself — `teams.edit` is company-wide, `attendance.roster` plus
+     * itself - `teams.edit` is company-wide, `attendance.roster` plus
      * actually leading a team the subject belongs to is a Team Lead's own.
      */
     protected function canDecide(Request $request, ?Employee $subject): bool

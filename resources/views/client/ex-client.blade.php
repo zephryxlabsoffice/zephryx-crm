@@ -5,7 +5,7 @@
 {{--
     The Ex-Client page (client portal decisions, Q4, 2026-09-21).
 
-    Going Inactive does not stop the login — it lands here instead. Invoices
+    Going Inactive does not stop the login - it lands here instead. Invoices
     stay reachable and read-only through the one button below; everywhere
     else in this realm is a plain 403 now, not a redirect and not hidden. See
     App\Http\Controllers\Client\PortalController::requireActiveClient.

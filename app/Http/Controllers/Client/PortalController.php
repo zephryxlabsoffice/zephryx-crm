@@ -11,7 +11,7 @@ use Illuminate\Routing\Controller;
  *
  * Its whole job is answering "which client is this?" in exactly one place. Every
  * page in this namespace passes that answer to App\Support\ClientPortal, which
- * cannot be asked for anything without it — see the head of that class for why
+ * cannot be asked for anything without it - see the head of that class for why
  * the reads are shaped that way rather than checked in the controllers.
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -37,7 +37,7 @@ abstract class PortalController extends Controller
      * THE SESSION, AND ONE METHOD.
      *
      * `client_ref` on the account is the whole answer, and every page in the
-     * portal is correctly scoped by this one method returning it — because none
+     * portal is correctly scoped by this one method returning it - because none
      * of them resolves the client for itself, and ClientPortal will not answer
      * without being told whose data to read.
      *
@@ -69,14 +69,14 @@ abstract class PortalController extends Controller
      *
      * Decided 2026-09-21 (client portal, Q4): going Inactive does not stop the
      * login. It lands on an Ex-Client page carrying one button through to
-     * Invoices, which stays read-only and reachable — Client\InvoiceController
+     * Invoices, which stays read-only and reachable - Client\InvoiceController
      * calls `client()`, not this method, and must keep working regardless of
      * status. Every other route in this realm calls this method instead, and
      * gets a plain 403, not a redirect: the plan doc is explicit that it is
      * 403, not hidden, not sent anywhere else.
      *
      * Client\DashboardController is the one controller that does not call
-     * this either — it is what RENDERS the Ex-Client page, so it has to be
+     * this either - it is what RENDERS the Ex-Client page, so it has to be
      * reachable by an inactive client to show it.
      * ─────────────────────────────────────────────────────────────────────────
      */

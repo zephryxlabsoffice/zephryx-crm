@@ -9,7 +9,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Tests\TestCase;
 
 /**
- * Navigation filtering — foundation spec §5.
+ * Navigation filtering - foundation spec §5.
  */
 class NavigationTest extends TestCase
 {
@@ -21,7 +21,7 @@ class NavigationTest extends TestCase
         /*
          * Every route in the staff realm is behind `realm:staff` now (§3.1), so
          * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
+         * what the page renders rather than about who may see it - the guard
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
@@ -80,7 +80,7 @@ class NavigationTest extends TestCase
          * This replaced a test asserting that PermissiveGate threw in
          * production (2026-09-07). That test existed to make forgetting the
          * swap loud; the swap has happened, PermissiveGate is deleted, and what
-         * is worth guarding now is the opposite — that nothing quietly rebinds
+         * is worth guarding now is the opposite - that nothing quietly rebinds
          * this contract back to something permissive.
          */
         $this->assertInstanceOf(RbacGate::class, $this->app->make(NavigationGate::class));

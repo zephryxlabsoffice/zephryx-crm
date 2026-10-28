@@ -27,20 +27,20 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 /**
- * Tasks — the managing face (`/tasks`), the personal face (`/tasks/mine`), the
+ * Tasks - the managing face (`/tasks`), the personal face (`/tasks/mine`), the
  * team lead's queue (`/tasks/team`) and one task (`/tasks/{task}`).
  * Foundation spec §12.1.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * THREE DIFFERENT ANSWERS TO "MAY THEY?"
  *
- * Creating and editing a task are permissions — they are authority over the
+ * Creating and editing a task are permissions - they are authority over the
  * plan. Completing one is not: it is the assignee saying they have finished
  * their own work, so it is an ownership check (§2.6), and the same check lets
  * the lead of the team holding it close a task nobody picked up.
  *
  * Assigning sits between them: `tasks.assign` opens the route, and a Team Lead
- * holding it may only assign within a team they actually lead — the same shape
+ * holding it may only assign within a team they actually lead - the same shape
  * as team membership, and for the same reason.
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -76,7 +76,7 @@ class TaskController extends Controller
     }
 
     /**
-     * GET /tasks/mine — the viewer's own queue.
+     * GET /tasks/mine - the viewer's own queue.
      *
      * Scoped by the session, with no parameter to change to somebody else's.
      */
@@ -98,7 +98,7 @@ class TaskController extends Controller
     }
 
     /**
-     * GET /tasks/team — tasks held by a team rather than a person.
+     * GET /tasks/team - tasks held by a team rather than a person.
      *
      * This is the Team Lead's queue: the point of it is deciding who picks each
      * one up, so the "nobody assigned yet" state is the normal case here rather
@@ -254,8 +254,8 @@ class TaskController extends Controller
      * Put somebody on a task, or take them off it.
      *
      * The Team Lead's act, on their own team's queue. Separate from editing
-     * because it is the one thing a lead does daily and the rest of the form —
-     * the project, the deadline, the priority — is the plan, which is not
+     * because it is the one thing a lead does daily and the rest of the form -
+     * the project, the deadline, the priority - is the plan, which is not
      * theirs to change.
      */
     public function assign(Request $request, string $task): RedirectResponse
@@ -352,7 +352,7 @@ class TaskController extends Controller
     /**
      * Leave a note on a task.
      *
-     * No visibility split, unlike a ticket comment — a task has one
+     * No visibility split, unlike a ticket comment - a task has one
      * readership, so there is nothing to choose. The author's name is copied
      * at write time, same as a ticket thread, so it survives the removal of
      * an account.
@@ -393,7 +393,7 @@ class TaskController extends Controller
      * Add-only, like every other write this module makes: there is no route
      * that removes one, matching the "no delete anywhere" rule the rest of
      * this module (and Clients, Teams, Projects) already follows. Always
-     * Google Drive — DocumentStore::put() is the only method that ever writes
+     * Google Drive - DocumentStore::put() is the only method that ever writes
      * an uploaded file, and it never writes to the local disk.
      */
     public function storeAttachment(Request $request, string $task): RedirectResponse
@@ -477,7 +477,7 @@ class TaskController extends Controller
 
     /**
      * A task's attachment, scoped to that task rather than fetched by id
-     * alone — the same reason every ownership check in this application runs
+     * alone - the same reason every ownership check in this application runs
      * inside the query: an attachment id from a different task's page must
      * 404 rather than resolve to a file that is not this task's to show.
      */
@@ -499,7 +499,7 @@ class TaskController extends Controller
      * Whether this person may put somebody on THIS task.
      *
      * `tasks.edit` is the wide answer. Otherwise `tasks.assign` plus leading
-     * the team that holds it — the key opens the route, Team::isLedBy decides
+     * the team that holds it - the key opens the route, Team::isLedBy decides
      * which queue (§2.6).
      */
     protected function canAssign(Request $request, Task $task): bool
@@ -611,8 +611,8 @@ class TaskController extends Controller
     }
 
     /**
-     * The next task reference. Owned by TaskDirectory now — see the note
-     * there — so TicketController::convertToTask mints from the same place.
+     * The next task reference. Owned by TaskDirectory now - see the note
+     * there - so TicketController::convertToTask mints from the same place.
      */
     protected function nextReference(): string
     {
@@ -623,14 +623,14 @@ class TaskController extends Controller
      * The one place an assignment is recorded, which is why the notification is
      * here too.
      *
-     * All three routes that can move a task onto somebody — create, edit and
-     * assign — come through this method, and each of them already knows to call
+     * All three routes that can move a task onto somebody - create, edit and
+     * assign - come through this method, and each of them already knows to call
      * it only when the roster actually changed. Notifying from the call sites
      * instead would mean three chances to forget, and the one that forgot would
      * be silent.
      *
      * `$beforeIds` is the roster before the write, so only the people newly
-     * added are notified — a sync that adds one person to a task two others
+     * added are notified - a sync that adds one person to a task two others
      * are already on must not re-notify the two who were already there.
      *
      * @param  list<int>  $beforeIds

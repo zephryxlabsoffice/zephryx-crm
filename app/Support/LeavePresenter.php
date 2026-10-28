@@ -29,11 +29,11 @@ class LeavePresenter
      */
     protected const STATUSES = [
         self::PENDING => ['pill-amber', 'Pending', 'Waiting for a decision'],
-        self::APPROVED => ['pill-green', 'Approved', 'Granted — these days come off the balance'],
+        self::APPROVED => ['pill-green', 'Approved', 'Granted - these days come off the balance'],
         self::REJECTED => ['pill-red', 'Rejected', 'Refused, with a reason on the request'],
         // "Withdrawn", not "Cancelled": it says who did it. The key stays
         // `cancelled` because that is the state, but nothing shows that word to
-        // a reader — one vocabulary, or the tab and the pill disagree.
+        // a reader - one vocabulary, or the tab and the pill disagree.
         self::CANCELLED => ['pill-gray', 'Withdrawn', 'Pulled by the person who asked'],
     ];
 
@@ -116,7 +116,7 @@ class LeavePresenter
      * `1 day` / `2.5 days`.
      *
      * Half days are shown when they were asked for. Nothing here works the
-     * figure out — the requester states it and the approver agrees it; see
+     * figure out - the requester states it and the approver agrees it; see
      * App\Support\LeavePolicy for why.
      *
      * @param  array<string, mixed>  $request
@@ -165,12 +165,12 @@ class LeavePresenter
 
     public static function date(Carbon|string|null $when): string
     {
-        return $when === null ? '—' : Carbon::parse($when)->format('d M Y');
+        return $when === null ? '-' : Carbon::parse($when)->format('d M Y');
     }
 
     public static function dateTime(Carbon|string|null $when): string
     {
-        return $when === null ? '—' : Carbon::parse($when)->format('d M Y, g:i A');
+        return $when === null ? '-' : Carbon::parse($when)->format('d M Y, g:i A');
     }
 
     /**

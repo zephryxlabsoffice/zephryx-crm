@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * `response` IS A CACHE OF GOOGLE'S ANSWER
  *
  * A person accepts or declines in their own calendar. This application reads
- * that back and displays it — there is no route, no button and no provider
+ * that back and displays it - there is no route, no button and no provider
  * method that sets one, and adding any of them would mean two systems claiming
  * to know whether somebody is coming.
  * ─────────────────────────────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ class MeetingAttendee extends Model
             'name' => (string) $this->user?->name,
             'email' => $this->user?->email,
             /*
-             * `staff` or `client`, which is what the list draws differently —
+             * `staff` or `client`, which is what the list draws differently -
              * a client on an internal-looking invite is worth being able to see
              * at a glance. Taken from the account's realm rather than stored,
              * because it is the same fact.

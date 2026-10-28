@@ -25,13 +25,13 @@ use Illuminate\Support\Collection;
  *
  * The usual way that rule gets broken is not malice or ignorance. It is a
  * controller written in a hurry that calls `InvoiceDirectory::find($id)`,
- * renders it, and looks completely correct — because it IS completely correct,
+ * renders it, and looks completely correct - because it IS completely correct,
  * except for the ownership check nobody remembered to add. The record comes
  * back; the page renders; a client reads another client's invoice.
  *
  * So the client controllers do not have access to a method that could do that.
  * Every read below takes a `Client` as its FIRST argument, and the ones that
- * fetch a single record return null when it belongs to somebody else — which
+ * fetch a single record return null when it belongs to somebody else - which
  * the controllers turn into a 404, identical to the response for a record that
  * does not exist. Forgetting the check is not possible here, because there is
  * no call that omits it.
@@ -44,7 +44,7 @@ use Illuminate\Support\Collection;
  *      the caller "obviously" already checked. The next caller will not have.
  *
  * ═════════════════════════════════════════════════════════════════════════════
- * IT TAKES THE RECORD, NOT THE NAME — AND THAT IS THE CHANGE
+ * IT TAKES THE RECORD, NOT THE NAME - AND THAT IS THE CHANGE
  *
  * The demo version was keyed on the company NAME, because the fixture had
  * nothing else. A name is not an identifier: two companies can share one, and
@@ -77,7 +77,7 @@ class ClientPortal
      * One project, or null when it is not this client's.
      *
      * Note the shape: the ownership filter is part of the query, so a project
-     * belonging to somebody else is not fetched and then rejected — it is never
+     * belonging to somebody else is not fetched and then rejected - it is never
      * a candidate. The controller turns null into a 404, the same answer as for
      * an id that does not exist, so the response cannot be used to find out
      * which project references are real.
@@ -112,7 +112,7 @@ class ClientPortal
             ->first();
 
         if ($project === null) {
-            // Ownership first, again: no project, no updates — not even if the
+            // Ownership first, again: no project, no updates - not even if the
             // update ids were guessed.
             return collect();
         }
@@ -141,7 +141,7 @@ class ClientPortal
              * A draft invoice is not the client's to see. It is a document
              * somebody here is still writing, with figures that may change and
              * a number not committed to the sequence yet. It becomes theirs
-             * when it is sent — which is a column, so this is a query and not a
+             * when it is sent - which is a column, so this is a query and not a
              * filter somebody could forget to apply.
              */
             ->whereNotNull('sent_at')
@@ -173,7 +173,7 @@ class ClientPortal
     /**
      * Tickets raised against this client.
      *
-     * Not "tickets about this client's projects" — an internal ticket raised by
+     * Not "tickets about this client's projects" - an internal ticket raised by
      * an engineer against the same project is ours, and often says why
      * something is late in words nobody wrote for a client to read. The filter
      * is `client_id`, which internal tickets do not carry.
@@ -239,8 +239,8 @@ class ClientPortal
      * ─────────────────────────────────────────────────────────────────────────
      * TWO WAYS TO BE ON ONE, AND BOTH ARE OWNERSHIP
      *
-     * A client is on a meeting either because they requested it — the record
-     * carries `requested_by_client_id` — or because it is about one of their
+     * A client is on a meeting either because they requested it - the record
+     * carries `requested_by_client_id` - or because it is about one of their
      * projects. Neither alone is enough: a request that has not been scheduled
      * yet has no project, and a scheduled meeting about their project is theirs
      * to see even though a client account is never an attendee row (attendees
@@ -274,7 +274,7 @@ class ClientPortal
 
     /**
      * The model behind one of this client's meetings, for the one write this
-     * realm makes against it — cancelling. `meeting()` above returns the
+     * realm makes against it - cancelling. `meeting()` above returns the
      * display array `toRecordArray` builds, which carries no model to call
      * `update` on; this runs the same ownership filter and hands back the
      * row itself.
@@ -308,7 +308,7 @@ class ClientPortal
      * The figures behind the portal's tiles, every one of them scoped.
      *
      * Computed from the same collections the pages list, so a tile and the
-     * table under it cannot disagree — the designer's handover had five invoice
+     * table under it cannot disagree - the designer's handover had five invoice
      * tiles whose totals contradicted the rows beneath them.
      *
      * @return array<string, mixed>
@@ -331,7 +331,7 @@ class ClientPortal
             /*
              * A scoped QUERY, not the collection above. TicketDirectory::stats
              * counts in SQL, and handing it an unscoped builder is exactly the
-             * mistake this class exists to make impossible — so the scope goes
+             * mistake this class exists to make impossible - so the scope goes
              * through `ticketQuery`, which cannot be built without a client.
              */
             'tickets' => TicketDirectory::stats(self::ticketQuery($client)),

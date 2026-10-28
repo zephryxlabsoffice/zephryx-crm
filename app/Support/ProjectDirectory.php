@@ -11,12 +11,12 @@ use Illuminate\Support\Carbon;
  * Projects, read from the database.
  *
  * The row shape the views already read: `id` (the reference), name, client,
- * manager, progress, deadline, status, priority — plus `manager_record` and
+ * manager, progress, deadline, status, priority - plus `manager_record` and
  * `deadline_meta`, which the controller used to attach in a decorate() step and
  * which belong with the rest of the shape.
  *
  * `due_in` and `progress` are both kept because the KPIs and the pages already
- * read them, and both are derived rather than stored — `due_in` from the
+ * read them, and both are derived rather than stored - `due_in` from the
  * deadline, `progress` from completed tasks over total tasks
  * (2026_09_21_000027_derive_project_progress_drop_column.php dropped the typed
  * column). Neither can drift from the facts beside it the way a stored figure
@@ -70,7 +70,7 @@ class ProjectDirectory
             'deadline' => $deadline,
             'start_date' => $project->started_on?->toDateString(),
             // Days from today, negative when it has passed. Derived, never
-            // stored — a stored one is wrong by tomorrow morning.
+            // stored - a stored one is wrong by tomorrow morning.
             'due_in' => (int) Carbon::today()->diffInDays($project->deadline->startOfDay(), false),
             'deadline_meta' => ProjectPresenter::deadline($deadline, $project->status),
         ];
@@ -79,7 +79,7 @@ class ProjectDirectory
     /**
      * Completed tasks over total tasks, as a whole-number percentage.
      *
-     * A project with no tasks yet reads 0% rather than dividing by zero — the
+     * A project with no tasks yet reads 0% rather than dividing by zero - the
      * honest answer for a project nothing has been logged against, not a
      * missing value to hide.
      */
@@ -111,7 +111,7 @@ class ProjectDirectory
             'active' => $base()->whereIn('status', ['in_progress', 'planning', 'review'])->count(),
             'completed' => $base()->where('status', 'completed')->count(),
             'on_hold' => $base()->where('status', 'on_hold')->count(),
-            // Past its deadline and not finished — see Project::scopeOverdue.
+            // Past its deadline and not finished - see Project::scopeOverdue.
             'overdue' => $base()->overdue()->count(),
         ];
     }
@@ -134,7 +134,7 @@ class ProjectDirectory
     }
 
     /**
-     * Projects grouped by status, for the donut — labels, not raw keys, so the
+     * Projects grouped by status, for the donut - labels, not raw keys, so the
      * legend reads as words.
      *
      * @return list<array{name: string, count: int, share: float}>

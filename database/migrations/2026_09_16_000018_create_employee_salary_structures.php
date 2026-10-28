@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Schema;
  * THIS IS STILL NOT A PAYROLL ENGINE
  *
  * The 2026-08-27 decision holds: this application does not calculate anybody's
- * pay. HR works the month out in a spreadsheet — LOP, bonus, incentive, arrears
- * and a rejected attendance day all absorbed there — and uploads the payslip
+ * pay. HR works the month out in a spreadsheet - LOP, bonus, incentive, arrears
+ * and a rejected attendance day all absorbed there - and uploads the payslip
  * that calculation produced. `salary_records` keeps that document and the net
  * figure it states, and nothing here changes it.
  *
@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * Which is why nothing reads it into a monthly figure, and why the Salary page
  * does not show it at all. A breakdown displayed beside a payslip invites the
- * comparison — and the two will disagree in any month with a deduction in it,
+ * comparison - and the two will disagree in any month with a deduction in it,
  * at which point the screen is arguing with the document somebody was actually
  * paid against.
  *
@@ -32,22 +32,22 @@ use Illuminate\Support\Facades\Schema;
  * Three engagements are paid three different ways, and they do not share a
  * shape:
  *
- *   breakdown — full-time. The six components.
- *   stipend   — an intern. One monthly amount, no breakdown, because there is
+ *   breakdown - full-time. The six components.
+ *   stipend   - an intern. One monthly amount, no breakdown, because there is
  *               no PF on a stipend and an HRA line on it would be a fiction.
- *   rate      — a freelancer. A per-project or hourly figure, and nothing else.
+ *   rate      - a freelancer. A per-project or hourly figure, and nothing else.
  *               Their payments are tracked outside the CRM entirely, so this is
  *               a record of what was agreed rather than anything that is acted
  *               on here.
  *
  * Hence the nullable columns. A stipend row with a null HRA is not an
- * incomplete row — HRA is not a question that applies to it. The alternative,
+ * incomplete row - HRA is not a question that applies to it. The alternative,
  * three tables, would make "what is this person paid" a three-way join for a
  * page that shows one card.
  *
  * AMOUNTS ARE INTEGERS OF MINOR UNITS
  *
- * Paise, never rupees, and never a float — see App\Support\Money. Signed
+ * Paise, never rupees, and never a float - see App\Support\Money. Signed
  * BIGINT rather than unsigned, unlike `salary_records.net_minor`: a correction
  * is conceivable here in a way it is not on a figure a payslip states, and an
  * unsigned column turns a mistaken negative into a wildly large positive
@@ -57,8 +57,8 @@ use Illuminate\Support\Facades\Schema;
  *
  * `employee_banking` is encrypted because an account number is an instrument:
  * possession of it enables something. A salary figure is confidential, not an
- * instrument, and `salary_records.net_minor` — the figure actually paid, every
- * month, for everybody — has been a plain integer since that table was built.
+ * instrument, and `salary_records.net_minor` - the figure actually paid, every
+ * month, for everybody - has been a plain integer since that table was built.
  * Encrypting the agreement while the payments beside it sit in the clear would
  * buy nothing and suggest a protection that is not there. The control is the
  * permission: `salary.view` to read it, `salary.manage` to write it, and the
@@ -104,9 +104,9 @@ return new class extends Migration
             $table->string('rate_basis', 20)->nullable();
 
             /*
-             * Who last set it. Nullable on delete rather than restricted — a
+             * Who last set it. Nullable on delete rather than restricted - a
              * salary must not become unchangeable because the account that last
-             * touched it was closed — and the audit log holds the accountable
+             * touched it was closed - and the audit log holds the accountable
              * record either way, with the actor's name copied into it.
              */
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();

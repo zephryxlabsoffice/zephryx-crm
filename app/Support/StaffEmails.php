@@ -11,7 +11,7 @@ use App\Models\User;
  * ─────────────────────────────────────────────────────────────────────────────
  * THE RULE (owner, 2026-10-27)
  *
- *   Personal email — required.  Work email — optional.
+ *   Personal email - required.  Work email - optional.
  *
  *   Until a work email exists, the personal email is the sign-in, and the
  *   one-time codes, invites and reset links go to it. Once a work email is
@@ -21,7 +21,7 @@ use App\Models\User;
  * record only"): interns and freelancers often have no company mailbox yet.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * WHERE EACH ADDRESS LIVES — NO NEW COLUMNS
+ * WHERE EACH ADDRESS LIVES - NO NEW COLUMNS
  *
  *   users.email                     the MAIL address: work email if there is
  *                                   one, otherwise the personal email
@@ -73,7 +73,7 @@ class StaffEmails
 
         /*
          * Active accounts only. An intern converted to full-time keeps a closed
-         * account carrying a copy of the same profile — the personal email
+         * account carrying a copy of the same profile - the personal email
          * must find the live account, not the closed one.
          */
         $profile = EmployeeProfile::query()
@@ -86,7 +86,7 @@ class StaffEmails
     }
 
     /**
-     * Whether an address is already somebody else's — as a sign-in or as a
+     * Whether an address is already somebody else's - as a sign-in or as a
      * personal email.
      */
     public static function takenByAnother(string $email, ?int $ownUserId): bool

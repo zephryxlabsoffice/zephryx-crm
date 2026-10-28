@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Schema;
  * has no department; the admin account has no joining date and no birthday. Put
  * on `users`, every one of them would be null for every non-staff account, and
  * "null because it does not apply" and "null because nobody filled it in" would
- * become the same value — which is exactly the ambiguity that later turns into
+ * become the same value - which is exactly the ambiguity that later turns into
  * a report quietly counting the admin account as an employee.
  *
  * The account and the employment are also different lifecycles: §2.1 has a
@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Schema;
  * WHAT IS NOT HERE: `status`
  *
  * The demo rows carried active / on_leave / inactive in one field. Two of those
- * are account state (`users.status`) and the third is not a state at all — it
+ * are account state (`users.status`) and the third is not a state at all - it
  * is a question about today, answered by whether an approved leave request
  * covers it. Stored, it would be a column somebody has to remember to change
  * twice per absence, and it would be wrong the morning somebody's leave ends.
@@ -58,7 +58,7 @@ return new class extends Migration
             $table->date('joined_on')->nullable();
 
             /*
-             * Stored in full and displayed as a day and a month only — see
+             * Stored in full and displayed as a day and a month only - see
              * App\Support\Milestones. A colleague needs to know when to say
              * happy birthday, not how old somebody is, and putting everybody's
              * age on an internal page permanently is harder to take back than

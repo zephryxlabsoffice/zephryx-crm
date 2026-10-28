@@ -27,7 +27,7 @@ require $appDir.'/vendor/autoload.php';
 /** @var Application $app */
 $app = require_once $appDir.'/bootstrap/app.php';
 
-// public_path() must name public_html, not zephryx-crm/public — the Vite
+// public_path() must name public_html, not zephryx-crm/public - the Vite
 // manifest (build/manifest.json) is read through it on every page.
 $app->usePublicPath(__DIR__);
 

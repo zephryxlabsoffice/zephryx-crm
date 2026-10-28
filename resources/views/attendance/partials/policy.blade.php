@@ -87,7 +87,7 @@
 
         Not from a list in this module's configuration. HR posts "office closed
         on the 14th" once, and that notice is both what everybody reads and the
-        day nobody is marked absent for — see App\Support\Holidays. The link
+        day nobody is marked absent for - see App\Support\Holidays. The link
         goes to what HR actually wrote rather than restating it here.
     --}}
     <div class="stat-row">
@@ -114,7 +114,7 @@
 
     <p class="att-rail-note">
         @if ($nextHoliday !== null)
-            <strong>{{ $nextHoliday['name'] }}</strong> —
+            <strong>{{ $nextHoliday['name'] }}</strong> -
         @endif
         holidays come from the holiday announcements on the board, so there is
         no second list to fall out of step with what people were told. Hours and

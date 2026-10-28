@@ -32,7 +32,7 @@ class ClientPresenterTest extends TestCase
     public function test_the_identity_tint_is_stable_and_in_range(): void
     {
         // Derived from the name so the same client is always the same colour,
-        // and so an eighth client does not fall through to a default — the
+        // and so an eighth client does not fall through to a default - the
         // handover hand-numbered av-1..av-7 against seven sample rows.
         $first = ClientPresenter::tint('GreenLeaf Foods');
 

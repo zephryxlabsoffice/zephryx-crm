@@ -43,7 +43,7 @@
             <div class="kpi-lbl">Ended</div>
             <div class="kpi-val">{{ number_format($stats['ended']) }}</div>
             {{-- Not "Completed". Nothing here can see whether a meeting
-                 happened — Google knows a room existed, not whether anybody
+                 happened - Google knows a room existed, not whether anybody
                  joined it. --}}
             <span class="kpi-sub">Their time has passed</span>
         </div>

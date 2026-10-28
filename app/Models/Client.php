@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * An organisation this company works for (foundation spec §12).
  *
  * The client, not the login. Portal accounts are `users` rows pointing here
- * through `client_ref` — see `accounts()` and the head of the migration for why
+ * through `client_ref` - see `accounts()` and the head of the migration for why
  * the two are separate.
  */
 class Client extends Model
@@ -34,7 +34,7 @@ class Client extends Model
     public const STATUSES = ['active', 'inactive'];
 
     /**
-     * What this company actually bills in — not the full list App\Support\
+     * What this company actually bills in - not the full list App\Support\
      * Money supports. Closed, the same reasoning `config/invoices.php`'s
      * payment methods list gives: free text here means "INR", "inr" and
      * "Inr" in the same column.
@@ -81,7 +81,7 @@ class Client extends Model
     }
 
     /**
-     * Everybody beyond the main contact — see App\Models\ClientContact.
+     * Everybody beyond the main contact - see App\Models\ClientContact.
      *
      * @return HasMany<ClientContact, $this>
      */

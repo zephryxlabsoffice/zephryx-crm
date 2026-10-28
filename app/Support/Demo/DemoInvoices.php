@@ -6,16 +6,16 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
- * Sample invoices — fixture data for InvoiceSeeder, and nothing else reads it.
+ * Sample invoices - fixture data for InvoiceSeeder, and nothing else reads it.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * WHY THIS CLASS GOT SMALLER
  *
- * Before 2026-09-21 this was a full stand-in for the `invoices` table — it
+ * Before 2026-09-21 this was a full stand-in for the `invoices` table - it
  * computed totals, statuses and money bags so the pages had something to show
  * before the database existed. That job is finished: `App\Models\Invoice` and
  * App\Support\InvoiceDirectory do all of it for real now, from real rows. What
- * is left is only what InvoiceSeeder needs to build those rows — a client, a
+ * is left is only what InvoiceSeeder needs to build those rows - a client, a
  * project, a currency, dates, an amount and a list of payments.
  *
  * `amount` REPLACES A LIST OF LINES, per the decision that ended the line-item
@@ -37,12 +37,12 @@ class DemoInvoices
     }
 
     /**
-     * Amounts and `payment.amount` are minor units throughout — paise for
+     * Amounts and `payment.amount` are minor units throughout - paise for
      * INR, cents for USD. `issued_ago` / `due_in` / payment `ago` are day
      * offsets from today, so the sample set's due-date states stay reviewable
      * instead of drifting into "universally overdue" as the calendar moves.
      *
-     * INV-2026-004 is cancelled and keeps its number — a tidy, gapless run of
+     * INV-2026-004 is cancelled and keeps its number - a tidy, gapless run of
      * live invoices would demonstrate nothing; the gap that is not a gap is
      * the point. The mixed currencies are deliberate too: USD is what makes
      * the KPI tiles bags rather than numbers.
@@ -132,7 +132,7 @@ class DemoInvoices
                 'id' => 'INV-2026-004', 'client' => 'Innovate Hub', 'project' => 'EC-2024-005',
                 'currency' => 'USD', 'amount' => 280000, 'issued_ago' => 60, 'due_in' => -30,
                 'issued' => true, 'cancelled' => true, 'payments' => [],
-                'notes' => 'Cancelled — scope moved into INV-2026-013. Kept so the sequence has no gap.',
+                'notes' => 'Cancelled - scope moved into INV-2026-013. Kept so the sequence has no gap.',
             ],
             [
                 'id' => 'INV-2026-003', 'client' => 'DGL International School', 'project' => 'SEO-2024-008',

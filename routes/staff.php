@@ -32,8 +32,8 @@ use Illuminate\Support\Facades\Route;
 | routes/web.php mounts this file behind `realm:staff`, so every route below
 | inherits the check without naming it. That is the point of the split: a staff
 | route cannot be added outside the guard, because being in this file IS being
-| inside the group. The previous arrangement — one flat file, with a comment
-| promising middleware later — depended on whoever added the next route
+| inside the group. The previous arrangement - one flat file, with a comment
+| promising middleware later - depended on whoever added the next route
 | remembering.
 |
 | The realm check runs before any data is read, and it is independent of
@@ -51,7 +51,7 @@ Route::post('/shell', [ShellPreferenceController::class, 'store'])
     ->name('shell.store');
 
 /*
- * The dashboard. One route, one page — and no `/dashboard/hr` beside it.
+ * The dashboard. One route, one page - and no `/dashboard/hr` beside it.
  *
  * The page is composed from config/dashboard.php against the viewer's
  * permissions, because §2.4 makes roles additive and Manager + HR is a person
@@ -61,7 +61,7 @@ Route::post('/shell', [ShellPreferenceController::class, 'store'])
  *
  * `?as=` previews one role's composition and exists only in local + debug. It
  * is intersected with the real gate, never substituted for it, so it can only
- * hide widgets — see DashboardController::gate.
+ * hide widgets - see DashboardController::gate.
  */
 Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
@@ -73,14 +73,14 @@ Route::get('/dashboard', DashboardController::class)->name('dashboard');
  *
  * The page had no permission on it at all while it was reading demo rows, which
  * was survivable when there was nothing behind it and is not now. Three roles
- * hold the key — Manager, Support and the CEO — and the sidebar entry has always
+ * hold the key - Manager, Support and the CEO - and the sidebar entry has always
  * been gated on it, so nothing about who sees the module changes; what changes
  * is that typing the URL is no longer a way around the sidebar.
  *
  * Four write permissions, because they are four different sizes of act:
  * recording that a company exists, correcting its details, moving it between
  * engagement states, and handing somebody a login that can read its invoices.
- * The last is sensitive — see RbacSeeder::SENSITIVE.
+ * The last is sensitive - see RbacSeeder::SENSITIVE.
  *
  * There is no delete at any permission. Projects, invoices, tickets and
  * meetings all point back at a client.
@@ -125,7 +125,7 @@ Route::post('/clients/{client}/invite', [ClientController::class, 'invite'])
     ->name('clients.invite');
 
 /*
- * Employees — the first module with real writes (2026-09-08).
+ * Employees - the first module with real writes (2026-09-08).
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * THE GUARD IS ON THE ROUTE
@@ -133,7 +133,7 @@ Route::post('/clients/{client}/invite', [ClientController::class, 'invite'])
  * `permission:` is the second barrier (§5); the realm has already been checked
  * by the file this is written in. Declared here rather than inside the
  * controller because a check in a method is one somebody can forget to write,
- * and nothing fails when they do — the route just works for everybody. On the
+ * and nothing fails when they do - the route just works for everybody. On the
  * route it is visible next to the thing it guards, and a route added without
  * one is conspicuous.
  *
@@ -226,7 +226,7 @@ Route::post('/employees/{employee}/status', [EmployeeController::class, 'status'
  * One full identifier, for a stated reason, written to the audit log.
  *
  * POST and never GET, and that is not a formality. A GET would be a link:
- * prefetched by the browser, kept in history, repeated by the back button —
+ * prefetched by the browser, kept in history, repeated by the back button -
  * and every one of those writes an entry for a look nobody took, which makes
  * the log worthless in precisely the situation it exists for.
  */
@@ -238,9 +238,9 @@ Route::post('/employees/{employee}/reveal', [EmployeeController::class, 'reveal'
 /*
  * HR viewing another employee's documents (review round Q16, answered
  * 2026-09-21: "yes … the reason the 'photocopy received' date exists at
- * all — without this, HR can log that a photocopy arrived but never
+ * all - without this, HR can log that a photocopy arrived but never
  * actually check it against the record"). Same permission as the identity
- * card, same shape as My Profile's own document routes — see
+ * card, same shape as My Profile's own document routes - see
  * ProfileController::documentFor, whose own comment already named this as
  * the second of the two parties who reach a document, on a route that did
  * not exist until now.
@@ -263,14 +263,14 @@ Route::get('/employees/{employee}/documents/{document}/download', [EmployeeContr
  * `/teams/mine` DELIBERATELY CARRIES NO PERMISSION
  *
  * §12.1 keeps the personal and managing faces as separate pages, and the
- * personal one is the viewer's own membership — reachable by anybody signed in,
+ * personal one is the viewer's own membership - reachable by anybody signed in,
  * for the same reason their own payslip is. It takes no parameter either: the
  * person comes from the session, so there is nothing to change to somebody
  * else's.
  *
  * The managing face keeps `teams.view`, which every staff role holds.
  *
- * Membership is its own permission because it is the routine act — a Team Lead
+ * Membership is its own permission because it is the routine act - a Team Lead
  * does it within their own team, which the route cannot express and the
  * controller checks (§2.6). `teams.edit` is the wider one: renaming a team,
  * moving it between states, naming its lead.
@@ -326,8 +326,8 @@ Route::post('/teams/{team}/members/remove', [TeamController::class, 'removeMembe
  * ─────────────────────────────────────────────────────────────────────────────
  * THE EOD ROUTES CARRY NO PERMISSION, AND THAT IS NOT AN OVERSIGHT
  *
- * Writing your own end-of-day update is not an authority — it is reporting your
- * own day — so it is guarded by an ownership check instead: the controller
+ * Writing your own end-of-day update is not an authority - it is reporting your
+ * own day - so it is guarded by an ownership check instead: the controller
  * refuses anybody who is not on the project. A permission would be the wrong
  * shape entirely, because it would either be held by everybody (and guard
  * nothing) or would stop people reporting the work they are doing.
@@ -439,7 +439,7 @@ Route::post('/tasks/{task}/complete', [TaskController::class, 'complete'])
     ->name('tasks.complete');
 
 /*
- * Comments and attachments — no permission beyond `tasks.view`, since being
+ * Comments and attachments - no permission beyond `tasks.view`, since being
  * signed in and able to read the task is the whole of what either act
  * requires. Neither has a delete: matches the rest of this module.
  */
@@ -491,7 +491,7 @@ Route::get('/tickets/{ticket}', [TicketController::class, 'show'])
     ->name('tickets.show');
 
 /*
- * Replying is not an authority either — anybody who can see the ticket can
+ * Replying is not an authority either - anybody who can see the ticket can
  * answer it. Triage IS: routing, prioritising and escalating are the support
  * team's judgement, and `tickets.triage` is the key for it.
  */
@@ -506,7 +506,7 @@ Route::post('/tickets/{ticket}/triage', [TicketController::class, 'triage'])
 
 /*
  * "A ticket can be turned into a task" (Tasks decision). `tasks.create`, not
- * `tickets.triage` — this creates a task, so the permission that opens the
+ * `tickets.triage` - this creates a task, so the permission that opens the
  * rest of task creation is the one that gates this too.
  */
 Route::post('/tickets/{ticket}/convert-to-task', [TicketController::class, 'convertToTask'])
@@ -515,7 +515,7 @@ Route::post('/tickets/{ticket}/convert-to-task', [TicketController::class, 'conv
     ->name('tickets.convertToTask');
 
 /*
- * Attachments (decided 2026-09-21) — staff-only for now, `tickets.view` is
+ * Attachments (decided 2026-09-21) - staff-only for now, `tickets.view` is
  * the whole of the gate, same as replying: anybody who can see the ticket
  * may attach something to it. No delete route.
  */
@@ -551,7 +551,7 @@ Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])
  * carrying CSRF tokens rather than dead markup.
  *
  * Note what is *not* here: there is no DELETE. An invoice number must never
- * leave the sequence — withdrawal is a cancellation that keeps the record and
+ * leave the sequence - withdrawal is a cancellation that keeps the record and
  * its number. Adding a destroy route later would be a mistake, not a feature.
  */
 Route::post('/invoices', [InvoiceController::class, 'store'])
@@ -572,10 +572,10 @@ Route::post('/invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])
 
 /*
  * The document itself. An invoice is an uploaded PDF now (decided
- * 2026-09-11), not a page this application generates — attaching or
+ * 2026-09-11), not a page this application generates - attaching or
  * replacing one is `invoices.manage`, same as every other write here;
  * reading it back is `invoices.view`, same as the invoice page it lives on.
- * `view` opens it in the browser, `download` saves it — see
+ * `view` opens it in the browser, `download` saves it - see
  * App\Support\Documents\DocumentStore::viewInline() for why both are safe.
  */
 Route::post('/invoices/{invoice}/document', [InvoiceController::class, 'storeDocument'])
@@ -592,7 +592,7 @@ Route::get('/invoices/{invoice}/document/view', [InvoiceController::class, 'view
     ->name('invoices.document.view');
 
 /*
- * Salary. The most sensitive routes in the application — see
+ * Salary. The most sensitive routes in the application - see
  * App\Http\Controllers\SalaryController for what the backend owes them.
  *
  * Note the shape of the payslip route: it takes a period and no employee, so
@@ -621,7 +621,7 @@ Route::get('/salary/{employee}/{period}', [SalaryController::class, 'show'])
  * by mis-click is hard to notice and awkward to undo, so the destructive step
  * is always the second one.
  *
- * `salary.pay.confirm` is a POST that renders — a dozen employee ids should not
+ * `salary.pay.confirm` is a POST that renders - a dozen employee ids should not
  * end up in a URL that gets bookmarked, shared or written to an access log.
  */
 Route::post('/salary/pay/confirm', [SalaryController::class, 'confirmPayment'])
@@ -631,7 +631,7 @@ Route::post('/salary/pay/confirm', [SalaryController::class, 'confirmPayment'])
 /*
  * The writes the backend phase implements. Both need an audit entry (§6), both
  * are restricted to whoever holds the finance permission (§2.6), and marking
- * paid must be IDEMPOTENT — running it against an already-paid record must not
+ * paid must be IDEMPOTENT - running it against an already-paid record must not
  * move its payment date.
  *
  * Note what is not here: no route deletes a salary record, and none marks
@@ -648,8 +648,8 @@ Route::post('/salary/{employee}/{period}/payslip', [SalaryController::class, 'st
 
 /*
  * The download carries NO permission on the route, and that is deliberate: your
- * own payslip is yours, and the controller is where the two answers — your own,
- * or `salary.view` — are decided together. A route-level key would have locked
+ * own payslip is yours, and the controller is where the two answers - your own,
+ * or `salary.view` - are decided together. A route-level key would have locked
  * people out of their own payslip.
  *
  * It is also the only way a stored file leaves this application: never a static
@@ -662,7 +662,7 @@ Route::get('/salary/{employee}/{period}/payslip/download', [SalaryController::cl
 
 /*
  * The viewer sibling (plan doc, "In-browser viewing is ours, not Drive's").
- * Same guard as the download above — the two only differ in whether the
+ * Same guard as the download above - the two only differ in whether the
  * response says `inline` or `attachment`, and in the Content-Security-Policy
  * a `application/pdf` response carries (see App\Http\Middleware\
  * SecurityHeaders).
@@ -685,7 +685,7 @@ Route::get('/leave/{leaveRequest}', [LeaveController::class, 'show'])
  *
  * Approving and rejecting are separate routes rather than one endpoint taking a
  * decision parameter: they are opposite acts, and a single handler is a single
- * place for a default to be wrong. Rejecting requires a reason — the handover's
+ * place for a default to be wrong. Rejecting requires a reason - the handover's
  * reject button captured nothing, which leaves the person guessing why.
  *
  * Three rules the writes must honour (§2.6, §6): `leave.approve` is its own
@@ -707,7 +707,7 @@ Route::post('/leave/{leaveRequest}/reject', [LeaveController::class, 'reject'])
 /*
  * Withdrawing carries no permission: it is the requester's own act on their own
  * request, and the controller refuses anybody else. An approver refusing leave
- * is a rejection, with a reason — calling it a withdrawal would put words in
+ * is a rejection, with a reason - calling it a withdrawal would put words in
  * somebody's mouth.
  */
 Route::post('/leave/{leaveRequest}/cancel', [LeaveController::class, 'cancel'])
@@ -730,14 +730,14 @@ Route::get('/meetings/{meeting}', [MeetingController::class, 'show'])
 
 /*
  * The writes the backend phase implements, all of which are Google Calendar API
- * calls — see App\Support\Meetings\GoogleMeetProvider for what each has to get
+ * calls - see App\Support\Meetings\GoogleMeetProvider for what each has to get
  * right.
  *
  * `store` creates the event and the conference: only a project manager or the
  * system admin may (decided 2026-08-28). `request` is the client's act, which
  * produces a record with no Google event until somebody creates it.
  *
- * There is no route that records an RSVP. Responses belong to Google Calendar —
+ * There is no route that records an RSVP. Responses belong to Google Calendar -
  * people accept or decline in their own calendar and this application reads
  * that back.
  */
@@ -763,7 +763,7 @@ Route::post('/meetings/{meeting}/cancel', [MeetingController::class, 'cancel'])
  * Announcements and notifications are two surfaces, not one (decided
  * 2026-08-28). The board is written by a person and broadcast; the bell is
  * generated by an event and addressed to one reader. Task and ticket events go
- * to the bell — a board they flood is a board nobody reads.
+ * to the bell - a board they flood is a board nobody reads.
  */
 Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
 // Before /announcements/{announcement}, or these are read as references.
@@ -778,7 +778,7 @@ Route::get('/announcements/{announcement}', [AnnouncementController::class, 'sho
     ->name('announcements.show');
 
 /*
- * Writes the backend phase implements. Posting needs `announcements.post` —
+ * Writes the backend phase implements. Posting needs `announcements.post` -
  * HR, project managers and the owner.
  *
  * Note what is absent: nothing creates a milestone. Birthdays and work
@@ -803,7 +803,7 @@ Route::get('/notifications', [NotificationController::class, 'index'])->name('no
  * Marking read is the reader's own act; nobody clears anybody else's.
  *
  * No permission on either route, and no `{notification}` on this one. Both are
- * decisions rather than omissions — see the head of NotificationController.
+ * decisions rather than omissions - see the head of NotificationController.
  */
 Route::post('/notifications/read', [NotificationController::class, 'read'])->name('notifications.read');
 
@@ -817,7 +817,7 @@ Route::post('/notifications/read', [NotificationController::class, 'read'])->nam
  *
  * Note also what check-in and check-out do NOT take: no employee, no date, no
  * time. The person comes from the session and the clock comes from the server,
- * so there is no parameter for anyone to tamper with — the same reason the
+ * so there is no parameter for anyone to tamper with - the same reason the
  * payslip route takes a period and no employee.
  */
 Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
@@ -825,7 +825,7 @@ Route::get('/attendance', [AttendanceController::class, 'index'])->name('attenda
 Route::get('/attendance/mine', [AttendanceController::class, 'mine'])->name('attendance.mine');
 /*
  * Filling in a missed PAST day (decided 2026-10-27). The same permission as
- * rejecting — it is the other half of correcting the record — and the
+ * rejecting - it is the other half of correcting the record - and the
  * controller refuses your own day, today, and any day that already has one.
  */
 Route::get('/attendance/add', [AttendanceController::class, 'createEntry'])
@@ -845,7 +845,7 @@ Route::get('/attendance/{record}', [AttendanceController::class, 'show'])
  * The writes the backend phase implements.
  *
  * Both clock routes must be idempotent per person per day, enforced by a unique
- * key on (employee, date) rather than by the button being hidden — a double
+ * key on (employee, date) rather than by the button being hidden - a double
  * submit must produce one record, and a second check-out must not move the
  * first one's time.
  *
@@ -854,7 +854,7 @@ Route::get('/attendance/{record}', [AttendanceController::class, 'show'])
  * `attendance.reject` is its own permission (§2.6), every rejection is audited
  * (§6), and nobody rejects their own record.
  *
- * Restoring exists because a rejection made in error must be reversible —
+ * Restoring exists because a rejection made in error must be reversible -
  * otherwise the correction mechanism needs a correction mechanism.
  *
  * Note what is NOT here: nothing approves, nothing edits a recorded time, and
@@ -863,7 +863,7 @@ Route::get('/attendance/{record}', [AttendanceController::class, 'show'])
 /*
  * The clock. No permission and no parameters: the person is the session and the
  * time is the server's, so there is nothing to guard beyond being staff with an
- * employment record — which the controller checks, because a Mentor has none.
+ * employment record - which the controller checks, because a Mentor has none.
  */
 Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.check-in');
 Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.check-out');
@@ -882,8 +882,8 @@ Route::post('/attendance/{record}/restore', [AttendanceController::class, 'resto
     ->name('attendance.restore');
 
 /*
- * The Sunday/holiday roster (decided 2026-09-11). No approval step — a row
- * existing IS the roster — so this is a plain read-then-write pair behind
+ * The Sunday/holiday roster (decided 2026-09-11). No approval step - a row
+ * existing IS the roster - so this is a plain read-then-write pair behind
  * `attendance.roster`, the same permission Manager and Team Lead both hold;
  * AttendanceController::canRoster is what tells them apart (§2.6).
  *
@@ -899,7 +899,7 @@ Route::post('/attendance/roster', [AttendanceController::class, 'storeRoster'])
     ->name('attendance.roster.store');
 
 /*
- * Comp-offs — earned automatically at check-out on a rostered day, spent
+ * Comp-offs - earned automatically at check-out on a rostered day, spent
  * through this request-and-approve pair. `attendance.roster` gates deciding
  * one, same reasoning as the roster routes above.
  */
@@ -921,7 +921,7 @@ Route::post('/comp-offs/{compOff}/reject', [CompOffController::class, 'reject'])
 
 /*
  * Sunday-against-leave. Asked from the leave request itself, before working
- * the day — see CompOffController::requestSundayAgainstLeave.
+ * the day - see CompOffController::requestSundayAgainstLeave.
  */
 Route::post('/leave/{leaveRequest}/sunday-against-leave', [CompOffController::class, 'requestSundayAgainstLeave'])
     ->where('leaveRequest', '[A-Za-z0-9-]{1,32}')
@@ -936,8 +936,8 @@ Route::post('/sunday-against-leave/{sundayRequest}/reject', [CompOffController::
     ->name('sundayAgainstLeave.reject');
 
 /*
- * My Profile. Four pages, because the four "tabs" are four different things —
- * a form, a set of preferences, a security action and a log — and each is a
+ * My Profile. Four pages, because the four "tabs" are four different things -
+ * a form, a set of preferences, a security action and a log - and each is a
  * URL so it is bookmarkable and separately guarded.
  *
  * Note what the routes do NOT take: no employee parameter, anywhere. This is
@@ -952,12 +952,12 @@ Route::get('/profile/password', [ProfileController::class, 'password'])->name('p
 Route::get('/profile/activity', [ProfileController::class, 'activity'])->name('profile.activity');
 
 /*
- * The writes the backend phase implements — see App\Http\Controllers\
+ * The writes the backend phase implements - see App\Http\Controllers\
  * ProfileController for what each owes.
  *
  * `profile.update` no longer updates anything (2026-09-14). It validates
  * against ProfilePolicy::requestable(), DROPS every other key, and writes a
- * request HR applies — the live record does not move on the strength of this
+ * request HR applies - the live record does not move on the strength of this
  * form. A field rendered disabled is not protected either way; the browser is
  * not where that rule lives.
  *
@@ -987,7 +987,7 @@ Route::post('/profile/requests/withdraw', [ProfileController::class, 'withdrawRe
 
 /*
  * The photo. Stored on the private disk with the documents, so it needs a route
- * to be seen at all — and that route takes no identifier either: it serves the
+ * to be seen at all - and that route takes no identifier either: it serves the
  * signed-in person's own. Who may see whose photograph is a decision about the
  * Employees module, not this one.
  */
@@ -1002,7 +1002,7 @@ Route::get('/profile/photo', [ProfileController::class, 'showPhoto'])->name('pro
 Route::get('/profile/documents/{document}', [ProfileController::class, 'downloadDocument'])
     ->where('document', 'DOC-[0-9]{4}')
     ->name('profile.documents.download');
-// The viewer sibling — same guard, `inline` instead of `attachment`. See the
+// The viewer sibling - same guard, `inline` instead of `attachment`. See the
 // matching comment on the salary payslip routes.
 Route::get('/profile/documents/{document}/view', [ProfileController::class, 'viewDocument'])
     ->where('document', 'DOC-[0-9]{4}')
@@ -1011,7 +1011,7 @@ Route::post('/profile/documents', [ProfileController::class, 'storeDocument'])
     ->name('profile.documents.store');
 
 // Deferred to v2. §12 keeps the navigation entries so adding the modules later
-// reshuffles nothing users have learned, but the pages 404 until then — the
+// reshuffles nothing users have learned, but the pages 404 until then - the
 // 404 view recognises them and says "not built yet" rather than "not found".
 //
 // Reports joined them on 2026-09-03. It had been showing the generic "coming
@@ -1020,14 +1020,14 @@ Route::post('/profile/documents', [ProfileController::class, 'storeDocument'])
 // module is planned and its place is already reserved. Reports also has nothing
 // to report on until the modules it would summarise have real data behind them.
 //
-// Leads left this list on 2026-09-11 — not deferred, cancelled: "No Leads
+// Leads left this list on 2026-09-11 - not deferred, cancelled: "No Leads
 // module. The unused leads.view permission goes." A cancelled module gets no
 // placeholder at all, deferred or otherwise.
 Route::get('/calendar', [ModulePlaceholderController::class, 'missing'])->name('calendar.index');
 Route::get('/reports', [ModulePlaceholderController::class, 'missing'])->name('reports.index');
 
 /*
- * Support. Two buttons and nothing else — raise a ticket, or email us
+ * Support. Two buttons and nothing else - raise a ticket, or email us
  * directly (App\Support\SupportContact, the same mailto builder the public
  * landing page and the error pages already use). No permission middleware:
  * the page holds no per-user data, so there is nothing on it a signed-in

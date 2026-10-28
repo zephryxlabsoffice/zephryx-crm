@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  *
  * How to reach them. That is the list.
  *
- * Not the company name — invoices, projects and tickets reference a client by
+ * Not the company name - invoices, projects and tickets reference a client by
  * it, and letting the far side rewrite it would rename their own invoice
  * history. Not the industry, which is ours to record. Not the account status,
  * obviously, and nothing at all about projects, deadlines or what is owed.
@@ -34,7 +34,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * The page also carries the support contact, because "how do I reach a human"
- * is the actual reason a client opens this page — the reference put a Support
+ * is the actual reason a client opens this page - the reference put a Support
  * Contact card here and that instinct was right.
  */
 class ProfileController extends PortalController
@@ -64,14 +64,14 @@ class ProfileController extends PortalController
         return response()->view('client.profile.show', $this->shell($request, 'profile') + [
             'profile' => $client,
             'editable' => self::EDITABLE,
-            // Additional contacts beyond the one main contact above — several
+            // Additional contacts beyond the one main contact above - several
             // people, one login. See App\Models\ClientContact and
             // Client\ContactController for the add/remove routes.
             'contacts' => $client->contacts,
             'stats' => ClientPortal::stats($client),
             'support' => [
                 'email' => SupportContact::address(),
-                'mailto' => SupportContact::mailto('Client portal — '.$client->name),
+                'mailto' => SupportContact::mailto('Client portal - '.$client->name),
             ],
         ]);
     }
@@ -82,7 +82,7 @@ class ProfileController extends PortalController
      * ─────────────────────────────────────────────────────────────────────────
      * FOUR KEYS, AND EVERY OTHER ONE IS DROPPED
      *
-     * Not refused — dropped. A request arriving with `name`, `status` or
+     * Not refused - dropped. A request arriving with `name`, `status` or
      * `industry` in it saves the four it is allowed to and ignores the rest
      * without saying so, which is the behaviour that does not teach anybody
      * which fields exist.
@@ -113,7 +113,7 @@ class ProfileController extends PortalController
             entityType: 'client',
             entityId: $client->reference,
             /*
-             * The values, not just the field names — unlike the staff profile,
+             * The values, not just the field names - unlike the staff profile,
              * where the audit entry names the fields and withholds the contents
              * because they are somebody's home address and emergency contact.
              * These are a company's business contact details, which the client
@@ -121,7 +121,7 @@ class ProfileController extends PortalController
              * against an invoice that bounced.
              */
             before: $this->describe($before),
-            after: $this->describe($client->only(self::EDITABLE)).' — changed by the client',
+            after: $this->describe($client->only(self::EDITABLE)).' - changed by the client',
             request: $request,
         );
 
@@ -138,7 +138,7 @@ class ProfileController extends PortalController
      * REFUSED UNTIL 2026-09-17, AND THE REASON IT STOPPED BEING REFUSED
      *
      * This route threw a 501 and said why: a client account is an ORGANISATION,
-     * so what it uploads is a company logo — and a logo appears on invoices,
+     * so what it uploads is a company logo - and a logo appears on invoices,
      * which made "may a client set the logo on their own invoice" a question
      * nobody had answered.
      *
@@ -155,7 +155,7 @@ class ProfileController extends PortalController
      * against and no HR relationship to check it. Queueing it would put a
      * picture in front of somebody whose only possible answer is "fine".
      *
-     * The cleaning is identical either way — parsed and rebuilt from its picture
+     * The cleaning is identical either way - parsed and rebuilt from its picture
      * segments, so nothing the camera recorded alongside it survives. See
      * App\Support\Images\PhotoIntake.
      * ─────────────────────────────────────────────────────────────────────────
@@ -202,7 +202,7 @@ class ProfileController extends PortalController
             entityType: 'client',
             entityId: $client->reference,
             before: $was === null ? 'no picture' : 'picture on record',
-            after: 'Picture replaced ('.$clean['width'].'×'.$clean['height'].', metadata stripped) — changed by the client',
+            after: 'Picture replaced ('.$clean['width'].'×'.$clean['height'].', metadata stripped) - changed by the client',
             request: $request,
         );
 
@@ -213,10 +213,10 @@ class ProfileController extends PortalController
     }
 
     /**
-     * GET /client/profile/photo — the signed-in client's own.
+     * GET /client/profile/photo - the signed-in client's own.
      *
      * On the private disk with everything else, so it needs a route to be seen
-     * at all — and this one takes no identifier. The record is the SESSION'S
+     * at all - and this one takes no identifier. The record is the SESSION'S
      * client, so there is nothing in the URL to change to somebody else's.
      */
     public function showPhoto(Request $request): StreamedResponse

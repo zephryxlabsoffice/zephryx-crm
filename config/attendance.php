@@ -10,7 +10,7 @@
 |
 | Working hours, the half-day threshold, which days are weekly offs and how long
 | an unclosed day is left open are all company policy, and company policy is
-| configured in the Admin Panel (§12) — not written into the application. Until
+| configured in the Admin Panel (§12) - not written into the application. Until
 | that surface exists the values live here so the Attendance module has
 | something real to read.
 |
@@ -28,7 +28,7 @@ return [
     | The working day, for information.
     |
     | Note that NOTHING is computed from these. They are on the policy card so
-    | people know when a normal day runs, and that is all they do — turning up
+    | people know when a normal day runs, and that is all they do - turning up
     | at 09:45 is not a status (decided 2026-09-03; see below), and leaving
     | early is a conversation rather than a flag.
     */
@@ -56,7 +56,7 @@ return [
     | How long a day stays open before it is written off.
     |
     | A check-in with no check-out is the most common attendance data problem
-    | there is — somebody shuts their laptop and goes home. After this many
+    | there is - somebody shuts their laptop and goes home. After this many
     | hours the record is REJECTED: there is no honest way to say how long that
     | person worked, and the alternatives are inventing a check-out time or
     | leaving a day counted as present on evidence that stops at 09:18.
@@ -69,7 +69,7 @@ return [
     /*
     | Weekly offs, as Carbon day-of-week numbers (0 = Sunday … 6 = Saturday).
     |
-    | Sunday only — this company works Saturdays. A day that is a weekly off is
+    | Sunday only - this company works Saturdays. A day that is a weekly off is
     | never counted absent, which is the whole reason this is a list in a config
     | file rather than an assumption in a class.
     */
@@ -79,7 +79,7 @@ return [
     | The first day attendance is tracked at all, as Y-m-d, or null for "always".
     |
     | Without it, every working day before the system went live reads as an
-    | absence — nobody could check in to a CRM that did not exist yet. Days
+    | absence - nobody could check in to a CRM that did not exist yet. Days
     | before this date with no record show as "Not tracked" instead. Like a
     | holiday, it can only ever hide an ABSENCE: a record made before it still
     | counts exactly as recorded.
@@ -91,7 +91,7 @@ return [
     | WHAT IS DELIBERATELY NOT HERE
     |
     | NO HOLIDAY LIST. Holidays come from the holiday announcements on the board
-    | (decided 2026-09-03) — see App\Support\Holidays. HR posts "office closed
+    | (decided 2026-09-03) - see App\Support\Holidays. HR posts "office closed
     | on the 14th" once, and that is both the notice everybody reads and the day
     | nobody is marked absent for. A second list here would be the one somebody
     | forgets to update, and then the board and the attendance record disagree

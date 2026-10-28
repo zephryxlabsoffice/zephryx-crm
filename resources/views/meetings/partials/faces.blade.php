@@ -7,7 +7,7 @@
 {{--
     Who is on the invite, at a glance.
 
-    The handover showed no attendees anywhere — a meeting without them is not a
+    The handover showed no attendees anywhere - a meeting without them is not a
     meeting, and its rail hardcoded "With: Santanu Kumar". A client is drawn as
     a square chip and a colleague as a round avatar, so the column tells you
     whether this is a client call without being read.

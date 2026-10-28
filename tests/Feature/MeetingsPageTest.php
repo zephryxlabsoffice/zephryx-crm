@@ -23,7 +23,7 @@ class MeetingsPageTest extends TestCase
         /*
          * Every route in the staff realm is behind `realm:staff` now (§3.1), so
          * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
+         * what the page renders rather than about who may see it - the guard
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
@@ -35,7 +35,7 @@ class MeetingsPageTest extends TestCase
      * The demo meetings, as real rows, read as somebody who is on some.
      *
      * Every read in this module takes the viewer, because the join link is
-     * withheld per person — so a test about who can see a link has to be
+     * withheld per person - so a test about who can see a link has to be
      * somebody, and the CEO the suite signs in as by default is on no meetings.
      */
     protected function withDemoData(): void
@@ -94,7 +94,7 @@ class MeetingsPageTest extends TestCase
 
        A Meet link is usually enough on its own to walk into a call. These
        assert against rendered HTML, because the question is what reached the
-       browser — masking or hiding it there would be a decoration over a leak.
+       browser - masking or hiding it there would be a decoration over a leak.
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_a_non_attendee_never_receives_the_join_link(): void
@@ -105,7 +105,7 @@ class MeetingsPageTest extends TestCase
          * Read from the MODEL, not from a row.
          *
          * A row for somebody not on the invite has already had its link
-         * removed — that is the whole design — so the raw value has to come
+         * removed - that is the whole design - so the raw value has to come
          * from the record in order for there to be anything to look for.
          */
         $notMine = Meeting::with(['attendees.user', 'organiser.user'])
@@ -160,7 +160,7 @@ class MeetingsPageTest extends TestCase
     public function test_the_next_meeting_card_only_shows_one_the_viewer_is_on(): void
     {
         // A card headed "Your next meeting" showing one somebody is not invited
-        // to is worse than showing nothing — they will act on it.
+        // to is worse than showing nothing - they will act on it.
         $this->withDemoData();
 
         $next = MeetingDirectory::nextFor($this->viewerAccount());
@@ -195,7 +195,7 @@ class MeetingsPageTest extends TestCase
     {
         /*
          * GoogleMeetProvider calls the real Calendar API now (built
-         * 2026-09-21) — see GoogleMeetProviderTest for the connected cases.
+         * 2026-09-21) - see GoogleMeetProviderTest for the connected cases.
          * This proves the one property that mattered when it was a
          * deliberate stub and still matters now it is real: with nothing
          * connected, it refuses rather than returning a plausible event id
@@ -219,7 +219,7 @@ class MeetingsPageTest extends TestCase
 
     public function test_a_meeting_with_no_google_event_has_no_link(): void
     {
-        // The link comes back from Google or it does not exist — it is never
+        // The link comes back from Google or it does not exist - it is never
         // assembled from an event id.
         $this->withDemoData();
 
@@ -347,7 +347,7 @@ class MeetingsPageTest extends TestCase
          * was true only because the fixture switched itself off. Meetings come
          * from a table now, and in production real ones SHOULD be shown.
          *
-         * What survives is the guarantee underneath it: nothing is invented —
+         * What survives is the guarantee underneath it: nothing is invented -
          * and in particular, no join link is composed for a meeting that has
          * no event behind it.
          */
@@ -369,7 +369,7 @@ class MeetingsPageTest extends TestCase
     public function test_no_support_phone_number_or_email_is_hardcoded_on_the_page(): void
     {
         // The handover's rail carried a "Need Immediate Help?" card with a phone
-        // number and two obfuscated addresses — a client-support panel that had
+        // number and two obfuscated addresses - a client-support panel that had
         // wandered onto an internal staff page.
         $this->withDemoData();
 

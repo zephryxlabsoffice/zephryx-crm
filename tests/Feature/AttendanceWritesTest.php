@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * Attendance — the clock, and the correction.
+ * Attendance - the clock, and the correction.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * WHAT THIS FILE IS REALLY CHECKING
@@ -24,7 +24,7 @@ use Tests\TestCase;
  *   1. The times come from the server. Nothing posted can set one.
  *   2. Checking in is idempotent per day. A double submit is one record, and a
  *      second check-out does not move the first one's time.
- *   3. No write ever changes a recorded time — not even a rejection.
+ *   3. No write ever changes a recorded time - not even a rejection.
  *   4. Nobody corrects their own record.
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -147,7 +147,7 @@ class AttendanceWritesTest extends TestCase
     public function test_a_freelancer_cannot_clock_in_or_out(): void
     {
         // Paid against work, not time (decided 2026-09-11): no attendance for
-        // them at all, even though they DO have an employment record — the
+        // them at all, even though they DO have an employment record - the
         // rule a Mentor's missing record cannot express on its own.
         $employee = $this->signInAsEmployee();
         $employee->update(['employment_type' => Employee::FREELANCE]);
@@ -155,7 +155,7 @@ class AttendanceWritesTest extends TestCase
         $this->post('/attendance/check-in')->assertForbidden();
         $this->assertSame(0, AttendanceRecord::count());
 
-        // Nor can they close a day that somehow exists — belt and braces,
+        // Nor can they close a day that somehow exists - belt and braces,
         // since the same gate protects both routes.
         AttendanceRecord::create([
             'employee_id' => $employee->id,
@@ -168,7 +168,7 @@ class AttendanceWritesTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       REJECTION — A CORRECTION, NOT A GATE
+       REJECTION - A CORRECTION, NOT A GATE
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_rejecting_needs_the_permission(): void
@@ -192,7 +192,7 @@ class AttendanceWritesTest extends TestCase
         $this->signInAsEmployee(['employee', 'hr'], 'EMP812');
 
         $this->post('/attendance/'.$this->reference($record).'/reject', [
-            'reason' => 'Duplicate — the reception tablet recorded the same day under a shared login.',
+            'reason' => 'Duplicate - the reception tablet recorded the same day under a shared login.',
         ])->assertRedirect();
 
         $record->refresh();

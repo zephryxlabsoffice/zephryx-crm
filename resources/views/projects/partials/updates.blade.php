@@ -5,7 +5,7 @@
 
 {{--
     The end-of-day log, INTERNAL NOTES INCLUDED. This is the staff side, and
-    internal notes are what it is for — the client portal reads
+    internal notes are what it is for - the client portal reads
     ProjectUpdate::clientVisible and has no way to reach this list at all.
 
     Every row states which of the two it is, in words, because somebody

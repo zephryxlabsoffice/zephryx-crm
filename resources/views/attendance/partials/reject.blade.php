@@ -1,5 +1,5 @@
 {{--
-    Rejecting a record — the only thing HR can do to somebody's attendance, and
+    Rejecting a record - the only thing HR can do to somebody's attendance, and
     the only thing they need to be able to do.
 
     ─────────────────────────────────────────────────────────────────────────────
@@ -7,8 +7,8 @@
 
     It is not an approval, and there is no approve button anywhere in this module
     to pair it with. A check-in is a fact; it counts the moment it is made. This
-    is a correction applied to a record that turned out to be wrong — a duplicate
-    from a shared login, a door reader that double-fired — and it is expected to
+    is a correction applied to a record that turned out to be wrong - a duplicate
+    from a shared login, a door reader that double-fired - and it is expected to
     be used a handful of times a month, not on every day of every person.
 
     It is also not an edit. The times stay exactly as they were recorded, on
@@ -18,7 +18,7 @@
 
     And it is not the ten-hour rule. A day left open past the window is already
     rejected, by the clock rather than by anybody, so this card does not appear
-    on one — there is nothing left to reject, and nothing to restore either.
+    on one - there is nothing left to reject, and nothing to restore either.
     ─────────────────────────────────────────────────────────────────────────────
 --}}
 <div class="card att-reject">
@@ -35,7 +35,7 @@
             <p>
                 Restoring puts the day back into {{ $record['employee_record']['name'] }}’s
                 counts exactly as it was recorded. The times were never changed,
-                so there is nothing to put back — only the rejection to lift.
+                so there is nothing to put back - only the rejection to lift.
                 {{-- Both acts are audited, and saying so is part of what stops
                      either being used casually (§6). --}}
                 Both the rejection and this reversal stay on the record.
@@ -55,7 +55,7 @@
             <p>
                 Rejecting removes this day from {{ $record['employee_record']['name'] }}’s
                 attendance counts. The recorded times stay on the record and stay
-                visible — this marks the day as not counted and says why, it does
+                visible - this marks the day as not counted and says why, it does
                 not change or delete anything.
             </p>
         </div>
@@ -66,7 +66,7 @@
             <div class="form-field">
                 <label class="form-field-lbl" for="reject-reason">Why is this record wrong?</label>
                 <textarea id="reject-reason" name="reason" rows="3" required minlength="10" maxlength="1000"
-                          placeholder="e.g. Duplicate — the same day was recorded from the reception tablet under a shared login.">{{ old('reason') }}</textarea>
+                          placeholder="e.g. Duplicate - the same day was recorded from the reception tablet under a shared login.">{{ old('reason') }}</textarea>
                 @error('reason')
                     <span class="field-error">{{ $message }}</span>
                 @enderror

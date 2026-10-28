@@ -105,7 +105,7 @@ class Meeting extends Model
     /**
      * The row shape the presenter and the views read.
      *
-     * The viewer is REQUIRED, because the join link depends on it — see the
+     * The viewer is REQUIRED, because the join link depends on it - see the
      * head of this class.
      *
      * @return array<string, mixed>
@@ -158,7 +158,7 @@ class Meeting extends Model
         /*
          * `now()->utc()`, not `now()`.
          *
-         * The application's timezone is the office's — Asia/Kolkata — and these
+         * The application's timezone is the office's - Asia/Kolkata - and these
          * columns are UTC. Comparing the column against a local `now()` puts
          * every meeting of the next five and a half hours in the past, which is
          * the same class of mistake MeetingPresenter::statusOf carries a note

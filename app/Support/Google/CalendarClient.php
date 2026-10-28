@@ -13,13 +13,13 @@ use RuntimeException;
  * ═════════════════════════════════════════════════════════════════════════════
  * THE ASYMMETRY WITH DriveClient IS DELIBERATE
  *
- * Drive access is Shared Drive membership — no impersonation anywhere in that
+ * Drive access is Shared Drive membership - no impersonation anywhere in that
  * class. Calendar needs the opposite: the service account has no calendar of
  * its own worth meeting on, so every call here impersonates
  * `GoogleConnection::impersonate_email` via the JWT's `sub` claim (see
  * GoogleAuth::token()), which is what domain-wide delegation actually grants.
  * This is the "note the asymmetry" the plan doc calls out under "Connecting
- * it" — Drive needs no delegation at all; this is the one job that does.
+ * it" - Drive needs no delegation at all; this is the one job that does.
  * ═════════════════════════════════════════════════════════════════════════════
  */
 class CalendarClient
@@ -41,7 +41,7 @@ class CalendarClient
      * `conferenceDataVersion=1` IS NOT OPTIONAL
      *
      * An event inserted without it exists on the calendar with no way to
-     * join — the exact state that looks fine in a list and fails at the
+     * join - the exact state that looks fine in a list and fails at the
      * meeting (MeetingProvider's own header comment, point 2). It is a query
      * parameter, not a body field, because that is where the Calendar API
      * puts it.
@@ -71,7 +71,7 @@ class CalendarClient
     }
 
     /**
-     * Call an event off. Tolerant of it already being gone (404/410) — the
+     * Call an event off. Tolerant of it already being gone (404/410) - the
      * same shape as DriveClient::delete(), and for the same reason: the
      * caller is telling Google something that may already be true.
      *
@@ -90,7 +90,7 @@ class CalendarClient
     }
 
     /**
-     * Read one event back — the RSVPs live on `attendees[].responseStatus`.
+     * Read one event back - the RSVPs live on `attendees[].responseStatus`.
      *
      * @return array<string, mixed> the raw Calendar API event resource
      *

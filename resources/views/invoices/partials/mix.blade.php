@@ -4,7 +4,7 @@
     Where the book stands, by status.
 
     This donut deliberately does NOT use the shared cycling palette the way
-    Employees and Teams do. Their categories are master data — departments —
+    Employees and Teams do. Their categories are master data - departments -
     with no inherent meaning, so any colour will do. Invoice statuses already
     carry meaning in the pills a few centimetres to the left: green settled,
     red overdue, amber part-paid. A legend that coloured "Overdue" indigo

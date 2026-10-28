@@ -29,7 +29,7 @@ use Illuminate\Support\Collection;
  *
  * The id is `ATT-{date}-{employee}` rather than a sequence, because a person
  * has at most one record per day and a compound key says so. Two records for
- * one person on one day is the duplicate that HR rejects — and with this key it
+ * one person on one day is the duplicate that HR rejects - and with this key it
  * cannot happen silently.
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -37,13 +37,13 @@ use Illuminate\Support\Collection;
  *
  * The calendar needs three months of days for one person and the management
  * roll needs every employee for today. Typed by hand that is several hundred
- * rows nobody would keep consistent — and the handover's were all in May 2024,
+ * rows nobody would keep consistent - and the handover's were all in May 2024,
  * which by now makes every screen empty.
  *
  * So days are generated from a seed derived from the employee and the date:
  * stable across requests, different per person, and reproducible in a test. The
- * days that are worth *looking at* — the absence, the forgotten check-out, the
- * duplicate that got rejected — are written out by hand in `overrides()`, so
+ * days that are worth *looking at* - the absence, the forgotten check-out, the
+ * duplicate that got rejected - are written out by hand in `overrides()`, so
  * every interesting state is on screen on purpose rather than by luck.
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -69,7 +69,7 @@ class DemoAttendance
 
     /**
      * Hand-written days, keyed by `EMPxxx@n` where n counts WORKING DAYS back
-     * from today — 0 is today, 1 is the last working day before it.
+     * from today - 0 is today, 1 is the last working day before it.
      *
      * ─────────────────────────────────────────────────────────────────────────
      * WORKING DAYS BACK, NOT CALENDAR DAYS BACK
@@ -81,7 +81,7 @@ class DemoAttendance
      * ─────────────────────────────────────────────────────────────────────────
      *
      * `null` check-in means the person did not turn up. A `reject` entry is a
-     * record HR rejected after the fact — with the reason, because a rejection
+     * record HR rejected after the fact - with the reason, because a rejection
      * nobody explained is one the person has to come and ask about.
      *
      * @return array<string, array{in: ?string, out: ?string, reject: ?string, by: ?string}>
@@ -92,21 +92,21 @@ class DemoAttendance
             // ── the viewer's own month ──
 
             // Today, still checked in. Deliberately open so the check-out
-            // button has something to do — and recent enough that it has not
+            // button has something to do - and recent enough that it has not
             // tripped the auto-reject window.
             'EMP002@0' => ['in' => '09:52', 'out' => null, 'reject' => null, 'by' => null],
             'EMP002@1' => ['in' => '09:21', 'out' => '18:44', 'reject' => null, 'by' => null],
-            // Checked in, went home, never checked out — so the ten-hour window
+            // Checked in, went home, never checked out - so the ten-hour window
             // passed and the day reads as rejected. The single most common
             // attendance data problem there is, and the one the handover's
             // screens had no way of showing.
             'EMP002@3' => ['in' => '09:18', 'out' => null, 'reject' => null, 'by' => null],
             // A genuine absence on a working day.
             'EMP002@5' => ['in' => null, 'out' => null, 'reject' => null, 'by' => null],
-            // Came in, left before lunch — under the half-day threshold.
+            // Came in, left before lunch - under the half-day threshold.
             'EMP002@6' => ['in' => '09:12', 'out' => '12:34', 'reject' => null, 'by' => null],
             // A long day, and nothing is made of it. Eleven hours is present,
-            // the same as eight — this module counts, it does not reward.
+            // the same as eight - this module counts, it does not reward.
             'EMP002@9' => ['in' => '08:40', 'out' => '19:50', 'reject' => null, 'by' => null],
             // A rejection by a PERSON, which is a different thing from the
             // window closing on an open day. Note what it is NOT: a punishment,
@@ -123,19 +123,19 @@ class DemoAttendance
             'EMP004@0' => ['in' => '10:24', 'out' => null, 'reject' => null, 'by' => null],
             'EMP006@0' => ['in' => null, 'out' => null, 'reject' => null, 'by' => null],
             'EMP008@0' => ['in' => '09:08', 'out' => null, 'reject' => null, 'by' => null],
-            // Rejected by a person AND left open past the window — both facts
+            // Rejected by a person AND left open past the window - both facts
             // true of one record, which is what the detail page's "the window
             // also closed" line exists to say.
             //
             // NOT ON TODAY, and that is load-bearing. `autoRejected` measures
             // check-in against `now`, so a day that started at 08:02 does not
-            // trip the ten-hour window until 18:02 — see EMP002@0 above, which
+            // trip the ten-hour window until 18:02 - see EMP002@0 above, which
             // relies on the same fact to stay merely open. Parked on today, this
             // record showed the rejection alone for most of the working day and
             // grew the second half of its meaning at six in the evening.
             'EMP010@4' => [
                 'in' => '08:02', 'out' => null,
-                'reject' => 'Recorded an hour before the office opened and Arjun was on a flight. Raised with IT — the door reader is double-firing.',
+                'reject' => 'Recorded an hour before the office opened and Arjun was on a flight. Raised with IT - the door reader is double-firing.',
                 'by' => 'EMP005',
             ],
             // Two more open days that the window has already closed on, so the
@@ -188,7 +188,7 @@ class DemoAttendance
      * The dates one person's approved leave covers.
      *
      * Attendance does not store leave. It asks the Leave module, because a day
-     * the company already granted must never be drawn as an absence — and two
+     * the company already granted must never be drawn as an absence - and two
      * copies of that answer would eventually disagree.
      *
      * @return list<string>
@@ -220,7 +220,7 @@ class DemoAttendance
      *
      * An absence is the ABSENCE of a record, not a record saying "absent".
      * Writing absence rows would mean deciding, at write time, that somebody is
-     * not coming — and then having to delete the row when they walk in at 11.
+     * not coming - and then having to delete the row when they walk in at 11.
      *
      * @return array<string, mixed>|null
      */
@@ -249,14 +249,14 @@ class DemoAttendance
         $seed = crc32($employeeId.':'.$date);
         $roll = $seed % 100;
 
-        // Nobody turned up. Kept rare — a demo where a tenth of the company is
+        // Nobody turned up. Kept rare - a demo where a tenth of the company is
         // missing every day is not a demo of anything.
         if ($roll < 5) {
             return null;
         }
 
         // Arrival times spread across the morning and mean nothing on their own
-        // — there is no "late". What decides the day is the gap to check-out.
+        // - there is no "late". What decides the day is the gap to check-out.
         $in = 9 * 60 + 2 + ($seed % 52);   // 09:02 – 09:53
 
         $out = $roll < 9
@@ -286,7 +286,7 @@ class DemoAttendance
             'date' => $date,
             'check_in' => $in,
             'check_out' => $out,
-            // A rejection is stamped, attributed and explained — all three, or
+            // A rejection is stamped, attributed and explained - all three, or
             // it is not auditable (§6).
             'rejected_at' => $reason === null ? null : Carbon::parse($date)->setTime(17, 40),
             'rejected_by' => $reason === null ? null : $by,
@@ -331,7 +331,7 @@ class DemoAttendance
     }
 
     /**
-     * Everyone's standing on one date — a row per PERSON, not per record.
+     * Everyone's standing on one date - a row per PERSON, not per record.
      *
      * ─────────────────────────────────────────────────────────────────────────
      * A ROLL LISTS PEOPLE, NOT ROWS IN A TABLE
@@ -390,7 +390,7 @@ class DemoAttendance
 
         [, $date, $employeeId] = $matches;
 
-        // Outside the window this source generates, there is no record — and
+        // Outside the window this source generates, there is no record - and
         // saying so is the difference between a 404 and inventing a Tuesday in
         // 2019 for anybody who edits the URL.
         if (self::workingDayIndex($date) === null) {
@@ -462,7 +462,7 @@ class DemoAttendance
     }
 
     /**
-     * Records a PERSON rejected, newest first — not the ones the ten-hour
+     * Records a PERSON rejected, newest first - not the ones the ten-hour
      * window closed on, which are `missingCheckOuts()`.
      *
      * @return Collection<int, array<string, mixed>>

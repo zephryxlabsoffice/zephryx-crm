@@ -5,7 +5,7 @@
 {{--
     See AccountController::create and ::storeNormal. Two kinds of account:
     an EMPLOYEE (attendance, leave, payslips) and a NORMAL account (hr@,
-    admin@ — roles only, nobody's employment). Only this panel makes normal
+    admin@ - roles only, nobody's employment). Only this panel makes normal
     accounts; HR and CEO add employees in Employees.
 --}}
 @section('content')
@@ -42,7 +42,7 @@
                 @if ($normal)
                     <p class="prose-quiet">
                         For a shared or office address such as hr@ or admin@. It does what its
-                        roles allow and has no attendance, leave or payslips — it is nobody's
+                        roles allow and has no attendance, leave or payslips - it is nobody's
                         employment.
                     </p>
                 @else
@@ -116,9 +116,9 @@
             <div class="card-body">
                 <p class="prose-quiet">
                     @if ($normal)
-                        Tick what this account does — for hr@, that is HR. At least one.
+                        Tick what this account does - for hr@, that is HR. At least one.
                     @else
-                        Everybody is an Employee. Tick anything else they do — for the first account, that is usually HR.
+                        Everybody is an Employee. Tick anything else they do - for the first account, that is usually HR.
                     @endif
                 </p>
 

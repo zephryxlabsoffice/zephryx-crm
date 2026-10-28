@@ -11,8 +11,8 @@ use Illuminate\Support\Carbon;
  * ─────────────────────────────────────────────────────────────────────────────
  * ONE LIST, NOT TWO
  *
- * Decided 2026-09-03. A holiday is announced on the board — "office closed on
- * the 14th" — and that announcement IS the holiday. Attendance reads it rather
+ * Decided 2026-09-03. A holiday is announced on the board - "office closed on
+ * the 14th" - and that announcement IS the holiday. Attendance reads it rather
  * than keeping its own calendar.
  *
  * The alternative is a holiday list in the Admin Panel that has to be kept in
@@ -24,13 +24,13 @@ use Illuminate\Support\Carbon;
  * ─────────────────────────────────────────────────────────────────────────────
  * A HOLIDAY HAS TWO DATE RANGES AND THEY ARE NOT THE SAME
  *
- * `from`/`to` on an announcement is when the NOTICE is on the board — a week's
+ * `from`/`to` on an announcement is when the NOTICE is on the board - a week's
  * warning about one Friday. `observed_from`/`observed_to` is when the OFFICE IS
  * SHUT. Attendance wants the second one, and reading the first would close the
  * office for the whole week the notice was up.
  *
  * A holiday announcement with no observed dates is a notice about a holiday
- * rather than a holiday — a policy change, a reminder — and is skipped rather
+ * rather than a holiday - a policy change, a reminder - and is skipped rather
  * than guessed at.
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ use Illuminate\Support\Carbon;
  *
  * Reading holidays from the board means a mis-typed date on a notice closes the
  * office on a day it was open. That is the price of one list, and it is worth
- * paying — but it is a real cost and three things carry it:
+ * paying - but it is a real cost and three things carry it:
  *
  * 1. THE DAMAGE IS CONTAINED BY CONSTRUCTION. The holiday branch in
  *    AttendancePolicy::state() only runs when there is no check-in, so a wrong
@@ -53,11 +53,11 @@ use Illuminate\Support\Carbon;
  *    a half day into a full one, or change anybody's hours. Keep it that way:
  *    a holiday must never outrank a record.
  *
- * 2. SETTING THE DATES IS ITS OWN PERMISSION. `announcements.holiday` — HR and
+ * 2. SETTING THE DATES IS ITS OWN PERMISSION. `announcements.holiday` - HR and
  *    the owner, not everyone who may post. See config/announcements.php.
  *
  * 3. THE ATTENDANCE ROLL CHECKS IT AGAINST REALITY. A day marked a holiday that
- *    most of the company checked in on is a wrong date, and the roll says so —
+ *    most of the company checked in on is a wrong date, and the roll says so -
  *    see AttendancePresenter::holidayLooksWrong. It needs nothing maintained,
  *    which is the whole reason it is a detector and not a second list.
  *
@@ -72,7 +72,7 @@ class Holidays
      * Memoised per request, keyed on whether the source is live.
      *
      * `AttendancePolicy::isWorkingDay()` asks this for every cell of a calendar
-     * and every day of a hundred-day history — rebuilding the announcement
+     * and every day of a hundred-day history - rebuilding the announcement
      * board each time turns one page render into a few thousand of them. The
      * key rather than a plain flag is so a test that switches the environment
      * off does not read a list built while it was on.
@@ -99,7 +99,7 @@ class Holidays
          * was enough while the list came from a fixture that never changed
          * mid-request. It comes from the `announcements` table now, and a
          * holiday published during a request must not be read from a list built
-         * before it — so the key is how many holiday notices there are and when
+         * before it - so the key is how many holiday notices there are and when
          * one last moved. Two cheap aggregates against an indexed column, and
          * the memoisation still saves the few thousand rebuilds an attendance
          * calendar would otherwise cause.
@@ -150,7 +150,7 @@ class Holidays
      * The next closed day from today, with the announcement that declared it.
      *
      * The announcement id comes back so the policy card can link to the notice
-     * rather than restating it — somebody who wants to know why the office is
+     * rather than restating it - somebody who wants to know why the office is
      * shut should land on what HR actually wrote.
      *
      * @return array{date: string, name: string, announcement: string|null}|null
@@ -175,7 +175,7 @@ class Holidays
     /**
      * The announcement that closed the office on a date, if any.
      *
-     * So a page can link to what HR actually wrote rather than restating it —
+     * So a page can link to what HR actually wrote rather than restating it -
      * and, when a closure looks wrong, send somebody straight to the notice
      * that caused it instead of making them go and find it.
      */
@@ -204,7 +204,7 @@ class Holidays
     /**
      * Published holiday announcements.
      *
-     * Today this is the demo board, which is inert outside local + debug — so
+     * Today this is the demo board, which is inert outside local + debug - so
      * a deployed site has no holidays until somebody announces one, which is
      * the correct answer rather than an invented calendar. When Announcements
      * gets its table, only this method changes.
@@ -234,7 +234,7 @@ class Holidays
          * nothing.
          *
          * This is one indexed query over a handful of rows, and what it saves
-         * is the date expansion — which the attendance calendar would otherwise
+         * is the date expansion - which the attendance calendar would otherwise
          * run for every cell of every month.
          */
         $rows = Announcement::query()

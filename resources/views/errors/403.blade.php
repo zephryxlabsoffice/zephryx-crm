@@ -15,7 +15,7 @@
 
 {{--
     Deliberately generic. It does not name the permission, the role that would
-    grant it, or whether the record exists — all three tell someone probing the
+    grant it, or whether the record exists - all three tell someone probing the
     application how it is put together, and §5 keeps that knowledge in the Admin
     Panel. "Ask an administrator" is the only useful next step anyway.
 --}}
@@ -29,5 +29,5 @@
     {{-- "an administrator", not "support": the person who can grant access is
          the one holding the Admin Panel, and saying so points them at the
          right door even though the address is the same. --}}
-    <a class="btn btn-outline" href="{{ \App\Support\SupportContact::mailto('ZephryxLabs CRM — access request') }}">Contact an administrator</a>
+    <a class="btn btn-outline" href="{{ \App\Support\SupportContact::mailto('ZephryxLabs CRM - access request') }}">Contact an administrator</a>
 @endsection

@@ -22,7 +22,7 @@ class DashboardPresenterTest extends TestCase
     {
         /*
          * 05:00 UTC is 10:30 in the office. Under UTC the dashboard would greet
-         * half the working morning as the small hours — the same class of bug
+         * half the working morning as the small hours - the same class of bug
          * that made Attendance move config('app.timezone') off UTC.
          */
         $this->assertSame('Asia/Kolkata', config('app.timezone'));

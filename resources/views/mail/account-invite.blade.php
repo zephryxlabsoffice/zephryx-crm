@@ -35,7 +35,7 @@
     {{--
         Who added them, by name. An account appearing unannounced is worth being
         able to check with a person rather than with an address nobody
-        recognises — and if it really was unexpected, the named person is who
+        recognises - and if it really was unexpected, the named person is who
         can say so.
     --}}
     <p style="margin: 0; color: #5C6B65;">

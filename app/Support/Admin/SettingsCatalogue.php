@@ -16,13 +16,13 @@ use App\Support\LeavePolicy;
  *
  * Attendance and Leave do not STORE their judgements. Whether a day was a half
  * day, whether it stopped counting, whether a Saturday was a working day, how
- * many leave days somebody has left — all of it is derived on read, from these
+ * many leave days somebody has left - all of it is derived on read, from these
  * values, every time a page is opened. AttendancePolicy::monthSummary and
  * LeavePolicy::balance compute it live.
  *
  * So lowering `half_day_hours` from 4 to 6 does not change what happens from
  * tomorrow. It silently reclassifies months of days that have already been
- * worked, reported on and — once payroll is real — paid against. Nobody is
+ * worked, reported on and - once payroll is real - paid against. Nobody is
  * notified. Nothing in the record shows it moved. The audit entry, written
  * naively, would read "half_day_hours: 4 → 6", which is true and useless: the
  * thing that actually happened is "47 days across 11 people became half days".
@@ -31,7 +31,7 @@ use App\Support\LeavePolicy;
  * ones that are get their effect computed and shown BEFORE the save, by
  * App\Support\Admin\Retroactive. The confirmation names the damage.
  *
- * THE REAL FIX, WHEN IT IS WORTH IT: effective-dated settings — each value
+ * THE REAL FIX, WHEN IT IS WORTH IT: effective-dated settings - each value
  * stored with a from-date, and the policies reading the value in force on the
  * date being judged, so the past cannot move at all. That is a data-model
  * change touching every call site in AttendancePolicy and LeavePolicy, and it
@@ -104,7 +104,7 @@ class SettingsCatalogue
 
             self::setting('zephryx.currency.code', 'Currency', 'text', config('zephryx.currency.code'),
                 'The default for new invoices. Existing invoices keep the currency they were '
-                .'issued in — an amount cannot change currency after the fact.'),
+                .'issued in - an amount cannot change currency after the fact.'),
 
             self::setting('zephryx.theme.default', 'Default theme', 'select', config('zephryx.theme.default'),
                 'What somebody sees before they choose for themselves.',
@@ -121,7 +121,7 @@ class SettingsCatalogue
     {
         return [
             self::setting('attendance.work_start', 'Day starts', 'time', AttendancePolicy::workStart(),
-                'Shown on the attendance pages. Nobody is marked late — see the Attendance module.'),
+                'Shown on the attendance pages. Nobody is marked late - see the Attendance module.'),
 
             self::setting('attendance.work_end', 'Day ends', 'time', AttendancePolicy::workEnd(),
                 'Shown on the attendance pages.'),
@@ -188,7 +188,7 @@ class SettingsCatalogue
                 'Minutes, pre-filled when scheduling.'),
 
             self::setting('meetings.allow_external_guests', 'Allow external guests', 'toggle', config('meetings.allow_external_guests'),
-                'Whether meetings may include addresses outside the company — clients, for instance.'),
+                'Whether meetings may include addresses outside the company - clients, for instance.'),
         ];
     }
 

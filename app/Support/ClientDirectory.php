@@ -28,8 +28,8 @@ use Illuminate\Support\Facades\DB;
  *   `payment`  is the state of that client's invoices, which is the Invoices
  *              module's question.
  *
- * Both render as "—" until those tables exist. The alternative — a stored
- * column somebody keeps in step by hand — is the mistake the employees table
+ * Both render as "-" until those tables exist. The alternative - a stored
+ * column somebody keeps in step by hand - is the mistake the employees table
  * avoided with `on_leave`, for exactly the same reason.
  *
  * `activity` is real today, because the audit log is: it is what has actually
@@ -84,7 +84,7 @@ class ClientDirectory
             'manager' => $client->accountManager?->name,
             'signed' => $client->signed_on?->toDateString(),
 
-            // Answered by Projects and Invoices when those land — see the head
+            // Answered by Projects and Invoices when those land - see the head
             // of this class. Null, not a placeholder string: the view decides
             // how "we cannot say yet" is drawn.
             'project' => null,
@@ -134,7 +134,7 @@ class ClientDirectory
     }
 
     /**
-     * The industries a filter may offer — the ones a client is actually in.
+     * The industries a filter may offer - the ones a client is actually in.
      *
      * @return list<string>
      */
@@ -151,7 +151,7 @@ class ClientDirectory
     /**
      * Recent client activity, from the audit log (§6).
      *
-     * What was actually recorded, by whom — not a generated narrative. An empty
+     * What was actually recorded, by whom - not a generated narrative. An empty
      * rail says nothing has been recorded, which is honest; a rail full of
      * invented events would not be.
      *

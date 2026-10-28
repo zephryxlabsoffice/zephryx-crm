@@ -3,7 +3,7 @@
 
     That is the key and not `employees.identifiers`: the identifiers permission
     is about documents, and this is about money. HR and the CEO hold both and
-    nobody else holds either, so today they select the same people — but they
+    nobody else holds either, so today they select the same people - but they
     answer different questions, and the day somebody is trusted with one and not
     the other, the gate is already in the right place.
 
@@ -33,7 +33,7 @@
              whose payslip has nothing to be prepared from, and that has to be
              visible rather than being a card that simply does not appear. --}}
         <div class="prose">
-            <p>Nothing on file yet — no agreement has been recorded, so there are no figures to prepare a payslip from.</p>
+            <p>Nothing on file yet - no agreement has been recorded, so there are no figures to prepare a payslip from.</p>
         </div>
     @else
         <dl class="field-grid att-record-grid">

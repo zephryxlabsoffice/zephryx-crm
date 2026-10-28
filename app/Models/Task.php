@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * `assignee_id` was a single nullable foreign key until
  * 2026_09_21_000028_tasks_multiple_assignees_comments_attachments.php. "A task
  * can go to a team and flow to its members" (review round decision) means more
- * than one person can be on it — two people pairing on the same piece of work
+ * than one person can be on it - two people pairing on the same piece of work
  * is the ordinary case `assignees()` exists for. The pivot is `task_assignees`,
  * shaped exactly like `team_members` and for the same reason a JSON list of
  * ids would fail: it cannot be joined against, cannot carry its own foreign
@@ -64,7 +64,7 @@ class Task extends Model
     /**
      * Who is on the task.
      *
-     * Ordered by the pivot's own key, same as Team::members() — without it the
+     * Ordered by the pivot's own key, same as Team::members() - without it the
      * order is whatever the database happens to return, and a page that
      * reshuffles on reload looks broken to the person reading it.
      *
@@ -111,7 +111,7 @@ class Task extends Model
     /**
      * Past its date and not finished.
      *
-     * A task delivered late is history, not an outstanding problem — the same
+     * A task delivered late is history, not an outstanding problem - the same
      * rule Projects uses, so the two modules cannot contradict each other.
      *
      * @param  Builder<Task>  $query
@@ -123,7 +123,7 @@ class Task extends Model
     }
 
     /**
-     * Held by a team with nobody on it — the Team Lead's queue.
+     * Held by a team with nobody on it - the Team Lead's queue.
      *
      * @param  Builder<Task>  $query
      * @return Builder<Task>
@@ -138,7 +138,7 @@ class Task extends Model
      *
      * One of the assignees, because it is their work; whoever leads the team
      * holding it, because that is their queue (§2.6). Anybody wider than that
-     * holds `tasks.edit` and the controller asks for that separately — this
+     * holds `tasks.edit` and the controller asks for that separately - this
      * method is only about the people close to the work.
      */
     public function isOwnedBy(?Employee $employee): bool

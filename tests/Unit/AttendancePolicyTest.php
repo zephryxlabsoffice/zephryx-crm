@@ -116,7 +116,7 @@ class AttendancePolicyTest extends TestCase
 
     public function test_a_day_never_checked_out_of_has_no_hours_at_all(): void
     {
-        // Measured to `now`, a day somebody forgot to close reads "51h 46m" —
+        // Measured to `now`, a day somebody forgot to close reads "51h 46m" -
         // a missing timestamp dressed up as a number, and one that would then be
         // counted as work.
         $yesterday = Carbon::today()->subDay()->toDateString();
@@ -283,7 +283,7 @@ class AttendancePolicyTest extends TestCase
          * it closes the office; a second list here is the one that goes stale.
          *
          * The board is a table now, so this posts a notice rather than flipping
-         * the environment to wake a fixture up — which is also a better test of
+         * the environment to wake a fixture up - which is also a better test of
          * the claim: what closes the office is an announcement somebody made.
          */
         \App\Models\Announcement::create([
@@ -364,7 +364,7 @@ class AttendancePolicyTest extends TestCase
 
     public function test_a_rostered_sunday_worked_half_a_day_is_still_a_half_day(): void
     {
-        // The state itself does not change because of rostering — only what
+        // The state itself does not change because of rostering - only what
         // COMP-OFF earning does with the state does (see
         // AttendanceController::earnCompOffIfDue). Half a day is still half a
         // day, whatever the calendar says about the date.
@@ -384,7 +384,7 @@ class AttendancePolicyTest extends TestCase
 
     public function test_an_unrostered_sunday_check_in_is_recorded_but_the_day_reads_as_an_ordinary_present(): void
     {
-        // "An unrostered Sunday clock-in is recorded but earns nothing" — the
+        // "An unrostered Sunday clock-in is recorded but earns nothing" - the
         // STATE is identical whether rostered or not once somebody has
         // actually checked in; only the comp-off write cares about the
         // roster. This is the existing "worked a weekly off" behaviour,

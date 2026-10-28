@@ -11,7 +11,7 @@
 
         {{-- Filters are a GET form with real URLs, so a filtered roll can be
              bookmarked and sent to somebody. The handover wired its dropdowns
-             with an inline <script>, which our CSP blocks — none of them would
+             with an inline <script>, which our CSP blocks - none of them would
              have filtered anything. --}}
         <form class="table-tools" method="GET" action="{{ route('attendance.index') }}">
             <div class="search-input">
@@ -124,7 +124,7 @@
                                 The handover had a three-dot menu on every row of
                                 a hundred-and-twenty-eight-person table. Rejecting
                                 somebody's attendance is a thing you do after
-                                reading the times, the lateness and the reason —
+                                reading the times, the lateness and the reason -
                                 all of which are on the record, and none of which
                                 fit in a row.
                             --}}
@@ -136,7 +136,7 @@
                                 <a class="btn btn-outline btn-sm"
                                    href="{{ route('attendance.add', ['employee' => $row['employee_record']['employee_id'], 'date' => $row['date']]) }}">Add</a>
                             @else
-                                <span class="att-nothing" aria-hidden="true">—</span>
+                                <span class="att-nothing" aria-hidden="true">-</span>
                             @endif
                         </td>
                     </tr>

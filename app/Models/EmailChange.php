@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * Written and read by App\Support\Auth\EmailChanges, which is the only place
  * that knows how to turn a token into one of these. Nothing else should query
- * it by token — see the head of that class for why.
+ * it by token - see the head of that class for why.
  */
 class EmailChange extends Model
 {

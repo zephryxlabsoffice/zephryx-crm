@@ -4,7 +4,7 @@
     Unmasked, unlike the card below it. An address is not a credential: nothing
     is protected by showing half of it, and a half-shown address is one HR
     cannot check against the photocopy in the file. The gate is the whole
-    control — `$addresses` is null for anybody else and the controller never
+    control - `$addresses` is null for anybody else and the controller never
     loaded the row.
 
     Rendered with `nl2br` and escaped first, because an address is three or four

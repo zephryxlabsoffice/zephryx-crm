@@ -9,7 +9,7 @@ use Tests\TestCase;
  * The filter the whole dashboard is built on.
  *
  * These run against a registry written here rather than the real one, because
- * the behaviour being checked is the composer's, not the configuration's — and
+ * the behaviour being checked is the composer's, not the configuration's - and
  * a test that broke every time a widget was added to config would get deleted.
  */
 class DashboardComposerTest extends TestCase
@@ -55,7 +55,7 @@ class DashboardComposerTest extends TestCase
     public function test_it_orders_by_weight_and_not_by_the_order_written(): void
     {
         // Gaps of ten in the real registry exist so a widget can be slotted
-        // between two without renumbering the file — which only works if the
+        // between two without renumbering the file - which only works if the
         // composer sorts rather than trusting the array order.
         $keys = array_column($this->composer->widgets($this->holding(['open']), 'main'), 'key');
 

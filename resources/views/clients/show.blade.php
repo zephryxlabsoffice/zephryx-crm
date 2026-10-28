@@ -108,14 +108,14 @@
                         Other contacts
                     </div>
 
-                    {{-- Self-served by the client through their own portal —
+                    {{-- Self-served by the client through their own portal -
                          see Client\ContactController. This page only reads
                          them; there is no add or remove here, so the client's
                          own list and this one can never disagree. --}}
                     @foreach ($contacts as $contact)
                         <div class="stat-row">
                             <span class="stat-label">{{ $contact->name }}</span>
-                            <span class="stat-value">{{ implode(' · ', array_filter([$contact->email, $contact->phone])) ?: '—' }}</span>
+                            <span class="stat-value">{{ implode(' · ', array_filter([$contact->email, $contact->phone])) ?: '-' }}</span>
                         </div>
                     @endforeach
                 </div>
@@ -133,7 +133,7 @@
                 <div class="prose">
                     <p>
                         Everybody here can sign in and read this client's own projects,
-                        invoices, tickets and meetings — and nothing belonging to anybody
+                        invoices, tickets and meetings - and nothing belonging to anybody
                         else. Access is scoped by the reference above, not by the name.
                     </p>
                 </div>
@@ -191,7 +191,7 @@
                         <p>
                             The status of the work, not of anybody's login. Marking a client
                             inactive keeps every invoice, ticket and project exactly where it
-                            is — which is why there is no delete on this page at all. The
+                            is - which is why there is no delete on this page at all. The
                             client's own portal switches to a read-only Invoices page the
                             moment this changes.
                         </p>
@@ -237,7 +237,7 @@
                     @if ($entry->after_summary)
                         <p class="att-rail-note">
                             {{ $entry->after_summary }}
-                            <span class="an-optional">— {{ $entry->actor_label }}</span>
+                            <span class="an-optional">- {{ $entry->actor_label }}</span>
                         </p>
                     @endif
                 @empty

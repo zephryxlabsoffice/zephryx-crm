@@ -18,7 +18,7 @@ class InvoicesPageTest extends TestCase
         /*
          * Every route in the staff realm is behind `realm:staff` now (§3.1), so
          * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
+         * what the page renders rather than about who may see it - the guard
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
@@ -65,7 +65,7 @@ class InvoicesPageTest extends TestCase
     public function test_the_total_is_the_amount_typed_in_not_a_separately_stored_figure(): void
     {
         // Decided 2026-09-11: an invoice's amount is typed once, the way a
-        // payslip's net figure is — not summed from line items that no
+        // payslip's net figure is - not summed from line items that no
         // longer exist. total() still has to agree with the column it reads.
         $this->withDemoData();
 
@@ -97,7 +97,7 @@ class InvoicesPageTest extends TestCase
 
     public function test_nobody_is_ever_recorded_as_paying_more_than_they_owe(): void
     {
-        // Not a rule of arithmetic — a rule about the sample data being sane,
+        // Not a rule of arithmetic - a rule about the sample data being sane,
         // and about the backend refusing an overpayment rather than absorbing
         // it. An overpayment is a credit note, not a bigger number.
         $this->withDemoData();
@@ -318,7 +318,7 @@ class InvoicesPageTest extends TestCase
 
         /*
          * Ungrouped in the field, grouped in the hint beside it. A prefilled
-         * "95,000.00" is a value the validator that rendered it would refuse —
+         * "95,000.00" is a value the validator that rendered it would refuse -
          * see Money::plain, which exists because of exactly this.
          */
         $response = $this->get('/invoices/INV-2026-012');

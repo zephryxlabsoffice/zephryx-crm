@@ -6,7 +6,7 @@ use App\Models\Client;
 use Tests\TestCase;
 
 /**
- * Clients — GET /clients.
+ * Clients - GET /clients.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * `withDemoData()` IS GONE, AND THAT IS THE POINT OF THIS EDIT
@@ -18,7 +18,7 @@ use Tests\TestCase;
  * assert the list.
  *
  * So the demo clients are seeded properly, through the same seeder that
- * populates a developer's machine — see TestCase::seedDemoWorkforce.
+ * populates a developer's machine - see TestCase::seedDemoWorkforce.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 class ClientsPageTest extends TestCase
@@ -31,7 +31,7 @@ class ClientsPageTest extends TestCase
          * Every route in the staff realm is behind `realm:staff` (§3.1), and
          * the list is behind `clients.view` as well now. A CEO, because this
          * file is about what the page renders rather than about who may see it
-         * — the guard has its own tests in ClientWritesTest.
+         * - the guard has its own tests in ClientWritesTest.
          */
         $this->signInAsStaff();
     }
@@ -79,7 +79,7 @@ class ClientsPageTest extends TestCase
     {
         /*
          * Three of the four KPIs are questions for Invoices and Tickets. They
-         * report zero rather than the demo source's ₹1,85,000 — a figure on a
+         * report zero rather than the demo source's ₹1,85,000 - a figure on a
          * page nobody can trace to a record is worse than an empty one, because
          * somebody will quote it.
          */
@@ -183,7 +183,7 @@ class ClientsPageTest extends TestCase
     {
         /*
          * `%` and `_` are LIKE wildcards. Unescaped, searching for "%" would
-         * return every client — which reads as a broken filter rather than as
+         * return every client - which reads as a broken filter rather than as
          * the injection-adjacent bug it is.
          */
         $this->seedDemoWorkforce();

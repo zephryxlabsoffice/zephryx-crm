@@ -35,7 +35,7 @@ class MeetingPresenter
      * THERE IS NO "COMPLETED" STATUS
      *
      * The handover had one. Nothing in this system can see whether a meeting
-     * took place — Google knows a room existed, not whether anybody joined it
+     * took place - Google knows a room existed, not whether anybody joined it
      * or whether the conversation happened. "Completed" asserts something we
      * cannot know, and it is the kind of claim that gets quoted back.
      *
@@ -49,7 +49,7 @@ class MeetingPresenter
     protected const STATUSES = [
         self::REQUESTED => ['pill-amber', 'Requested', 'Asked for, but not created on Google yet'],
         self::SCHEDULED => ['pill-green', 'Scheduled', 'On Google, invites sent, link ready'],
-        self::ENDED => ['pill-gray', 'Ended', 'Its time has passed — whether it happened is not something this records'],
+        self::ENDED => ['pill-gray', 'Ended', 'Its time has passed - whether it happened is not something this records'],
         self::CANCELLED => ['pill-red', 'Cancelled', 'Called off, and removed from everyone’s calendar'],
     ];
 
@@ -74,7 +74,7 @@ class MeetingPresenter
 
         // `'UTC'` is not optional here. Every date on a meeting record is UTC
         // (see the head of this class), and parsing one without saying so reads
-        // it in the application's timezone — which was harmless only for as
+        // it in the application's timezone - which was harmless only for as
         // long as that timezone WAS UTC. It stopped being UTC when Attendance
         // landed (2026-09-03, config/app.php), and this line then declared
         // every meeting of the next five and a half hours already ended.
@@ -118,7 +118,7 @@ class MeetingPresenter
     /**
      * How an attendee responded.
      *
-     * Read from Google Calendar, never set here — a person accepts or declines
+     * Read from Google Calendar, never set here - a person accepts or declines
      * in their own calendar. Anything unrecognised reads as no reply rather
      * than as attendance, because assuming somebody is coming is the error that
      * costs a meeting.
@@ -165,7 +165,7 @@ class MeetingPresenter
     }
 
     /**
-     * `4:00 – 4:30 PM` — the span, with the meridiem stated once when both ends
+     * `4:00 – 4:30 PM` - the span, with the meridiem stated once when both ends
      * share it.
      *
      * @param  array<string, mixed>  $meeting
@@ -245,7 +245,7 @@ class MeetingPresenter
     /**
      * Whether the meeting is close enough that a join button is worth offering.
      *
-     * A Meet link works whenever, so this is not a lock — it is about not
+     * A Meet link works whenever, so this is not a lock - it is about not
      * putting a live "Join" beside a meeting three weeks out, where the only
      * reason to press it is by accident.
      *

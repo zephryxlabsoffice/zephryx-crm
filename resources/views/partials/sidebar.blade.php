@@ -3,7 +3,7 @@
     by App\Support\Navigation\Navigation (foundation spec §5).
 
     Filtering the nav hides what a person cannot use; it is NOT the access
-    control. Every route carries its own guard (§3.1) — this is the courtesy
+    control. Every route carries its own guard (§3.1) - this is the courtesy
     layer on top of it.
 --}}
 <aside class="sidebar" id="sidebar" aria-label="Main navigation">

@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * Files this application holds on somebody's behalf.
  *
  * ═════════════════════════════════════════════════════════════════════════════
- * TWO DRIVERS, ONE SEAM — AND THE METHOD CALLED IS THE ROUTING
+ * TWO DRIVERS, ONE SEAM - AND THE METHOD CALLED IS THE ROUTING
  *
  * Decided 2026-09-16: photos stay on the local disk (small, few of them,
  * nothing to check them against); payslips, invoices and ticket/task
@@ -24,33 +24,33 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * driver" flag to say so, because the two kinds of write already arrive
  * through different methods:
  *
- *   putBytes() — bytes this application composed (a resized photo). Always
+ *   putBytes() - bytes this application composed (a resized photo). Always
  *   local. Every call site already is a photo; see App\Support\Images\
  *   PhotoIntake, the only producer of bytes this method receives.
  *
- *   put() — a file somebody uploaded (a payslip, a document). Always Drive.
+ *   put() - a file somebody uploaded (a payslip, a document). Always Drive.
  *
  * `exists()`, `copy()`, `download()` and `forget()` take a stored `path` back
  * and cannot ask the caller which driver wrote it, so the path itself carries
  * that: a Drive file lives behind the `drive:` prefix this class puts on it,
  * and everything else is a local disk path exactly as before. A local path
- * can never collide with the prefix — `put()`'s local paths are composed from
+ * can never collide with the prefix - `put()`'s local paths are composed from
  * a folder and `Str::random(40)`, never typed by hand.
  *
  * NOTHING IS MIGRATED (decided 2026-09-16). Files already on local disk
- * before this landed — demo content — stay there and still work; `copy()` and
+ * before this landed - demo content - stay there and still work; `copy()` and
  * `download()` read the prefix to decide, not a global switch. The production
  * seeder ships no files, so the first real payslip goes straight to Drive.
  * ═════════════════════════════════════════════════════════════════════════════
  *
  * NOTHING THIS CLASS WRITES ON THE LOCAL DISK IS REACHABLE OVER HTTP
  *
- * Local files go to `storage/app/private`, outside the webroot — §6 requires
+ * Local files go to `storage/app/private`, outside the webroot - §6 requires
  * it, and a payslip or a PAN scan under a guessable public path is a link
  * somebody can forward, no amount of care afterwards takes it back. Drive
  * files carry the same rule a different way: the service account is a member
  * of the Shared Drive, nothing on it is shared "anyone with the link", and
- * `download()` is the only route back out — see the class-level note above
+ * `download()` is the only route back out - see the class-level note above
  * `stream()`.
  *
  * THE STORED NAME IS NOT THE UPLOADED NAME
@@ -78,7 +78,7 @@ class DocumentStore
 
     /**
      * Marks a stored path as a Drive file id rather than a local disk path.
-     * Never appears in a path `put()` composes for the local disk — those are
+     * Never appears in a path `put()` composes for the local disk - those are
      * always `folder/random-token.ext`.
      */
     protected const DRIVE_PREFIX = 'drive:';
@@ -89,7 +89,7 @@ class DocumentStore
     }
 
     /**
-     * Store an uploaded file. Always Drive — see the class header.
+     * Store an uploaded file. Always Drive - see the class header.
      *
      * `$folder` is still `employees/{id}/documents` or `payslips/{period}`,
      * exactly as it was on the local disk: the first path segment becomes the
@@ -130,7 +130,7 @@ class DocumentStore
     }
 
     /**
-     * Store bytes we composed rather than a file we received. Always local —
+     * Store bytes we composed rather than a file we received. Always local -
      * see the class header. Every caller today is a photo.
      *
      * Added for the profile photo, which is not stored as it arrived: it is
@@ -138,8 +138,8 @@ class DocumentStore
      * App\Support\Images\PhotoIntake), so what reaches the disk is a string
      * this application produced and the UploadedFile is long gone by then.
      *
-     * The same validation rules apply — whitelisted extension, a name that is
-     * ours, a path composed by the caller — because the reason for each of
+     * The same validation rules apply - whitelisted extension, a name that is
+     * ours, a path composed by the caller - because the reason for each of
      * them is where the file ENDS UP, not where it came from.
      *
      * @return array{path: string, bytes: int}
@@ -185,7 +185,7 @@ class DocumentStore
      *
      * Added for converting an intern (2026-09-16), where a photo and a set of
      * documents move from a closed record to a new one. The cheap version is
-     * to write the same `path` onto both rows — and the cost lands later, when
+     * to write the same `path` onto both rows - and the cost lands later, when
      * the person replaces their photo and `forget()` deletes the file out
      * from under the record that is supposed to be history. One row, one
      * file, on whichever driver the source already lives on: a photo copy
@@ -217,7 +217,7 @@ class DocumentStore
         if ($contents === null) {
             // The caller decides what a missing source means. For a
             // conversion it means that record simply has no photo, which is
-            // survivable — and far better than half a conversion.
+            // survivable - and far better than half a conversion.
             throw new \RuntimeException('There is no file at '.$from.' to copy.');
         }
 
@@ -243,14 +243,14 @@ class DocumentStore
     }
 
     /**
-     * Show a stored file in the browser rather than saving it — for things
+     * Show a stored file in the browser rather than saving it - for things
      * THIS APPLICATION produced and knows the shape of. The profile photo,
      * rebuilt byte by byte from its picture segments before it is written
      * (see App\Support\Images\PhotoIntake). Always local: see the class
-     * header — nothing that reaches this method is ever a Drive path, and it
+     * header - nothing that reaches this method is ever a Drive path, and it
      * refuses one outright rather than guess.
      *
-     * Never for an uploaded document — see `viewInline()` for that, which
+     * Never for an uploaded document - see `viewInline()` for that, which
      * exists because this method used to be the only way to show something
      * inline, and an upload is not a shape this application chose.
      *
@@ -261,7 +261,7 @@ class DocumentStore
     public function stream(string $path): StreamedResponse
     {
         if ($this->isDrivePath($path)) {
-            throw new \InvalidArgumentException('That is a Drive file — this store streams inline only from the local disk.');
+            throw new \InvalidArgumentException('That is a Drive file - this store streams inline only from the local disk.');
         }
 
         $extension = mb_strtolower(pathinfo($path, PATHINFO_EXTENSION));
@@ -282,27 +282,27 @@ class DocumentStore
     }
 
     /**
-     * Show an UPLOADED file in the browser — a payslip, an identity scan.
+     * Show an UPLOADED file in the browser - a payslip, an identity scan.
      *
      * ─────────────────────────────────────────────────────────────────────────
      * THE CONDITION stream() WAS WRITTEN TO WAIT FOR
      *
      * Rendering somebody's upload inline used to mean rendering it in this
-     * application's own origin — the reason `stream()` refused everything but
+     * application's own origin - the reason `stream()` refused everything but
      * bytes this application produced itself. That is no longer the whole
      * picture: every `application/pdf` response now gets a Content-Security-
-     * Policy that allows the document nothing — no script, no network, no
+     * Policy that allows the document nothing - no script, no network, no
      * form submission (see App\Http\Middleware\SecurityHeaders). A PDF
      * rendered under that policy cannot act inside our origin whatever it
      * contains, which is the plan doc's own condition for lifting the
      * refusal ("How, concretely", point 4).
      *
-     * Images carry no such risk on their own — a PNG or JPEG cannot execute
-     * anything — so they pass through unlocked, same as `stream()`.
+     * Images carry no such risk on their own - a PNG or JPEG cannot execute
+     * anything - so they pass through unlocked, same as `stream()`.
      * ─────────────────────────────────────────────────────────────────────────
      *
      * `$mimeType` is trusted: it comes from either a caller's own stored
-     * `mime` column (content-sniffed at upload — see EmployeeDocument) or is
+     * `mime` column (content-sniffed at upload - see EmployeeDocument) or is
      * derived here from the display name's extension when there is no such
      * column (a payslip has none). Both are already constrained to
      * DocumentStore::ALLOWED at upload time; this method is not where that
@@ -341,7 +341,7 @@ class DocumentStore
     }
 
     /**
-     * Remove a file. Used when one is replaced — see the callers.
+     * Remove a file. Used when one is replaced - see the callers.
      */
     public function forget(?string $path): void
     {
@@ -377,7 +377,7 @@ class DocumentStore
 
     /**
      * A name for the Drive file that keeps the caller's folder legible inside
-     * a flat module folder — "employees/12/documents" becomes a filename
+     * a flat module folder - "employees/12/documents" becomes a filename
      * carrying "employees_12_documents", not a nested path Drive would have
      * to be taught to create.
      */
@@ -389,7 +389,7 @@ class DocumentStore
     }
 
     /**
-     * A Drive client built from the current connection. Fresh per call — the
+     * A Drive client built from the current connection. Fresh per call - the
      * connection can change between requests, and this class is resolved new
      * per request anyway (see the controllers that inject it).
      *

@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Schema;
  * ─────────────────────────────────────────────────────────────────────────────
  * THE EXCEPTION TO "CLOSED, NEVER REMOVED"
  *
- * Records are closed, never deleted — somebody's attendance and payslips must
+ * Records are closed, never deleted - somebody's attendance and payslips must
  * outlive their account. But an account created with a typo in the email has
  * no history to protect, and while it exists it holds that email, so the
  * right account cannot be made. So deletion exists for exactly that case:
@@ -58,7 +58,7 @@ class AccountRemoval
     public function __construct(protected DocumentStore $documents) {}
 
     /**
-     * Why this account cannot be deleted — an empty list means it can.
+     * Why this account cannot be deleted - an empty list means it can.
      *
      * @return list<string>
      */

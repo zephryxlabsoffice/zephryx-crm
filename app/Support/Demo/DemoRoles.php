@@ -12,7 +12,7 @@ namespace App\Support\Demo;
  * App\Support\Navigation\PermissiveGate allows everything, which is right for
  * building the shell and useless for reviewing a page whose entire behaviour is
  * "show what this person holds". Against a gate that says yes to everything,
- * the dashboard renders every widget at once — which is the one layout no real
+ * the dashboard renders every widget at once - which is the one layout no real
  * account will ever see.
  *
  * So `?as=hr` narrows the dashboard to one role's set. It is how the five
@@ -23,7 +23,7 @@ namespace App\Support\Demo;
  *
  * The preview is INTERSECTED with the real gate, never substituted for it (see
  * DashboardController::gate). A role set cannot grant a permission the viewer
- * does not already hold — it can only hide ones they do. That ordering is the
+ * does not already hold - it can only hide ones they do. That ordering is the
  * whole safety argument: when the real gate lands, `?as=ceo` on an intern's
  * session still shows an intern's dashboard.
  *
@@ -42,13 +42,13 @@ class DemoRoles
     }
 
     /**
-     * Every human account except Mentor sits on the Employee base (§2.2) — my
+     * Every human account except Mentor sits on the Employee base (§2.2) - my
      * attendance, my leave, my payslip, my tasks, my profile. CEO and HR have
      * these too, which is precisely why they cannot approve their own.
      *
      * Note the two kinds of key. `*.self` is the Employee base: my own records.
      * `*.view` is sight of a module. A Mentor holds the second and never the
-     * first, which is the distinction the whole rail depends on — see the note
+     * first, which is the distinction the whole rail depends on - see the note
      * in config/dashboard.php.
      *
      * @return list<string>
@@ -136,7 +136,7 @@ class DemoRoles
 
             'ceo' => [
                 'label' => 'CEO',
-                'note' => 'Top of the human hierarchy — and still an Employee, with their own leave and attendance.',
+                'note' => 'Top of the human hierarchy - and still an Employee, with their own leave and attendance.',
                 'permissions' => [
                     ...$base,
                     'clients.view',
@@ -164,12 +164,12 @@ class DemoRoles
              * card headed "Your tasks" on a Mentor's dashboard is empty by
              * construction, because a Mentor has no tasks.
              *
-             * What a Mentor legitimately keeps is the announcements board —
+             * What a Mentor legitimately keeps is the announcements board -
              * published to the company, and read-only is exactly what they are.
              */
             'mentor' => [
                 'label' => 'Mentor',
-                'note' => 'Read-only, and no Employee base — so no personal records at all (§2.1).',
+                'note' => 'Read-only, and no Employee base - so no personal records at all (§2.1).',
                 'permissions' => [
                     'dashboard.view',
                     'clients.view',

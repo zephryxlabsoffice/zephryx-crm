@@ -11,7 +11,7 @@ use Illuminate\Database\Seeder;
  * The demo clients, as real rows. Local + debug only.
  *
  * Runs BEFORE AccountSeeder, because the client accounts it creates point at
- * these rows through `client_ref` — an account whose client does not exist is
+ * these rows through `client_ref` - an account whose client does not exist is
  * a portal session scoped to nothing.
  *
  * Nothing here runs in production: real clients are added through the Clients

@@ -1,17 +1,17 @@
 @php use App\Support\InvoicePresenter as P; @endphp
 
 {{--
-    The invoice summary — what it is for, and where the actual document is.
+    The invoice summary - what it is for, and where the actual document is.
 
     Decided 2026-09-11, built 2026-09-21: an invoice is an uploaded PDF, not
     something this application renders to look like one. So this partial does
-    not reproduce a letterhead or a line-item table any more — that would be a
+    not reproduce a letterhead or a line-item table any more - that would be a
     second copy of a document that already exists, and the two would drift the
     first time somebody corrected one and not the other. It states the amount
     that was typed in, and links to the one real file.
 
     Shared by the staff invoice page, the client invoice page, and nothing
-    else — no print view exists any more, because there is nothing left to
+    else - no print view exists any more, because there is nothing left to
     render for printing that the PDF itself does not already do better.
 --}}
 <div class="card inv-doc">
@@ -62,7 +62,7 @@
     </div>
 
     {{--
-        The amount. Typed once, the same way a payslip's net figure is — not
+        The amount. Typed once, the same way a payslip's net figure is - not
         a sum of rows that no longer exist. No tax block: the company is not
         GST-registered (decided 2026-08-27), and there is nothing generated
         here that would need one.
@@ -88,7 +88,7 @@
 
     {{--
         The document itself. `target="_blank"` opens it in the browser's own
-        viewer rather than navigating away from this page — the same choice
+        viewer rather than navigating away from this page - the same choice
         Salary and Profile documents made (see App\Support\Documents\
         DocumentStore::viewInline() for what makes that safe for an upload).
     --}}

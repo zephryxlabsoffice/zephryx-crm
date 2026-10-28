@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 /**
- * Access Control — which roles hold which permissions, and where each role
+ * Access Control - which roles hold which permissions, and where each role
  * ranks in each domain.
  *
  * ═════════════════════════════════════════════════════════════════════════════
@@ -31,7 +31,7 @@ use Illuminate\Validation\Rule;
  *
  * So every toggle names its blast radius: how many people gain or lose the
  * permission, and who. AccessDirectory::whoWouldHold computes it, and it subtracts
- * people who already hold the permission through another role — because roles
+ * people who already hold the permission through another role - because roles
  * stack as a union (§2.4), granting salary.view to Manager changes nothing for
  * a Manager who is also HR, and counting them would overstate the change.
  *
@@ -44,7 +44,7 @@ use Illuminate\Validation\Rule;
  * The Employee base. §5 is explicit: it is not a role, and it is granted
  * implicitly to every staff account of kind `employee` so that it can never be
  * accidentally revoked by a role edit. There is no control for it on this page
- * and there must not be one — an owner who removed it would take everyone's own
+ * and there must not be one - an owner who removed it would take everyone's own
  * attendance, leave and payslips away from them at once.
  *
  * Rank never grants anything either (§2.5). It answers "may I act on this
@@ -82,7 +82,7 @@ class AccessController extends Controller
      * "AN ADMIN MAY CREATE A ROLE" (review round Q12, answered 2026-09-21)
      *
      * Everything below is the same form `show`/`update` already render and
-     * write — permissions grouped by module, rank per domain — with a name
+     * write - permissions grouped by module, rank per domain - with a name
      * and a key added at the top. A new role is not a different KIND of
      * screen from editing one; it is the same screen with nothing ticked yet.
      * ─────────────────────────────────────────────────────────────────────────
@@ -116,7 +116,7 @@ class AccessController extends Controller
     /**
      * POST /admin/access
      *
-     * A blank role — no permissions, rank 0 everywhere — is a valid save.
+     * A blank role - no permissions, rank 0 everywhere - is a valid save.
      * Refusing an empty grant would push somebody to tick something just to
      * get past validation, which is a worse outcome than a role that starts
      * doing nothing and is edited on the next visit to `show`.
@@ -168,7 +168,7 @@ class AccessController extends Controller
 
         foreach ($data['ranks'] ?? [] as $domainKey => $rank) {
             if (! isset($domainIds[$domainKey])) {
-                // A stale or invented key in the payload — nothing in
+                // A stale or invented key in the payload - nothing in
                 // AccessDirectory::domains() offers one that would not
                 // exist, so this is a request built by hand, not a form.
                 continue;
@@ -188,13 +188,13 @@ class AccessController extends Controller
             actor: $request->user(),
             entityType: 'role',
             entityId: $role->role_key,
-            after: $role->role_name.' — '.($role->permissions()->count()).' permissions',
+            after: $role->role_name.' - '.($role->permissions()->count()).' permissions',
             request: $request,
         );
 
         return redirect()
             ->route('admin.access.show', ['role' => $role->role_key])
-            ->with('status', $role->role_name.' created. Nobody holds it yet — assign it from an account.')
+            ->with('status', $role->role_name.' created. Nobody holds it yet - assign it from an account.')
             ->with('status_tone', 'success');
     }
 
@@ -245,8 +245,8 @@ class AccessController extends Controller
      *
      * WHAT THIS ROUTE CANNOT DO
      *
-     * Grant `admin.*` or `client.*`. Both are realm bases (§2.1, §2.2) — held
-     * by account type, never by a role — and the validator refuses them rather
+     * Grant `admin.*` or `client.*`. Both are realm bases (§2.1, §2.2) - held
+     * by account type, never by a role - and the validator refuses them rather
      * than silently dropping them, because a toggle that appears to work and
      * grants nothing is worse than one that says no.
      *
@@ -287,7 +287,7 @@ class AccessController extends Controller
         $record->permissions()->sync(Permission::whereIn('permission_key', $now)->pluck('id'));
 
         // Roles changed inside this request, so anything already resolved is
-        // stale — including the session of the person who just saved.
+        // stale - including the session of the person who just saved.
         $this->rbac->forget();
 
         $this->audit->record(

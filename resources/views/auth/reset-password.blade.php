@@ -17,7 +17,7 @@
         <h1 class="auth-heading">Choose a new password</h1>
 
         <p class="auth-subheading">
-            Signing you out everywhere else — you'll need to sign in again on your other devices.
+            Signing you out everywhere else - you'll need to sign in again on your other devices.
         </p>
 
         @if ($errors->has('token'))

@@ -4,7 +4,7 @@
     The viewer's own meetings, never the company's.
 
     A card headed "Your meetings" listing one somebody is not invited to is
-    worse than an empty card — the filtering happens in DashboardData, which
+    worse than an empty card - the filtering happens in DashboardData, which
     made the same call DemoMeetings::nextFor did.
 --}}
 <section class="rail-card">

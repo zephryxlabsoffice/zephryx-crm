@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * One person, rostered to work a Sunday or holiday.
  *
- * A row existing IS the roster — there is no status column and no approval
+ * A row existing IS the roster - there is no status column and no approval
  * (decided 2026-09-11). See the migration for why a Sunday-against-leave
  * approval also produces a row here.
  */

@@ -16,7 +16,7 @@ use Illuminate\Validation\ValidationException;
  * The lookup lists the rest of the application reads.
  *
  * Nothing here deletes. These rows are referenced by records that already
- * exist, and removing one does not remove that history — it orphans it, leaving
+ * exist, and removing one does not remove that history - it orphans it, leaving
  * an employee whose department is a blank cell that nobody can ever resolve.
  * The destructive act available is deactivation, and the row keeps answering
  * for the past. See the head of App\Support\Admin\MasterDataDirectory.
@@ -72,7 +72,7 @@ class MasterDataController extends Controller
      * Somebody retires Operations, then a year later adds it back. A second row
      * with the same code would give the list two Operations, one of which
      * quietly holds all the history. So an existing row with that code is
-     * reactivated instead — the records that pointed at it keep pointing at it,
+     * reactivated instead - the records that pointed at it keep pointing at it,
      * which is the outcome the person meant.
      * ─────────────────────────────────────────────────────────────────────────
      */
@@ -85,7 +85,7 @@ class MasterDataController extends Controller
              * Unique among the ACTIVE rows of this list, twice over.
              *
              * Not across the table, because the four lists are four lists. And
-             * not across the retired rows either — a retired name colliding
+             * not across the retired rows either - a retired name colliding
              * here would refuse the request, and the request is exactly the one
              * that should bring that row back. See below.
              */
@@ -104,7 +104,7 @@ class MasterDataController extends Controller
         ], [
             'name.unique' => 'That name is already in this list.',
             'code.unique' => 'That code is already in this list.',
-            'code.alpha_num' => 'A code is letters and digits only — other records reference it.',
+            'code.alpha_num' => 'A code is letters and digits only - other records reference it.',
         ]);
 
         $code = mb_strtoupper($data['code']);
@@ -170,7 +170,7 @@ class MasterDataController extends Controller
      * THE ONLY DESTRUCTIVE ACT, AND IT DESTROYS NOTHING
      *
      * The row stops being offered for new records and keeps answering for old
-     * ones. There is no delete route, no soft-delete column and no cascade —
+     * ones. There is no delete route, no soft-delete column and no cascade -
      * see the head of MasterDataDirectory.
      *
      * A list cannot be emptied of active rows this way. An employee form with
@@ -199,7 +199,7 @@ class MasterDataController extends Controller
 
         if ($remaining === 0) {
             throw ValidationException::withMessages([
-                'item' => 'That is the last active row in this list. Add its replacement first — '
+                'item' => 'That is the last active row in this list. Add its replacement first - '
                     .'a form with nothing to choose from creates nothing.',
             ]);
         }

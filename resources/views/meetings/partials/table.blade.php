@@ -104,7 +104,7 @@
                         <td role="cell" class="cell-actions cell-actions-wide" data-label="Open">
                             @if (P::isJoinable($item) && $item['join_url'])
                                 {{-- Only when it is nearly time, and only for
-                                     somebody on the invite — the controller
+                                     somebody on the invite - the controller
                                      removed the link otherwise. --}}
                                 <a class="btn btn-primary btn-sm" href="{{ $item['join_url'] }}" target="_blank" rel="noopener noreferrer">
                                     Join

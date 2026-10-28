@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
  * Panel maps them to roles."
  *
  * Rather than a hand-written list that drifts, the keys are read out of the
- * places they are actually used — the three navigation files, the dashboard
+ * places they are actually used - the three navigation files, the dashboard
  * registry, and the modules that declare their own. A key cannot exist in the
  * application and be missing from the table that grants it, because the table
  * is built from the application.
@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\DB;
  * ═════════════════════════════════════════════════════════════════════════════
  *
  * Idempotent. Run it again after adding a module and it adds the new keys and
- * leaves every existing grant alone — re-seeding must never silently revoke
+ * leaves every existing grant alone - re-seeding must never silently revoke
  * somebody's access.
  */
 class RbacSeeder extends Seeder
@@ -59,7 +59,7 @@ class RbacSeeder extends Seeder
      * Every permission key the application uses.
      *
      * `admin.*` and `client.*` are seeded too, even though no role may hold
-     * them — the Admin Panel and the client portal grant theirs implicitly by
+     * them - the Admin Panel and the client portal grant theirs implicitly by
      * account type (see Rbac::ADMIN_BASE and Rbac::CLIENT_BASE). They are here
      * so the catalogue is complete and so a permission can never be referenced
      * by a page without existing as a row.
@@ -94,7 +94,7 @@ class RbacSeeder extends Seeder
         'announcements.holiday',
         'invoices.view',
         // Creating an account and taking one away are both people operations,
-        // not clerical ones — see MODULE_WRITES.
+        // not clerical ones - see MODULE_WRITES.
         'employees.create',
         'employees.deactivate',
         /*
@@ -115,7 +115,7 @@ class RbacSeeder extends Seeder
         // Raises what a client owes, and records what has arrived.
         'invoices.manage',
         /*
-         * Not grantable — it is ADMIN_BASE, held by account type — but listed
+         * Not grantable - it is ADMIN_BASE, held by account type - but listed
          * here anyway so the row is marked sensitive from the day it is
          * seeded. See Rbac::ADMIN_BASE for why it is its own key.
          */
@@ -157,7 +157,7 @@ class RbacSeeder extends Seeder
         'clients.invite',
         /*
          * Teams. `teams.members` is separate from `teams.edit` because it is
-         * the routine act and the one a Team Lead does — within their own team
+         * the routine act and the one a Team Lead does - within their own team
          * only, which is a rule no permission key can express and the
          * controller enforces (§2.6). Renaming a team, naming its lead and
          * moving it between states are `teams.edit`.
@@ -176,7 +176,7 @@ class RbacSeeder extends Seeder
          * it is about, and internal notes are the reason the visibility column
          * exists at all.
          *
-         * Writing an update has no key here on purpose — it is not an
+         * Writing an update has no key here on purpose - it is not an
          * authority, it is reporting your own day, and the controller checks
          * that the person is on the project instead.
          */
@@ -185,7 +185,7 @@ class RbacSeeder extends Seeder
         'projects.publish',
         /*
          * Tasks. `tasks.assign` is the Team Lead's daily act and is separate
-         * from `tasks.edit`, which is authority over the plan — the project,
+         * from `tasks.edit`, which is authority over the plan - the project,
          * the deadline, the priority. Anybody granted the wider key is granted
          * the narrower one with it, because the assign route is guarded by the
          * narrower one.
@@ -198,8 +198,8 @@ class RbacSeeder extends Seeder
         'tasks.edit',
         'tasks.assign',
         /*
-         * Salary. `salary.view` is the sensitive read — seeing what a colleague
-         * earns is itself the harm — and `salary.manage` is the write: adding a
+         * Salary. `salary.view` is the sensitive read - seeing what a colleague
+         * earns is itself the harm - and `salary.manage` is the write: adding a
          * payslip and moving money. Separate, because somebody who may see the
          * payroll to answer a question is not thereby somebody who may mark
          * twelve people paid.
@@ -210,8 +210,8 @@ class RbacSeeder extends Seeder
          */
         'salary.manage',
         /*
-         * Invoices. `invoices.view` is already sensitive — what we charge a
-         * client is not everybody's business — and `invoices.manage` is the
+         * Invoices. `invoices.view` is already sensitive - what we charge a
+         * client is not everybody's business - and `invoices.manage` is the
          * write: raising one, sending it, recording money against it and
          * cancelling it.
          *
@@ -221,7 +221,7 @@ class RbacSeeder extends Seeder
         'invoices.manage',
         /*
          * Attendance. `attendance.roster` is the Manager-or-Team-Lead act of
-         * putting somebody on a Sunday or holiday (decided 2026-09-11) — the
+         * putting somebody on a Sunday or holiday (decided 2026-09-11) - the
          * same shape as `tasks.assign`: the key opens the route, and
          * Team::isLedBy narrows a Team Lead to their own team. It also gates
          * deciding a comp-off "take" request and a Sunday-against-leave
@@ -236,7 +236,7 @@ class RbacSeeder extends Seeder
      *
      * `permissionKeys()` finds a key in one of three ways: a sidebar entry, a
      * dashboard widget, or MODULE_WRITES. A permission that gates a SECTION of
-     * a page rather than the page itself is none of those — it opens no
+     * a page rather than the page itself is none of those - it opens no
      * navigation entry and changes nothing.
      *
      * Left undeclared, the row would simply not exist, and a permission with no
@@ -245,7 +245,7 @@ class RbacSeeder extends Seeder
      * loudly. That is the failure this list exists to prevent.
      *
      * It is NOT part of MODULE_WRITES, though adding it there would have worked
-     * — a read filed under a constant documented as "write permissions" is the
+     * - a read filed under a constant documented as "write permissions" is the
      * kind of small lie that makes the next person mistrust the whole file.
      *
      * @var list<string>
@@ -276,7 +276,7 @@ class RbacSeeder extends Seeder
         }
 
         /*
-         * The write permissions. Nothing derives these — a sidebar entry says
+         * The write permissions. Nothing derives these - a sidebar entry says
          * who may SEE a module, and every one of these is about changing
          * something inside it, so they are declared rather than discovered.
          *
@@ -289,7 +289,7 @@ class RbacSeeder extends Seeder
         }
 
         // And the reads that gate a section rather than a page, which no
-        // sidebar or widget mentions — see MODULE_READS.
+        // sidebar or widget mentions - see MODULE_READS.
         foreach (self::MODULE_READS as $key) {
             $keys[$key] = true;
         }
@@ -336,7 +336,7 @@ class RbacSeeder extends Seeder
             default => ucfirst($action),
         };
 
-        return $verb.' — '.$key;
+        return $verb.' - '.$key;
     }
 
     /**
@@ -370,7 +370,7 @@ class RbacSeeder extends Seeder
              * syncWithoutDetaching, not sync: re-running the seeder after
              * adding a module must add the new keys and leave every existing
              * grant alone. A seeder that silently revoked somebody's access on
-             * deploy would be the worst kind of bug — invisible until they
+             * deploy would be the worst kind of bug - invisible until they
              * needed the thing.
              */
             $role->permissions()->syncWithoutDetaching($ids);
@@ -395,7 +395,7 @@ class RbacSeeder extends Seeder
          *
          * `calendar.view` is here even though Calendar is deferred to v2 and
          * its route returns 404. §12 keeps deferred entries in the navigation
-         * so its shape does not shift when they ship — and an entry nobody
+         * so its shape does not shift when they ship - and an entry nobody
          * holds the permission for is not in the navigation at all, which
          * defeats the point. The 404 says "not built yet"; the missing sidebar
          * entry would say nothing.
@@ -423,11 +423,11 @@ class RbacSeeder extends Seeder
                     // decides which team (§2.6).
                     'teams.members', 'tasks.assign',
                     // Tasks are created by Manager and Team Lead (review round
-                    // decision, 2026-09-21) — a lead can put new work straight
+                    // decision, 2026-09-21) - a lead can put new work straight
                     // into their own team's queue without waiting on a manager.
                     'tasks.create',
                     // Rostering a Sunday or holiday, and deciding the comp-off
-                    // and Sunday-against-leave requests that follow from it —
+                    // and Sunday-against-leave requests that follow from it -
                     // their own team only, same as teams.members above.
                     'attendance.roster',
                 ],
@@ -446,10 +446,10 @@ class RbacSeeder extends Seeder
                     // manager first, and either may assign it (review round).
                     'tickets.triage',
                     // The client relationship is the manager's, so the client
-                    // record is too — including who at the client gets a login.
+                    // record is too - including who at the client gets a login.
                     'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
                     // Teams are the work domain, where a Manager outranks a
-                    // Team Lead — so the whole module, not just membership.
+                    // Team Lead - so the whole module, not just membership.
                     'teams.create', 'teams.edit', 'teams.members',
                     /*
                      * Posting to the board, which §12 has always described as
@@ -513,14 +513,14 @@ class RbacSeeder extends Seeder
                     'meetings.schedule',
                 ],
                 // Outranks HR in system and is outranked by them everywhere
-                // else — the row that makes rank per-domain rather than a
+                // else - the row that makes rank per-domain rather than a
                 // single ladder.
                 'ranks' => ['people' => 20, 'finance' => 10, 'work' => 30, 'support' => 40, 'system' => 90],
             ],
 
             'ceo' => [
                 'name' => 'CEO',
-                'description' => 'Top of the human hierarchy — and still an Employee, with their own leave and attendance.',
+                'description' => 'Top of the human hierarchy - and still an Employee, with their own leave and attendance.',
                 'permissions' => [
                     ...$staffReading, 'clients.view', 'employees.view', 'attendance.view',
                     'attendance.view.all', 'attendance.reject', 'leave.approve', 'salary.view',
@@ -539,14 +539,14 @@ class RbacSeeder extends Seeder
             ],
 
             /*
-             * The one role with no Employee base (§2.1) — that comes from
+             * The one role with no Employee base (§2.1) - that comes from
              * `staff_kind = 'mentor'` on the account, not from this row. Rank
              * is zero everywhere: read-only means no standing to act on
              * anybody.
              */
             'mentor' => [
                 'name' => 'Mentor',
-                'description' => 'Read-only, and no Employee base — so no personal records at all (§2.1).',
+                'description' => 'Read-only, and no Employee base - so no personal records at all (§2.1).',
                 'permissions' => [
                     'clients.view', 'employees.view', 'teams.view', 'projects.view', 'tasks.view',
                     'tickets.view', 'invoices.view', 'meetings.view', 'announcements.view',

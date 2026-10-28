@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * One file on a ticket. See App\Models\TaskAttachment — same shape, same
+ * One file on a ticket. See App\Models\TaskAttachment - same shape, same
  * reasoning, one row per file rather than a single-document column.
  */
 class TicketAttachment extends Model

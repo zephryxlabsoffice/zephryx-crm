@@ -22,8 +22,8 @@ use Symfony\Component\HttpFoundation\Response;
  * tomorrow inherits the guard rather than needing somebody to remember it. That
  * is the entire reason routes/web.php is organised into three groups.
  *
- * It is independent of permissions. A client account holding `salary.view` — by
- * whatever mistake — still cannot open /salary, because this refuses the
+ * It is independent of permissions. A client account holding `salary.view` - by
+ * whatever mistake - still cannot open /salary, because this refuses the
  * request before the RBAC engine is ever consulted. Two barriers, and neither
  * relies on the other being right.
  * ═════════════════════════════════════════════════════════════════════════════
@@ -33,7 +33,7 @@ use Symfony\Component\HttpFoundation\Response;
  * A staff account asking for /admin gets "not found", not "forbidden".
  * "Forbidden" confirms the surface exists, which tells somebody probing that
  * there is an admin panel at that address and it is worth attacking. Within a
- * realm the answer is different — a 403 there says "you are in the right place
+ * realm the answer is different - a 403 there says "you are in the right place
  * and lack a permission", which is useful and true.
  *
  * Not signed in at all is a redirect to the sign-in form, because that is a
@@ -52,7 +52,7 @@ class EnsureRealm
         if ($user === null) {
             /*
              * Remembered so the sign-in form can send them back where they were
-             * going. Only the path — a full URL from the request would let
+             * going. Only the path - a full URL from the request would let
              * somebody craft a link that bounces a signed-in user off-site.
              */
             $request->session()->put('url.intended', $request->fullUrl());
@@ -73,7 +73,7 @@ class EnsureRealm
     }
 
     /**
-     * The middleware string for a realm — `realm:staff`.
+     * The middleware string for a realm - `realm:staff`.
      *
      * Used by routes/web.php so the three groups name their realm through the
      * Realm constants rather than repeating string literals that can drift.

@@ -9,10 +9,10 @@ use Illuminate\Support\Facades\Schema;
  * Teams get the decided shape (review round, 2026-09-11; built 2026-09-21).
  *
  * ═════════════════════════════════════════════════════════════════════════════
- * "ARCHIVED" GOES — ACTIVE / INACTIVE ONLY
+ * "ARCHIVED" GOES - ACTIVE / INACTIVE ONLY
  *
  * The original three states never earned their keep: nothing in this
- * application reads `archived` differently from `inactive` — both mean "not
+ * application reads `archived` differently from `inactive` - both mean "not
  * currently used, keep everything it holds" (§ the head of
  * 2026_09_09_000002_create_teams_tables.php). Two words for one meaning is a
  * filter somebody has to remember has two spellings, so any existing
@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * `status` was created with `->index()`
  * (2026_09_09_000002_create_teams_tables.php), and SQLite refuses to drop an
- * indexed column with the index still attached — `2026_09_21_000025_simplify_
+ * indexed column with the index still attached - `2026_09_21_000025_simplify_
  * client_status_and_add_contacts.php` hit exactly this and had to drop
  * `clients_status_index` first. Done here from the start rather than
  * rediscovered the same way.

@@ -64,9 +64,9 @@
                                     @elseif ($row['status'] === 'available')
                                         <span class="pill pill-green">Available</span>
                                     @elseif ($row['status'] === 'pending')
-                                        <span class="pill pill-amber">Pending — {{ $row['take_date'] ? Carbon::parse($row['take_date'])->format('d M Y') : '' }}</span>
+                                        <span class="pill pill-amber">Pending - {{ $row['take_date'] ? Carbon::parse($row['take_date'])->format('d M Y') : '' }}</span>
                                     @elseif ($row['status'] === 'taken')
-                                        <span class="pill pill-indigo">Taken{{ $row['take_date'] ? ' — '.Carbon::parse($row['take_date'])->format('d M Y') : '' }}</span>
+                                        <span class="pill pill-indigo">Taken{{ $row['take_date'] ? ' - '.Carbon::parse($row['take_date'])->format('d M Y') : '' }}</span>
                                     @else
                                         <span class="pill pill-red">Rejected</span>
                                     @endif
@@ -84,7 +84,7 @@
                                             <button class="btn btn-outline btn-sm" type="submit">Request</button>
                                         </form>
                                     @else
-                                        <span class="dash-quiet-meta">—</span>
+                                        <span class="dash-quiet-meta">-</span>
                                     @endif
                                 </td>
                             </tr>

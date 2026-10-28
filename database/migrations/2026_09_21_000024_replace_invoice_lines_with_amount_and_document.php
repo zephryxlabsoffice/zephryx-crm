@@ -17,18 +17,18 @@ use Illuminate\Support\Facades\Schema;
  * builder." (plan doc, Clients section, 2026-09-11.)
  *
  * `invoice_lines` drops outright rather than being kept unused. Nothing in
- * production has shipped against it — migrations here have never been run
- * against a real database (see the plan doc's "Environment note") — so there
+ * production has shipped against it - migrations here have never been run
+ * against a real database (see the plan doc's "Environment note") - so there
  * is no data to preserve and no reason to carry a dead table forward.
  *
  * `invoice_payments` is UNTOUCHED. "Bank payments are still recorded by
  * hand" is the one piece of the old shape the decision keeps, and the
- * ledger it already was — a row per payment, never an `amount_paid` column —
+ * ledger it already was - a row per payment, never an `amount_paid` column -
  * is exactly what "so overdue and balance keep working" describes.
  *
  * `amount_minor` REPLACES THE SUM OF THE LINES, not `total()` itself.
  * `Invoice::total()` stays a method, not a column, for the same reason it
- * always was one: SalaryRecord already proved the shape — `net_minor` is
+ * always was one: SalaryRecord already proved the shape - `net_minor` is
  * typed once, by hand, and nothing above it treats that as less trustworthy
  * than a computed sum. An invoice's total was never "derived" in a sense
  * that mattered for correctness; it was arithmetic over numbers a person
@@ -50,7 +50,7 @@ return new class extends Migration
         Schema::dropIfExists('invoice_lines');
 
         Schema::table('invoices', function (Blueprint $table) {
-            // Typed by hand, like a payslip's net figure — not summed from
+            // Typed by hand, like a payslip's net figure - not summed from
             // rows that no longer exist.
             $table->unsignedBigInteger('amount_minor')->after('currency')->default(0);
 

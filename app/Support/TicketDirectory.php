@@ -85,11 +85,11 @@ class TicketDirectory
             'assignee_record' => $ticket->assignee ? EmployeeDirectory::row($ticket->assignee) : null,
             'escalator_record' => $ticket->escalator ? EmployeeDirectory::row($ticket->escalator) : null,
             'project_record' => $ticket->project ? ProjectDirectory::row($ticket->project) : null,
-            // Set once a ticket becomes a task — see
+            // Set once a ticket becomes a task - see
             // TicketController::convertToTask. Read from the relation rather
             // than the raw column so the page can link straight to it.
             'converted_task' => $ticket->convertedTask?->reference,
-            // Set at creation when this ticket replaces an older one — see
+            // Set at creation when this ticket replaces an older one - see
             // TicketController::store(). The old ticket is closed at the same
             // moment; this is only the link back to it.
             'supersedes' => $ticket->supersedes?->reference,
@@ -167,7 +167,7 @@ class TicketDirectory
     }
 
     /**
-     * The next reference — year-scoped, from the highest existing one.
+     * The next reference - year-scoped, from the highest existing one.
      */
     public static function nextReference(): string
     {

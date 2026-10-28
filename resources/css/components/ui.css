@@ -6,7 +6,7 @@
    cards are what every module is built from. Only genuinely Clients-specific
    rules live in pages/clients.css.
 
-   `.cta` on the public pages is a different, larger button — see base.css.
+   `.cta` on the public pages is a different, larger button - see base.css.
    ========================================================================= */
 
 /* ─────────────────────────  buttons  ───────────────────────── */
@@ -55,7 +55,7 @@
 }
 .btn-ghost:hover { background: var(--surface-2); }
 
-/* A disabled control must not merely look dimmer — it must not respond to the
+/* A disabled control must not merely look dimmer - it must not respond to the
    pointer either, or people keep clicking it. */
 .btn[disabled],
 .btn[aria-disabled="true"] {
@@ -160,14 +160,14 @@
 
 /* Between the stacking breakpoint and a comfortable desktop there is a band
    where a six- or seven-column table is simply wider than the space. It scrolls
-   inside its own card rather than pushing the whole page sideways — a page that
+   inside its own card rather than pushing the whole page sideways - a page that
    scrolls horizontally moves the navigation off screen too. */
 .card-body-table {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   /* The card is a flex column, so this would otherwise keep an automatic
      minimum of the table's own width and the scroll container would itself
-     overflow — leaving the whole page scrolling sideways anyway. */
+     overflow - leaving the whole page scrolling sideways anyway. */
   min-width: 0;
 }
 
@@ -202,11 +202,11 @@
 .data-table tbody tr:hover { background: var(--green-tint); }
 /* The handover put `cursor: pointer` on the row. A row is not focusable and
    cannot be opened from the keyboard, so the pointer is on the link inside it
-   instead — the whole row is not actually clickable. */
+   instead - the whole row is not actually clickable. */
 .data-table a.row-link { color: inherit; }
 .data-table a.row-link:hover strong { color: var(--green); }
 
-/* For short, indivisible values — a date, a status pill. Wrapping "12 Jan
+/* For short, indivisible values - a date, a status pill. Wrapping "12 Jan
    2024" onto two lines wastes a row's height and reads as two facts. */
 .data-table td.cell-tight { white-space: nowrap; }
 
@@ -491,7 +491,7 @@
 [data-theme="dark"] .tint-6 { --avatar-fg: #A5B4FC; --avatar-bg: #1A1F38; }
 [data-theme="dark"] .tint-7 { --avatar-fg: #F472B6; --avatar-bg: #2A1226; }
 
-/* A rounded square rather than a circle — for a thing (a team, a project),
+/* A rounded square rather than a circle - for a thing (a team, a project),
    where a circle reads as a person. Same tint palette. */
 .chip {
   width: 38px;
@@ -546,7 +546,7 @@
 }
 
 /* ─────────────────────────  stat rows  ─────────────────────────
-   A rail card of labelled figures — "Average tenure: 3.2 months". */
+   A rail card of labelled figures - "Average tenure: 3.2 months". */
 .stat-row {
   display: flex;
   align-items: center;
@@ -586,7 +586,7 @@
 
 /* ─────────────────────────  progress  ─────────────────────────
    A native <progress>, not a div with `style="width:75%"`. The handover used
-   the latter, which our Content-Security-Policy blocks outright (§6) — every
+   the latter, which our Content-Security-Policy blocks outright (§6) - every
    bar would have rendered empty. The element also announces itself to a screen
    reader without any ARIA of our own. */
 .progress-cell {
@@ -648,7 +648,7 @@
 .date-cell.is-overdue { color: var(--danger); }
 .date-cell.is-overdue svg { color: var(--danger); }
 
-/* A two-line right-hand column in a rail row — a date above a countdown. */
+/* A two-line right-hand column in a rail row - a date above a countdown. */
 .rail-meta {
   text-align: right;
   font-size: 11.5px;
@@ -692,8 +692,8 @@
 .due-cell span.is-done { color: var(--green); }
 
 /* ─────────────────────────  timeline  ─────────────────────────
-   A vertical history — task events, attendance, an approval chain. */
-/* Rendered as an <ol> — the sequence is the meaning — so the marker and the
+   A vertical history - task events, attendance, an approval chain. */
+/* Rendered as an <ol> - the sequence is the meaning - so the marker and the
    default indent have to go. */
 .timeline {
   position: relative;
@@ -776,7 +776,7 @@
   min-width: 0;
 }
 .field-val .field-stack { min-width: 0; }
-/* Several assignees on one task's fields — a row per person, stacked, inside
+/* Several assignees on one task's fields - a row per person, stacked, inside
    the single .field-val slot "Assigned to" used to hold one icon+name pair
    for. See resources/views/tasks/partials/fields.blade.php. */
 .task-assignees {
@@ -870,7 +870,7 @@
   flex-shrink: 0;
 }
 /* The name and icon are a link (view inline); the download icon beside it is
-   a second, separate one — see resources/views/tasks/show.blade.php. Neither
+   a second, separate one - see resources/views/tasks/show.blade.php. Neither
    looks like ordinary link text: the row itself is what reads as clickable. */
 .attachment-open {
   display: flex;
@@ -882,7 +882,7 @@
   color: inherit;
 }
 
-/* An inline count with a leading icon — "6 members". */
+/* An inline count with a leading icon - "6 members". */
 .count-inline {
   display: inline-flex;
   align-items: center;
@@ -895,7 +895,7 @@
 .count-inline .unit { font-weight: 500; color: var(--muted); }
 
 /* ─────────────────────────  person rows  ─────────────────────────
-   A rail list of people — new starters, birthdays, a team roster. */
+   A rail list of people - new starters, birthdays, a team roster. */
 .person-row {
   display: flex;
   align-items: center;
@@ -1001,7 +1001,7 @@
    nothing scrolls horizontally.
 
    Setting `display: block` on table elements drops their implicit ARIA roles,
-   which is why the markup states role="table"/"row"/"cell" explicitly — the
+   which is why the markup states role="table"/"row"/"cell" explicitly - the
    structure still reads correctly to a screen reader either way. */
 @media (max-width: 760px) {
   .data-table-stack thead { display: none; }
@@ -1069,7 +1069,7 @@
   .data-table-stack td.cell-actions::before { content: none; }
   .data-table-stack tr { position: relative; }
 
-  /* A full control — a button with a label — stays in the flow, at the foot of
+  /* A full control - a button with a label - stays in the flow, at the foot of
      the card where it reads as the card's action. */
   .data-table-stack td.cell-actions.cell-actions-wide {
     position: static;
@@ -1103,7 +1103,7 @@
 
    These four started life inside a single page's stylesheet and are now used by
    several, so they live here instead of being re-derived under a new prefix in
-   each module — the mistake the handover stylesheets make every time.
+   each module - the mistake the handover stylesheets make every time.
 
    Each keeps its original class name as a co-selector so the module that
    introduced it needs no edit. New code should use the neutral name.
@@ -1122,7 +1122,7 @@
 }
 .section-hd svg { width: 16px; height: 16px; color: var(--muted); }
 
-/* A heading BELOW a section heading, for a card that groups its fields — the
+/* A heading BELOW a section heading, for a card that groups its fields - the
    employee form's pay components, one group per engagement. Quieter and
    lighter than the heading above it, so the grouping reads as a subdivision of
    one card rather than as three cards that lost their borders. */
@@ -1231,7 +1231,7 @@
    MONEY
 
    Every amount in the application is drawn with these. Tabular figures so
-   columns of numbers line up digit for digit — proportional digits make a
+   columns of numbers line up digit for digit - proportional digits make a
    column of amounts impossible to scan and, worse, make two different amounts
    look the same width.
    ─────────────────────────────────────────────────────────────────────────── */
@@ -1307,7 +1307,7 @@
 .stat-value span.is-done { color: var(--green); }
 
 /* A grid of labelled form controls. Distinct from `.field-grid`, which is a
-   read-only label/value list — reusing that here squeezed six controls onto one
+   read-only label/value list - reusing that here squeezed six controls onto one
    row. auto-fit + minmax so the column count follows the width rather than
    being declared per breakpoint. */
 .form-grid {
@@ -1320,7 +1320,7 @@
 
 /* `.kpi-ic.tone-danger` was missing while `.qa-tile.tone-danger` existed, so
    the Invoices "Overdue" tile and the Salary "On hold" tile both fell back to
-   the default green — the most alarming figure on each page rendering as if it
+   the default green - the most alarming figure on each page rendering as if it
    were fine. Feedback tones are defined for every element that takes one. */
 .kpi-ic.tone-danger  { background: var(--danger-soft);  color: var(--danger); }
 .rail-ic.tone-danger { background: var(--danger-soft);  color: var(--danger); }
@@ -1335,7 +1335,7 @@
 .data-table tfoot td.cell-money { text-align: right; }
 
 /* A stat row whose value is a sentence rather than a figure. Side by side, a
-   long value forces the label to wrap and the two interleave — "What it Held
+   long value forces the label to wrap and the two interleave - "What it Held
    back deliberately - someone decided this means". */
 .stat-row-block {
   display: block;
@@ -1356,7 +1356,7 @@
 
    `.page` was a plain block, so the space between one section and the next came
    from whatever bottom margin each component happened to carry. `.kpi-row` had
-   one; `.notice` and `.card` did not — which is why a banner sat flush against
+   one; `.notice` and `.card` did not - which is why a banner sat flush against
    the tiles below it, and two stacked cards touched.
 
    A flex column with one gap makes the spacing a property of the page rather
@@ -1408,5 +1408,5 @@
   cursor: pointer;
 }
 
-/* A quieter paragraph inside running text — a caveat under a statement. */
+/* A quieter paragraph inside running text - a caveat under a statement. */
 .prose-quiet { color: var(--muted); font-size: 12.5px; }

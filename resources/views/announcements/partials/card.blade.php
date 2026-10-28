@@ -8,7 +8,7 @@
 {{--
     One announcement on the board.
 
-    A milestone is drawn differently from an authored post — it has no author,
+    A milestone is drawn differently from an authored post - it has no author,
     no expiry worth stating and nothing to manage, and dressing it up as a
     written announcement would invite somebody to try editing it.
 --}}

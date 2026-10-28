@@ -8,7 +8,7 @@
 
     Showing somebody their own wrong designation with no way to correct it is
     worse than not showing it. The handover solved that by making the fields
-    editable, which is the wrong fix — a person who can set their own department
+    editable, which is the wrong fix - a person who can set their own department
     can grant themselves whatever that department can see.
 
     The right fix is to say who owns each one and where to go. This module does
@@ -38,7 +38,7 @@
     </ul>
 
     <p class="pf-rail-note">
-        If any of these is wrong, raise it with HR — corrections are recorded
+        If any of these is wrong, raise it with HR - corrections are recorded
         against your account, so a change to your role or department is never
         something that happens quietly.
     </p>

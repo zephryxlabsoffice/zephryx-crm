@@ -7,7 +7,7 @@
         <div class="page-hd">
             {{--
                 This page is reached by a button on Salary Management, so it
-                needs a way back — unlike My Teams and My Projects, which are
+                needs a way back - unlike My Teams and My Projects, which are
                 navigation destinations and correctly have none.
 
                 TODO (backend phase): render only for a viewer holding
@@ -31,7 +31,7 @@
         @include('partials.notice', [
             'tone' => 'info',
             'title' => 'No salary record yet',
-            'message' => 'Nothing has been recorded for you. If that seems wrong, speak to HR — this page shows what is on record, not what should be.',
+            'message' => 'Nothing has been recorded for you. If that seems wrong, speak to HR - this page shows what is on record, not what should be.',
         ])
     @else
         @include('salary.partials.mine-kpis')
@@ -42,7 +42,7 @@
             The month's figure is already the first row of the history below,
             and the breakdown behind it lives in the payslip. Restating either
             here would be a second place to keep correct, and payroll is not run
-            from this page — it is run in Excel, and this is where the result is
+            from this page - it is run in Excel, and this is where the result is
             read.
         --}}
         <section class="ms-grid">

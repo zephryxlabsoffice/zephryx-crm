@@ -43,7 +43,7 @@ use Illuminate\Validation\ValidationException;
  * This page owns the ACCOUNT: whether it can sign in, and what it may do. Those
  * belong to the owner. The two are different questions asked by different
  * people, and merging them would mean either HR could grant permissions or the
- * owner could edit somebody's date of birth — both wrong.
+ * owner could edit somebody's date of birth - both wrong.
  *
  * §8 gives `user_roles` an `assigned_by`, which is the column that only makes
  * sense if role assignment happens somewhere with an accountable actor. This is
@@ -58,13 +58,13 @@ use Illuminate\Validation\ValidationException;
  *
  * 2. THE OWNER ACCOUNT CANNOT BE SUSPENDED OR STRIPPED HERE. It is absent from
  *    AccountDirectory's query entirely, so the routes 404 on it rather than
- *    refusing it — a row nobody may act on is a row that invites the attempt.
+ *    refusing it - a row nobody may act on is a row that invites the attempt.
  *
  * 3. SUSPENDING KILLS LIVE SESSIONS, REMEMBER-ME CHAINS AND TRUSTED DEVICES. An
  *    account that cannot sign in but is already signed in is not suspended
  *    (§4.4, §4.6), and a remembered cookie would sign it straight back in.
  *
- * 4. EVERY CHANGE IS AUDITED with before and after (§6) — and the roles entry
+ * 4. EVERY CHANGE IS AUDITED with before and after (§6) - and the roles entry
  *    names what MOVED rather than the resulting set, because "now holds
  *    employee, hr" does not say whether hr was just granted.
  */
@@ -89,13 +89,13 @@ class AccountController extends Controller
     }
 
     /**
-     * GET /admin/accounts/new — add a staff account.
+     * GET /admin/accounts/new - add a staff account.
      *
      * ─────────────────────────────────────────────────────────────────────────
      * WHY THE ADMIN PANEL CAN ADD PEOPLE (decided 2026-10-27)
      *
      * Adding an employee is HR's act, in Employees. But a fresh install has
-     * only the owner, and the owner's realm has no Employees module — so there
+     * only the owner, and the owner's realm has no Employees module - so there
      * was nobody who could create the first HR account. This form is the way
      * in, and the owner asked for it to stay available, not only for the first
      * one.
@@ -126,7 +126,7 @@ class AccountController extends Controller
     {
         /*
          * Two kinds (2026-10-27). An EMPLOYEE is a person with attendance,
-         * leave and payslips. A NORMAL account — hr@, admin@ — holds roles and
+         * leave and payslips. A NORMAL account - hr@, admin@ - holds roles and
          * nothing else: no employment record, so no attendance or payslip.
          * Only this panel creates normal accounts; HR and CEO add employees.
          */
@@ -135,7 +135,7 @@ class AccountController extends Controller
         $data = $request->validate([
             'kind' => ['nullable', Rule::in(['employee', 'normal'])],
             'name' => ['required', 'string', 'max:120'],
-            // Employee: personal required, work optional — see StaffEmails.
+            // Employee: personal required, work optional - see StaffEmails.
             'personal_email' => [$normal ? 'nullable' : 'required', 'email', 'max:190'],
             'work_email' => ['nullable', 'email', 'max:190'],
             'phone' => [$normal ? 'nullable' : 'required', 'string', 'max:32'],
@@ -171,7 +171,7 @@ class AccountController extends Controller
                 'user_id' => StaffId::forEmployee($data['employment_type']),
                 'name' => $data['name'],
                 'email' => StaffEmails::mailAddress($data['personal_email'], $data['work_email'] ?? null),
-                // Never used — replaced when they follow the invite link.
+                // Never used - replaced when they follow the invite link.
                 'password' => Str::random(64),
                 'account_type' => Realm::STAFF,
                 'staff_kind' => 'employee',
@@ -228,7 +228,7 @@ class AccountController extends Controller
     }
 
     /**
-     * POST /admin/accounts/{account}/delete — only for an account made by
+     * POST /admin/accounts/{account}/delete - only for an account made by
      * mistake and never used. See App\Support\Admin\AccountRemoval for the
      * rule and why it is this narrow.
      *
@@ -244,7 +244,7 @@ class AccountController extends Controller
 
         if ($blockers !== []) {
             return redirect()->route('admin.accounts.show', ['account' => $user->user_id])
-                ->with('status', 'This account cannot be deleted — it has been used: '.implode(', ', $blockers)
+                ->with('status', 'This account cannot be deleted - it has been used: '.implode(', ', $blockers)
                     .'. Deactivate it instead.')
                 ->with('status_tone', 'danger');
         }
@@ -267,7 +267,7 @@ class AccountController extends Controller
             entityType: 'user',
             entityId: $user->user_id,
             before: $summary,
-            after: 'deleted — made by mistake, never used',
+            after: 'deleted - made by mistake, never used',
             request: $request,
         );
 
@@ -277,11 +277,11 @@ class AccountController extends Controller
     }
 
     /**
-     * POST /admin/accounts/{account}/company — department, designation,
+     * POST /admin/accounts/{account}/company - department, designation,
      * reporting line and joining date (2026-10-27).
      *
      * The same four facts HR edits in Employees, reachable from the panel too.
-     * They describe who works where and decide no access at all — roles do.
+     * They describe who works where and decide no access at all - roles do.
      * Everything else on the record (documents, bank, salary) stays HR's.
      */
     public function company(Request $request, string $account): RedirectResponse
@@ -347,8 +347,8 @@ class AccountController extends Controller
     /**
      * A normal account: roles and a sign-in, and no employment.
      *
-     * `staff_kind` stays null, which is what keeps the Employee base — own
-     * attendance, leave, payslips — off it (User::hasEmployeeBase). The
+     * `staff_kind` stays null, which is what keeps the Employee base - own
+     * attendance, leave, payslips - off it (User::hasEmployeeBase). The
      * Employee role is never added, for the same reason.
      *
      * @param  array<string, mixed>  $data
@@ -423,7 +423,7 @@ class AccountController extends Controller
         $held = AccessDirectory::rolesOf($user);
 
         /*
-         * What this account can actually do — the UNION across its roles (§2.4)
+         * What this account can actually do - the UNION across its roles (§2.4)
          * plus whatever its type grants implicitly, which is what `permissionsFor`
          * answers. Read from the engine rather than assembled here: a second
          * implementation of the union is a second answer to "who can see
@@ -436,7 +436,7 @@ class AccountController extends Controller
         return response()->view('admin.accounts.show', [
             'activeNav' => 'accounts',
             /*
-             * Company details — who works where (2026-10-27). A record, never
+             * Company details - who works where (2026-10-27). A record, never
              * access: roles decide what somebody may do. Null for a normal
              * account, which is nobody's employment.
              */
@@ -473,7 +473,7 @@ class AccountController extends Controller
      * SUSPENDING IS NOT A COLUMN CHANGE
      *
      * Setting `status` and stopping there produces an account that cannot sign
-     * in and is still signed in — for up to a session's lifetime, and
+     * in and is still signed in - for up to a session's lifetime, and
      * indefinitely if it holds a remember-me cookie. The person suspending it
      * would be told it worked.
      *
@@ -519,7 +519,7 @@ class AccountController extends Controller
             entityType: 'user',
             entityId: $user->user_id,
             before: $was,
-            after: $data['status'].(($data['reason'] ?? null) ? ' — '.($data['reason'] ?? null) : '')
+            after: $data['status'].(($data['reason'] ?? null) ? ' - '.($data['reason'] ?? null) : '')
                 .($data['status'] === 'active' ? '' : '; sessions, remember-me tokens and trusted devices revoked'),
             request: $request,
         );
@@ -539,7 +539,7 @@ class AccountController extends Controller
      * THE ENTRY SAYS WHAT MOVED, NOT WHAT THE SET NOW IS
      *
      * "Now holds employee, hr" does not say whether hr was granted just now or
-     * has been there for a year — and the question somebody brings to an audit
+     * has been there for a year - and the question somebody brings to an audit
      * log is always the first one. So the before and after are the sets, and
      * the after also names the difference.
      *
@@ -624,8 +624,8 @@ class AccountController extends Controller
      * This one answers the first: it puts the account through exactly the
      * self-service reset flow (`PasswordResetController`) would, on the
      * admin's say-so rather than the owner's own click on an email link, and
-     * — because a "forced" reset that left the old password and an
-     * already-open session still working would not be forcing anything —
+     * - because a "forced" reset that left the old password and an
+     * already-open session still working would not be forcing anything -
      * cuts off everywhere they are currently signed in at the same time.
      * ─────────────────────────────────────────────────────────────────────────
      */
@@ -663,7 +663,7 @@ class AccountController extends Controller
      *
      * The second of the three (see forcePasswordReset above): a session or a
      * remember-me chain believed to be in the wrong hands, with nothing wrong
-     * with the password itself. Device trust is untouched on purpose — the
+     * with the password itself. Device trust is untouched on purpose - the
      * next sign-in still needs the password, which is the actual barrier a
      * stolen browser tab does not get past.
      */
@@ -695,7 +695,7 @@ class AccountController extends Controller
      * The third (see forcePasswordReset above): a device that should have to
      * prove itself with a code again, without touching whatever session or
      * password is already working. The one of the three that does not sign
-     * anybody out — a currently open session is not device trust, it is a
+     * anybody out - a currently open session is not device trust, it is a
      * session, and stays open until it expires or one of the other two acts.
      */
     public function untrustDevices(Request $request, string $account): RedirectResponse
@@ -726,7 +726,7 @@ class AccountController extends Controller
     /**
      * The account, or a 404.
      *
-     * Looked up through AccountDirectory, which excludes the owner — so these
+     * Looked up through AccountDirectory, which excludes the owner - so these
      * routes cannot reach it at all. See the head of that class.
      */
     protected function find(string $userId): User
@@ -749,7 +749,7 @@ class AccountController extends Controller
     }
 
     /**
-     * Delete every live session row for a user — the one part of "signed out
+     * Delete every live session row for a user - the one part of "signed out
      * everywhere" that needs the database session driver to reach at all.
      *
      * Shared by `cutOff` (suspend, force-password-reset) and
@@ -762,13 +762,13 @@ class AccountController extends Controller
             /*
              * On `file` or `cookie` there is no way to reach another session,
              * so an account this was meant to cut off stays signed in until
-             * its session expires — while the panel reports that it has been
+             * its session expires - while the panel reports that it has been
              * handled.
              */
             Log::error('An account action could not invalidate other sessions.', [
                 'driver' => config('session.driver'),
                 'user_id' => $user->user_id,
-                'why' => 'SESSION_DRIVER must be `database` for §4.4/§4.6 — other sessions cannot be '
+                'why' => 'SESSION_DRIVER must be `database` for §4.4/§4.6 - other sessions cannot be '
                     .'reached on this driver and stay signed in.',
             ]);
 

@@ -20,7 +20,7 @@ use Illuminate\Support\Carbon;
  * IT REPLAYS THE EVENTS RATHER THAN WRITING THE ROWS
  *
  * Every notification here comes out of `Notifier`, driven by records the other
- * seeders already created — this task, that leave decision, this meeting. Not
+ * seeders already created - this task, that leave decision, this meeting. Not
  * one of them is typed out.
  *
  * That is worth the extra work for three reasons:
@@ -32,7 +32,7 @@ use Illuminate\Support\Carbon;
  *     the record. The rule that a notification only links somewhere real is
  *     then true of the demo data too, rather than true only in production.
  *   - It exercises the rules. The seed cannot produce a notification telling
- *     somebody they assigned themselves a task, because `send()` drops it — the
+ *     somebody they assigned themselves a task, because `send()` drops it - the
  *     same code path that drops it on a live machine.
  *
  * NOTHING IS SEEDED IN PRODUCTION, AND THERE IS NO PRODUCTION SEEDER
@@ -45,7 +45,7 @@ use Illuminate\Support\Carbon;
  *
  * The team lead assigned the task, the decider decided the leave, the organiser
  * called the meeting, the comment's author wrote the comment. Where a record
- * does not say — an unled team's task — the actor is null and the notification
+ * does not say - an unled team's task - the actor is null and the notification
  * reads "Somebody assigned you a task", which is what a live one would say in
  * the same situation rather than a name the seed made up.
  * ═════════════════════════════════════════════════════════════════════════════
@@ -125,7 +125,7 @@ class NotificationSeeder extends Seeder
      * Two events per ticket, and they are not the same event.
      *
      * The assignment is credited to whoever escalated it where the row says so,
-     * and to nobody where it does not — triage leaves no other trace. Replies
+     * and to nobody where it does not - triage leaves no other trace. Replies
      * are credited to their author, which the comment carries.
      */
     protected function tickets(): void
@@ -194,14 +194,14 @@ class NotificationSeeder extends Seeder
      * ─────────────────────────────────────────────────────────────────────────
      * WHY THE ROWS ARE FOUND BY ID RATHER THAN RETURNED
      *
-     * `Notifier` returns nothing on purpose — a controller has no business
+     * `Notifier` returns nothing on purpose - a controller has no business
      * holding the notification it caused, and a return value is one more thing
      * a caller can be tempted to act on. So the seeder brackets the call and
      * takes what appeared, which also handles the methods that write several
      * rows at once (a meeting with four attendees) without any of them
      * changing shape for the seed's convenience.
      *
-     * `saveQuietly` is not needed here — this is a bulk update, and there are
+     * `saveQuietly` is not needed here - this is a bulk update, and there are
      * no model events on this table to suppress.
      * ─────────────────────────────────────────────────────────────────────────
      */

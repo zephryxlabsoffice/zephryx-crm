@@ -6,7 +6,7 @@ use App\Support\Shell;
 use Tests\TestCase;
 
 /**
- * POST /shell — sidebar collapse and density.
+ * POST /shell - sidebar collapse and density.
  */
 class ShellPreferenceTest extends TestCase
 {
@@ -18,7 +18,7 @@ class ShellPreferenceTest extends TestCase
         /*
          * Every route in the staff realm is behind `realm:staff` now (§3.1), so
          * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
+         * what the page renders rather than about who may see it - the guard
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();

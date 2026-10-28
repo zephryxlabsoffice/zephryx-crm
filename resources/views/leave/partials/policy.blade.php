@@ -37,7 +37,7 @@
         this module are for your current year
         @if (LeavePolicy::carryForward() === null)
             {{-- Said plainly rather than showing an "Expired" figure whose rule
-                 does not exist yet — which the handover did, reading zero. --}}
+                 does not exist yet - which the handover did, reading zero. --}}
             only; whether unused days carry into next year is not settled.
         @else
             , with up to {{ LeavePolicy::carryForward() }} days carrying forward.

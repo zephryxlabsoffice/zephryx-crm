@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 /**
  * The three isolated realms of the application (foundation spec §3).
  *
- * This class answers one question only — "where does this account belong?" — and
+ * This class answers one question only - "where does this account belong?" - and
  * is deliberately free of authorisation logic. Realm *enforcement* happens in
  * middleware on every request (§3.1); a redirect is a convenience, never a
  * security boundary.
@@ -42,7 +42,7 @@ class Realm
      * THIS IS FOR DRAWING, NOT FOR DECIDING (foundation spec §3.1)
      *
      * It reads the URL, and a URL is something anybody can type. That is fine
-     * for its actual job — picking which sidebar to render — and catastrophic
+     * for its actual job - picking which sidebar to render - and catastrophic
      * for anything else, so nothing may use it to authorise a read.
      *
      * The realm that MATTERS comes from the session cookie (`zx_staff`,

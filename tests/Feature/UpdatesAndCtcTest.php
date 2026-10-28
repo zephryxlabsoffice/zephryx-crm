@@ -52,11 +52,11 @@ class UpdatesAndCtcTest extends TestCase
     {
         $this->signInAsAdmin();
 
-        // Two steps: the CTC column, and the 2026-10-28 role grants after it.
-        Artisan::call('migrate:rollback', ['--step' => 2, '--force' => true]);
+        // Three steps: the CTC column, and the two 2026-10-28 updates after it.
+        Artisan::call('migrate:rollback', ['--step' => 3, '--force' => true]);
         $this->assertFalse(Schema::hasColumn('employee_salary_structures', 'ctc_minor'));
 
-        $this->assertCount(2, Updates::pending());
+        $this->assertCount(3, Updates::pending());
         $this->get('/admin/dashboard')->assertOk()->assertSee('An update is waiting to be applied');
         $this->get('/admin/updates')->assertOk()->assertSee('Add ctc to employee salary structures');
 
@@ -93,7 +93,7 @@ class UpdatesAndCtcTest extends TestCase
 
         $employee = Employee::with('user')->whereHas('user', fn ($q) => $q->where('name', 'Asha Roy'))->firstOrFail();
 
-        // Stored as typed, in paise — never the sum of the components.
+        // Stored as typed, in paise - never the sum of the components.
         $this->assertSame(126000000, (int) EmployeeSalaryStructure::where('employee_id', $employee->id)->value('ctc_minor'));
 
         $this->get('/employees/'.$employee->user->user_id)->assertOk()->assertSee('CTC per year');

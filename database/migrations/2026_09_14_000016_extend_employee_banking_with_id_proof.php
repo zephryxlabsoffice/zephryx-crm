@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * The values in `aadhaar` are ciphertext produced by the `encrypted` cast. A
  * rename moves them untouched, which is the only version of this that does not
- * require decrypting and re-encrypting every row inside a migration — a thing
+ * require decrypting and re-encrypting every row inside a migration - a thing
  * that fails halfway with half the table readable and half not.
  *
  * WHY THE BACKFILL IS NOT A GUESS
@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Schema;
  * Every number already in this column was entered under a field labelled
  * Aadhaar. Setting `id_proof_type = 'aadhaar'` where a number exists records
  * what those rows always were; leaving the type null would make them unreadable
- * — Sensitive::idProof withholds a number whose document it cannot name.
+ * - Sensitive::idProof withholds a number whose document it cannot name.
  *
  * WHAT THE COPY COLUMN IS FOR
  *

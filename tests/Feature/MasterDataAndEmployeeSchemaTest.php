@@ -21,13 +21,13 @@ class MasterDataAndEmployeeSchemaTest extends TestCase
     use RefreshDatabase;
 
     /* ══════════════════════════════════════════════════════════════════════
-       MASTER DATA — SEEDED IN PRODUCTION, BECAUSE THE APP NEEDS IT TO RUN
+       MASTER DATA - SEEDED IN PRODUCTION, BECAUSE THE APP NEEDS IT TO RUN
        ══════════════════════════════════════════════════════════════════════ */
 
     /*
      * Note there is no seeding in these tests. Tests\TestCase seeds
      * DatabaseSeeder for every test, so the master data lists are already
-     * present — which is itself the thing being asserted first.
+     * present - which is itself the thing being asserted first.
      */
 
     public function test_the_four_lists_are_seeded(): void
@@ -116,7 +116,7 @@ class MasterDataAndEmployeeSchemaTest extends TestCase
 
     public function test_an_employment_record_resolves_its_person_and_its_master_data(): void
     {
-        // The seeded rows, not invented ones — this is the shape a real
+        // The seeded rows, not invented ones - this is the shape a real
         // employee gets when somebody picks from the form's dropdowns.
         $department = MasterDataItem::inList(MasterDataItem::DEPARTMENTS)
             ->where('name', 'Development')->firstOrFail();

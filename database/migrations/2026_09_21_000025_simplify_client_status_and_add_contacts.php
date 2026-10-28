@@ -9,12 +9,12 @@ use Illuminate\Support\Facades\Schema;
  * Clients get the decided shape (review round, 2026-09-11; built 2026-09-21).
  *
  * ═════════════════════════════════════════════════════════════════════════════
- * STATUS BECOMES Active / Inactive — REPLACES THE PROJECT-STYLE STATES
+ * STATUS BECOMES Active / Inactive - REPLACES THE PROJECT-STYLE STATES
  *
- * `pending` / `review` / `on_hold` mapped to `active` — a client is still
+ * `pending` / `review` / `on_hold` mapped to `active` - a client is still
  * being worked with in every one of those states, and none of them said
  * anything the portal or the invoice module actually reads differently.
- * `completed` mapped to `inactive` — the engagement is over, and that is
+ * `completed` mapped to `inactive` - the engagement is over, and that is
  * exactly what the new value means: an Ex-Client page and read-only access
  * to old invoices (plan doc, client portal decisions, Q4).
  *
@@ -24,9 +24,9 @@ use Illuminate\Support\Facades\Schema;
  * list of what this company actually bills in, the same reasoning
  * `config/invoices.php`'s payment methods list gives for being closed.
  *
- * `client_contacts` — SEVERAL CONTACTS, ONE LOGIN (decided)
+ * `client_contacts` - SEVERAL CONTACTS, ONE LOGIN (decided)
  *
- * The one login still reads `clients.contact_*` — that triple stays the
+ * The one login still reads `clients.contact_*` - that triple stays the
  * "main" contact, editable by the client themselves exactly as it always
  * was (`Client\ProfileController::EDITABLE`). This table is the OTHERS: a
  * client company with three people worth knowing about, self-served by
@@ -52,7 +52,7 @@ return new class extends Migration
         /*
          * The original column carries an index of its own (see
          * 2026_09_09_000001_create_clients_table.php), and SQLite refuses to
-         * drop a column an index still points at — it errors rebuilding the
+         * drop a column an index still points at - it errors rebuilding the
          * index rather than silently dropping it with the column. Dropped
          * here, explicitly, before the column that carries it.
          */

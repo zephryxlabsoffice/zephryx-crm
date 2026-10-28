@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
  * EmployeeDirectory: the templates and their tests were working, so the
  * data-source change does not touch them.
  *
- * `id` in that shape is the REFERENCE — TM-1001, what the URL carries — and not
+ * `id` in that shape is the REFERENCE - TM-1001, what the URL carries - and not
  * the primary key. The views were built against it and it is what people quote.
  *
  * WHY member_count IS A SUBQUERY AND NOT count($team['members'])
@@ -119,7 +119,7 @@ class TeamDirectory
     }
 
     /**
-     * The leads a filter may offer — the people actually leading something.
+     * The leads a filter may offer - the people actually leading something.
      *
      * Not every employee: a filter that returns nothing is a dead end somebody
      * has to discover by trying it.

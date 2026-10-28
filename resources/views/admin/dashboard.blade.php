@@ -27,7 +27,7 @@
         Not a company dashboard. §2.1 gives this account no operational
         authority and no personal records, and the owner holds a staff account
         for the headcount-and-revenue view. What is here is configuration state
-        and recent actions — loose ends and a log.
+        and recent actions - loose ends and a log.
 
         If this page is boring, the configuration is in order. That is the
         correct resting state for an administration screen.

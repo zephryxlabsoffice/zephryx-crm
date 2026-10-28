@@ -19,7 +19,7 @@ use Tests\TestCase;
  *
  * The person fills the form in and a pending row is written. The live record is
  * untouched. HR checks it against the document handed in at the office and
- * applies it — at which point, and only then, the record changes.
+ * applies it - at which point, and only then, the record changes.
  *
  * WHAT THE TESTS HERE ARE ACTUALLY GUARDING
  *
@@ -160,7 +160,7 @@ class ProfileChangeRequestTest extends TestCase
     {
         /*
          * `changes` holds a field NAME that will be used to write to the column
-         * it names — the same shape as the identifier reveal, and it gets the
+         * it names - the same shape as the identifier reveal, and it gets the
          * same treatment: checked against the policy at BOTH ends. This writes
          * a row by hand carrying a field the policy does not name, which is
          * what a row stored before a decision changed would look like.

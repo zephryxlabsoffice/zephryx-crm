@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * Leave — asking, deciding, and withdrawing.
+ * Leave - asking, deciding, and withdrawing.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * THE RULES THIS FILE HOLDS
@@ -61,7 +61,7 @@ class LeaveWritesTest extends TestCase
 
     public function test_a_freelancer_has_no_leave_to_ask_for_either(): void
     {
-        // Paid against work, not time (decided 2026-09-11) — unlike a
+        // Paid against work, not time (decided 2026-09-11) - unlike a
         // Mentor, a freelancer DOES have an employment record, so this is a
         // separate check rather than the same §2.1 gap.
         $employee = $this->signInAsEmployee();
@@ -93,8 +93,8 @@ class LeaveWritesTest extends TestCase
     {
         /*
          * The only arithmetic in a module that deliberately does no arithmetic.
-         * It is not deciding what a range is worth — a week with a holiday in it
-         * may well cost four days — it refuses a figure the range cannot contain
+         * It is not deciding what a range is worth - a week with a holiday in it
+         * may well cost four days - it refuses a figure the range cannot contain
          * at all, which is a typo rather than a judgement.
          */
         $this->signInAsEmployee();
@@ -194,7 +194,7 @@ class LeaveWritesTest extends TestCase
         /*
          * The one rule in this module that cannot be delegated away. Checked on
          * the write and not only in the view, because a button that is not drawn
-         * is not a control — and this is the one somebody would think to try.
+         * is not a control - and this is the one somebody would think to try.
          */
         $me = $this->signInAsEmployee(['employee', 'hr']);
         $mine = $this->aRequest($me);
@@ -271,7 +271,7 @@ class LeaveWritesTest extends TestCase
     {
         /*
          * The reason this module has a table rather than a form. Attendance
-         * keeps no copy of who is off — it asks — so the moment a request is
+         * keeps no copy of who is off - it asks - so the moment a request is
          * approved, the day stops being drawn as an absence.
          */
         $employee = $this->signInAsEmployee(['employee', 'hr']);
@@ -331,7 +331,7 @@ class LeaveWritesTest extends TestCase
     {
         /*
          * Somebody who came in on a day they had leave for was here, and the
-         * record proves it. Leave only ever explains an ABSENCE — it never
+         * record proves it. Leave only ever explains an ABSENCE - it never
          * erases hours somebody worked.
          */
         $me = $this->signInAsEmployee();
@@ -429,7 +429,7 @@ class LeaveWritesTest extends TestCase
     }
 
     /**
-     * A past working day, found rather than assumed — a fixed offset lands on a
+     * A past working day, found rather than assumed - a fixed offset lands on a
      * weekend often enough to fail on the calendar rather than on the code.
      */
     protected function aPastWorkingDay(): string

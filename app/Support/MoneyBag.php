@@ -10,7 +10,7 @@ namespace App\Support;
  * WHY THERE IS NO SINGLE TOTAL
  *
  * ₹75,000 + $2,000 is not an amount. Producing one requires an exchange rate,
- * and this system has no rate source — no feed, no stored rate, nobody entering
+ * and this system has no rate source - no feed, no stored rate, nobody entering
  * one. Inventing a conversion would put a figure on a KPI tile that looks
  * authoritative, is wrong by however much the rate has moved, and that somebody
  * will eventually quote in a meeting.
@@ -55,7 +55,7 @@ final class MoneyBag
     }
 
     /**
-     * True when everything in the bag is one currency — the common case, and
+     * True when everything in the bag is one currency - the common case, and
      * the one where a view can show a single figure without qualification.
      */
     public function isSingleCurrency(): bool
@@ -91,7 +91,7 @@ final class MoneyBag
      * The whole bag as one string: `₹4,05,000 and $2,000`.
      *
      * Deliberately not a number. A caller that wants to lay the subtotals out
-     * itself should use subtotals() — this is for the single-line case.
+     * itself should use subtotals() - this is for the single-line case.
      */
     public function format(): string
     {

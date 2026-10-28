@@ -6,7 +6,7 @@
     Rostering Sunday and holiday work (client portal decisions, review round,
     2026-09-11).
 
-    No approval step — a row existing IS the roster. A Manager rosters
+    No approval step - a row existing IS the roster. A Manager rosters
     anyone; a Team Lead rosters only their own team's members
     (AttendanceController::canRoster, §2.6), which is why the employee
     dropdown here is already scoped server-side rather than filtered in the
@@ -34,7 +34,7 @@
                         <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
                         <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                     </svg>
-                    Roster — last week and coming weeks
+                    Roster - last week and coming weeks
                 </div>
 
                 @if ($roster->isEmpty())
@@ -59,7 +59,7 @@
                                             <span class="dash-sub">{{ $entry->employee?->user?->user_id }}</span>
                                         </td>
                                         <td class="cell-tight">{{ $entry->date->format('D, d M Y') }}</td>
-                                        <td class="cell-tight">{{ $entry->rosterer?->user?->name ?? '—' }}</td>
+                                        <td class="cell-tight">{{ $entry->rosterer?->user?->name ?? '-' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -117,7 +117,7 @@
                 </div>
                 <div class="prose prose-quiet">
                     <p>
-                        Nothing is asked of the person — a row existing is the whole
+                        Nothing is asked of the person - a row existing is the whole
                         roster. If they work the full day, one comp-off is added
                         automatically when they check out. Rostered and absent still
                         counts as absent, not as a week off.

@@ -8,14 +8,14 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 
 /**
- * "Your account is ready — set your password."
+ * "Your account is ready - set your password."
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * WHY THIS IS NOT PasswordResetMail WITH A DIFFERENT SUBJECT
  *
  * It carries the same kind of link and the same expiry, so reusing the reset
  * mail would have worked. It would also have told somebody who has never had a
- * password that theirs is being RESET — which reads either as a mistake or as
+ * password that theirs is being RESET - which reads either as a mistake or as
  * somebody having got into their account, and the one thing an unexpected
  * security email must not do is make the recipient guess.
  *

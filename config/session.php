@@ -43,7 +43,7 @@ return [
     | decorative.
     |
     | That bound is the SEVEN-DAY CEILING (10080 minutes), not the thirty-day
-    | idle window — no session outlives the ceiling however active it is, so
+    | idle window - no session outlives the ceiling however active it is, so
     | sizing this to thirty days would only leave dead rows in the session table
     | for three extra weeks. Thirty-day persistence comes from remember-me
     | (§4.5), which rotates its token on every use and revokes the chain when a
@@ -197,7 +197,7 @@ return [
     | network the first time a request arrives over plain HTTP.
     |
     | So the default is "on everywhere except local", and an environment that
-    | genuinely needs it off has to say so. Getting this wrong is silent — the
+    | genuinely needs it off has to say so. Getting this wrong is silent - the
     | application works perfectly either way, which is exactly why it should
     | not depend on being remembered.
     |

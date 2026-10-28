@@ -11,7 +11,7 @@ use Throwable;
 class Updates
 {
     /**
-     * Pending migration names, oldest first. Empty when up to date — and
+     * Pending migration names, oldest first. Empty when up to date - and
      * empty, not an exception, if the migrations table cannot be read, so a
      * broken database never takes the Admin Panel down with it.
      *

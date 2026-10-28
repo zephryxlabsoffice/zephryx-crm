@@ -5,7 +5,7 @@
     use App\Support\ClientPresenter as P;
 
     // One template for adding and for editing. The fields and their validation
-    // are identical, and two files would mean every future change made twice —
+    // are identical, and two files would mean every future change made twice -
     // with the second one eventually forgotten.
     $editing = $client !== null;
 @endphp
@@ -26,7 +26,7 @@
                 @if ($editing)
                     Changes are recorded against this client, with who made them.
                 @else
-                    This records the organisation. It does not create a login — portal access is given separately.
+                    This records the organisation. It does not create a login - portal access is given separately.
                 @endif
             </p>
         </div>
@@ -52,7 +52,7 @@
                             <input id="cl-name" name="name" type="text" required
                                    value="{{ old('name', $client?->name) }}"
                                    @if ($errors->has('name')) aria-invalid="true" aria-describedby="cl-name-error" @endif>
-                            <span class="pay-hint">Has to be unique — two identical rows on a list cannot be told apart.</span>
+                            <span class="pay-hint">Has to be unique - two identical rows on a list cannot be told apart.</span>
                             @error('name')
                                 <span class="field-error" id="cl-name-error">{{ $message }}</span>
                             @enderror
@@ -116,7 +116,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <span class="pay-hint">The engagement, not anybody's login. An inactive client's own portal switches to a read-only invoices page — they never lose access outright.</span>
+                            <span class="pay-hint">The engagement, not anybody's login. An inactive client's own portal switches to a read-only invoices page - they never lose access outright.</span>
                             @error('status')
                                 <span class="field-error">{{ $message }}</span>
                             @enderror
@@ -136,7 +136,7 @@
                             <label class="form-field-lbl" for="cl-manager">Account manager <span class="an-optional">(optional)</span></label>
                             {{-- Only active staff are offered. Somebody whose
                                  record was closed last month is not who a client
-                                 should be told to contact — and the rule is on
+                                 should be told to contact - and the rule is on
                                  the validator too, because a dropdown is not
                                  where that is enforced. --}}
                             <select id="cl-manager" name="account_manager_id">

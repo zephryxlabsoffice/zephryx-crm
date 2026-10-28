@@ -7,13 +7,13 @@
     Requests waiting on a decision.
 
     The viewer's own request is not in this list. Nobody decides their own
-    (§2.6), owner included — filtered in DashboardData as well as refused by the
+    (§2.6), owner included - filtered in DashboardData as well as refused by the
     write, because a queue that puts your own request next to an Approve button
     teaches people to find that rule out the hard way.
 
     There are no Approve/Reject buttons here either. Approving leave without
     seeing who else is already off is the mistake the Leave module was rebuilt
-    to prevent, and that context does not fit in a dashboard card — so this is a
+    to prevent, and that context does not fit in a dashboard card - so this is a
     queue that links, not a queue that decides.
 --}}
 <section class="card table-card">

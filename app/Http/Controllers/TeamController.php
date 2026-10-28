@@ -21,7 +21,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Teams — the managing face (`/teams`), the personal face (`/teams/mine`) and
+ * Teams - the managing face (`/teams`), the personal face (`/teams/mine`) and
  * one team's overview (`/teams/{team}`). Foundation spec §12.1.
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -29,8 +29,8 @@ use Illuminate\Validation\ValidationException;
  *
  * The permission (§5) says what somebody may do at all. The §2.6 rule says who
  * they may do it to: a Team Lead acts within their own team and no further.
- * Both are enforced — the permission on the route, the ownership in `authorise`
- * below — because a Team Lead holding `teams.members` must not be able to
+ * Both are enforced - the permission on the route, the ownership in `authorise`
+ * below - because a Team Lead holding `teams.members` must not be able to
  * reassign somebody else's team by typing its reference into the URL.
  *
  * `/teams/mine` carries no permission beyond being signed in, and filters on
@@ -50,7 +50,7 @@ class TeamController extends Controller
     }
 
     /**
-     * GET /teams — every team in the company.
+     * GET /teams - every team in the company.
      */
     public function index(Request $request): Response
     {
@@ -81,7 +81,7 @@ class TeamController extends Controller
     }
 
     /**
-     * GET /teams/mine — the teams the signed-in person belongs to.
+     * GET /teams/mine - the teams the signed-in person belongs to.
      *
      * A separate route rather than a filter on the managing face: §12.1 keeps
      * the personal and managing views distinct, and this one is reachable by
@@ -94,7 +94,7 @@ class TeamController extends Controller
         /*
          * Scoped by the viewer's own employment id, taken from the session.
          * There is no parameter here for anybody to change to somebody else's
-         * — the same reason the payslip route takes a period and no employee.
+         * - the same reason the payslip route takes a period and no employee.
          */
         $query = TeamDirectory::query()->whereHas(
             'members',
@@ -109,7 +109,7 @@ class TeamController extends Controller
     }
 
     /**
-     * GET /teams/{team} — one team and its members.
+     * GET /teams/{team} - one team and its members.
      */
     public function show(Request $request, string $team): Response
     {
@@ -129,7 +129,7 @@ class TeamController extends Controller
 
         $members = collect($allMembers)
             /*
-             * `on_leave` is not a stored state — it is a question about today
+             * `on_leave` is not a stored state - it is a question about today
              * that an approved leave request answers, and the Leave module has
              * no table yet. The tab stays, and reports nobody, which is the
              * honest answer rather than a stale one. Same decision as the
@@ -169,7 +169,7 @@ class TeamController extends Controller
             'age' => TeamPresenter::age(TeamDirectory::row($record)['created']),
             'mayEdit' => $this->rbac->can($request->user(), 'teams.edit'),
             // Membership is the routine act, and a Team Lead may do it on their
-            // own team — which is why this is not simply the permission.
+            // own team - which is why this is not simply the permission.
             'mayManageMembers' => $this->canManageMembers($request, $record),
             'addable' => $this->canManageMembers($request, $record) ? $this->addableTo($record) : collect(),
         ]);
@@ -191,8 +191,8 @@ class TeamController extends Controller
         $team = Team::create($data + ['reference' => $this->nextReference()]);
 
         /*
-         * The lead joins the team they lead. Not enforced by the schema —
-         * leading a team you are not in is a real, if unusual, arrangement —
+         * The lead joins the team they lead. Not enforced by the schema -
+         * leading a team you are not in is a real, if unusual, arrangement -
          * but it is what somebody naming a lead means, and having to add them
          * as a member afterwards is a step everybody forgets.
          */
@@ -342,7 +342,7 @@ class TeamController extends Controller
         if ($record->lead_id === $employee->id) {
             /*
              * The lead cannot be removed as a member while they are still the
-             * lead — the team would show a lead who is not in it, which is a
+             * lead - the team would show a lead who is not in it, which is a
              * state nobody arrives at on purpose. Naming a different lead first
              * is one extra click and one less confusing page.
              */
@@ -385,7 +385,7 @@ class TeamController extends Controller
      * The signed-in person's employment record, if they have one.
      *
      * A Mentor and the owner have none (§2.1), which is why this is nullable
-     * rather than an assumption — "my teams" for somebody with no employment is
+     * rather than an assumption - "my teams" for somebody with no employment is
      * an empty list, not an error.
      */
     protected function employeeFor(Request $request): ?Employee
@@ -449,7 +449,7 @@ class TeamController extends Controller
     }
 
     /**
-     * The people who could be added — active employees not already in.
+     * The people who could be added - active employees not already in.
      *
      * @return Collection<int, Employee>
      */
@@ -467,7 +467,7 @@ class TeamController extends Controller
     /**
      * The next team reference.
      *
-     * From the highest existing one, never from a count — the same reason as
+     * From the highest existing one, never from a count - the same reason as
      * staff ids and client references: a reference two teams have held makes
      * every audit entry about it ambiguous.
      */
@@ -501,7 +501,7 @@ class TeamController extends Controller
     }
 
     /**
-     * Pagination over an in-memory list — the member table, which is filtered
+     * Pagination over an in-memory list - the member table, which is filtered
      * and grouped in PHP because it is one team's worth of people.
      *
      * @param  Collection<int, array<string, mixed>>  $rows

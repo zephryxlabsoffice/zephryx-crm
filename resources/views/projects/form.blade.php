@@ -162,7 +162,7 @@
                         <div class="prose prose-quiet">
                             <p>
                                 Progress is {{ ProjectDirectory::progress($project) }}%,
-                                computed from this project's tasks — completed over total. There is
+                                computed from this project's tasks - completed over total. There is
                                 nothing to type here; add, assign and complete tasks to move it.
                             </p>
                         </div>

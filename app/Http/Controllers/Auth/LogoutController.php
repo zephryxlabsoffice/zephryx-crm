@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 /**
- * POST /logout — foundation spec §3.2, §4.4.
+ * POST /logout - foundation spec §3.2, §4.4.
  *
  * POST, never GET: a GET sign-out can be fired by any `<img src="/logout">` on
  * any page the user visits.
@@ -24,7 +24,7 @@ use Illuminate\Routing\Controller;
  *
  * All three, because of what signing out MEANS on a shared or borrowed machine.
  * Somebody who presses it in an internet cafe expects to have left nothing
- * behind — a session that ends while a remember-me cookie survives has left the
+ * behind - a session that ends while a remember-me cookie survives has left the
  * next person a working account, and one that skips device trust has left them
  * a machine that no longer needs a code.
  *
@@ -68,7 +68,7 @@ class LogoutController extends Controller
             ->with('status_tone', 'success')
             // The cookies go too. Leaving them to expire would mean the browser
             // keeps presenting credentials that the database has already
-            // revoked — harmless, and confusing to anybody reading traffic.
+            // revoked - harmless, and confusing to anybody reading traffic.
             ->withCookie($this->remember->forget())
             ->withCookie($this->devices->forget());
     }

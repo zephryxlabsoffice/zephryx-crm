@@ -10,20 +10,20 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Roles, permissions, rank and who holds what — read from the RBAC tables.
+ * Roles, permissions, rank and who holds what - read from the RBAC tables.
  *
  * ═════════════════════════════════════════════════════════════════════════════
  * THE CATALOGUE IS THE `permissions` TABLE, AND NOTHING DERIVES IT ANY MORE
  *
  * The demo source assembled the permission list by reading keys back out of the
  * navigation config and the dashboard registry, because there was no table. §5
- * said that would be replaced by a seeder — it has been, and RbacSeeder is now
+ * said that would be replaced by a seeder - it has been, and RbacSeeder is now
  * the one place a key is declared.
  *
  * That matters beyond tidiness. Derivation could only ever see permissions that
  * some sidebar or widget mentioned, so a write permission gating a route and
- * nothing else — `teams.members`, `invoices.manage`, every key in
- * RbacSeeder::MODULE_WRITES — was invisible to the screen that assigns it. The
+ * nothing else - `teams.members`, `invoices.manage`, every key in
+ * RbacSeeder::MODULE_WRITES - was invisible to the screen that assigns it. The
  * Admin Panel could not grant the permissions the application spent the backend
  * phase adding.
  *
@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\DB;
  * WHAT "SENSITIVE" IS NOW
  *
  * A column on the row (`is_sensitive`), not a list this class keeps. Marking a
- * new permission sensitive is data rather than a deploy — and the mark cannot
+ * new permission sensitive is data rather than a deploy - and the mark cannot
  * disagree with the catalogue, because it is on the catalogue.
  * ═════════════════════════════════════════════════════════════════════════════
  */
@@ -45,8 +45,8 @@ class AccessDirectory
      * The five domains rank is stored per (§2.5).
      *
      * Rank exists ONLY to answer "may I act on this person" and to route
-     * approvals. It never grants a permission — that is entirely
-     * role_permissions — which is why this stays separate from everything else.
+     * approvals. It never grants a permission - that is entirely
+     * role_permissions - which is why this stays separate from everything else.
      *
      * @return array<string, string>
      */
@@ -175,7 +175,7 @@ class AccessDirectory
     }
 
     /**
-     * The roles one account holds. Several is normal — they stack (§2.4).
+     * The roles one account holds. Several is normal - they stack (§2.4).
      *
      * @return list<string>
      */
@@ -202,7 +202,7 @@ class AccessDirectory
      *
      * People who already hold the permission through ANOTHER role are excluded.
      * Roles stack as a union (§2.4), so granting salary.view to Manager changes
-     * nothing for a Manager who is also HR — counting them would overstate the
+     * nothing for a Manager who is also HR - counting them would overstate the
      * change, and an overstated warning is one people learn to dismiss.
      * ─────────────────────────────────────────────────────────────────────────
      *
@@ -246,7 +246,7 @@ class AccessDirectory
      * The accounts these screens are about.
      *
      * Staff only. A client account holds no roles by construction (§2.2) and
-     * the owner's holds none either (§2.1) — listing either would put rows on
+     * the owner's holds none either (§2.1) - listing either would put rows on
      * an access screen that no toggle on it can change.
      *
      * @return \Illuminate\Database\Eloquent\Builder<User>

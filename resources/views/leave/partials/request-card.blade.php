@@ -23,7 +23,7 @@
         <div class="lv-field">
             <dt>Days</dt>
             {{-- Stated by the requester, agreed by the approver. Nothing here
-                 works it out — see App\Support\LeavePolicy for why this module
+                 works it out - see App\Support\LeavePolicy for why this module
                  counts rather than decides. --}}
             <dd>{{ P::duration($request) }}</dd>
         </div>
@@ -46,7 +46,7 @@
         <div class="lv-reason">
             <span class="lv-field-lbl">Contact while away</span>
             {{-- A phone number is personal data (§6). It appears on the request
-                 for the person deciding it and on no list — which is why there
+                 for the person deciding it and on no list - which is why there
                  is no contact column in the queue. --}}
             <p class="lv-contact">{{ $request['contact'] }}</p>
         </div>

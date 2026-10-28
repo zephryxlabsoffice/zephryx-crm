@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    ANNOUNCEMENTS AND NOTIFICATIONS
 
-   Two surfaces sharing one set of components — the board is what everybody
+   Two surfaces sharing one set of components - the board is what everybody
    reads, the notification page is what is addressed to you. The handover's
    announcements.css re-derived the KPI tile (.an-kpi), the tabs (.an-tab), the
    table and the rail rows; only what is specific here.
@@ -11,7 +11,7 @@
 .an-detail-grid,
 .an-form-grid {
   display: grid;
-  /* minmax(0, …), never 1fr — a bare 1fr track is forced open by a wide child
+  /* minmax(0, …), never 1fr - a bare 1fr track is forced open by a wide child
      and the whole page scrolls sideways. */
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: var(--density-gap);
@@ -271,7 +271,7 @@
 
    The one card on this form that writes outside Announcements: these dates are
    read by Attendance and decide who is not marked absent. Bordered rather than
-   filled — it is a normal thing to do, not an alarm — with the consequence
+   filled - it is a normal thing to do, not an alarm - with the consequence
    called out underneath in the warning tone.                                */
 
 .an-closure { border-color: var(--line-strong); }

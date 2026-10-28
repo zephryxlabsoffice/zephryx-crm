@@ -16,13 +16,13 @@ use Illuminate\Support\Collection;
  *
  * Plain arrays: id, employee, date, check_in, check_out, rejected_at,
  * rejected_by, rejection_reason. The policy and the presenter are the tested
- * heart of this module and they predate the table — handing them models instead
+ * heart of this module and they predate the table - handing them models instead
  * would have meant rewriting them to prove nothing.
  *
  * WHERE `onLeave` COMES FROM
  *
  * A day the company already granted must never be drawn as an absence, and
- * Attendance does not store leave — it asks. `leaveDates()` is one call into
+ * Attendance does not store leave - it asks. `leaveDates()` is one call into
  * LeaveDirectory, and it is the only thing this module knows about leave.
  * ═════════════════════════════════════════════════════════════════════════════
  */
@@ -32,7 +32,7 @@ class AttendanceDirectory
      * The dates one person's approved leave covers.
      *
      * Asked of the Leave module, never stored here. Two copies of "was this
-     * person off on the 14th" is one copy that eventually disagrees — and the
+     * person off on the 14th" is one copy that eventually disagrees - and the
      * disagreement shows up as somebody being marked absent on a day the
      * company granted them.
      *
@@ -47,7 +47,7 @@ class AttendanceDirectory
      * The Sundays and holidays one person is rostered for.
      *
      * Asked of `sunday_rosters` the same way `leaveDates` asks LeaveDirectory
-     * — a fact this module reads rather than a second copy of it.
+     * - a fact this module reads rather than a second copy of it.
      *
      * @return list<string>
      */
@@ -80,7 +80,7 @@ class AttendanceDirectory
     }
 
     /**
-     * Everyone's standing on one date — a row per PERSON, not per record.
+     * Everyone's standing on one date - a row per PERSON, not per record.
      *
      * The people are the spine and the records are looked up against them: a
      * list built from records is a list in which the people who did not turn up
@@ -188,7 +188,7 @@ class AttendanceDirectory
      * actionable: it is a conversation with a named person rather than a report.
      *
      * Filtered in PHP after an indexed, bounded query, because "past the
-     * ten-hour window" is a comparison against `now` that the policy owns — and
+     * ten-hour window" is a comparison against `now` that the policy owns - and
      * a second copy of that arithmetic in SQL is the copy that goes stale when
      * the window changes.
      *

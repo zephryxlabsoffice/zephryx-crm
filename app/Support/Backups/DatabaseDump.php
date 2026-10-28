@@ -18,7 +18,7 @@ use RuntimeException;
  * has works anywhere the application works. The database is small (a
  * six-person company), so streaming rows in chunks is quick.
  *
- * The output is ordinary SQL — DROP/CREATE then INSERTs — and restores with
+ * The output is ordinary SQL - DROP/CREATE then INSERTs - and restores with
  * phpMyAdmin's Import tab. Foreign key checks are switched off for the
  * duration so tables can load in any order.
  * ─────────────────────────────────────────────────────────────────────────────

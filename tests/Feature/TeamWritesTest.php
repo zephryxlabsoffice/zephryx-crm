@@ -14,14 +14,14 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * Teams — creating, editing, and changing who is in one.
+ * Teams - creating, editing, and changing who is in one.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * THE FILE IS MOSTLY ABOUT THE SECOND CHECK
  *
  * The permission says what somebody may do; §2.6 says who they may do it to. A
  * Team Lead holds `teams.members` for their own team and no other, and that
- * distinction cannot live on a route — so most of what follows is a lead being
+ * distinction cannot live on a route - so most of what follows is a lead being
  * allowed on one team and refused on the one next to it.
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -43,7 +43,7 @@ class TeamWritesTest extends TestCase
     public function test_the_personal_face_needs_no_permission_at_all(): void
     {
         // §12.1: it is the viewer's own membership, reachable by anybody signed
-        // in — the same reason their own payslip is.
+        // in - the same reason their own payslip is.
         $this->signInAsStaff(['employee']);
 
         $this->get('/teams/mine')->assertOk();
@@ -93,8 +93,8 @@ class TeamWritesTest extends TestCase
     public function test_the_lead_is_a_member_of_the_team_they_lead(): void
     {
         /*
-         * Not enforced by the schema — leading a team you are not in is a real
-         * if unusual arrangement — but it is what naming a lead means, and
+         * Not enforced by the schema - leading a team you are not in is a real
+         * if unusual arrangement - but it is what naming a lead means, and
          * having to add them separately is the step everybody forgets.
          */
         $lead = $this->anEmployee('EMP600', 'A Lead');

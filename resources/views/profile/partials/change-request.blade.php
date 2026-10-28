@@ -10,7 +10,7 @@
     their address has changed when it has not.
 
     So: one explanation above the fields, a button that says "Send to HR" rather
-    than "Save", and — while something is pending — the request itself shown
+    than "Save", and - while something is pending - the request itself shown
     with what it will do, instead of a form that would be refused.
 --}}
 <div class="card">
@@ -26,7 +26,7 @@
         <p>
             These details are the company's record of you, so they are corrected against
             documents rather than on the form alone.
-            <strong>Filling this in sends a request to HR</strong> — bring the supporting
+            <strong>Filling this in sends a request to HR</strong> - bring the supporting
             document to the office, and HR applies it. Nothing below changes until they do.
         </p>
         <p>

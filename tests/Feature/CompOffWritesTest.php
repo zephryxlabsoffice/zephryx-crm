@@ -88,7 +88,7 @@ class CompOffWritesTest extends TestCase
         $this->signInAsEmployee(['employee', 'manager']);
         $worker = $this->anEmployee('EMP813', 'A Worker');
 
-        // The Monday after the pinned Sunday — an ordinary working day.
+        // The Monday after the pinned Sunday - an ordinary working day.
         $this->post('/attendance/roster', [
             'employee_id' => $worker->id,
             'date' => Carbon::parse(self::SUNDAY)->addDay()->toDateString(),
@@ -141,7 +141,7 @@ class CompOffWritesTest extends TestCase
 
         $this->post('/attendance/check-in')->assertRedirect();
 
-        // Half an hour later — well under the half-day threshold.
+        // Half an hour later - well under the half-day threshold.
         Carbon::setTestNow(Carbon::parse(self::SUNDAY)->setTime(10, 0));
         $this->post('/attendance/check-out')->assertRedirect();
 
@@ -168,7 +168,7 @@ class CompOffWritesTest extends TestCase
         $this->post('/attendance/check-in');
         Carbon::setTestNow(Carbon::parse(self::SUNDAY)->setTime(18, 30));
         $this->post('/attendance/check-out');
-        $this->post('/attendance/check-out'); // idempotent — does not move anything
+        $this->post('/attendance/check-out'); // idempotent - does not move anything
 
         $this->assertSame(1, CompOff::where('employee_id', $employee->id)->count());
     }

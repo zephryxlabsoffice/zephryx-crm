@@ -21,7 +21,7 @@
 
                 <div class="card-body">
                     <p class="dash-note">
-                        For anything that should go into the queue and get triaged —
+                        For anything that should go into the queue and get triaged -
                         something broken, a request that needs routing, or work that
                         should be tracked to a close. It arrives unassigned and
                         unprioritised, and whoever is on triage sets both.
@@ -43,7 +43,7 @@
 
                 <div class="card-body">
                     <p class="dash-note">
-                        For anything that is not a ticket — a question, something
+                        For anything that is not a ticket - a question, something
                         urgent, or something that should not sit in a queue.
                     </p>
 

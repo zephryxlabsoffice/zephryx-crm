@@ -1,12 +1,12 @@
 /**
- * Theme toggle — foundation spec §7.
+ * Theme toggle - foundation spec §7.
  *
  * The toggle is a real <form method="post" action="/theme">, so it works with
  * JavaScript disabled (full page round-trip). This script upgrades it to an
  * in-place swap: flip `data-theme` immediately, then persist in the background.
  *
  * The server always renders `data-theme` on <html>, so there is no flash of the
- * wrong palette and no need for a blocking inline script — which also keeps the
+ * wrong palette and no need for a blocking inline script - which also keeps the
  * Content-Security-Policy free of `unsafe-inline`.
  */
 

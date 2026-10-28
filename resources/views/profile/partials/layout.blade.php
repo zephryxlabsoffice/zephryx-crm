@@ -18,7 +18,7 @@
         {{-- No "Edit Profile" button.
 
              The handover had one sitting above a form whose fields were already
-             editable, with Save and Cancel at the bottom — so it either did
+             editable, with Save and Cancel at the bottom - so it either did
              nothing or it did the same thing twice. The form is the form. --}}
     </div>
 

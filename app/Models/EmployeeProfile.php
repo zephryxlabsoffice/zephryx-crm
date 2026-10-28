@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * The fields a person owns about themselves.
  *
  * Everything here is ProfilePolicy::SELF. Nothing HR owns is on this model, and
- * that is the point of it being a separate table — a write that reaches this
+ * that is the point of it being a separate table - a write that reaches this
  * row cannot touch a department, a designation or a name however it is shaped.
  */
 class EmployeeProfile extends Model
@@ -45,7 +45,7 @@ class EmployeeProfile extends Model
      * The defaults a person with no row reads as.
      *
      * Kept here rather than in the controller so "never opened the page" and
-     * "opened it and cleared everything" render identically — the distinction
+     * "opened it and cleared everything" render identically - the distinction
      * matters in the table (see the migration) and matters nowhere else.
      *
      * @return array<string, mixed>

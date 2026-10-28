@@ -11,7 +11,7 @@
     they are checking a payslip against the days they worked, and five rows is
     never the answer to that question.
 
-    Days with no record — weekly offs, holidays, absences — are not here. They
+    Days with no record - weekly offs, holidays, absences - are not here. They
     are on the calendar above, which is the surface that can show the absence of
     something. A table cannot: a row saying "absent" is a row somebody has to be
     written, and nothing writes it.

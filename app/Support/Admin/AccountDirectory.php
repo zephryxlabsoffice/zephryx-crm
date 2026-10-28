@@ -22,7 +22,7 @@ use Illuminate\Support\Collection;
  *
  * An accounts screen that starts from `employees` cannot show the first and
  * cannot explain the second. It starts from the account, and the employment
- * record is what it joins ON — absent for some rows, which the page draws.
+ * record is what it joins ON - absent for some rows, which the page draws.
  *
  * WHY THE OWNER IS NOT IN THE LIST
  *
@@ -30,7 +30,7 @@ use Illuminate\Support\Collection;
  * and no operational authority, operated by one account. That account is the
  * only one that can reach this page. Listing it would offer a suspend button
  * that locks the company out of its own configuration with no way back that
- * does not involve the database — so it is absent from the query, not merely
+ * does not involve the database - so it is absent from the query, not merely
  * refused by the write. A row nobody may act on is a row that invites the
  * attempt.
  * ═════════════════════════════════════════════════════════════════════════════
@@ -40,7 +40,7 @@ class AccountDirectory
     /**
      * Every account this panel administers.
      *
-     * Staff and clients. Not the owner — see the head of this class.
+     * Staff and clients. Not the owner - see the head of this class.
      *
      * @return Builder<User>
      */
@@ -70,7 +70,7 @@ class AccountDirectory
      *
      * `department` and `designation` come off the employment record and are
      * null where there is none. They are shown here and editable nowhere on
-     * this screen — that is HR's, in Employees.
+     * this screen - that is HR's, in Employees.
      *
      * @return array<string, mixed>
      */
@@ -109,7 +109,7 @@ class AccountDirectory
      *
      * `no_roles` is the one worth looking at, and it is why this card exists: a
      * staff account that can sign in and holds nothing is somebody who was
-     * created and then forgotten, and they will not report it — from the
+     * created and then forgotten, and they will not report it - from the
      * inside it looks like an application with no modules in it.
      *
      * Client accounts are excluded from that count rather than swelling it:

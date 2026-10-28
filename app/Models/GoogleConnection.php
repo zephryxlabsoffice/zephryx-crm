@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * is its own table and not a `company_settings` row.
  *
  * Nothing outside App\Http\Controllers\Admin\IntegrationsController and
- * App\Support\Google reads `service_account_key` — the whole point of keeping
+ * App\Support\Google reads `service_account_key` - the whole point of keeping
  * it off `config()` is that reading it anywhere else recreates the leak this
  * table exists to close.
  */
@@ -33,7 +33,7 @@ class GoogleConnection extends Model
     }
 
     /**
-     * The one row, created on first save rather than forced to id 1 — so a
+     * The one row, created on first save rather than forced to id 1 - so a
      * fresh install with nothing connected yet still gets a usable, unsaved
      * instance instead of a special-cased null.
      */

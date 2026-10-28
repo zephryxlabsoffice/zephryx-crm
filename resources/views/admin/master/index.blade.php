@@ -12,7 +12,7 @@
         'tone' => 'info',
         'title' => 'Nothing here is deleted',
         'message' => 'These rows are referenced by records that already exist. Removing one would not '
-            .'remove that history — it would orphan it, leaving a department nobody can look up. Rows are '
+            .'remove that history - it would orphan it, leaving a department nobody can look up. Rows are '
             .'deactivated instead: they stop being offered for new records and keep answering for old ones.',
     ])
 
@@ -23,7 +23,7 @@
                 <span>{{ $list['label'] }}</span>
                 <span class="ad-list-count">
                     @if ($list['empty'])
-                        Empty — nothing can be created that needs one
+                        Empty - nothing can be created that needs one
                     @else
                         {{ $list['active'] }} active
                         @if ($list['total'] > $list['active'])

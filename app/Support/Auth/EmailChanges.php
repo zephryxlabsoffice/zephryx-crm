@@ -24,7 +24,7 @@ use Illuminate\Support\Str;
  *   borrowed session is the whole attack.
  *
  *   THE NEW ADDRESS proves it is one they can actually receive at. Without it,
- *   a typo — or somebody typing a colleague's address — locks the account to a
+ *   a typo - or somebody typing a colleague's address - locks the account to a
  *   mailbox its owner cannot read, which is the same outcome as the attack and
  *   is far more likely to happen by accident.
  *
@@ -34,14 +34,14 @@ use Illuminate\Support\Str;
  *
  * THE TOKEN CARRIES THE CHANGE, AND NOTHING ELSE IS TRUSTED
  *
- * `confirm()` takes a token and nothing more — no user id, no address, no
+ * `confirm()` takes a token and nothing more - no user id, no address, no
  * "which half". The same rule PasswordResets holds to, for the same reason: a
  * confirm route that accepted an identifier alongside the token would let
  * anybody with a token for their own change confirm somebody else's by editing
  * one field.
  *
  * Which half a token is for is decided by which column it matches, so a link
- * mailed to the old address cannot be used to satisfy the new one — the trick
+ * mailed to the old address cannot be used to satisfy the new one - the trick
  * that would otherwise turn "confirm from both" back into "confirm from one".
  * ═════════════════════════════════════════════════════════════════════════════
  */
@@ -174,7 +174,7 @@ class EmailChanges
     }
 
     /**
-     * A fast hash, not bcrypt — the same reasoning as PasswordResets: 64
+     * A fast hash, not bcrypt - the same reasoning as PasswordResets: 64
      * characters from a CSPRNG have nothing to guess, so a slow hash buys
      * nothing, and what matters is that the stored value cannot be turned back
      * into a working link.

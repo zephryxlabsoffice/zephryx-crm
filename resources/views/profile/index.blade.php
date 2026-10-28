@@ -30,8 +30,8 @@
                     {{-- Said before somebody uploads, not after. A phone photo
                          carries the coordinates of wherever it was taken. --}}
                     JPEG or PNG, up to 2 MB and {{ \App\Support\Images\PhotoIntake::MAX_SIDE }} pixels a side.
-                    Anything your camera recorded alongside the picture — where it was taken,
-                    when, and on what — is removed before the file is stored.
+                    Anything your camera recorded alongside the picture - where it was taken,
+                    when, and on what - is removed before the file is stored.
                 </span>
             </div>
 
@@ -45,7 +45,7 @@
         {{--
             Everything in this form is the person's own (ProfilePolicy::SELF).
 
-            Nothing HR owns appears as an input anywhere on it — name,
+            Nothing HR owns appears as an input anywhere on it - name,
             department, designation, reporting line, date of birth and role are
             in the header card above, shown and labelled as HR's. The handover
             had three of those as editable text boxes in this exact form.
@@ -81,7 +81,7 @@
                          also shows the sign-in address reads as a second way
                          in, and it is not one. --}}
                     <span class="pay-hint">
-                        A record only — you do not sign in with it. It is how we reach you if
+                        A record only - you do not sign in with it. It is how we reach you if
                         your work account is the thing that is broken.
                     </span>
                 </div>
@@ -116,7 +116,7 @@
                 <div class="form-field pf-form-wide">
                     <label class="form-field-lbl" for="pf-languages">{{ ProfilePolicy::labelOf('languages') }}</label>
                     {{-- A text field, not the handover's removable chips. Chips
-                         need JavaScript to add one, and ours is a comma — which
+                         need JavaScript to add one, and ours is a comma - which
                          works with the keyboard, works with JavaScript off, and
                          is one thing to validate. --}}
                     <input id="pf-languages" name="languages" type="text"

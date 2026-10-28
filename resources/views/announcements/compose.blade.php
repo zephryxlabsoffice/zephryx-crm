@@ -70,7 +70,7 @@
                         <div class="form-field">
                             <label class="form-field-lbl" for="an-department">Which department <span class="an-optional">(if not everyone)</span></label>
                             <select id="an-department" name="audience_department_id">
-                                <option value="">—</option>
+                                <option value="">-</option>
                                 @foreach ($departments as $department)
                                     <option value="{{ $department->id }}"
                                         @selected((int) old('audience_department_id') === $department->id)>
@@ -88,7 +88,7 @@
                                 <input id="an-for-clients" name="for_clients" type="checkbox" value="1" @checked(old('for_clients'))>
                                 Also show this on the client board
                             </label>
-                            <span class="pay-hint">A separate question from who sees it above — clients never see the internal audience, only this.</span>
+                            <span class="pay-hint">A separate question from who sees it above - clients never see the internal audience, only this.</span>
                         </div>
                     </div>
                 </div>
@@ -123,7 +123,7 @@
                                 <input id="an-pinned" name="pinned" type="checkbox" value="1" @checked(old('pinned'))>
                                 Pin to the top of the board
                             </label>
-                            <span class="pay-hint">Use it sparingly — everything pinned is nothing pinned.</span>
+                            <span class="pay-hint">Use it sparingly - everything pinned is nothing pinned.</span>
                         </div>
                     </div>
                 </div>
@@ -136,8 +136,8 @@
                         These dates are read by the Attendance module
                         (App\Support\Holidays): on them, nobody is marked absent.
                         Posting a holiday notice and closing the office are the
-                        same act, which is the point — one list cannot disagree
-                        with itself — but it means a typo here changes the
+                        same act, which is the point - one list cannot disagree
+                        with itself - but it means a typo here changes the
                         attendance record for everybody.
 
                         Two things about this card follow from that, and neither
@@ -152,7 +152,7 @@
                            labelling the fields and trusting people to infer it.
 
                         It is shown only to whoever holds `announcements.holiday`
-                        — HR and the owner. A project manager may post a notice
+                        - HR and the owner. A project manager may post a notice
                         about a closure; declaring one is not theirs.
                         ─────────────────────────────────────────────────────────
                     --}}
@@ -168,7 +168,7 @@
                             <p>
                                 Only for a <strong>holiday</strong> announcement, and only if the
                                 office is actually shut. Leave both blank for a notice
-                                <em>about</em> a holiday — a policy change, a reminder.
+                                <em>about</em> a holiday - a policy change, a reminder.
                             </p>
                         </div>
 
@@ -197,7 +197,7 @@
                                 <strong>Nobody is marked absent on these days.</strong>
                                 They stop counting as working days for everyone in the company,
                                 on their attendance and in their monthly totals. Check the
-                                weekday, not just the number — “the 4th” and “the 14th” look
+                                weekday, not just the number - “the 4th” and “the 14th” look
                                 alike in a date box and read very differently on a calendar.
                             </span>
                         </p>

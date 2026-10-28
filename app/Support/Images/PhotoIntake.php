@@ -12,13 +12,13 @@ use RuntimeException;
  * WHAT THIS IS AND, JUST AS IMPORTANTLY, WHAT IT IS NOT
  *
  * My Profile has said since it was built that an uploaded photo is "re-encoded
- * rather than stored as received, size capped, stripped of EXIF — a phone photo
+ * rather than stored as received, size capped, stripped of EXIF - a phone photo
  * carries GPS coordinates, and a staff directory that publishes where everybody
  * lives is not a feature."
  *
  * This host has neither GD nor Imagick, and `exif` is not loaded either. There
  * is no re-encode available, and adding an image library is a deployment
- * decision rather than a code one — this application ships to shared hosting.
+ * decision rather than a code one - this application ships to shared hosting.
  *
  * So this does the next honest thing: it PARSES the container and rebuilds it
  * from the parts that carry picture, dropping every part that carries anything
@@ -60,7 +60,7 @@ class PhotoIntake
     /**
      * The largest side accepted, in pixels.
      *
-     * Nothing here decodes the image, so this is not protecting this server —
+     * Nothing here decodes the image, so this is not protecting this server -
      * it protects everybody who opens the page. A 20000×20000 PNG is a few
      * hundred kilobytes on disk and a gigabyte of memory in a browser, and a
      * profile photo has no reason to be larger than a screen.
@@ -107,7 +107,7 @@ class PhotoIntake
         }
 
         /*
-         * `getimagesize` is in the standard library, not in GD — it reads the
+         * `getimagesize` is in the standard library, not in GD - it reads the
          * header rather than decoding. It is used here for the dimensions and
          * for a second opinion on the format, never as the only type check.
          */
@@ -150,7 +150,7 @@ class PhotoIntake
      * ─────────────────────────────────────────────────────────────────────────
      * EVERY APPn SEGMENT IS DROPPED, INCLUDING APP0
      *
-     * APP1 is where Exif and XMP live — GPS, camera body, the original
+     * APP1 is where Exif and XMP live - GPS, camera body, the original
      * timestamp, and frequently a full-size thumbnail that survives cropping.
      * APP13 is Photoshop's IPTC. APP2 is an ICC profile. APP0 is JFIF and is
      * merely a density hint, which nothing here reads.
@@ -160,7 +160,7 @@ class PhotoIntake
      * is a valid JPEG that every decoder opens.
      *
      * The scan is walked segment by segment until SOS (FFDA), after which the
-     * remainder is entropy-coded picture data and is copied verbatim — walking
+     * remainder is entropy-coded picture data and is copied verbatim - walking
      * INTO it would be reading compressed pixels as markers.
      * ─────────────────────────────────────────────────────────────────────────
      */
@@ -243,7 +243,7 @@ class PhotoIntake
     /**
      * Rebuild a PNG from the chunks on the keep-list.
      *
-     * Each chunk carries its own CRC, which is copied with it — the chunks that
+     * Each chunk carries its own CRC, which is copied with it - the chunks that
      * survive are byte-identical, so nothing needs recomputing and a corrupt
      * chunk cannot be laundered into a valid-looking one.
      */

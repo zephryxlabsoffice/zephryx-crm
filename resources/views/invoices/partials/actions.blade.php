@@ -4,7 +4,7 @@
     What can be done to this invoice, which depends on where it stands.
 
     Note what is absent at every state: Delete. An invoice number must never
-    leave the sequence — a gap is the first thing an auditor asks about, and
+    leave the sequence - a gap is the first thing an auditor asks about, and
     "we deleted it" is the wrong answer everywhere. Withdrawal is Cancel, which
     keeps the record and its number.
 
@@ -29,7 +29,7 @@
             {{-- Only offered while nothing has been received. Cancelling an
                  invoice somebody has already part-paid would leave that payment
                  attached to a withdrawn document; that case needs a credit
-                 note, which is its own record and its own decision — and the
+                 note, which is its own record and its own decision - and the
                  controller refuses it whatever this markup does. --}}
             <form class="inv-cancel" method="POST" action="{{ route('invoices.cancel', ['invoice' => $invoice['id']]) }}">
                 @csrf
@@ -55,7 +55,7 @@
     {{--
         Real now: an invoice is an uploaded PDF (decided 2026-09-11), so this
         is the same file `invoices.partials.document` links to, offered again
-        here beside Send and Cancel. Absent when nothing has been attached —
+        here beside Send and Cancel. Absent when nothing has been attached -
         a download button that 404s is worse than no button.
     --}}
     @if ($invoice['has_document'])
@@ -68,7 +68,7 @@
     @endif
 
     {{--
-        A reminder is an email with a schedule behind it — not a data
+        A reminder is an email with a schedule behind it - not a data
         problem, and not one this commit takes on.
     --}}
     @if (P::isOutstanding($invoice))

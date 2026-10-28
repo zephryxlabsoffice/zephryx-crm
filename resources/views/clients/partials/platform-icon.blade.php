@@ -1,6 +1,6 @@
 {{--
     Meeting-platform glyphs, inlined so no request leaves our origin (§6).
-    Simplified marks, not the vendors' official logos — close enough to be
+    Simplified marks, not the vendors' official logos - close enough to be
     recognised at 16px, and not a redistribution of someone's brand asset.
 --}}
 @switch($platform)

@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Schema;
  * MEMBERSHIP IS A TABLE, NOT A COLUMN
  *
  * The demo rows carried members as a list on the team. As a database that would
- * be a JSON column holding staff ids — which cannot have a foreign key, cannot
+ * be a JSON column holding staff ids - which cannot have a foreign key, cannot
  * be joined against, and would quietly keep pointing at somebody after their
  * record was closed. "Which teams is this person in?" would be a search inside
  * a text field.
@@ -41,14 +41,14 @@ return new class extends Migration
         Schema::create('teams', function (Blueprint $table) {
             $table->id();
 
-            // The human-facing identifier — TM-1001, and what every URL carries.
+            // The human-facing identifier - TM-1001, and what every URL carries.
             $table->string('reference', 32)->unique();
 
             $table->string('name', 120)->unique();
             $table->string('purpose', 200)->nullable();
 
             /*
-             * Nullable, because a team with no lead is a real state — one that
+             * Nullable, because a team with no lead is a real state - one that
              * has just been formed, or one whose lead has moved on. Restricted
              * rather than cascading for the same reason as everywhere else:
              * removing a person must never take a team with them. In practice
@@ -94,7 +94,7 @@ return new class extends Migration
              */
             $table->unique(['team_id', 'employee_id']);
 
-            // "Which teams is this person in?" — asked by the profile page and
+            // "Which teams is this person in?" - asked by the profile page and
             // by every ownership check a Team Lead's permission runs.
             $table->index('employee_id');
         });

@@ -29,7 +29,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 /**
- * Invoices — what clients owe us and what has been received.
+ * Invoices - what clients owe us and what has been received.
  *
  * Three pages: the list (`/invoices`), the invoice document
  * (`/invoices/{invoice}`) and the create form (`/invoices/create`).
@@ -37,13 +37,13 @@ use Throwable;
  * ─────────────────────────────────────────────────────────────────────────────
  * FOUR OBLIGATIONS
  *
- * 1. AMOUNTS ARE INTEGER MINOR UNITS. No float touches money at any layer — not
+ * 1. AMOUNTS ARE INTEGER MINOR UNITS. No float touches money at any layer - not
  *    the column, not the request, not the calculation. App\Support\Money is the
  *    only thing that holds an amount.
  *
  * 2. THE INVOICE IS AN UPLOADED DOCUMENT, NOT A GENERATED ONE (decided
  *    2026-09-11). The amount is typed once, the same way SalaryRecord's net
- *    figure is — this is not "less derived" than the old line-item sum, it is
+ *    figure is - this is not "less derived" than the old line-item sum, it is
  *    a different fact typed in a different number of fields. Status is still
  *    derived, from the amount, the payments and the dates.
  *
@@ -82,7 +82,7 @@ class InvoiceController extends Controller
 
         /*
          * Everything, as rows, once. The tabs, the KPI bags and the donut are
-         * all counts over the same set, and status is derived — so asking the
+         * all counts over the same set, and status is derived - so asking the
          * database five times would be five loads of the same rows plus five
          * re-derivations.
          */
@@ -117,7 +117,7 @@ class InvoiceController extends Controller
     }
 
     /**
-     * GET /invoices/{invoice} — the document.
+     * GET /invoices/{invoice} - the document.
      */
     public function show(Request $request, string $invoice): Response
     {
@@ -157,7 +157,7 @@ class InvoiceController extends Controller
      * ─────────────────────────────────────────────────────────────────────────
      * THE NUMBER IS ALLOCATED INSIDE A TRANSACTION; THE UPLOAD NEVER IS
      *
-     * The number is not read from the form — the form's copy is a preview,
+     * The number is not read from the form - the form's copy is a preview,
      * and by the time somebody submits it another invoice may exist. The
      * allocation is a locked read of the table followed by the insert, in one
      * short, DB-only transaction, so two people pressing Create in the same
@@ -165,7 +165,7 @@ class InvoiceController extends Controller
      * lost invoice.
      *
      * The document upload happens AFTER that transaction commits, never
-     * inside it — Drive is a network call, and a database lock has no
+     * inside it - Drive is a network call, and a database lock has no
      * business waiting on one. If the upload fails, the invoice row already
      * exists (as a draft with no document yet) rather than being lost, and
      * the redirect says so: `send()` refuses a document-less invoice, so
@@ -225,11 +225,11 @@ class InvoiceController extends Controller
     }
 
     /**
-     * POST /invoices/{invoice}/document — attach or replace the PDF.
+     * POST /invoices/{invoice}/document - attach or replace the PDF.
      *
      * The recovery path when `store()`'s own upload failed, and the ordinary
      * path for correcting a document before the invoice is sent. Reuses the
-     * same audit action either way — see AuditLog::INVOICE_DOCUMENT_ADDED —
+     * same audit action either way - see AuditLog::INVOICE_DOCUMENT_ADDED -
      * because "attached" and "replaced" are the same fact from the record's
      * point of view: which document is behind this invoice right now.
      */
@@ -279,7 +279,7 @@ class InvoiceController extends Controller
     }
 
     /**
-     * GET /invoices/{invoice}/document/view — opened rather than saved.
+     * GET /invoices/{invoice}/document/view - opened rather than saved.
      */
     public function viewDocument(Request $request, string $invoice): StreamedResponse
     {
@@ -294,7 +294,7 @@ class InvoiceController extends Controller
      * Record money that arrived.
      *
      * The invoice's paid figure is the sum of these rows; nothing sets a status.
-     * An overpayment is refused rather than absorbed — money arriving that
+     * An overpayment is refused rather than absorbed - money arriving that
      * nobody expected is a conversation with the client, not a number to round
      * away, and an invoice showing a negative balance is a page nobody trusts.
      */
@@ -362,7 +362,7 @@ class InvoiceController extends Controller
      * Send it.
      *
      * Idempotent: `sent_at` is when it went, and sending twice does not move it
-     * — the second press is a person checking, not a second invoice.
+     * - the second press is a person checking, not a second invoice.
      */
     public function send(Request $request, string $invoice): RedirectResponse
     {
@@ -377,7 +377,7 @@ class InvoiceController extends Controller
 
         if (! $model->hasDocument()) {
             // An invoice with nothing behind it is not a document anybody
-            // should be able to put in front of a client — the same rule
+            // should be able to put in front of a client - the same rule
             // that used to be "no lines", read against the new shape.
             throw ValidationException::withMessages([
                 'send' => 'This invoice has no document attached yet.',
@@ -409,7 +409,7 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Cancel it — and keep the number.
+     * Cancel it - and keep the number.
      *
      * ─────────────────────────────────────────────────────────────────────────
      * THIS IS WHY THERE IS NO DELETE ROUTE ANYWHERE IN THIS MODULE
@@ -417,7 +417,7 @@ class InvoiceController extends Controller
      * A missing number in a sequence is the first thing an auditor asks about,
      * and "we deleted it" is the wrong answer in every jurisdiction. The record
      * stays, the number stays in the sequence, and the reason is stored beside
-     * it — because a cancelled invoice with no explanation is one somebody has
+     * it - because a cancelled invoice with no explanation is one somebody has
      * to reconstruct from memory a year later.
      * ─────────────────────────────────────────────────────────────────────────
      */
@@ -433,7 +433,7 @@ class InvoiceController extends Controller
         if ($model->paid()->isPositive()) {
             /*
              * Money has already arrived against it. Cancelling would leave a
-             * payment attached to an invoice nobody owes — that is a credit
+             * payment attached to an invoice nobody owes - that is a credit
              * note, which is a document this module does not issue yet, and
              * pretending otherwise would put the books out.
              */
@@ -479,7 +479,7 @@ class InvoiceController extends Controller
      *
      * A replaced document's old file goes. Nothing points at it any more, and
      * keeping a superseded invoice PDF with no record naming it is worse than
-     * deleting it — the same rule SalaryController::storePayslip follows.
+     * deleting it - the same rule SalaryController::storePayslip follows.
      */
     protected function attachDocument(Request $request, Invoice $invoice, UploadedFile $file): void
     {
@@ -571,7 +571,7 @@ class InvoiceController extends Controller
         if (($data['project_id'] ?? null) !== null) {
             /*
              * A project belonging to a different client would put one client's
-             * work on another's invoice — checked here rather than trusted from
+             * work on another's invoice - checked here rather than trusted from
              * the form, because the dropdown filters by client in the browser
              * and the browser is not where that rule lives.
              */

@@ -9,12 +9,12 @@
     ─────────────────────────────────────────────────────────────────────────────
     THE ONE ACTIONABLE THING ON THIS PAGE
 
-    The handover's rail had six quick-action tiles — Bulk Mark Attendance, Import,
-    Export, Holiday Calendar — none of which went anywhere. This replaces them
+    The handover's rail had six quick-action tiles - Bulk Mark Attendance, Import,
+    Export, Holiday Calendar - none of which went anywhere. This replaces them
     with the only attendance problem that recurs and that a person can actually
     fix: a record with a check-in and no check-out.
 
-    Each of these has already stopped counting — past the window a day is
+    Each of these has already stopped counting - past the window a day is
     rejected, because there is no honest way to say how long it ran. The list is
     therefore not a queue of things to fix; those days are gone. It is here so
     the pattern is visible while it is still worth a conversation, which is the
@@ -50,7 +50,7 @@
                  plausible check-out time in, and that is the one thing this
                  module must never let anybody do. --}}
             Open more than {{ (int) \App\Support\AttendancePolicy::autoRejectAfterHours() }} hours, so these no longer
-            count. Nobody can fill them in — a recorded time is never edited, and
+            count. Nobody can fill them in - a recorded time is never edited, and
             a check-out that was never made cannot be invented.
         </p>
     @endif

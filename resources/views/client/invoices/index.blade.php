@@ -17,8 +17,8 @@
         The handover had five. The fifth read "Total Paid ₹18,75,000" and was a
         word-for-word repeat of the Paid tile's own subtitle; its Pending tile
         claimed four invoices totalling ₹4,20,000 above a table showing three
-        totalling ₹6,70,000. Both problems have the same cause — figures typed
-        in rather than derived — and the same fix.
+        totalling ₹6,70,000. Both problems have the same cause - figures typed
+        in rather than derived - and the same fix.
 
         Money is a MoneyBag, never a number: a mixed-currency set has no single
         total without an exchange rate this system does not have.

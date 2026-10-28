@@ -4,8 +4,8 @@
     /**
      * "4 more than last month", not "+12% vs last month".
      *
-     * The handover printed a percentage delta under every tile — 12%, 20%, 50%,
-     * 8% — all four hardcoded, and none of them meaningful anyway: a percentage
+     * The handover printed a percentage delta under every tile - 12%, 20%, 50%,
+     * 8% - all four hardcoded, and none of them meaningful anyway: a percentage
      * change on a count of two late days is a hundred per cent, which sounds
      * like a crisis and means one day. Whole days, said in words, or nothing.
      */
@@ -78,7 +78,7 @@
 
         Over a handful of days an average swings wildly on one short afternoon,
         it hides the days that actually differ, and it is the number people
-        start managing to — staying at a desk to protect a figure is not the
+        start managing to - staying at a desk to protect a figure is not the
         behaviour this module should be encouraging. The calendar below shows
         every day individually, which is the same information without the
         summary that misleads.

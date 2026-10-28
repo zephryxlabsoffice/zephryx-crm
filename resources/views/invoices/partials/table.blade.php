@@ -95,7 +95,7 @@
                         </td>
 
                         <td role="cell" data-label="Project">
-                            {{ $item['project_record']['name'] ?? '—' }}
+                            {{ $item['project_record']['name'] ?? '-' }}
                         </td>
 
                         <td role="cell" class="cell-tight" data-label="Due">
@@ -113,7 +113,7 @@
                             difference.
 
                             When some of it has been paid, the balance is what
-                            matters and the total is the context — so the
+                            matters and the total is the context - so the
                             balance leads and the total is stated beneath it.
                         --}}
                         <td role="cell" class="cell-money" data-label="Amount">

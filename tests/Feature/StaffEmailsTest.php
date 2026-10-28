@@ -107,7 +107,7 @@ class StaffEmailsTest extends TestCase
      */
     protected function payload(array $overrides = []): array
     {
-        // A complete full-time hire — none of these cases is about the
+        // A complete full-time hire - none of these cases is about the
         // identity, bank or pay fields, so they are simply all present.
         return $overrides + [
             'name' => 'Asha Roy',

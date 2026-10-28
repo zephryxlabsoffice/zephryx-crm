@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
 /**
- * The identifier a person is known by — `ZEPH261001`.
+ * The identifier a person is known by - `ZEPH261001`.
  *
  * ═════════════════════════════════════════════════════════════════════════════
  * THE SCHEME (decided 2026-09-11, replacing `EMP001`)
@@ -31,7 +31,7 @@ use InvalidArgumentException;
  *
  * THE YEAR IS THE RECORD'S, NOT THE JOINING DATE'S
  *
- * Joining dates are backdated — somebody is entered in March for a February
+ * Joining dates are backdated - somebody is entered in March for a February
  * start, and a record created in 2027 for a 2024 joiner is not unusual. Keyed
  * to the joining year, such a record would be handed a number that year had
  * already issued.
@@ -68,8 +68,8 @@ class StaffId
         if ($digit === null) {
             /*
              * Rather than defaulting to full-time. A wrong type digit is
-             * invisible afterwards — it reads as a perfectly ordinary
-             * identifier — and nothing downstream would ever question it.
+             * invisible afterwards - it reads as a perfectly ordinary
+             * identifier - and nothing downstream would ever question it.
              */
             throw new InvalidArgumentException(
                 'Unknown employment type ['.$employmentType.']. Expected one of: '
@@ -86,7 +86,7 @@ class StaffId
     }
 
     /**
-     * A normal account — hr@, admin@ — that holds roles but is nobody's
+     * A normal account - hr@, admin@ - that holds roles but is nobody's
      * employment (2026-10-27): `ZEPH6NNN`.
      */
     public static function forNormalAccount(): string

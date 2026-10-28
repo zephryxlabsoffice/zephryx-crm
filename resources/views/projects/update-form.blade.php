@@ -65,14 +65,14 @@
                     @if ($mayPublish)
                         {{-- The radio, not a checkbox, and internal is
                              pre-selected. Forgetting hides something that should
-                             have been shared — an annoyance, fixed by a click.
+                             have been shared - an annoyance, fixed by a click.
                              The other way round, forgetting publishes it, and
                              that is not fixable once it has been read. --}}
                         <div class="form-field">
                             <label class="check-row">
                                 <input type="radio" name="visibility" value="{{ ProjectUpdate::INTERNAL }}"
                                        @checked(old('visibility', ProjectUpdate::INTERNAL) === ProjectUpdate::INTERNAL)>
-                                <span>Internal only — the team, and nobody at the client</span>
+                                <span>Internal only - the team, and nobody at the client</span>
                             </label>
 
                             <label class="check-row">
@@ -85,7 +85,7 @@
                         <div class="prose">
                             <p>
                                 Sharing puts this in the client's portal. It can be hidden again
-                                afterwards, but that is housekeeping rather than a recall — once
+                                afterwards, but that is housekeeping rather than a recall - once
                                 they have read it, they have read it.
                             </p>
                         </div>
@@ -109,7 +109,7 @@
                     <div class="prose">
                         <p>
                             Internal is the default because a useful end-of-day note says what
-                            actually happened — what is blocked, what was redone, what is waiting
+                            actually happened - what is blocked, what was redone, what is waiting
                             on somebody. All of that is worth recording and most of it is not for
                             the client to read.
                         </p>

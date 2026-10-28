@@ -51,7 +51,7 @@
                 <strong class="sl-gap-hd">No bank details on file</strong>
                 <p class="sl-gap-note">
                     {{ $withoutBanking->count() }} {{ \Illuminate\Support\Str::plural('person', $withoutBanking->count()) }}
-                    cannot be paid at all — the bank transfer file has nothing to
+                    cannot be paid at all - the bank transfer file has nothing to
                     send for {{ $withoutBanking->count() === 1 ? 'them' : 'them' }}.
                 </p>
                 <ul class="sl-gap-list">

@@ -13,11 +13,11 @@ use Illuminate\Support\Facades\Schema;
  *   `account_type`  which realm this account belongs to (§3). Read by the realm
  *                   middleware on every request, before any data.
  *   `staff_kind`    employee or mentor. This is what grants the Employee base
- *                   (§5) — it is not a role, precisely so a role edit cannot
+ *                   (§5) - it is not a role, precisely so a role edit cannot
  *                   revoke it, so it has to live on the account itself.
  *   `status`        active, inactive or suspended (§4.2 step 4).
  *
- * `user_id` is the human-facing identifier — EMP002, and the one printed on
+ * `user_id` is the human-facing identifier - EMP002, and the one printed on
  * screens and quoted in support requests. Separate from the primary key on
  * purpose: an auto-increment id leaks how many accounts exist and how recently
  * one was created, and it cannot be reissued to a person whose record is
@@ -53,7 +53,7 @@ return new class extends Migration
              * because staff and admin accounts have none.
              *
              * This is the column every ownership check in the client portal
-             * resolves through (§6) — the reason DemoClientPortal takes a client
+             * resolves through (§6) - the reason DemoClientPortal takes a client
              * as its first argument everywhere is that this is what will supply
              * it.
              */

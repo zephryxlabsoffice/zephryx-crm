@@ -1,5 +1,5 @@
 /* ============================================================================
-   Authentication surfaces — /login, /login/verify, /forgot-password.
+   Authentication surfaces - /login, /login/verify, /forgot-password.
    Foundation spec §9.2.
 
    Layout and visual treatment are taken unchanged from the handover
@@ -14,7 +14,7 @@
   grid-template-columns: 1fr 1fr;
   min-height: 100vh;
   /* dvh, not vh: on mobile the address bar shrinks and grows, and 100vh is the
-     *tallest* state — using it would push the submit button under the bar. */
+     *tallest* state - using it would push the submit button under the bar. */
   min-height: 100dvh;
 }
 
@@ -275,7 +275,7 @@ body.auth-body { background: var(--surface); }
 .eye-toggle[aria-pressed="true"] .icon-show { display: none; }
 .eye-toggle[aria-pressed="true"] .icon-hide { display: block; }
 
-/* Guidance under a field — not an error, so it stays quiet. */
+/* Guidance under a field - not an error, so it stays quiet. */
 .field-hint {
   margin: -14px 0 0 30px;
   font-size: 13px;
@@ -342,7 +342,7 @@ body.auth-body { background: var(--surface); }
 }
 .link-quiet:hover { color: var(--green-2); text-decoration: underline; }
 
-/* ── submit — narrower than the fields, centred ── */
+/* ── submit - narrower than the fields, centred ── */
 .btn-auth {
   align-self: center;
   width: 240px;
@@ -398,7 +398,7 @@ body.auth-body { background: var(--surface); }
 .form-foot a:hover { text-decoration: underline; }
 
 /* ─────────────────────  one-time code entry  ───────────────────── */
-/* A fieldset, so the six boxes are announced as one labelled group — but its
+/* A fieldset, so the six boxes are announced as one labelled group - but its
    default border, padding and min-width have to be cleared. */
 .otp-row {
   display: flex;
@@ -563,12 +563,12 @@ body.auth-body { background: var(--surface); }
 /* ── short viewports ──
    Height, not width, is what runs out on a phone. Two tiers. */
 
-/* Tier 1 — a smaller or older handset (≈360×640). Everything still fits;
+/* Tier 1 - a smaller or older handset (≈360×640). Everything still fits;
    the decoration just gives up more room. */
 @media (max-width: 900px) and (max-height: 740px) {
   .visual-panel { height: clamp(130px, 22dvh, 180px); padding: 14px 18px 34px; }
 
-  /* The band is now too short for a 4/3 card — holding the ratio would squeeze
+  /* The band is now too short for a 4/3 card - holding the ratio would squeeze
      it to ~120px wide, which puts the badge on top of the manifesto. Let the
      card fill the band instead, and drop the badge: there is no room for it
      that is not on top of something else. */
@@ -596,7 +596,7 @@ body.auth-body { background: var(--surface); }
   .otp-row input { height: 54px; }
 }
 
-/* Tier 1b — a very small handset (≈320×568). Squeeze the spacing, but never
+/* Tier 1b - a very small handset (≈320×568). Squeeze the spacing, but never
    the content: the OTP page's masked address and the reset page's hint are the
    only guidance those screens carry, so they stay. */
 @media (max-width: 900px) and (max-height: 620px) {
@@ -612,7 +612,7 @@ body.auth-body { background: var(--surface); }
   .otp-row input { height: 46px; }
 }
 
-/* Tier 2 — a phone in landscape. No arrangement fits here, so stop
+/* Tier 2 - a phone in landscape. No arrangement fits here, so stop
    pretending: drop the decoration to a token strip and let the form scroll
    rather than clipping the submit button out of reach. */
 @media (max-width: 900px) and (max-height: 560px) {
@@ -621,7 +621,7 @@ body.auth-body { background: var(--surface); }
   .form-panel { align-content: start; }
 }
 
-/* Tier 2b — landscape phones, no scroll (2026-10-27). Even the 90px token
+/* Tier 2b - landscape phones, no scroll (2026-10-27). Even the 90px token
    strip pushed the sign-in form ~40px past the fold. The strip is decoration,
    so on these screens it goes entirely and the form takes the full height.
    Still min-height on .auth, so a longer form (the reset page with an error

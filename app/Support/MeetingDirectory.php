@@ -13,8 +13,8 @@ use Illuminate\Support\Collection;
  * ═════════════════════════════════════════════════════════════════════════════
  * EVERY READ TAKES THE VIEWER, AND THAT IS NOT CONVENIENCE
  *
- * The join link is withheld per person — a Meet link is effectively a password
- * — so there is no method here that returns a meeting without being told whose
+ * The join link is withheld per person - a Meet link is effectively a password
+ * - so there is no method here that returns a meeting without being told whose
  * behalf it is for. Same shape as TicketDirectory::commentsFor and
  * ProjectUpdate::clientVisible: the rule is kept by not providing the call that
  * could break it.
@@ -51,8 +51,8 @@ class MeetingDirectory
     /**
      * Rows for one viewer, with the status filter applied after they are built.
      *
-     * Status is derived — cancelled, requested, scheduled or ended come from the
-     * event id, the cancellation and the clock — so it is filtered here rather
+     * Status is derived - cancelled, requested, scheduled or ended come from the
+     * event id, the cancellation and the clock - so it is filtered here rather
      * than in SQL, for the same reason invoices are.
      *
      * @param  Builder<Meeting>  $query
@@ -125,7 +125,7 @@ class MeetingDirectory
     }
 
     /**
-     * The next reference — year-scoped, from the highest existing one.
+     * The next reference - year-scoped, from the highest existing one.
      */
     public static function nextReference(): string
     {

@@ -19,7 +19,7 @@ use Illuminate\Support\Collection;
  *
  * "half_day_hours: 4 → 6" is a true audit entry and a useless one. What
  * actually happened is that forty-seven days across eleven people stopped being
- * full days — retroactively, silently, in months that have already been
+ * full days - retroactively, silently, in months that have already been
  * reported on.
  *
  * This class computes that second sentence. The settings form shows it on a
@@ -34,8 +34,8 @@ use Illuminate\Support\Collection;
  *
  * HOW IT WORKS, AND WHY THAT IS ACCEPTABLE HERE
  *
- * The policies read config at call time, so this evaluates the history twice —
- * once as things stand, once with the proposed value pushed into config — and
+ * The policies read config at call time, so this evaluates the history twice -
+ * once as things stand, once with the proposed value pushed into config - and
  * diffs the two. Swapping config under a computation is not something to do
  * casually; it is contained to this class, always restored in a `finally`, and
  * never touches anything that writes.
@@ -114,7 +114,7 @@ class Retroactive
          *
          * Taken in natural order they came out as eight consecutive Saturdays
          * belonging to Riya Sharma, under a heading claiming eleven people were
-         * affected — which reads as though the summary is wrong. The examples
+         * affected - which reads as though the summary is wrong. The examples
          * are there to make the number believable, so they have to look like
          * the number.
          */
@@ -232,7 +232,7 @@ class Retroactive
                     'who' => $employee->user?->name ?? $employee->id,
                     'when' => 'This year',
                     'from' => $row['taken'].' of '.$row['entitlement'].' taken',
-                    'to' => $row['taken'].' of '.$proposed.' — over by '.($row['taken'] - $proposed),
+                    'to' => $row['taken'].' of '.$proposed.' - over by '.($row['taken'] - $proposed),
                 ];
             }
         }

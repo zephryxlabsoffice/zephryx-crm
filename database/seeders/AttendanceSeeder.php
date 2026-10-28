@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\DB;
  * WHY THE FIXTURE IS GENERATED AND THIS ONLY COPIES IT
  *
  * DemoAttendance builds days from a seed derived from the person and the date,
- * with the days worth looking at — the absence, the forgotten check-out, the
- * duplicate somebody rejected — written out by hand. Every one of those states
+ * with the days worth looking at - the absence, the forgotten check-out, the
+ * duplicate somebody rejected - written out by hand. Every one of those states
  * is on screen on purpose. Regenerating that logic here would be a second
  * implementation of it that drifts; this walks what it already produces and
  * writes it down.
@@ -81,6 +81,6 @@ class AttendanceSeeder extends Seeder
         }
 
         // Note what this never writes: an "absent" row. An absence is the
-        // absence of a record — see the migration.
+        // absence of a record - see the migration.
     }
 }

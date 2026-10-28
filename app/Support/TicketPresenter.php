@@ -38,7 +38,7 @@ class TicketPresenter
     }
 
     /**
-     * Priority shares its vocabulary with Projects and Tasks — the same word
+     * Priority shares its vocabulary with Projects and Tasks - the same word
      * must mean the same thing everywhere it appears.
      *
      * @return array{tone: string, label: string}

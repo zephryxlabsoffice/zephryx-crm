@@ -7,7 +7,7 @@ use App\Support\Demo\DemoTeams;
 use Tests\TestCase;
 
 /**
- * Teams — the managing face, the personal face and one team's overview.
+ * Teams - the managing face, the personal face and one team's overview.
  * Foundation spec §12.1.
  */
 class TeamsPageTest extends TestCase
@@ -20,7 +20,7 @@ class TeamsPageTest extends TestCase
         /*
          * Every route in the staff realm is behind `realm:staff` now (§3.1), so
          * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
+         * what the page renders rather than about who may see it - the guard
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
@@ -48,7 +48,7 @@ class TeamsPageTest extends TestCase
 
     public function test_the_personal_face_is_a_separate_page(): void
     {
-        // §12.1 — the personal and managing views are distinct pages, not one
+        // §12.1 - the personal and managing views are distinct pages, not one
         // page with a filter. /teams/mine needs no `teams.view`.
         $response = $this->get('/teams/mine');
 
@@ -136,8 +136,8 @@ class TeamsPageTest extends TestCase
     public function test_my_teams_is_the_viewers_own_membership(): void
     {
         /*
-         * The whole point of the personal face. It takes no parameter — the
-         * person comes from the session — so there is nothing here to change to
+         * The whole point of the personal face. It takes no parameter - the
+         * person comes from the session - so there is nothing here to change to
          * somebody else's teams, the same reason the payslip route takes a
          * period and no employee.
          */
@@ -222,7 +222,7 @@ class TeamsPageTest extends TestCase
 
         $grouped = $this->get('/teams/TM-1001?tab=by_department');
 
-        // Every member is still listed — it is a grouping, not a filter.
+        // Every member is still listed - it is a grouping, not a filter.
         $grouped->assertSee('class="group-row"', false);
         $grouped->assertSee('/employees/EMP001', false);
         $grouped->assertSee('/employees/EMP003', false);
@@ -259,7 +259,7 @@ class TeamsPageTest extends TestCase
     public function test_the_pages_render_nothing_the_content_security_policy_would_block(): void
     {
         // The handover used onclick on <tr>, onclick="history.back()",
-        // style="display:none" and inline <style> blocks — all blocked.
+        // style="display:none" and inline <style> blocks - all blocked.
         $this->withDemoData();
 
         foreach (['/teams', '/teams/mine', '/teams/TM-1001'] as $url) {

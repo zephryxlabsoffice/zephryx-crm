@@ -6,7 +6,7 @@ use App\Support\Theme;
 use Tests\TestCase;
 
 /**
- * GET / — foundation spec §9.1.
+ * GET / - foundation spec §9.1.
  */
 class LandingPageTest extends TestCase
 {

@@ -9,7 +9,7 @@
 
     Everything on this card is either one of the two recorded times or something
     derived from them and the policy. Nothing is stored, and nothing is a
-    judgement — which is what lets the card show its own working. Somebody who
+    judgement - which is what lets the card show its own working. Somebody who
     disagrees with "Late" can read the check-in, the start time and the grace
     period on the same card and check it themselves.
 --}}
@@ -48,7 +48,7 @@
 
         {{-- The rule is in the label, not a tooltip. A status about somebody's
              day should never appear without the figure it was measured
-             against — this is the whole judgement, and it is one comparison. --}}
+             against - this is the whole judgement, and it is one comparison. --}}
         <div class="lv-field">
             <dt class="lv-field-lbl">Half day under</dt>
             <dd>{{ rtrim(rtrim(number_format($policy['halfDay'], 1), '0'), '.') }} hours</dd>
@@ -60,7 +60,7 @@
                 @if ($record['holiday'] !== null)
                     {{ $record['holiday'] }}
                 @elseif (! $record['working_day'])
-                    Weekly off — worked anyway
+                    Weekly off - worked anyway
                 @else
                     Working day
                 @endif
@@ -77,9 +77,9 @@
                      in show.blade.php: when a record is both, the human reason
                      is the one that explains anything. --}}
                 @if ($record['rejected_at'] !== null)
-                    No — rejected
+                    No - rejected
                 @elseif ($record['auto_rejected'])
-                    No — never checked out
+                    No - never checked out
                 @else
                     Yes
                 @endif
@@ -90,7 +90,7 @@
     @if (! $record['working_day'] && $record['holiday'] === null)
         <p class="att-record-note">
             This was a weekly off. The record is kept and shown because the work
-            happened — it is simply not counted against a day nobody was
+            happened - it is simply not counted against a day nobody was
             expected in.
         </p>
     @endif

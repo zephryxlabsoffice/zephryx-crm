@@ -22,10 +22,10 @@
 | ─────────────────────────────────────────────────────────────────────────
 |
 | `days` is the annual entitlement. `null` means the type has no balance at
-| all — unpaid leave is granted case by case, so showing a "balance" for it
+| all - unpaid leave is granted case by case, so showing a "balance" for it
 | would be inventing an allowance nobody has.
 |
-| `accrual` is `'monthly'` or `'annual'` (default) — decided 2026-09-11:
+| `accrual` is `'monthly'` or `'annual'` (default) - decided 2026-09-11:
 | privilege and sick are granted in full at the start of an employee's own
 | leave year; casual accrues monthly. See
 | App\Support\LeavePolicy::accruedEntitlement, which is the only reader.
@@ -72,10 +72,10 @@ return [
     /*
     | What happens to unused days at the end of the year is NOT decided
     | (2026-08-28). Rather than showing an "Expired" figure whose rule does not
-    | exist — which the handover did, reading zero — the balance is stated for
+    | exist - which the handover did, reading zero - the balance is stated for
     | the current year only and says so.
     |
-    | "The year" is each employee's own leave year now (decided 2026-09-11) —
+    | "The year" is each employee's own leave year now (decided 2026-09-11) -
     | twelve months from their joining month, not a company-wide calendar year.
     | Unused days lapse at the end of it; there is still no carry-forward rule.
     |

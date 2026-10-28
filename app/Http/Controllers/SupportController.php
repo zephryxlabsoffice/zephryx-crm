@@ -9,7 +9,7 @@ use Illuminate\Routing\Controller;
  * The sidebar "Support" link (plan doc §Support).
  *
  * One page, two buttons: raise a ticket, or email us. Nothing here reads or
- * writes anything — Tickets already owns the raise-a-ticket write, and
+ * writes anything - Tickets already owns the raise-a-ticket write, and
  * App\Support\SupportContact already owns the mailto address every other
  * surface (the landing page, the login footer, the error pages) uses. This
  * controller exists only to put both in front of a signed-in staff account

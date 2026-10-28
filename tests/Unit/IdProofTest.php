@@ -12,7 +12,7 @@ use Tests\TestCase;
  * ═════════════════════════════════════════════════════════════════════════════
  * WHY THIS REPLACED AN AADHAAR COLUMN (decided 2026-09-12)
  *
- * Aadhaar was held on its own, and a private employer cannot require it — the
+ * Aadhaar was held on its own, and a private employer cannot require it - the
  * Supreme Court settled that in 2018. So the record asks for ONE document that
  * carries an address, and Aadhaar is one of the four answers rather than the
  * only one.
@@ -107,7 +107,7 @@ class IdProofTest extends TestCase
     {
         /*
          * Fails towards withholding. A number we cannot name the document for
-         * is one we cannot state the masking rule for either — and guessing at
+         * is one we cannot state the masking rule for either - and guessing at
          * "last four" for a document that might be nine digits of something
          * else is how too much of it ends up on screen.
          */

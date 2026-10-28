@@ -9,12 +9,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * One file on a task.
  *
  * `document_path`/`document_name`/`document_bytes` per row rather than the
- * single-document columns Invoices carries — a task can hold several files at
+ * single-document columns Invoices carries - a task can hold several files at
  * once. Storage always goes through App\Support\Documents\DocumentStore::put(),
  * which is always Google Drive for an uploaded file (decided 2026-09-16).
  *
  * No delete route: matches the rest of this module (and Clients, Teams,
- * Projects) — nothing here is destructive, only added to.
+ * Projects) - nothing here is destructive, only added to.
  */
 class TaskAttachment extends Model
 {

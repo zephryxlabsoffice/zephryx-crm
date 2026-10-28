@@ -11,7 +11,7 @@
     <div class="page-hd-row">
         <div class="page-hd">
             {{-- Reached by a button on the approval queue, so it needs a way
-                 back — but only for the people who could have come from there.
+                 back - but only for the people who could have come from there.
                  TODO (backend phase): gate on `leave.approve`. --}}
             @if ($canApprove)
                 <a class="back-link" href="{{ route('leave.index') }}">

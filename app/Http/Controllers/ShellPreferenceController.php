@@ -12,7 +12,7 @@ use Illuminate\Validation\Rule;
 /**
  * Persists the shell's per-viewer preferences: sidebar collapse and density.
  *
- * CSRF-protected and validated against an allow-list, like the theme (§6) —
+ * CSRF-protected and validated against an allow-list, like the theme (§6) -
  * both values are echoed into attributes on <html> on every later page.
  */
 class ShellPreferenceController extends Controller

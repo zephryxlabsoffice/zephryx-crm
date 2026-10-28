@@ -70,7 +70,7 @@
 
                     <div class="card-body">
                         <p class="ad-group-note">
-                            Who works where. These decide no access — roles do. Documents, bank
+                            Who works where. These decide no access - roles do. Documents, bank
                             and salary stay with HR in Employees.
                         </p>
 
@@ -219,7 +219,7 @@
                     {{--
                         Suspending, never deleting. The person's attendance,
                         leave and payslips stay where they are and keep naming
-                        them — a deleted user is a payroll record with nobody
+                        them - a deleted user is a payroll record with nobody
                         attached to it.
                     --}}
                     <p class="dash-note">
@@ -256,7 +256,7 @@
 
                 A forgotten password, a stolen session and a compromised
                 device are different things to have happened to an account,
-                and none of these three substitutes for another — see
+                and none of these three substitutes for another - see
                 AdminAccountController's own header on each route.
                 ─────────────────────────────────────────────────────────────
             --}}
@@ -293,7 +293,7 @@
                     <p class="dash-note">
                         Forgets every device this account skipped the code on. The next
                         sign-in from any of them asks for one again. Nothing else
-                        changes — this does not sign anybody out.
+                        changes - this does not sign anybody out.
                     </p>
                     <div class="dash-punch-action">
                         <button class="btn btn-outline" type="submit">Untrust devices</button>
@@ -305,7 +305,7 @@
                  App\Support\Admin\AccountRemoval. --}}
             <section class="rail-card">
                 <div class="rail-hd">
-                    <strong>Delete — made by mistake</strong>
+                    <strong>Delete - made by mistake</strong>
                 </div>
 
                 @if ($deleteBlockers === [])
@@ -327,7 +327,7 @@
                 @else
                     <p class="dash-note">
                         Not available: this account has been used
-                        ({{ implode(', ', $deleteBlockers) }}). Deactivate it instead —
+                        ({{ implode(', ', $deleteBlockers) }}). Deactivate it instead -
                         its history stays.
                     </p>
                 @endif

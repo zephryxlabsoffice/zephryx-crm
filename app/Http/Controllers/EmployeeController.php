@@ -43,7 +43,7 @@ use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Employees — the spine every other module references (foundation spec §12).
+ * Employees - the spine every other module references (foundation spec §12).
  *
  * Reads the `employees` table through App\Support\EmployeeDirectory, which owns
  * the row shape the views expect. Filtering and pagination happen in SQL: the
@@ -60,7 +60,7 @@ class EmployeeController extends Controller
      *
      * A fixed list because the key arrives in the request and names a column.
      * IFSC is absent on purpose: it is never masked, so there is nothing to
-     * reveal — and the bank name is not an identifier at all.
+     * reveal - and the bank name is not an identifier at all.
      *
      * @var array<string, string>
      */
@@ -90,7 +90,7 @@ class EmployeeController extends Controller
     /**
      * The roles this person may give, by key (2026-10-27).
      *
-     * Below their own standing in People — HR (80) can give Team Lead,
+     * Below their own standing in People - HR (80) can give Team Lead,
      * Manager or Support but not HR; the CEO (90) can also give HR. A role
      * nobody can see past cannot be used to make somebody more senior than
      * the person granting it.
@@ -109,7 +109,7 @@ class EmployeeController extends Controller
 
     /**
      * Apply the ticked roles. Roles this person may not give are left exactly
-     * as they were — HR editing a manager's record cannot strip a CEO role it
+     * as they were - HR editing a manager's record cannot strip a CEO role it
      * could never have granted. Nobody changes their own roles here.
      *
      * @param  array<string, mixed>  $data
@@ -161,7 +161,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * HR's photo upload — straight onto the record, unlike the employee's own
+     * HR's photo upload - straight onto the record, unlike the employee's own
      * which waits for approval. Cleaned the same way (PhotoIntake).
      */
     protected function writePhoto(Employee $employee, Request $request): void
@@ -227,7 +227,7 @@ class EmployeeController extends Controller
             'mayCreate' => $this->rbac->can($request->user(), 'employees.create'),
             /*
              * The change-request queue's size, for the button in the header.
-             * Counted only for somebody who may open it — a number nobody can
+             * Counted only for somebody who may open it - a number nobody can
              * act on is a number that should not have been queried.
              */
             'pendingRequests' => $this->rbac->can($request->user(), 'employees.edit')
@@ -247,15 +247,15 @@ class EmployeeController extends Controller
             'history' => $this->audit->entriesFor('employee', $employee),
             /*
              * Masked here, in PHP, before anything reaches the template. The
-             * view never receives a full number to hide — markup the browser
+             * view never receives a full number to hide - markup the browser
              * was sent has already been read by whoever is sitting at it.
              */
             'identity' => $this->withReveal($this->maskedIdentity($request, $record), $record),
             /*
              * Behind the same permission as the identity card and, unlike it,
-             * shown in full. An address is not a credential — masking it would
+             * shown in full. An address is not a credential - masking it would
              * protect nothing and stop HR spotting the typo that sends a
-             * courier to the wrong street — but it is still nobody's business
+             * courier to the wrong street - but it is still nobody's business
              * who merely holds `employees.view`.
              */
             'addresses' => $this->addresses($request, $record),
@@ -263,11 +263,11 @@ class EmployeeController extends Controller
             'maySeeIdentifiers' => $this->rbac->can($request->user(), 'employees.identifiers'),
             /*
              * Behind the same permission as the identity card (review round
-             * Q16) — "without this, HR can log that a photocopy arrived but
+             * Q16) - "without this, HR can log that a photocopy arrived but
              * never actually check it against the record." `toRecordArray`
              * takes the EMPLOYEE's own user id regardless of who is looking,
              * because "self" vs "hr" answers who uploaded it, not who is
-             * viewing — the same call ProfileDirectory::documents() makes
+             * viewing - the same call ProfileDirectory::documents() makes
              * for the person's own copy of this page.
              */
             'documents' => $this->rbac->can($request->user(), 'employees.identifiers')
@@ -302,7 +302,7 @@ class EmployeeController extends Controller
             'employee' => null,
             /*
              * No preview. The identifier carries the engagement type as a
-             * digit, so it is not known until the type is chosen — and a
+             * digit, so it is not known until the type is chosen - and a
              * preview that silently went stale when somebody changed the
              * dropdown would be worse than saying it is assigned on save.
              */
@@ -314,7 +314,7 @@ class EmployeeController extends Controller
              * The form draws the pay boxes for whoever may write them, and the
              * engagement decides WHICH boxes. On a create that is not known
              * until the dropdown is chosen, so the form renders all three sets
-             * and the validator accepts only the set that matches — the same
+             * and the validator accepts only the set that matches - the same
              * arrangement as the staff ID, which is also not knowable until the
              * type is picked.
              */
@@ -352,7 +352,7 @@ class EmployeeController extends Controller
      * THIS CREATES AN ACCOUNT, AND THAT IS THE POINT
      *
      * §1 says there is no public sign-up and every account is created by an
-     * administrator. This is that act — which is why `employees.create` is a
+     * administrator. This is that act - which is why `employees.create` is a
      * sensitive permission and why the whole thing is one transaction: an
      * account with no employment record is a person who can sign in and has no
      * department, and an employment record with no account is a row nobody can
@@ -441,7 +441,7 @@ class EmployeeController extends Controller
             'staffId' => $record->user->user_id,
             /*
              * Masked, as a hint beside an EMPTY input. The form never receives
-             * a real number, so there is nothing for it to post back — which is
+             * a real number, so there is nothing for it to post back - which is
              * what stops a saved mask overwriting somebody's actual Aadhaar
              * with `XXXX XXXX 1234`.
              */
@@ -599,7 +599,7 @@ class EmployeeController extends Controller
 
         $banking = EmployeeBanking::where('employee_id', $record->id)->first();
 
-        // Nothing on file is not a reveal that failed — there was no look to
+        // Nothing on file is not a reveal that failed - there was no look to
         // record, so nothing is written either.
         if ($banking === null) {
             abort(404);
@@ -613,9 +613,9 @@ class EmployeeController extends Controller
             actor: $request->user(),
             entityType: 'employee',
             entityId: $record->user?->user_id ?? (string) $record->id,
-            // The field and the stated reason. Never the value — see the
+            // The field and the stated reason. Never the value - see the
             // constant's own note in App\Support\Audit\AuditLog.
-            after: $label.' — '.$data['reason'],
+            after: $label.' - '.$data['reason'],
             request: $request,
         );
 
@@ -640,7 +640,7 @@ class EmployeeController extends Controller
      * The second of the two parties ProfileController::documentFor names in
      * its own header comment: the person's own copy is `profile.documents`,
      * and this is HR's (review round Q16). Same file, same audit obligation,
-     * different entity on the entry — this one names the EMPLOYEE, because
+     * different entity on the entry - this one names the EMPLOYEE, because
      * "who looked at whose documents" is the question this route exists to
      * answer.
      */
@@ -670,7 +670,7 @@ class EmployeeController extends Controller
      *
      * The document is looked up WITHIN the named employee's own, so a
      * reference that belongs to somebody else's record is a 404 rather than
-     * a 403 — the same shape as ProfileController::documentFor, and for the
+     * a 403 - the same shape as ProfileController::documentFor, and for the
      * same reason: there is no branch here that could be written the wrong
      * way round.
      * ─────────────────────────────────────────────────────────────────────────
@@ -731,7 +731,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Somebody else's identifiers, masked — or nothing at all.
+     * Somebody else's identifiers, masked - or nothing at all.
      *
      * ─────────────────────────────────────────────────────────────────────────
      * THE QUERY IS THE GATE, NOT THE TEMPLATE
@@ -742,7 +742,7 @@ class EmployeeController extends Controller
      * from being a card rendered outside it.
      *
      * Returns null for "may not see" and an array with `on_file => false` for
-     * "may see, and there is nothing there" — two different facts. The second
+     * "may see, and there is nothing there" - two different facts. The second
      * is the one that matters operationally: somebody nobody has set up cannot
      * be paid, and that has to be visible as an absence rather than as a
      * section that quietly does not appear.
@@ -763,8 +763,8 @@ class EmployeeController extends Controller
 
         return [
             'on_file' => true,
-            // The type itself is not sensitive — which document somebody
-            // produced is not the half worth protecting — and the edit form
+            // The type itself is not sensitive - which document somebody
+            // produced is not the half worth protecting - and the edit form
             // needs it to preselect the dropdown.
             'type' => $banking['id_proof_type'],
             'id_proof_label' => $banking['id_proof_label'],
@@ -804,7 +804,7 @@ class EmployeeController extends Controller
             // the required one. Uniqueness across both is checked below.
             'work_email' => ['nullable', 'email', 'max:190'],
 
-            // Master data, and it must be a row from the RIGHT list — otherwise
+            // Master data, and it must be a row from the RIGHT list - otherwise
             // a crafted id could set somebody's department to a leave type.
             'department_id' => [
                 'nullable',
@@ -853,7 +853,7 @@ class EmployeeController extends Controller
          * An intern becoming full-time is a conversion: a new identifier is
          * issued, the old record is closed, and the leave balance starts
          * again. Allowing the same change through the edit form would do none
-         * of that — it would leave a `ZEPH262001` whose column says full-time,
+         * of that - it would leave a `ZEPH262001` whose column says full-time,
          * with a year of intern leave behind it and no audit entry saying when
          * it changed.
          *
@@ -874,7 +874,7 @@ class EmployeeController extends Controller
         );
 
         /*
-         * Either address can sign in, so neither may belong to anybody else —
+         * Either address can sign in, so neither may belong to anybody else -
          * as their sign-in OR as their personal email. See StaffEmails.
          */
         $errors = [];
@@ -895,7 +895,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * The address that goes on users.email — the work email, or the personal
+     * The address that goes on users.email - the work email, or the personal
      * one until there is a work email. On an edit a blank personal email
      * keeps the one on file (the form's "blank keeps" rule).
      *
@@ -916,12 +916,12 @@ class EmployeeController extends Controller
      * REQUIRED WHEN HIRING, OPTIONAL WHEN CORRECTING
      *
      * On a CREATE these are required, because the owner decided a record is not
-     * complete without them (2026-09-12) — with one exception: an intern is not
+     * complete without them (2026-09-12) - with one exception: an intern is not
      * required to have a PAN, because students frequently do not have one and
      * refusing would mean the intern cannot be added at all. A freelancer must,
      * since they invoice us and that is a TDS matter.
      *
-     * On an EDIT every one of them is optional, and that is not laxness — it is
+     * On an EDIT every one of them is optional, and that is not laxness - it is
      * the whole mechanism. The form is rendered with EMPTY inputs beside masked
      * hints, because filling them would put the real numbers into the HTML. So
      * an empty field means "leave what is stored alone", and Laravel's
@@ -937,7 +937,7 @@ class EmployeeController extends Controller
         $creating = $existing === null;
         $required = $creating ? 'required' : 'nullable';
 
-        // The intern exception, and only on a create — an edit demands nothing.
+        // The intern exception, and only on a create - an edit demands nothing.
         $panRequired = $creating && $request->input('employment_type') !== Employee::INTERN
             ? 'required'
             : 'nullable';
@@ -973,8 +973,8 @@ class EmployeeController extends Controller
     {
         return [
             'id_proof_number.regex' => IdProof::formatMessage((string) $request->input('id_proof_type')),
-            'pan.regex' => 'A PAN is five letters, four digits and a letter — like ABCDE1234F.',
-            'ifsc.regex' => 'An IFSC is four letters, a zero, then six characters — like HDFC0001234.',
+            'pan.regex' => 'A PAN is five letters, four digits and a letter - like ABCDE1234F.',
+            'ifsc.regex' => 'An IFSC is four letters, a zero, then six characters - like HDFC0001234.',
             'account_number.regex' => 'An account number is 9 to 18 digits, with no spaces.',
         ];
     }
@@ -1063,7 +1063,7 @@ class EmployeeController extends Controller
      * everywhere else. A freelancer we pay against an invoice does not need to
      * tell us which flat they work from.
      *
-     * On an EDIT both are optional, and empty means keep — the same rule the
+     * On an EDIT both are optional, and empty means keep - the same rule the
      * identity fields follow, so one form has one behaviour rather than two.
      * The boxes ARE prefilled here (see `addresses()`), so an empty one is
      * either a deliberate clear-out by somebody who can see what they cleared,
@@ -1088,8 +1088,8 @@ class EmployeeController extends Controller
              * A PHONE NUMBER IS REQUIRED OF EVERYBODY, NOT JUST FULL-TIME
              *
              * The only field on this form that is. The owner's list names it
-             * for all three engagements — full-time everything, interns ID
-             * proof/phone/bank, freelancers those plus a PAN — and the reason
+             * for all three engagements - full-time everything, interns ID
+             * proof/phone/bank, freelancers those plus a PAN - and the reason
              * is obvious the first time somebody has to be reached and the CRM
              * has no way to do it.
              */
@@ -1107,8 +1107,8 @@ class EmployeeController extends Controller
     /**
      * The two addresses on file, or null for somebody who may not read them.
      *
-     * Behind `employees.identifiers` — the permission the directory does not
-     * carry — and, unlike the identifiers themselves, returned in full. Masking
+     * Behind `employees.identifiers` - the permission the directory does not
+     * carry - and, unlike the identifiers themselves, returned in full. Masking
      * an address would protect nothing a mask can protect and would stop HR
      * seeing the typo that sends a courier to the wrong street.
      *
@@ -1135,7 +1135,7 @@ class EmployeeController extends Controller
      *
      * Blank keeps, exactly as `writeIdentity()` does, and for the same reason:
      * one form, one rule about what an empty box means. The audit entry names
-     * the fields and never the values — see the constant's own note.
+     * the fields and never the values - see the constant's own note.
      *
      * @param  array<string, mixed>  $data
      */
@@ -1207,7 +1207,7 @@ class EmployeeController extends Controller
      * silently become full-time attendance, and there would be no date anywhere
      * saying when any of it happened.
      *
-     * So: a new identifier, a new employment record, a new account — and the old
+     * So: a new identifier, a new employment record, a new account - and the old
      * one CLOSED rather than deleted, keeping every hour, leave day and payslip
      * filed under the identifier it was recorded against. `converted_from_id`
      * threads the two together so the history is still findable.
@@ -1216,7 +1216,7 @@ class EmployeeController extends Controller
      *
      * Moves: the work email, the identity and bank details, the profile fields,
      * the photo, the documents, the roles, the reporting line and the
-     * department. None of it is re-typed — the owner asked for a button, not a
+     * department. None of it is re-typed - the owner asked for a button, not a
      * second pass at the form.
      *
      * Does not: leave, attendance, payslips, tasks and team membership. The
@@ -1269,7 +1269,7 @@ class EmployeeController extends Controller
         }
 
         /*
-         * Rank, not role (§2.5) — the same check closing a record makes, because
+         * Rank, not role (§2.5) - the same check closing a record makes, because
          * this closes one. Somebody who may not close this person's record must
          * not be able to close it by converting them instead.
          */
@@ -1318,7 +1318,7 @@ class EmployeeController extends Controller
          * rows cannot hold it even for the length of a transaction.
          *
          * What the closed record keeps is a tombstone built from the address it
-         * had — `someone+ZEPH262004@…` — rather than a null or a blank. It says
+         * had - `someone+ZEPH262004@…` - rather than a null or a blank. It says
          * which address this record signed in with, it cannot collide with
          * anything, and it is a valid address shape so nothing downstream that
          * expects one chokes on it. The account is inactive, so it is not a way
@@ -1360,7 +1360,7 @@ class EmployeeController extends Controller
             /*
              * TODAY, not the day they started as an intern. The leave year runs
              * from each person's own joining month and the balance starts
-             * fresh (2026-09-11), and both read this column — carrying the
+             * fresh (2026-09-11), and both read this column - carrying the
              * intern date over would hand them a year of accrual they have not
              * earned under this engagement.
              */
@@ -1429,7 +1429,7 @@ class EmployeeController extends Controller
 
         // A copy, so replacing it later on one record cannot delete it from
         // under the other. A source that has gone missing is not worth failing
-        // a conversion over — they simply start without a photo.
+        // a conversion over - they simply start without a photo.
         if (($fields['photo_path'] ?? null) !== null) {
             $fields['photo_path'] = $this->documents->exists($fields['photo_path'])
                 ? $this->documents->copy($fields['photo_path'], 'employees/'.$to->id.'/photo')['path']
@@ -1444,7 +1444,7 @@ class EmployeeController extends Controller
      *
      * Not strictly asked for, and left out it would mean somebody's resume and
      * offer letter becoming unreachable to them the day they are made
-     * permanent — the old account cannot sign in, and this module's document
+     * permanent - the old account cannot sign in, and this module's document
      * routes serve the signed-in person's own.
      */
     protected function carryDocuments(Employee $from, Employee $to): void
@@ -1493,7 +1493,7 @@ class EmployeeController extends Controller
      *
      * Returning an empty rule set is the gate, not an afterthought. `validate()`
      * returns only what it validated, so a key with no rule never reaches
-     * `$data` and `writeSalary()` finds nothing to write — the request is not
+     * `$data` and `writeSalary()` finds nothing to write - the request is not
      * refused, it simply carries no authority over pay. Somebody holding
      * `employees.edit` and not `salary.manage` can correct a department all day
      * and cannot touch a salary by posting extra fields at the same form.
@@ -1506,7 +1506,7 @@ class EmployeeController extends Controller
      * ZERO IS AN ANSWER; EMPTY IS NOT AN ANSWER
      *
      * PF of 0 is a statement that none is deducted, and it is stored. An empty
-     * box is "not stated" — null on a create, and on an edit it means keep,
+     * box is "not stated" - null on a create, and on an edit it means keep,
      * like every other field on this form.
      *
      * @return array<string, list<mixed>>
@@ -1521,7 +1521,7 @@ class EmployeeController extends Controller
 
         // Required when hiring, per the owner's list: full-time, everything.
         // An intern's stipend and a freelancer's rate are asked for and not
-        // demanded — an intern may be added before the stipend is agreed, and a
+        // demanded - an intern may be added before the stipend is agreed, and a
         // freelancer's rate lives outside this application anyway.
         $required = $existing === null && $kind === SalaryStructureModel::BREAKDOWN
             ? 'required'
@@ -1555,7 +1555,7 @@ class EmployeeController extends Controller
     /**
      * Which shape this person's agreement has.
      *
-     * From the engagement type — the column, not the digit in the staff ID —
+     * From the engagement type - the column, not the digit in the staff ID -
      * which on a create comes from the form and on an edit cannot change at
      * all, because converting an intern is its own act.
      */
@@ -1577,7 +1577,7 @@ class EmployeeController extends Controller
     /**
      * Record the agreement, and record THAT it changed.
      *
-     * Blank keeps and the entry names fields rather than figures — the same two
+     * Blank keeps and the entry names fields rather than figures - the same two
      * rules as `writeIdentity()`, for the same reasons.
      *
      * @param  array<string, mixed>  $data
@@ -1657,8 +1657,8 @@ class EmployeeController extends Controller
     /**
      * The pay card, or null for somebody who may not read it.
      *
-     * `salary.view` is the sensitive read the module already defines — seeing
-     * what a colleague earns is itself the harm — so it is that key and not
+     * `salary.view` is the sensitive read the module already defines - seeing
+     * what a colleague earns is itself the harm - so it is that key and not
      * `employees.identifiers`, which is about documents. HR and the CEO hold
      * both; nobody else holds either.
      *
@@ -1683,7 +1683,7 @@ class EmployeeController extends Controller
      *
      * Prefilled, like the addresses and unlike the identifiers. A salary is
      * revised by changing one component, and a form that made HR retype all six
-     * from memory would produce a wrong figure eventually — which is a worse
+     * from memory would produce a wrong figure eventually - which is a worse
      * outcome than the figure being on a page only `salary.view` can open.
      *
      * Keyed by INPUT name and rendered with `plain()`, which does not group:
@@ -1740,8 +1740,8 @@ class EmployeeController extends Controller
         return [
             'departments' => MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->active()->get(),
             'designations' => MasterDataItem::inList(MasterDataItem::DESIGNATIONS)->active()->get(),
-            // Not master data: the three types are rules in code — the staff ID
-            // digit, who the clock applies to, which fields are required — and
+            // Not master data: the three types are rules in code - the staff ID
+            // digit, who the clock applies to, which fields are required - and
             // a fourth one somebody typed into a list would satisfy none of them.
             'employmentTypes' => EmployeePresenter::employmentTypeOptions(),
         ];

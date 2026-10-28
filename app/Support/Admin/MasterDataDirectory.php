@@ -14,14 +14,14 @@ use Illuminate\Support\Collection;
  * These lists are referenced by records that already exist. Every employee
  * points at a department and a designation; every leave request names a type.
  *
- * Deleting a row does not remove that history — it orphans it. An employee
+ * Deleting a row does not remove that history - it orphans it. An employee
  * whose department no longer exists renders a blank cell forever, and nobody
  * reading that record later can find out what it used to say. So the only
  * destructive act is deactivation: the row stops being offered for new records
  * and keeps answering for old ones. The same argument as an invoice number
  * never leaving the sequence, and a rejected attendance record staying legible.
  *
- * `in_use` is what makes that rule enforceable rather than advisory — the
+ * `in_use` is what makes that rule enforceable rather than advisory - the
  * screen states the count before you retire something.
  *
  * AND `in_use` CAN BE NULL, WHICH IS NOT ZERO
@@ -52,7 +52,7 @@ class MasterDataDirectory
             ],
             MasterDataItem::DESIGNATIONS => [
                 'label' => 'Designations',
-                'note' => 'Job titles. A display label — designations carry no rank and grant '
+                'note' => 'Job titles. A display label - designations carry no rank and grant '
                     .'nothing (§2.3).',
                 'unit' => 'employee',
             ],
@@ -75,7 +75,7 @@ class MasterDataDirectory
             ],
             MasterDataItem::ANNOUNCEMENT_CATEGORIES => [
                 'label' => 'Announcement categories',
-                'note' => 'One of these — "holiday" — closes the office on its observed dates; '
+                'note' => 'One of these - "holiday" - closes the office on its observed dates; '
                     .'see Announcements. "Milestone" is generated, never posted by hand, and does '
                     .'not appear on the compose form however it is set here.',
                 'unit' => 'announcement',
@@ -125,7 +125,7 @@ class MasterDataDirectory
                 'key' => $key,
                 'total' => $rows->count(),
                 'active' => $rows->where('active', true)->count(),
-                // A list with nothing in it is a module that cannot be used —
+                // A list with nothing in it is a module that cannot be used -
                 // worth surfacing on the overview rather than discovering when
                 // somebody tries to add an employee.
                 'empty' => $rows->isEmpty(),

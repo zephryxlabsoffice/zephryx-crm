@@ -34,7 +34,7 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
 
             /*
-             * A factory user is staff, an employee, and active — the ordinary
+             * A factory user is staff, an employee, and active - the ordinary
              * case, so a test that does not care about realms does not have to
              * say anything about them.
              *
@@ -52,7 +52,7 @@ class UserFactory extends Factory
     /**
      * An account that cannot sign in (§4.2 step 4).
      *
-     * Holds no permissions at all, however many roles it has — the check runs
+     * Holds no permissions at all, however many roles it has - the check runs
      * before roles are read. See Rbac::permissionsFor.
      */
     public function suspended(): static

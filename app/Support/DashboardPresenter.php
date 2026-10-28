@@ -7,7 +7,7 @@ use Illuminate\Support\Carbon;
 /**
  * Wording and formatting for the dashboard.
  *
- * Kept out of the Blade files for the usual reason — a rule written in one
+ * Kept out of the Blade files for the usual reason - a rule written in one
  * place is a rule, and the same rule written in fourteen widget partials is
  * fourteen chances to word a count differently.
  */
@@ -16,7 +16,7 @@ class DashboardPresenter
     /**
      * "Good morning", and the boundaries are the office's, not UTC's.
      *
-     * Carbon reads config('app.timezone'), which is Asia/Kolkata — see the note
+     * Carbon reads config('app.timezone'), which is Asia/Kolkata - see the note
      * in config/app.php about why that is a config value and not an env one. A
      * dashboard that says "Good evening" at half past nine in the morning is a
      * small thing that makes the whole page feel like it belongs to somebody

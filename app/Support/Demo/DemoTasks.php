@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
  * Local + debug only. Projects, teams and people are drawn from the other demo
  * sources so the modules agree with each other.
  *
- * Like DemoProjects, due dates are offsets from today rather than fixed dates —
+ * Like DemoProjects, due dates are offsets from today rather than fixed dates -
  * the handover's were all in 2024 and would read as universally overdue.
  *
  * A task is assigned either to a whole team (`assignee` null, `team` set) or to
@@ -74,7 +74,7 @@ class DemoTasks
     }
 
     /**
-     * Tasks held by a whole team rather than an individual — the Team Lead's
+     * Tasks held by a whole team rather than an individual - the Team Lead's
      * queue, and the ones that still need someone put on them.
      *
      * @return Collection<int, array<string, mixed>>

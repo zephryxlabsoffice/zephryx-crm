@@ -17,10 +17,10 @@ use Throwable;
  * ─────────────────────────────────────────────────────────────────────────────
  * TWO COPIES, IN TWO PLACES (decided 2026-10-27)
  *
- * 1. On the server, in storage/app/backups — the last KEEP_LOCAL days. Quick
+ * 1. On the server, in storage/app/backups - the last KEEP_LOCAL days. Quick
  *    to download from Admin → Backups, but it lives on the same disk as the
  *    database, so it does not survive losing the server.
- * 2. In the Google Shared Drive, in a "backups" folder — the last KEEP_DRIVE.
+ * 2. In the Google Shared Drive, in a "backups" folder - the last KEEP_DRIVE.
  *    The copy that survives the server, the hosting account, or both.
  *
  * Run daily by a cPanel Cron Job (`php artisan backup:database`), and on

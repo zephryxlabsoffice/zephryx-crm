@@ -7,7 +7,7 @@
 |
 | The client realm's sidebar (foundation spec §3). Same shape as
 | config/navigation.php and read by the same App\Support\Navigation\Navigation
-| — the client portal reuses the staff shell rather than having one of its own,
+| - the client portal reuses the staff shell rather than having one of its own,
 | because the designer's client screens use the same markup for it.
 |
 | ─────────────────────────────────────────────────────────────────────────────

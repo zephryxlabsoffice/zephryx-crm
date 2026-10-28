@@ -18,12 +18,12 @@ use Illuminate\Database\Seeder;
  * THE `event_id`s ARE THE FIXTURE'S, AND THEY ARE NOT REAL GOOGLE EVENTS
  *
  * `gcal_58x7a2` and friends are what the demo has always used, and they exist
- * so the scheduled/requested split is reviewable — a meeting with an event id
+ * so the scheduled/requested split is reviewable - a meeting with an event id
  * reads as scheduled, one without reads as requested and appears in the queue.
  *
  * The `join_url`s are the fixture's too, and they go in the column. That is not
  * a contradiction of "this application never invents a Meet link": the rule is
- * about the APPLICATION — nothing in app/ composes a URL from an event id, and
+ * about the APPLICATION - nothing in app/ composes a URL from an event id, and
  * the column is filled only from what a provider returns. A local + debug
  * fixture standing in for that return value is the same fiction as its fake
  * emails and fake bank accounts.

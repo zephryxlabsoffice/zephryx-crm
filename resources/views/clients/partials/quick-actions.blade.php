@@ -1,11 +1,11 @@
 {{--
-    Quick actions. Links, not buttons, because each one goes somewhere — the
+    Quick actions. Links, not buttons, because each one goes somewhere - the
     handover drew <button> elements, which cannot be opened in a new tab or
     reached by a screen reader as navigation.
 
     A tile that leads straight to a 403 is worse than no tile, so each one that
     has a permission behind it is filtered out for somebody who does not hold it
-    — currently Add Client, whose route is guarded by `clients.create`. The rest
+    - currently Add Client, whose route is guarded by `clients.create`. The rest
     lead to pages already gated by the sidebar.
 --}}
 @php

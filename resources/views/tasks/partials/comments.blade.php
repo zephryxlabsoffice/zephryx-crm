@@ -39,7 +39,7 @@
 
     <form class="composer" method="POST" action="{{ route('tasks.comment', ['task' => $task['id']]) }}">
         @csrf
-        <span class="avatar tint-1" aria-hidden="true">—</span>
+        <span class="avatar tint-1" aria-hidden="true">-</span>
 
         <div class="composer-body">
             <label class="sr-only" for="task-comment">Add a comment</label>

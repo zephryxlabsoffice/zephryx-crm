@@ -94,7 +94,7 @@
 
                         <td role="cell" data-label="Project">
                             <span class="stack-cell">
-                                <strong>{{ $item['project_record']['name'] ?? '—' }}</strong>
+                                <strong>{{ $item['project_record']['name'] ?? '-' }}</strong>
                                 <span>{{ $item['project_record']['client'] ?? '' }}</span>
                             </span>
                         </td>
@@ -102,7 +102,7 @@
                         <td role="cell" data-label="Assigned to">
                             {{-- A round avatar for a person, a square chip for a
                                  team: a glance down the column says which. A
-                                 second (or third) assignee is named as "+N" —
+                                 second (or third) assignee is named as "+N" -
                                  the full roster is on the task's own page. --}}
                             @if (! empty($item['assignee_records']))
                                 @php

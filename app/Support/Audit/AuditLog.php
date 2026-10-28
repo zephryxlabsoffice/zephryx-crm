@@ -31,8 +31,8 @@ use Illuminate\Support\Facades\DB;
  * the two that matter: an entry recording that a value changed, without saying
  * from what to what, cannot answer the question anybody arrives with.
  *
- * For a settings change the `after` carries the EFFECT as well as the value —
- * "4 → 6, reclassified 47 days across 11 people" — because the new number alone
+ * For a settings change the `after` carries the EFFECT as well as the value -
+ * "4 → 6, reclassified 47 days across 11 people" - because the new number alone
  * does not describe what happened to the records. See App\Support\Admin\
  * Retroactive.
  *
@@ -92,14 +92,14 @@ class AuditLog
      * Its own action rather than folded into `employee.updated`, because the
      * entry has to name the field and NOT the value. `employee.updated` writes
      * a before and an after made of the values that changed, which is right for
-     * a department and wrong for a home address — an audit log nobody may edit
+     * a department and wrong for a home address - an audit log nobody may edit
      * is the last place to keep a permanent copy of one.
      */
     public const EMPLOYEE_ADDRESS_CHANGED = 'employee.address_changed';
 
     /*
-     * Somebody looked at one full identifier — an ID proof number, a PAN, a
-     * bank account — and said why.
+     * Somebody looked at one full identifier - an ID proof number, a PAN, a
+     * bank account - and said why.
      *
      * A READ that is logged, which almost nothing else here is. It earns that
      * because the looking is itself the act worth accounting for: the number
@@ -107,7 +107,7 @@ class AuditLog
      * happened is that a person now knows something they did not. Without an
      * entry, "who has seen my Aadhaar" has no answer at all.
      *
-     * The entry names the field and the reason. It never carries the value —
+     * The entry names the field and the reason. It never carries the value -
      * that would copy a decrypted identifier into the one table nothing may
      * edit, and the Admin Panel lists that table by the page.
      */
@@ -115,12 +115,12 @@ class AuditLog
 
     /*
      * HR (or the CEO) obtaining a document from someone ELSE's employee
-     * record — review round Q16. The entity is the employee the document
+     * record - review round Q16. The entity is the employee the document
      * belongs to, not the actor, which is what makes "who looked at whose
      * documents" answerable from this row alone. Deliberately its own pair
      * of actions rather than a reuse of PROFILE_DOCUMENT_DOWNLOADED, which
      * is a person obtaining their OWN document and names themselves as the
-     * entity — the same distinction PROFILE_CHANGE_APPLIED draws from
+     * entity - the same distinction PROFILE_CHANGE_APPLIED draws from
      * PROFILE_CHANGE_REQUESTED.
      */
     public const EMPLOYEE_DOCUMENT_VIEWED = 'employee.document_viewed';
@@ -135,7 +135,7 @@ class AuditLog
 
     /*
      * Portal access is its own action and not an update, because it is the one
-     * that creates an ACCOUNT — the entry somebody looks for when asking who
+     * that creates an ACCOUNT - the entry somebody looks for when asking who
      * could see this client's invoices, and when.
      */
     public const CLIENT_INVITED = 'client.invited';
@@ -147,8 +147,8 @@ class AuditLog
     public const TEAM_STATUS_CHANGED = 'team.status_changed';
 
     /*
-     * Joining and leaving share one action. Both answer the same question —
-     * "who was on this team when" — and the entry carries which of the two it
+     * Joining and leaving share one action. Both answer the same question -
+     * "who was on this team when" - and the entry carries which of the two it
      * was; two constants would split one timeline across two filters.
      */
     public const TEAM_MEMBERS_CHANGED = 'team.members_changed';
@@ -192,7 +192,7 @@ class AuditLog
     public const TASK_ATTACHMENT_ADDED = 'task.attachment_added';
 
     /*
-     * The task's own record of where it came from — a ticket, converted
+     * The task's own record of where it came from - a ticket, converted
      * rather than typed from scratch. See TicketController::convertToTask.
      */
     public const TASK_CREATED_FROM_TICKET = 'task.created_from_ticket';
@@ -202,7 +202,7 @@ class AuditLog
     /*
      * Attendance. The clock entries are here because §6 asks for them and
      * because a check-in somebody disputes is answered by the log rather than
-     * by the record it wrote — the record says 09:21, the entry says who was
+     * by the record it wrote - the record says 09:21, the entry says who was
      * signed in and from which address when it said so.
      */
     public const ATTENDANCE_CHECKED_IN = 'attendance.checked_in';
@@ -223,7 +223,7 @@ class AuditLog
     /*
      * Sunday/holiday rostering and comp-off (review round, 2026-09-11).
      * Rostering has no approval step, so this is the only trace of who put
-     * somebody on a date — the roster row itself carries `rostered_by`, but
+     * somebody on a date - the roster row itself carries `rostered_by`, but
      * the log is what survives it being corrected or the row being read
      * later without that join.
      */
@@ -279,7 +279,7 @@ class AuditLog
      *
      * Names the components that moved and not the figures, which is the same
      * rule the banking entry follows. What an audit trail has to answer is
-     * "who changed this person's salary, and when" — a question a field name
+     * "who changed this person's salary, and when" - a question a field name
      * answers completely. Carrying the amounts would make this table a
      * permanent, unredactable history of everybody's pay, reachable by anybody
      * who can open the audit screen, which is a wider set than `salary.view`.
@@ -298,7 +298,7 @@ class AuditLog
 
     /*
      * Invoices. Every one of these is a financial act, and the cancellation is
-     * the one somebody will eventually be asked to account for — which is why
+     * the one somebody will eventually be asked to account for - which is why
      * it carries its reason into the entry rather than only onto the record.
      */
     public const INVOICE_CREATED = 'invoice.created';
@@ -310,7 +310,7 @@ class AuditLog
     public const INVOICE_CANCELLED = 'invoice.cancelled';
 
     /*
-     * The PDF itself was attached or replaced — its own action, not folded
+     * The PDF itself was attached or replaced - its own action, not folded
      * into `INVOICE_CREATED`, because raising an invoice and putting the
      * actual document behind it are two acts now that invoices are uploaded
      * rather than generated (decided 2026-09-11). A replacement is the
@@ -322,8 +322,8 @@ class AuditLog
     /*
      * Who took a copy of the document, and when. Its own action rather than a
      * read nobody records, because an invoice is the page that gets argued
-     * about on a call — "we never received it" is answered by this entry.
-     * Viewing it inline and downloading it are both this action — the fact
+     * about on a call - "we never received it" is answered by this entry.
+     * Viewing it inline and downloading it are both this action - the fact
      * that matters is that somebody obtained the bytes, not which button
      * they pressed to do it (same rule as SALARY_PAYSLIP_DOWNLOADED).
      */
@@ -332,7 +332,7 @@ class AuditLog
     /*
      * Meetings. The two FAILED actions are here on purpose: a calendar event
      * that did not get created, and a cancellation that did not reach Google,
-     * are exactly the states somebody has to be able to find afterwards —
+     * are exactly the states somebody has to be able to find afterwards -
      * "nobody was invited and nothing said so" is the failure this module is
      * shaped to avoid.
      */
@@ -350,7 +350,7 @@ class AuditLog
 
     /*
      * Announcements. Posting is separate from drafting because publishing a
-     * holiday notice is what closes the office — the entry that matters is the
+     * holiday notice is what closes the office - the entry that matters is the
      * one naming who put it on the board and when, since that is the moment
      * everybody's attendance changed.
      */
@@ -371,7 +371,7 @@ class AuditLog
      *
      * The email change is TWO actions, not one. "Somebody asked to move this
      * account to that address" is the entry that matters when it was not the
-     * account's owner asking — and it is written whether or not the change ever
+     * account's owner asking - and it is written whether or not the change ever
      * completes, which is exactly the case a single `email_changed` would miss.
      */
     public const PROFILE_UPDATED = 'profile.updated';
@@ -394,7 +394,7 @@ class AuditLog
      * would undo that on the way past.
      *
      * The requested entry is written against the PERSON, and the decision
-     * entries against them too rather than against HR — the question somebody
+     * entries against them too rather than against HR - the question somebody
      * asks months later is "what happened to my record", and an entry filed
      * under the approver answers a different one.
      */
@@ -419,7 +419,7 @@ class AuditLog
 
     /*
      * Three distinct account-security acts (review round Q11, decided
-     * 2026-09-21) — a forgotten password, a stolen session and a compromised
+     * 2026-09-21) - a forgotten password, a stolen session and a compromised
      * device are different problems, and none of the three routes below
      * substitutes for another.
      */
@@ -435,7 +435,7 @@ class AuditLog
 
     /*
      * The Google connection. Every entry names the fingerprint and the
-     * actor, never the key (plan doc, "Connecting it", rule 4) — the same
+     * actor, never the key (plan doc, "Connecting it", rule 4) - the same
      * rule IDENTIFIER_REVEALED follows for a bank account number.
      *
      * A failed test is its own action and not swallowed, because it is the
@@ -454,7 +454,7 @@ class AuditLog
 
     /*
      * Database backups (2026-10-27). Downloading one is logged because the
-     * file is the whole database — every salary, every client — in one place.
+     * file is the whole database - every salary, every client - in one place.
      */
     public const BACKUP_TAKEN = 'admin.backup_taken';
 
@@ -473,7 +473,7 @@ class AuditLog
      *
      * Takes the actor explicitly rather than reading `auth()->user()`, because
      * the most important auth entries are written when there is no session yet
-     * — a refused sign-in has an identifier and no user, and recording those as
+     * - a refused sign-in has an identifier and no user, and recording those as
      * "nobody" would lose the only trail an attempted break-in leaves.
      *
      * @param  array<string, mixed>|string|null  $before

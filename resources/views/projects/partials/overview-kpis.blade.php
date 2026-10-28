@@ -50,7 +50,7 @@
             <div class="kpi-lbl">Status</div>
             {{-- The handover had a custom listbox that changed the status in
                  place with no backend behind it. It is a real control now, for
-                 whoever may edit the project — and a plain link to the form for
+                 whoever may edit the project - and a plain link to the form for
                  everybody else, rather than a disabled box that reads as
                  broken. Changing it is audited as its own action. --}}
             @if ($mayEdit ?? false)

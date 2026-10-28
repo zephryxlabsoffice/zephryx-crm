@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
- * GET /login and GET /login/verify — foundation spec §9.2.
+ * GET /login and GET /login/verify - foundation spec §9.2.
  *
  * These cover the rendered pages. The flow behind them is exercised by
  * AuthenticationTest.
@@ -19,7 +19,7 @@ class LoginPageTest extends TestCase
      * Get as far as the code step, the way a person does.
      *
      * `/login/verify` refuses to render without a half-finished sign-in behind
-     * it (§4.2 step 6) — reaching that URL directly must not suggest a code was
+     * it (§4.2 step 6) - reaching that URL directly must not suggest a code was
      * sent to somebody. So these page tests have to actually sign in first.
      */
     protected function pendingSignIn(): User
@@ -49,7 +49,7 @@ class LoginPageTest extends TestCase
 
     public function test_the_identifier_field_accepts_an_email_or_a_user_id(): void
     {
-        // §4.1 — one field for both; the handover labelled it "Username".
+        // §4.1 - one field for both; the handover labelled it "Username".
         $response = $this->get('/login');
 
         $response->assertSee('Email or User ID', false);
@@ -68,7 +68,7 @@ class LoginPageTest extends TestCase
 
     public function test_it_never_reveals_which_realm_an_account_belongs_to(): void
     {
-        // §3 — one form for all three realms; it must not ask or hint.
+        // §3 - one form for all three realms; it must not ask or hint.
         $response = $this->get('/login');
 
         $response->assertDontSee('Staff', false);
@@ -106,7 +106,7 @@ class LoginPageTest extends TestCase
 
     /**
      * The preview parameter exists so the form-level states can be reviewed
-     * while the page is designed. Outside local + debug it must do nothing —
+     * while the page is designed. Outside local + debug it must do nothing -
      * otherwise anyone could put "Session expired" or "Cannot sign in" on the
      * live sign-in page and use it to mislead staff.
      *
@@ -139,7 +139,7 @@ class LoginPageTest extends TestCase
         $this->pendingSignIn();
 
         /*
-         * The cooldown shown is the REAL one now — a code was just issued, so
+         * The cooldown shown is the REAL one now - a code was just issued, so
          * there genuinely is one. What this still checks is that `?preview=`
          * cannot fabricate a number outside local + debug.
          */
@@ -159,7 +159,7 @@ class LoginPageTest extends TestCase
             'password' => 'whatever-it-is',
         ]);
 
-        // The one refusal (§4.2 step 3) — never a reason, never a hint.
+        // The one refusal (§4.2 step 3) - never a reason, never a hint.
         $response->assertSee('Invalid credentials.', false);
         $response->assertDontSee('period of inactivity', false);
     }

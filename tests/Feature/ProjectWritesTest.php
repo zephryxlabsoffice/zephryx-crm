@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * Projects — creating, editing, and the end-of-day updates written against one.
+ * Projects - creating, editing, and the end-of-day updates written against one.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * MOST OF THIS FILE IS ABOUT ONE COLUMN
@@ -119,7 +119,7 @@ class ProjectWritesTest extends TestCase
         ]))->assertRedirect();
 
         $this->assertFalse($project->teams()->where('teams.id', $team->id)->exists());
-        // The team itself is untouched — an assignment is not a membership.
+        // The team itself is untouched - an assignment is not a membership.
         $this->assertNotNull($team->fresh());
     }
 
@@ -151,7 +151,7 @@ class ProjectWritesTest extends TestCase
     public function test_somebody_not_on_the_project_cannot_write_against_it(): void
     {
         /*
-         * Not a permission — reporting your own day is not an authority — so
+         * Not a permission - reporting your own day is not an authority - so
          * it is an ownership check, and this is what it refuses.
          */
         $project = $this->aProject();
@@ -196,7 +196,7 @@ class ProjectWritesTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       VISIBILITY — THE POINT OF THE MODULE
+       VISIBILITY - THE POINT OF THE MODULE
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_an_update_is_internal_unless_somebody_says_otherwise(): void
@@ -220,7 +220,7 @@ class ProjectWritesTest extends TestCase
     {
         /*
          * Not merely the form's default. A row inserted by a seeder, a script
-         * or a future import must be internal unless it says otherwise — the
+         * or a future import must be internal unless it says otherwise - the
          * direction of that default is the whole safety argument.
          */
         $project = $this->aProject();
@@ -246,7 +246,7 @@ class ProjectWritesTest extends TestCase
     {
         /*
          * The field is on the form for people who may publish. Somebody who may
-         * not can still send it — so the request is not trusted: the update is
+         * not can still send it - so the request is not trusted: the update is
          * saved, internal, rather than refused. Losing somebody's written
          * account of their day over a tick box would be the worse outcome.
          */

@@ -16,13 +16,13 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * Tasks — creating, editing, assigning and completing.
+ * Tasks - creating, editing, assigning and completing.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * THREE DIFFERENT ANSWERS TO "MAY THEY?", AND THIS FILE HOLDS ALL THREE
  *
  * Creating and editing are permissions. Assigning is a permission plus an
- * ownership rule — a Team Lead may assign within a team they lead and no other.
+ * ownership rule - a Team Lead may assign within a team they lead and no other.
  * Completing is ownership alone: saying you have finished your own work is not
  * an authority, and a permission would either be held by everybody or would
  * stop people closing the work they did.
@@ -138,7 +138,7 @@ class TaskWritesTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       ASSIGNING — THE §2.6 RULE AGAIN
+       ASSIGNING - THE §2.6 RULE AGAIN
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_a_team_lead_may_assign_within_their_own_team(): void
@@ -202,7 +202,7 @@ class TaskWritesTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       COMPLETING — OWNERSHIP, NOT AUTHORITY
+       COMPLETING - OWNERSHIP, NOT AUTHORITY
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_the_assignee_may_complete_their_own_task_without_any_permission(): void
@@ -298,7 +298,7 @@ class TaskWritesTest extends TestCase
     public function test_a_task_may_carry_more_than_one_assignee(): void
     {
         // "A task can go to a team and flow to its members" (review round
-        // decision) — two people pairing on the same work is the ordinary
+        // decision) - two people pairing on the same work is the ordinary
         // case this pivot exists for.
         $task = $this->aTask();
         $first = $this->anEmployee('EMP807', 'First Worker');
@@ -411,7 +411,7 @@ class TaskWritesTest extends TestCase
     /**
      * @param  array<string, mixed>  $attributes  an 'assignees' key (a list
      *                                            of employee ids) is synced onto the pivot rather than passed to
-     *                                            Task::create — assignee_id is not a column any more.
+     *                                            Task::create - assignee_id is not a column any more.
      */
     protected function aTask(array $attributes = []): Task
     {

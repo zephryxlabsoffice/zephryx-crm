@@ -8,7 +8,7 @@ use App\Support\ProjectDirectory;
 use Tests\TestCase;
 
 /**
- * Projects — the managing face, the personal face, the EOD list and one
+ * Projects - the managing face, the personal face, the EOD list and one
  * project's overview. Foundation spec §12.1.
  */
 class ProjectsPageTest extends TestCase
@@ -21,7 +21,7 @@ class ProjectsPageTest extends TestCase
         /*
          * Every route in the staff realm is behind `realm:staff` now (§3.1), so
          * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
+         * what the page renders rather than about who may see it - the guard
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
@@ -121,7 +121,7 @@ class ProjectsPageTest extends TestCase
     public function test_progress_uses_a_native_element_not_an_inline_width(): void
     {
         // The handover sized the bar with style="width:75%", which our
-        // Content-Security-Policy blocks — every bar would have been empty.
+        // Content-Security-Policy blocks - every bar would have been empty.
         $this->withDemoData();
 
         $project = Project::where('reference', 'WD-2024-001')->firstOrFail();
@@ -136,7 +136,7 @@ class ProjectsPageTest extends TestCase
     public function test_progress_is_derived_from_completed_tasks(): void
     {
         /*
-         * Dropped as a typed column 2026-09-21 — completed tasks over total
+         * Dropped as a typed column 2026-09-21 - completed tasks over total
          * tasks, computed rather than kept honestly by whoever last opened
          * the form. Asserted from the data the seeder actually wrote rather
          * than a fixed number, so this keeps testing something when the
@@ -191,7 +191,7 @@ class ProjectsPageTest extends TestCase
     public function test_the_status_control_is_real_now_and_leads_to_the_form(): void
     {
         /*
-         * It was a disabled listbox saying "not built yet" — the honest state
+         * It was a disabled listbox saying "not built yet" - the honest state
          * while there was no backend. There is one, so somebody who may edit
          * gets a route to the change and somebody who may not gets a plain
          * pill rather than a control that reads as broken.

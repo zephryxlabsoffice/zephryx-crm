@@ -192,7 +192,7 @@ class MeetingPresenterTest extends TestCase
 
     public function test_joining_opens_shortly_before_the_start(): void
     {
-        // Not a lock — a Meet link works whenever. It is about not putting a
+        // Not a lock - a Meet link works whenever. It is about not putting a
         // live "Join" beside a meeting three weeks out.
         $soon = $this->meeting([
             'starts_at' => Carbon::now('UTC')->addMinutes(5)->toDateTimeString(),

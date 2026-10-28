@@ -17,9 +17,9 @@ use Illuminate\Support\Carbon;
  * TWO STATES ARE PRESERVED ON PURPOSE, BECAUSE THEY ARE THE INTERESTING ONES
  *
  * EMP011 gets no banking details: a recent joiner nobody has set up, who
- * therefore cannot be paid at all. And the current month is left mid-run — some
+ * therefore cannot be paid at all. And the current month is left mid-run - some
  * payslips added and paid, some added and awaiting payment, some with nothing
- * added — so all three states are reviewable on one screen.
+ * added - so all three states are reviewable on one screen.
  *
  * The payslip FILE is not seeded. There is no document to invent, and a record
  * whose `payslip_path` pointed at nothing would break the download route rather
@@ -77,7 +77,7 @@ class SalarySeeder extends Seeder
                      */
                     'id_proof_type' => $details['id_proof_type'] ?? IdProof::AADHAAR,
                     'id_proof_number' => $details['id_proof_number'],
-                    // Null for some people on purpose — the photocopy arrives
+                    // Null for some people on purpose - the photocopy arrives
                     // on paper, and "Not yet" is a state HR has to chase.
                     'id_proof_copy_received_on' => isset($details['copy_received'])
                         ? Carbon::parse($details['copy_received'])

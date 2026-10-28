@@ -13,7 +13,7 @@
 | WHAT IS NOT IN THIS LIST, AND CANNOT BE
 |
 | §2.1: the Admin Panel sets the rules and does not participate in them. It has
-| no personal records — no "my attendance", no "my payslip" — and no operational
+| no personal records - no "my attendance", no "my payslip" - and no operational
 | authority: it cannot approve leave, run payroll or mark attendance.
 |
 | So there is no entry here for Leave, Salary, Attendance, Projects or any other
@@ -27,7 +27,7 @@
 | ─────────────────────────────────────────────────────────────────────────────
 |
 | Permission keys are `admin.*` and are held only by the owner account. They are
-| deliberately not shared with any staff key — `employees.view` on the staff side
+| deliberately not shared with any staff key - `employees.view` on the staff side
 | means the HR directory, while `admin.accounts.view` means login credentials and
 | role assignments, and those are not the same thing to be allowed to see.
 |

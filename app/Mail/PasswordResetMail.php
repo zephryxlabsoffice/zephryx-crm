@@ -11,7 +11,7 @@ use Illuminate\Mail\Mailables\Envelope;
  * The password reset link (foundation spec §4.6).
  *
  * This one does carry a link, because there is no other way to prove possession
- * of the mailbox — but it says plainly what to do if it was not requested, and
+ * of the mailbox - but it says plainly what to do if it was not requested, and
  * it does not say anything about the account beyond the address it was sent to.
  */
 class PasswordResetMail extends Mailable

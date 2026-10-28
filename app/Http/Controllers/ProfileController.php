@@ -37,7 +37,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 /**
- * My Profile — what a person may change about themselves, and what the company
+ * My Profile - what a person may change about themselves, and what the company
  * holds about them.
  *
  * Four pages: personal information (`/profile`), preferences
@@ -48,7 +48,7 @@ use Throwable;
  * TWO THINGS IN ONE LAYOUT, AND THE LINE BETWEEN THEM IS THE MODULE
  *
  * Decided 2026-09-03. Every field on these pages has exactly one owner, and the
- * table that says so is App\Support\ProfilePolicy — read it before adding a
+ * table that says so is App\Support\ProfilePolicy - read it before adding a
  * field here. The short version:
  *
  *   THE PERSON'S OWN     phone, address, the descriptive fields, emergency
@@ -69,24 +69,24 @@ use Throwable;
  *
  * 1. THE WRITE VALIDATES AGAINST ProfilePolicy::selfEditable() AND IGNORES THE
  *    REST. `update()` builds its rules from that list and writes to
- *    `employee_profiles`, a table with no HR column in it — so a request
+ *    `employee_profiles`, a table with no HR column in it - so a request
  *    carrying `department` is dropped by the validator AND has nowhere to land
  *    if it were not. Two independent reasons, because `disabled` in the markup
  *    is a rendering instruction and stops nobody.
  *
  * 2. CHANGING THE EMAIL IS A FLOW, NOT A FIELD. Both addresses confirm, the old
  *    one is told either way, and the account keeps signing in with the old
- *    address until the new is confirmed — see App\Support\Auth\EmailChanges.
+ *    address until the new is confirmed - see App\Support\Auth\EmailChanges.
  *
  * 3. CHANGING THE PASSWORD REQUIRES THE CURRENT ONE, even though the person is
  *    already signed in. A borrowed unlocked laptop is the whole threat. Policy
- *    is §4.7 — twelve characters, blocklist, no composition rules, no forced
+ *    is §4.7 - twelve characters, blocklist, no composition rules, no forced
  *    rotation. All sessions but this one are signed out on success.
  *
  * 4. THE PHOTO IS AN UPLOAD, WITH EVERYTHING THAT IMPLIES. Type checked by
  *    content, size and dimensions capped, and rebuilt from its picture segments
  *    so nothing the camera recorded alongside the image survives. It is a strip
- *    rather than a re-encode, because this host has neither GD nor Imagick —
+ *    rather than a re-encode, because this host has neither GD nor Imagick -
  *    App\Support\Images\PhotoIntake states what that buys and what it does not.
  *
  * 5. EVERY WRITE HERE IS AUDITED (§6), and the activity page reads those
@@ -98,7 +98,7 @@ use Throwable;
  *
  * Like Notifications, nothing here is behind a §5 permission: it is the
  * signed-in person's own record and no route takes an identifier. What it does
- * check is that there IS an employment record — a Mentor and the owner hold no
+ * check is that there IS an employment record - a Mentor and the owner hold no
  * Employee base (§2.1), so there is no profile to show them, and a page that
  * rendered blank would be claiming they have one that is empty.
  * ─────────────────────────────────────────────────────────────────────────────
@@ -121,7 +121,7 @@ class ProfileController extends Controller
        ══════════════════════════════════════════════════════════════════════ */
 
     /**
-     * GET /profile — personal information.
+     * GET /profile - personal information.
      */
     public function show(Request $request): Response
     {
@@ -133,7 +133,7 @@ class ProfileController extends Controller
             /*
              * A request in flight, so the page SAYS SO rather than offering a
              * form that would be refused. The same arrangement the password
-             * page uses for an email change already under way — and the same
+             * page uses for an email change already under way - and the same
              * reason: a control that cannot succeed is worse than one that is
              * not there.
              */
@@ -189,7 +189,7 @@ class ProfileController extends Controller
        ══════════════════════════════════════════════════════════════════════ */
 
     /**
-     * POST /profile — ASK for a change. Nothing here saves a record.
+     * POST /profile - ASK for a change. Nothing here saves a record.
      *
      * ─────────────────────────────────────────────────────────────────────────
      * THE FORM STOPPED SAVING ON 2026-09-14
@@ -205,7 +205,7 @@ class ProfileController extends Controller
      * `detailRules()` walks ProfilePolicy::requestable() and refuses to
      * validate a field the policy does not name. Written out by hand it would
      * be a second copy of the rule, and the day a field moves out of that list
-     * the copy would keep accepting it — the failure that looks exactly like
+     * the copy would keep accepting it - the failure that looks exactly like
      * everything working.
      *
      * ONE REQUEST AT A TIME
@@ -229,7 +229,7 @@ class ProfileController extends Controller
         }
 
         // Lists arrive as a comma-separated string and are stored as lists, so
-        // they are shaped BEFORE the comparison — otherwise "English, Hindi"
+        // they are shaped BEFORE the comparison - otherwise "English, Hindi"
         // never equals ['English', 'Hindi'] and every submission looks like a
         // change to a field nobody touched.
         $submitted = $data;
@@ -261,12 +261,12 @@ class ProfileController extends Controller
 
         return redirect()
             ->route('profile.show')
-            ->with('status', 'Sent to HR. Nothing on your record has changed yet — bring the documents to the office and HR will apply it.')
+            ->with('status', 'Sent to HR. Nothing on your record has changed yet - bring the documents to the office and HR will apply it.')
             ->with('status_tone', 'success');
     }
 
     /**
-     * POST /profile/requests/withdraw — take back a request HR has not decided.
+     * POST /profile/requests/withdraw - take back a request HR has not decided.
      */
     public function withdrawRequest(Request $request): RedirectResponse
     {
@@ -311,7 +311,7 @@ class ProfileController extends Controller
      * The milestone opt-out is on the EMPLOYEE record, because Announcements
      * reads it there. The two notification switches are on the profile row,
      * because Notifier reads them there. Theme, density and sidebar are cookies
-     * on this browser, because that is what they have always been — writing
+     * on this browser, because that is what they have always been - writing
      * them to the account would make somebody's laptop preference follow them
      * onto a shared machine.
      *
@@ -371,7 +371,7 @@ class ProfileController extends Controller
 
         /*
          * The three that are cookies, written through the same factories the
-         * topbar switch and the sidebar toggle use — Theme::cookie and
+         * topbar switch and the sidebar toggle use - Theme::cookie and
          * Shell::*Cookie. Composing them here instead would give one setting
          * two lifetimes and two SameSite policies depending on which control
          * somebody happened to use.
@@ -448,8 +448,8 @@ class ProfileController extends Controller
         /*
          * §4.6's invalidation, minus this session.
          *
-         * Unlike a reset — where the person is signing in fresh and being
-         * dropped is expected — somebody changing their password from inside
+         * Unlike a reset - where the person is signing in fresh and being
+         * dropped is expected - somebody changing their password from inside
          * the application has not asked to be signed out of the page they are
          * on. Every OTHER session goes, which is the half that matters: it is
          * how somebody whose account has been borrowed takes it back.
@@ -472,7 +472,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * POST /profile/email — start a change.
+     * POST /profile/email - start a change.
      *
      * The current password is asked for here too, and for the same reason as on
      * the password form: this is the other half of the login, and a borrowed
@@ -506,7 +506,7 @@ class ProfileController extends Controller
          * Both mails, and the old address first.
          *
          * If the mailer fails partway, the half that has definitely gone out is
-         * the one to the address that already holds the account — which is the
+         * the one to the address that already holds the account - which is the
          * one the security of this flow rests on.
          */
         Mail::to($user->email)->send(new EmailChangeMail(
@@ -533,7 +533,7 @@ class ProfileController extends Controller
             entityType: 'user',
             entityId: $user->user_id,
             before: $user->email,
-            after: $data['new_email'].' — requested, awaiting confirmation from both addresses',
+            after: $data['new_email'].' - requested, awaiting confirmation from both addresses',
             request: $request,
         );
 
@@ -555,7 +555,7 @@ class ProfileController extends Controller
      * in. Requiring a session would make the new-address half unusable for
      * exactly the people it is meant for.
      *
-     * That is safe because the token is the whole authority — 64 characters
+     * That is safe because the token is the whole authority - 64 characters
      * from a CSPRNG, stored hashed, and carrying which change and which half it
      * is. Nothing in the request is trusted, including who is signed in.
      * ─────────────────────────────────────────────────────────────────────────
@@ -587,7 +587,7 @@ class ProfileController extends Controller
         $this->audit->record(
             action: AuditLog::PROFILE_EMAIL_CHANGED,
             // The account itself, not whoever happens to be signed in on this
-            // browser — which on the new-address half is frequently nobody.
+            // browser - which on the new-address half is frequently nobody.
             actor: $change->user,
             entityType: 'user',
             entityId: $change->user?->user_id,
@@ -607,7 +607,7 @@ class ProfileController extends Controller
      * ─────────────────────────────────────────────────────────────────────────
      * WHAT REACHES THE DISK IS NOT WHAT ARRIVED
      *
-     * The upload is parsed and rebuilt from its picture segments — every APPn
+     * The upload is parsed and rebuilt from its picture segments - every APPn
      * block on a JPEG, every non-picture chunk on a PNG, dropped. A phone photo
      * carries GPS coordinates, and a staff photo that publishes where somebody
      * lives is not a feature.
@@ -649,9 +649,9 @@ class ProfileController extends Controller
         /*
          * Stored straight away, and NOT onto the record.
          *
-         * The cleaning has already happened — the bytes here are ones this
+         * The cleaning has already happened - the bytes here are ones this
          * application produced from the picture segments, with everything the
-         * camera recorded alongside them gone — so holding the file is safe.
+         * camera recorded alongside them gone - so holding the file is safe.
          * It goes to its own folder, and the live `photo_path` is untouched
          * until HR applies the request. A candidate on a declined request is
          * deleted; see App\Support\Profile\ProfileChanges.
@@ -681,13 +681,13 @@ class ProfileController extends Controller
     }
 
     /**
-     * GET /profile/photo — the signed-in person's own.
+     * GET /profile/photo - the signed-in person's own.
      *
      * ─────────────────────────────────────────────────────────────────────────
      * ONE ROUTE, AND IT SERVES NOBODY ELSE'S
      *
      * The photo is on the private disk with the documents, so it needs a route
-     * to be seen at all — and this one resolves the file from the session,
+     * to be seen at all - and this one resolves the file from the session,
      * exactly like the rest of the module.
      *
      * Which means, today, that a person's photo is visible to that person. A
@@ -725,7 +725,7 @@ class ProfileController extends Controller
                 'required', 'file',
                 'max:'.(int) (DocumentStore::MAX_BYTES / 1024),
                 /*
-                 * `mimes` checks the CONTENT, not the name — Laravel runs the
+                 * `mimes` checks the CONTENT, not the name - Laravel runs the
                  * file through finfo and compares the guessed extension. A
                  * whitelist by extension alone is how "payslip.pdf.php"
                  * becomes a problem.
@@ -739,7 +739,7 @@ class ProfileController extends Controller
             $stored = $this->documents->put('employees/'.$employee->id.'/documents', $request->file('document'));
         } catch (Throwable $e) {
             // Nothing is saved on the way here, so there is no partial state
-            // to leave behind — an upload that fails simply never happened.
+            // to leave behind - an upload that fails simply never happened.
             throw ValidationException::withMessages([
                 'document' => 'Could not store the file: '.$e->getMessage(),
             ]);
@@ -779,7 +779,7 @@ class ProfileController extends Controller
      * THE SCOPE IS THE QUERY, NOT A CHECK AFTER IT
      *
      * The document is looked up WITHIN this person's own, so somebody else's
-     * reference is a 404 rather than a 403 — and there is no branch anywhere
+     * reference is a 404 rather than a 403 - and there is no branch anywhere
      * that could be written the wrong way round. §6 says two parties reach
      * these, the person and HR; HR's route is the employee record, not this
      * one, and this method deliberately cannot serve anybody else's file.
@@ -796,7 +796,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * GET /profile/documents/{document}/view — the same file, opened rather
+     * GET /profile/documents/{document}/view - the same file, opened rather
      * than saved (plan doc, "In-browser viewing is ours, not Drive's"). Same
      * scope, same guard; only the response shape and the audit verb differ.
      */
@@ -862,7 +862,7 @@ class ProfileController extends Controller
      * The employment record behind the session.
      *
      * A Mentor and the owner hold no Employee base (§2.1). They have no profile
-     * — not an empty one — so this is a 403 rather than a page of blanks.
+     * - not an empty one - so this is a 403 rather than a page of blanks.
      */
     protected function requireEmployee(Request $request): Employee
     {
@@ -886,7 +886,7 @@ class ProfileController extends Controller
      *
      * Every key here is checked against ProfilePolicy::isRequestable() as the
      * rules are assembled, so a field that stops being requestable stops being
-     * validated — and therefore stops being accepted — without anybody
+     * validated - and therefore stops being accepted - without anybody
      * remembering to come here.
      *
      * @return array<string, list<string>>
@@ -944,7 +944,7 @@ class ProfileController extends Controller
     /**
      * What changed, for the audit entry.
      *
-     * Field names and whether each is set — never the values. §6 wants a before
+     * Field names and whether each is set - never the values. §6 wants a before
      * and an after, and here that is the shape of the record rather than its
      * contents: an audit log carrying everybody's home address and emergency
      * contact number is a second copy of the most sensitive fields on the page,
@@ -977,7 +977,7 @@ class ProfileController extends Controller
              * same reason it is an error rather than a silent skip: on `file`
              * or `cookie` there is no way to reach another session, so somebody
              * changing their password because their account was borrowed would
-             * leave the borrower signed in — and the page would tell them it
+             * leave the borrower signed in - and the page would tell them it
              * had worked.
              */
             Log::error('Profile password change could not invalidate other sessions.', [
@@ -997,7 +997,7 @@ class ProfileController extends Controller
 
     /**
      * §4.7: twelve characters, a blocklist, and no composition rules. The same
-     * list PasswordResetController uses — both forced complexity and forced
+     * list PasswordResetController uses - both forced complexity and forced
      * rotation are known to produce weaker passwords in practice.
      *
      * @return list<mixed>

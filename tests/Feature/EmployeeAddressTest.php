@@ -25,8 +25,8 @@ use Tests\TestCase;
  *
  * WHAT IS BEHIND THE PERMISSION AND WHAT IS NOT
  *
- * Reading them needs `employees.identifiers` — the permission the directory
- * does not carry — for the same reason the identity card does: a Team Lead
+ * Reading them needs `employees.identifiers` - the permission the directory
+ * does not carry - for the same reason the identity card does: a Team Lead
  * looking up a colleague's department is not thereby looking up their flat.
  *
  * But unlike the card, they are shown IN FULL. An address is not a credential:
@@ -92,8 +92,8 @@ class EmployeeAddressTest extends TestCase
         $this->assertSame(1, Employee::count());
 
         /*
-         * There IS a profile row — the phone number is required of everybody
-         * and lives on it — and both address columns are null. Which is the
+         * There IS a profile row - the phone number is required of everybody
+         * and lives on it - and both address columns are null. Which is the
          * distinction that matters: "not stated" is a chaseable gap, and it is
          * not the same as a row of empty strings saying somebody was asked and
          * answered nothing.
@@ -106,7 +106,7 @@ class EmployeeAddressTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       EDITING THEM — BLANK KEEPS, TYPED REPLACES
+       EDITING THEM - BLANK KEEPS, TYPED REPLACES
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_leaving_them_blank_keeps_what_is_on_file(): void
@@ -217,7 +217,7 @@ class EmployeeAddressTest extends TestCase
          * Prefilled, unlike the identity fields beside them. There is nothing
          * to withhold from somebody who may already read the card, and an
          * address is corrected a line at a time rather than retyped from
-         * memory — a blank box would make every correction a re-entry.
+         * memory - a blank box would make every correction a re-entry.
          */
         $this->signInAsStaff(['employee', 'hr']);
         $this->post('/employees', $this->payload());

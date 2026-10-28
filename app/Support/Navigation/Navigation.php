@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Route;
  * Builds the sidebar for a viewer (foundation spec §5, §12).
  *
  * Two filters, in order:
- *   1. Permission — the viewer must hold the entry's key.
- *   2. Existence  — the entry's route must be registered.
+ *   1. Permission - the viewer must hold the entry's key.
+ *   2. Existence  - the entry's route must be registered.
  *
  * The second matters while the application is being built module by module:
  * config/navigation.php lists the whole roadmap, and an entry whose module has
@@ -28,7 +28,7 @@ class Navigation
      *
      * Leads, Calendar and Reports keep their entries and return 404 until v2
      * (§12). Without this the 404 page would tell someone who clicked a link we
-     * chose to show them that the page does not exist — which reads as a broken
+     * chose to show them that the page does not exist - which reads as a broken
      * application rather than a decision.
      *
      * @return array<string, mixed>|null
@@ -62,7 +62,7 @@ class Navigation
      *
      * An unknown realm gets the client list, which is the smallest of the
      * three. Failing towards less is the only sensible direction for a default
-     * here — certainly not towards the admin one.
+     * here - certainly not towards the admin one.
      */
     protected function configFor(string $realm): string
     {

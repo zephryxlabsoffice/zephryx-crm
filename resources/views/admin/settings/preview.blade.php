@@ -21,7 +21,7 @@
         THE SCREEN THIS MODULE EXISTS FOR
 
         The value is the small half of this page. The large half is what the
-        value DOES to records that already exist — computed against the real
+        value DOES to records that already exist - computed against the real
         history by App\Support\Admin\Retroactive, not estimated.
 
         "half_day_hours: 4 → 6" is a true sentence that tells nobody anything.
@@ -116,7 +116,7 @@
                         @endif
 
                         <p class="ad-effect-warning">
-                            These records are not edited — they are re-judged. Nothing in them
+                            These records are not edited - they are re-judged. Nothing in them
                             shows that the rule moved, which is why this change is recorded
                             against your account with the figures above.
                         </p>
@@ -152,7 +152,7 @@
                     {{-- What the figures above say, in one string. The save
                          re-computes them and refuses if they have moved: the
                          numbers on this page are a snapshot, and between the
-                         two steps somebody may have checked in — confirming
+                         two steps somebody may have checked in - confirming
                          against a stale preview means agreeing to a number
                          nobody ever saw. --}}
                     <input type="hidden" name="fingerprint" value="{{ $fingerprint }}">

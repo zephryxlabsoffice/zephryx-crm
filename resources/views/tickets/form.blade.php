@@ -65,10 +65,10 @@
                             <label class="form-field-lbl" for="ticket-type">Type</label>
                             <select id="ticket-type" name="type" required>
                                 <option value="internal" @selected(old('type', 'internal') === 'internal')>
-                                    Internal — something here needs fixing
+                                    Internal - something here needs fixing
                                 </option>
                                 <option value="client" @selected(old('type') === 'client')>
-                                    Client — raised on a client's behalf
+                                    Client - raised on a client's behalf
                                 </option>
                             </select>
                             @error('type')
@@ -110,7 +110,7 @@
                             <label class="form-field-lbl" for="ticket-supersedes">Replaces ticket <span class="an-optional">(optional)</span></label>
                             <input id="ticket-supersedes" name="supersedes" type="text" maxlength="32"
                                    placeholder="e.g. TKT-2026-014" value="{{ old('supersedes') }}">
-                            <span class="pay-hint">If this continues an earlier ticket, reference it here — it will be closed automatically.</span>
+                            <span class="pay-hint">If this continues an earlier ticket, reference it here - it will be closed automatically.</span>
                             @error('supersedes')
                                 <span class="field-error">{{ $message }}</span>
                             @enderror
@@ -133,7 +133,7 @@
                             everything is urgent, which is the same as nothing being.
                         </p>
                         <p>
-                            The reference is assigned automatically — {{ $reference }} —
+                            The reference is assigned automatically - {{ $reference }} -
                             and never reused.
                         </p>
                     </div>

@@ -18,7 +18,7 @@ use Illuminate\Support\Carbon;
  * So there is no basic/HRA split here, no deductions engine and no derived CTC.
  * Holding our own version of a calculation somebody else owns would give the
  * company two sources of truth for what it pays people, and they would
- * eventually disagree — in front of the employee.
+ * eventually disagree - in front of the employee.
  *
  * The net amount IS stored, typed once when the payslip is added, because a
  * payroll page that cannot say what was paid out this month is not much of a
@@ -46,7 +46,7 @@ class SalaryPresenter
     /**
      * Where a record stands.
      *
-     * Derived from two facts — is there a payslip, and has it been paid — so
+     * Derived from two facts - is there a payslip, and has it been paid - so
      * there is no status column anybody can set to something the record does
      * not support. Nobody marks a person paid who has no payslip on file.
      *
@@ -95,7 +95,7 @@ class SalaryPresenter
     }
 
     /**
-     * `May 2026` — the month a record belongs to.
+     * `May 2026` - the month a record belongs to.
      */
     public static function period(string $period): string
     {
@@ -110,8 +110,8 @@ class SalaryPresenter
     /**
      * The months a period picker offers, most recent first.
      *
-     * Back to `$earliest` (Y-m) — the first month anybody could have been paid
-     * for — rather than a fixed twelve, which hid every payslip older than a
+     * Back to `$earliest` (Y-m) - the first month anybody could have been paid
+     * for - rather than a fixed twelve, which hid every payslip older than a
      * year (fixed 2026-10-27). Never fewer than twelve, so a new company still
      * gets a usable list. `$include` is the month being viewed: a month reached
      * by URL that falls outside the list is still shown as selected, rather
@@ -148,7 +148,7 @@ class SalaryPresenter
 
     public static function date(Carbon|string|null $when): string
     {
-        return $when === null ? '—' : Carbon::parse($when)->format('d M Y');
+        return $when === null ? '-' : Carbon::parse($when)->format('d M Y');
     }
 
     /**
@@ -167,7 +167,7 @@ class SalaryPresenter
     /**
      * What the net figure reads as before a payslip has been added.
      *
-     * Deliberately not "₹0.00" — nothing has been recorded, and a zero is a
+     * Deliberately not "₹0.00" - nothing has been recorded, and a zero is a
      * claim that somebody was paid nothing.
      *
      * @param  array<string, mixed>  $record

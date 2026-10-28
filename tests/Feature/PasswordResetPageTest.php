@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use Tests\TestCase;
 
 /**
- * /forgot-password and /reset-password — foundation spec §4.6, §4.7.
+ * /forgot-password and /reset-password - foundation spec §4.6, §4.7.
  *
  * Token issue, mail and token verification are not implemented. The
  * no-enumeration guarantee and the password policy are, and are the reason
@@ -30,7 +30,7 @@ class PasswordResetPageTest extends TestCase
 
     public function test_the_response_is_identical_for_any_identifier(): void
     {
-        // §4.6 — the confirmation must not reveal whether an account exists.
+        // §4.6 - the confirmation must not reveal whether an account exists.
         // Once the backend lands, only the side effects may differ.
         $known = $this->from('/forgot-password')
             ->post('/forgot-password', ['identifier' => 'santanu@zephryxlabs.com']);
@@ -101,7 +101,7 @@ class PasswordResetPageTest extends TestCase
 
     public function test_a_good_password_clears_validation(): void
     {
-        // It still fails at the token step, because that is not built — but it
+        // It still fails at the token step, because that is not built - but it
         // must get past the policy.
         $this->from('/reset-password/abc123token')->post('/reset-password', [
             'token' => 'abc123token',

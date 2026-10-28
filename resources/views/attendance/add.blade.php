@@ -5,7 +5,7 @@
 {{--
     Filling in a past day somebody could not check in for (decided 2026-10-27).
 
-    Creates a record only where none exists — it never edits one. Who entered
+    Creates a record only where none exists - it never edits one. Who entered
     it and why goes to the audit log, and the record's own page says so. See
     AttendanceController::createEntry.
 --}}

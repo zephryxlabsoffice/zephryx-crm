@@ -73,12 +73,12 @@
                                 <strong>{{ $client['name'] }}</strong>
                             </a>
                         </td>
-                        <td role="cell" data-label="Industry">{{ $client['industry'] ?: '—' }}</td>
+                        <td role="cell" data-label="Industry">{{ $client['industry'] ?: '-' }}</td>
                         {{-- Projects and Invoices answer these two. Until those
                              tables exist the cells say so, rather than carrying
                              a stored value somebody would have to keep in step
-                             by hand — see App\Support\ClientDirectory. --}}
-                        <td role="cell" data-label="Project">{{ $client['project'] ?: '—' }}</td>
+                             by hand - see App\Support\ClientDirectory. --}}
+                        <td role="cell" data-label="Project">{{ $client['project'] ?: '-' }}</td>
                         <td role="cell" class="cell-tight" data-label="Status">
                             <span class="pill {{ $statusPill['tone'] }}">{{ $statusPill['label'] }}</span>
                         </td>

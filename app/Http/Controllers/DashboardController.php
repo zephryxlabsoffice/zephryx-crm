@@ -16,7 +16,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Validation\Rule;
 
 /**
- * The dashboard — assembled from the other modules, which is why §12 builds it
+ * The dashboard - assembled from the other modules, which is why §12 builds it
  * last.
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ use Illuminate\Validation\Rule;
  *    allowed everything and threw in production; the binding moved and nothing
  *    on this page did, which is what the NavigationGate contract was for.
  *
- * 2. THE VIEWER is the session's employment record, and it may be null — a
+ * 2. THE VIEWER is the session's employment record, and it may be null - a
  *    Mentor and the owner hold no Employee base (§2.1). The fourteen widgets
  *    all take it as an argument rather than reading a constant, so this stayed
  *    one line in one place.
@@ -69,7 +69,7 @@ class DashboardController extends Controller
         /*
          * Filter, THEN hydrate. `all()` is the list that survived the
          * permission check, and it is the only list DashboardData is asked
-         * about — the figures behind a widget the viewer cannot see are never
+         * about - the figures behind a widget the viewer cannot see are never
          * read. See the head of DashboardData for why that is not the same as
          * rendering everything and hiding some of it.
          */
@@ -114,7 +114,7 @@ class DashboardController extends Controller
      * THE PREVIEW CAN ONLY EVER TAKE THINGS AWAY
      *
      * Note the `&&`. The real gate is asked first and the preview role can only
-     * narrow its answer — never widen it. That ordering is the entire safety
+     * narrow its answer - never widen it. That ordering is the entire safety
      * argument for `?as=`: when the RBAC engine replaces PermissiveGate,
      * `?as=ceo` on an intern's session still renders an intern's dashboard,
      * because the intern's gate already said no.
@@ -147,15 +147,15 @@ class DashboardController extends Controller
      *
      * The permission sets came from a fixture, so the preview showed what a
      * Manager was assumed to hold. It reads `roles` and `role_permissions`,
-     * which is what the application actually enforces — a preview that could
+     * which is what the application actually enforces - a preview that could
      * disagree with the engine was a preview of nothing.
      *
      * Validated against the table rather than trusted, so `?as=` cannot put
      * arbitrary text on the page: the switcher renders the role's name, and an
      * unvalidated one would be reflected input on an authenticated page.
      *
-     * Still local + debug only. Unlike the client portal's switch — which
-     * changed WHOSE data was shown and is gone — this one can only narrow the
+     * Still local + debug only. Unlike the client portal's switch - which
+     * changed WHOSE data was shown and is gone - this one can only narrow the
      * viewer's own permissions (see the `&&` in `gate()`), so it is a review
      * affordance rather than an authorisation surface. It stays out of a
      * deployed application anyway, because a control that does nothing there is
@@ -203,13 +203,13 @@ class DashboardController extends Controller
      * ─────────────────────────────────────────────────────────────────────────
      * A ROLE IS NOT THE WHOLE OF WHAT SOMEBODY HOLDS
      *
-     * §5 grants the Employee base by ACCOUNT TYPE — `staff_kind` — precisely so
+     * §5 grants the Employee base by ACCOUNT TYPE - `staff_kind` - precisely so
      * that no role edit can revoke it. Which means a preview built from
      * `role_permissions` alone shows something nobody is: an "Employee" with no
      * attendance, no leave and no payslips, because those keys are not on the
      * role and never were.
      *
-     * So the base is added back — except for the one role that names an account
+     * So the base is added back - except for the one role that names an account
      * type which does not carry it. §2.1: "a Mentor is staff and has none of
      * it", and `Rbac::NO_EMPLOYEE_BASE_ROLE` is where that fact is written
      * down, next to the base it qualifies.
@@ -217,7 +217,7 @@ class DashboardController extends Controller
      * This is the only place in the application where a role key stands in for
      * an account kind, and it is confined to a development preview: the real
      * check is `User::hasEmployeeBase()`, on the column, and nothing here
-     * grants anybody anything — the preview can only narrow (see `gate()`).
+     * grants anybody anything - the preview can only narrow (see `gate()`).
      *
      * @return list<string>
      */
@@ -256,7 +256,7 @@ class DashboardController extends Controller
      * This used to fall back to a fixed demo employee when the account had no
      * matching record, because the widgets read fixtures keyed by staff id.
      * That fallback showed one person's tasks, leave and pay to anybody without
-     * a record — harmless against invented data and not something to leave
+     * a record - harmless against invented data and not something to leave
      * behind next to real payroll.
      *
      * A Mentor and the owner hold no Employee base (§2.1). Their personal
@@ -276,8 +276,8 @@ class DashboardController extends Controller
     /**
      * The name in the greeting.
      *
-     * Read from the ACCOUNT rather than the employment record, so a Mentor —
-     * who has no record — is still greeted by name. Falls back to a neutral
+     * Read from the ACCOUNT rather than the employment record, so a Mentor -
+     * who has no record - is still greeted by name. Falls back to a neutral
      * greeting rather than an id: "Good morning, EMP002" is worse than no name
      * at all.
      */

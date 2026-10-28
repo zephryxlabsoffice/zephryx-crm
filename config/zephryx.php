@@ -41,7 +41,7 @@ return [
     | Dark is the default (spec §7). Pre-login the choice lives in a cookie;
     | once accounts exist it is persisted to users.theme_preference.
     |
-    | The cookie's name is not configurable — it is referenced while the
+    | The cookie's name is not configurable - it is referenced while the
     | middleware stack is being assembled, before config is available. It lives
     | on App\Support\Theme::COOKIE.
     |

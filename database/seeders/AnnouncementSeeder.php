@@ -16,7 +16,7 @@ use Illuminate\Support\Carbon;
  * THE TWO HOLIDAY NOTICES ARE THE REASON THIS SEEDER MATTERS
  *
  * One is a current closure and one is long past with an expired notice. Both
- * carry observed dates, and Attendance reads them — so the seed is what makes
+ * carry observed dates, and Attendance reads them - so the seed is what makes
  * "nobody was absent on the day the office was shut" reviewable, including for
  * a day whose notice has already come down.
  *
@@ -60,7 +60,7 @@ class AnnouncementSeeder extends Seeder
                     'for_clients' => $row['for_clients'] ?? false,
                     'starts_on' => Carbon::parse($row['published_at'])->toDateString(),
                     'ends_on' => $row['expires_at'],
-                    // The days the office is shut — not the window the notice is
+                    // The days the office is shut - not the window the notice is
                     // up for. Null on everything that is not a closure.
                     'observed_from' => $row['observed_from'],
                     'observed_to' => $row['observed_to'],

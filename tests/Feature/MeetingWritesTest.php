@@ -18,18 +18,18 @@ use RuntimeException;
 use Tests\TestCase;
 
 /**
- * Meetings — scheduling, creating the calendar event, and calling one off.
+ * Meetings - scheduling, creating the calendar event, and calling one off.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * THE PROVIDER IS THE THING BEING TESTED AROUND
  *
  * GoogleMeetProvider calls the real Google Calendar API now (built
- * 2026-09-21) — see GoogleMeetProviderTest for that half. This file is not
+ * 2026-09-21) - see GoogleMeetProviderTest for that half. This file is not
  * about Google at all: it is about MeetingController's own handling of
  * "the provider answered" versus "the provider threw", which is exactly as
  * true whether the throw comes from a deliberate stub or a real outage. So
- * these tests bind fakes in the provider's place — one that answers, one
- * that fails — and assert the two behaviours that matter regardless of
+ * these tests bind fakes in the provider's place - one that answers, one
+ * that fails - and assert the two behaviours that matter regardless of
  * cause: a failure leaves the meeting visibly unscheduled, and a
  * cancellation that Google refuses does NOT cancel it here.
  * ─────────────────────────────────────────────────────────────────────────────
@@ -141,7 +141,7 @@ class MeetingWritesTest extends TestCase
         $this->assertSame('2026-10-15 06:15:00', $meeting->ends_at->toDateTimeString());
 
         /*
-         * And it reads back as the time somebody typed — through the row, which
+         * And it reads back as the time somebody typed - through the row, which
          * is how every page gets it.
          *
          * Asserted on the row rather than on the model's Carbon deliberately:
@@ -161,7 +161,7 @@ class MeetingWritesTest extends TestCase
 
     public function test_a_successful_create_stores_what_google_returned(): void
     {
-        // The link comes back from Google or there is no link — it is never
+        // The link comes back from Google or there is no link - it is never
         // assembled from an event id.
         $this->fakeProvider();
         $this->signInAsManager();
@@ -179,7 +179,7 @@ class MeetingWritesTest extends TestCase
     {
         /*
          * The failure this module is shaped around. What it must never do is
-         * swallow the error and show a scheduled meeting with no way to join —
+         * swallow the error and show a scheduled meeting with no way to join -
          * somebody would sit in a room that does not exist.
          */
         $this->failingProvider();
@@ -255,7 +255,7 @@ class MeetingWritesTest extends TestCase
         $outsider = User::factory()->create(['user_id' => 'EMP921', 'account_type' => 'staff']);
 
         $this->assertNull($meeting->toRecordArray($outsider)['join_url']);
-        // And the record still has one — it is withheld, not missing.
+        // And the record still has one - it is withheld, not missing.
         $this->assertNotNull($meeting->join_url);
     }
 
@@ -318,7 +318,7 @@ class MeetingWritesTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       A CLIENT ASKS — WHICH IS NOT SCHEDULING
+       A CLIENT ASKS - WHICH IS NOT SCHEDULING
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_a_client_request_creates_a_meeting_with_no_event(): void
@@ -370,7 +370,7 @@ class MeetingWritesTest extends TestCase
     {
         /*
          * Responses belong to Google Calendar. A second accept button here
-         * would be a second source of truth for the same fact — so there is no
+         * would be a second source of truth for the same fact - so there is no
          * route that sets one, and no provider method either.
          */
         foreach (app('router')->getRoutes() as $route) {

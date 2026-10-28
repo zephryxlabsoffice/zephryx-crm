@@ -78,7 +78,7 @@ class AttendancePageTest extends TestCase
          * still DemoAnnouncements, which gates on local + debug. That module
          * has no table yet; when it gets one, this line goes.
          *
-         * There are no POST tests in this file — Laravel only skips CSRF
+         * There are no POST tests in this file - Laravel only skips CSRF
          * verification in the `testing` environment, so the writes have their
          * own file, which does not flip anything.
          */
@@ -909,7 +909,7 @@ class AttendancePageTest extends TestCase
         /*
          * Still two distinct pairs of date inputs, not one reused for both.
          *
-         * The notice window is `starts_on`/`ends_on` now — it was named
+         * The notice window is `starts_on`/`ends_on` now - it was named
          * `published_at`/`expires_at` while the form posted nowhere, and the
          * columns it writes are what the fields are called since it does.
          */
@@ -928,7 +928,7 @@ class AttendancePageTest extends TestCase
          * This replaced "the demo source is inert outside local + debug", which
          * was true only because the fixture switched itself off. Attendance
          * comes from a table now, and in production real records SHOULD be
-         * shown — asserting otherwise would assert that the module does not
+         * shown - asserting otherwise would assert that the module does not
          * work where it matters.
          *
          * What survives is the guarantee underneath it: nothing is invented. No
@@ -1007,7 +1007,7 @@ class AttendancePageTest extends TestCase
         }
 
         // Rostering and the requests queue need a session withDemoData()'s
-        // HR does not hold ("not HR", decided 2026-09-11) — checked with
+        // HR does not hold ("not HR", decided 2026-09-11) - checked with
         // their own session so this is the real page, not a 403.
         $this->signInAsStaff(['employee', 'manager']);
 
@@ -1027,7 +1027,7 @@ class AttendancePageTest extends TestCase
 
     public function test_the_roster_page_renders(): void
     {
-        // HR does not roster people (decided 2026-09-11: "not HR") — a
+        // HR does not roster people (decided 2026-09-11: "not HR") - a
         // Manager or Team Lead does, so this needs its own session rather
         // than withDemoData()'s HR one.
         $this->withDemoData();

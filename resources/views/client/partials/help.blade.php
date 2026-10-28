@@ -4,7 +4,7 @@
     How to reach a person.
 
     The designer put a version of this on three of the client screens, and the
-    instinct was right — the moment something is wrong, "who do I tell" is the
+    instinct was right - the moment something is wrong, "who do I tell" is the
     only question on the page that matters.
 
     A mailto:, not a contact form. §6 and §13.3: a form here would be an
@@ -18,7 +18,7 @@
 
     <p class="dash-note">
         For anything urgent, a support ticket reaches the team working on your
-        project and stays attached to it — which an email thread does not.
+        project and stays attached to it - which an email thread does not.
     </p>
 
     <div class="dash-punch-action">

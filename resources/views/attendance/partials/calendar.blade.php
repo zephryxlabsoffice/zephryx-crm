@@ -16,7 +16,7 @@
 
     The handover's calendar was thirty-five hand-written cells for May 2024 with
     the dots typed in, and its < > arrows were wired to an inline <script> that
-    our CSP blocks — so it showed one fixed month of a past year and could not be
+    our CSP blocks - so it showed one fixed month of a past year and could not be
     moved off it.
 
     Here the grid is built from the records (App\Support\AttendancePresenter::
@@ -53,8 +53,8 @@
         </div>
     </div>
 
-    {{-- A table, not a grid of divs. A calendar IS tabular data — day of the
-         week across, week down — and marking it up as one is what lets a screen
+    {{-- A table, not a grid of divs. A calendar IS tabular data - day of the
+         week across, week down - and marking it up as one is what lets a screen
          reader say "Thursday, 3" instead of reading thirty-five loose numbers. --}}
     <div class="att-cal-body">
         <table class="att-cal-grid">
@@ -84,13 +84,13 @@
                                     <a class="att-cell-link" href="{{ route('attendance.show', ['record' => $cell['record']['id']]) }}">
                                         <span class="att-cell-day">{{ $cell['day'] }}</span>
                                         <span class="att-dot {{ $meta['dot'] }}" aria-hidden="true"></span>
-                                        <span class="sr-only">{{ P::longDate($cell['date']) }} — {{ $meta['label'] }}</span>
+                                        <span class="sr-only">{{ P::longDate($cell['date']) }} - {{ $meta['label'] }}</span>
                                     </a>
                                 @else
                                     <span class="att-cell-day">{{ $cell['day'] }}</span>
                                     @if ($cell['in_month'] && ! $cell['future'])
                                         <span class="att-dot {{ $meta['dot'] }}" aria-hidden="true"></span>
-                                        <span class="sr-only">{{ P::longDate($cell['date']) }} — {{ $meta['label'] }}</span>
+                                        <span class="sr-only">{{ P::longDate($cell['date']) }} - {{ $meta['label'] }}</span>
                                     @endif
                                 @endif
                             </td>

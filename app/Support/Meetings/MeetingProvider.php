@@ -8,7 +8,7 @@ namespace App\Support\Meetings;
  * ─────────────────────────────────────────────────────────────────────────────
  * WHY THIS IS AN INTERFACE AND NOT A GOOGLE CLASS
  *
- * Not to keep options open — Google Meet is the decision (2026-08-28). It is an
+ * Not to keep options open - Google Meet is the decision (2026-08-28). It is an
  * interface because the seam is where the failures live, and naming it makes
  * them impossible to skip:
  *
@@ -52,7 +52,7 @@ interface MeetingProvider
     /**
      * Read every attendee's RSVP back from Google.
      *
-     * One direction only. Google Calendar owns responses — a person accepts or
+     * One direction only. Google Calendar owns responses - a person accepts or
      * declines in their own calendar, and this application reports what they
      * did. There is deliberately no `setAttendance()`.
      *

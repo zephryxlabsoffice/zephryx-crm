@@ -3,7 +3,7 @@
 
    The handover's profile.css was ~15KB and re-derived the card, the tabs
    (.pf-tab), the form field (.pf-field/.pf-label/.pf-input/.pf-select), the
-   rail card (.rr-card) and the pill — all of which already exist in
+   rail card (.rr-card) and the pill - all of which already exist in
    components/ui.css and components/shell.css. Only what is specific to a
    profile is here: the identity header, the ownership markers, the toggle rows
    and the activity list.
@@ -11,7 +11,7 @@
 
 .pf-grid {
   display: grid;
-  /* minmax(0, …), never 1fr — a bare 1fr track is forced open by a wide child
+  /* minmax(0, …), never 1fr - a bare 1fr track is forced open by a wide child
      and the whole page scrolls sideways. */
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: var(--density-gap);
@@ -114,7 +114,7 @@
 /* ─────────────────────────  the two fact columns  ─────────────────────────
 
    These are the fields the person does not control. The column header says so
-   once, rather than a padlock repeated on every row — six padlocks read as six
+   once, rather than a padlock repeated on every row - six padlocks read as six
    errors.                                                                   */
 
 .pf-facts {

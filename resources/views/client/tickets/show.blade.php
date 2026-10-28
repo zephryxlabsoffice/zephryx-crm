@@ -29,7 +29,7 @@
 
             {{--
                 The conversation. See client.partials.thread for why this is not
-                the staff partial — sharing the markup is fine, sharing the
+                the staff partial - sharing the markup is fine, sharing the
                 composer and its "Internal note" button was not.
 
                 The comments themselves are filtered twice before they reach
@@ -43,7 +43,7 @@
                 @include('partials.notice', [
                     'tone' => 'info',
                     'title' => 'This ticket is closed',
-                    'message' => 'Raise a new ticket if this continues — our team can reference this one.',
+                    'message' => 'Raise a new ticket if this continues - our team can reference this one.',
                 ])
             @else
                 <section class="card">
@@ -62,7 +62,7 @@
                                 <label class="form-field-lbl sr-only" for="ticket-reply">Your reply</label>
                                 <textarea id="ticket-reply" name="body" rows="4"
                                           maxlength="5000" required
-                                          placeholder="Add anything that would help — a page, a screenshot, what you expected to happen.">{{ old('body') }}</textarea>
+                                          placeholder="Add anything that would help - a page, a screenshot, what you expected to happen.">{{ old('body') }}</textarea>
                             </div>
 
                             <div class="form-actions">
@@ -102,7 +102,7 @@
                     No assignee, no department, no internal category.
 
                     Who inside ZephryxLabs is holding a ticket, and which team
-                    it was routed to, is our business — naming an individual
+                    it was routed to, is our business - naming an individual
                     invites the client to chase that person directly, around the
                     process that exists so nothing gets lost.
                 --}}

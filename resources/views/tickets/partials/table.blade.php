@@ -7,7 +7,7 @@
     The ticket list, shared by all five faces. `$action` is the route the
     filter form posts back to, so each list filters itself.
 
-    `$columns` names which columns this face needs — the escalated queue wants
+    `$columns` names which columns this face needs - the escalated queue wants
     "Escalated by", the personal lists do not need "Raised by" because it is
     always you.
 --}}
@@ -126,7 +126,7 @@
 
                         @if (in_array('project', $columns, true))
                             <td role="cell" data-label="Project">
-                                {{ $item['project_record']['name'] ?? '—' }}
+                                {{ $item['project_record']['name'] ?? '-' }}
                             </td>
                         @endif
 
@@ -141,7 +141,7 @@
                                         </span>
                                     </span>
                                 @else
-                                    <span class="tkt-unassigned">—</span>
+                                    <span class="tkt-unassigned">-</span>
                                 @endif
                             </td>
                         @endif

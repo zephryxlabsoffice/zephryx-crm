@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Storage;
  * ONE PERSON HAS A FULL PROFILE AND THE OTHERS DO NOT
  *
  * Deliberate. `employee_profiles` has no row until somebody saves the form, and
- * "never filled it in" is a state the page has to draw — the version where
+ * "never filled it in" is a state the page has to draw - the version where
  * every seeded person has every field is the version where the empty case is
  * never seen until a real employee opens it on their first day.
  *
@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\Storage;
  * A row pointing at nothing makes the download route look built and 404 on
  * every click, which is the shape of bug that survives a whole review. So this
  * writes four small placeholder PDFs to the private disk under the same folder
- * the upload uses, and the rows point at them. They are text in a PDF wrapper —
+ * the upload uses, and the rows point at them. They are text in a PDF wrapper -
  * the point is that the route streams a file that exists, not that anybody
  * reads it.
  *
@@ -127,7 +127,7 @@ class ProfileSeeder extends Seeder
      * Four files, on the disk and in the table.
      *
      * `uploaded_by` is the person themselves on three and null on the offer
-     * letter, because HR put that one there — which is the distinction the rail
+     * letter, because HR put that one there - which is the distinction the rail
      * draws, and the only one it draws.
      */
     protected function documents(?Employee $employee): void
@@ -149,7 +149,7 @@ class ProfileSeeder extends Seeder
             $path = $folder.'/seed-'.strtolower(str_replace(['-', '_'], '', $reference)).'.pdf';
 
             /*
-             * The private disk — `storage/app/private`, outside the webroot.
+             * The private disk - `storage/app/private`, outside the webroot.
              * The same disk DocumentStore writes to, reached through it rather
              * than by naming the disk here, so a change to where documents live
              * moves the seed too.
@@ -189,7 +189,7 @@ class ProfileSeeder extends Seeder
      * The smallest thing a PDF reader will open.
      *
      * Written out rather than copied from a fixture file so the seeder has no
-     * binary assets to keep in the repository — and so it is obvious at a
+     * binary assets to keep in the repository - and so it is obvious at a
      * glance that nothing here is anybody's real document.
      */
     protected function placeholderPdf(string $title): string

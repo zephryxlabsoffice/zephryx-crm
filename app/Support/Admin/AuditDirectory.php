@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
  * THIS CLASS HAS NO WRITE, AND NEITHER DOES THE SCREEN ABOVE IT
  *
  * No edit, no delete, no "clear old entries", no bulk actions. Not because they
- * are unbuilt — an audit log with a delete button is not an audit log, and the
+ * are unbuilt - an audit log with a delete button is not an audit log, and the
  * first thing anybody covering their tracks would reach for is the control that
  * tidies the evidence.
  *
@@ -29,8 +29,8 @@ use Illuminate\Support\Facades\DB;
  * ═════════════════════════════════════════════════════════════════════════════
  * THE FILTER IS BUILT FROM THE ACTIONS PRESENT, NOT FROM A FIXED LIST
  *
- * The demo source named five kinds — authentication, permissions, settings,
- * accounts, master data — because those were the five §6 calls out and the log
+ * The demo source named five kinds - authentication, permissions, settings,
+ * accounts, master data - because those were the five §6 calls out and the log
  * held nothing else. It holds a great deal else now: every module write since
  * the backend phase began.
  *
@@ -103,7 +103,7 @@ class AuditDirectory
     }
 
     /**
-     * The filter's tabs — every kind the log actually holds.
+     * The filter's tabs - every kind the log actually holds.
      *
      * @return array<string, array{label: string, tone: string}>
      */
@@ -264,11 +264,11 @@ class AuditDirectory
             'actor_type' => $entry->actor_type ?? 'unknown',
             'action' => self::describe($entry->action),
             'entity' => $entry->entity_type === null
-                ? '—'
-                : $entry->entity_type.':'.($entry->entity_id ?? '—'),
+                ? '-'
+                : $entry->entity_type.':'.($entry->entity_id ?? '-'),
             'before' => self::readable($entry->before_json),
             'after' => self::readable($entry->after_json),
-            'ip' => $entry->ip_address ?? '—',
+            'ip' => $entry->ip_address ?? '-',
             'agent' => self::agent($entry->user_agent),
             'failed' => in_array($entry->action, self::FAILURES, true),
         ];
@@ -278,7 +278,7 @@ class AuditDirectory
      * The action as a sentence.
      *
      * `admin.permission_changed` reads as "Permission changed". The key itself
-     * is on the page too — this is the line somebody scans, not the one they
+     * is on the page too - this is the line somebody scans, not the one they
      * quote.
      */
     public static function describe(string $action): string
@@ -286,7 +286,7 @@ class AuditDirectory
         $parts = explode('.', $action);
 
         return ucfirst(str_replace('_', ' ', array_pop($parts) ?? $action))
-            .' — '.implode('.', $parts);
+            .' - '.implode('.', $parts);
     }
 
     /**
@@ -311,7 +311,7 @@ class AuditDirectory
      * A stored before/after, as something to read.
      *
      * Both are json, and both are usually a string that was written to be read
-     * — see AuditLog's note on why `after` carries the EFFECT and not only the
+     * - see AuditLog's note on why `after` carries the EFFECT and not only the
      * value. An array is flattened rather than printed as json: this page is
      * for a person, and `{"days":47}` is a value somebody has to decode.
      */
@@ -349,7 +349,7 @@ class AuditDirectory
     protected static function agent(?string $agent): string
     {
         if ($agent === null || $agent === '') {
-            return '—';
+            return '-';
         }
 
         return mb_strimwidth($agent, 0, 60, '…');

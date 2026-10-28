@@ -2,7 +2,7 @@
     Categories, counted from the board itself.
 
     Every figure is computed, so a count can never disagree with the list
-    beneath it — the handover's were written in (7 / 6 / 8 / 5 / 4 / 6). A
+    beneath it - the handover's were written in (7 / 6 / 8 / 5 / 4 / 6). A
     category with nothing live in it is left out entirely rather than shown as a
     zero: an empty filter is a control that does nothing.
 --}}

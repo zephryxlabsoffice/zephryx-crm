@@ -16,7 +16,7 @@ use Illuminate\Support\Carbon;
  * Runs after ProjectSeeder: every task points at a project, most at a team, and
  * many at a person.
  *
- * The fixture's unassigned tasks are kept unassigned deliberately — they are
+ * The fixture's unassigned tasks are kept unassigned deliberately - they are
  * the Team Lead's queue, and a seed where everything already has somebody on it
  * would hide the state `/tasks/team` exists for.
  */

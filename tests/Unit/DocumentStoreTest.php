@@ -14,7 +14,7 @@ use Tests\TestCase;
  *
  * The one property that matters: `putBytes()` (photos) never leaves the
  * local disk and `put()` (uploads) never touches it, whatever module calls
- * them — see the class header on DocumentStore for why the METHOD is the
+ * them - see the class header on DocumentStore for why the METHOD is the
  * routing rather than a flag anybody has to remember to pass.
  */
 class DocumentStoreTest extends TestCase
@@ -25,7 +25,7 @@ class DocumentStoreTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       put() — ALWAYS DRIVE
+       put() - ALWAYS DRIVE
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_put_stores_to_drive_and_returns_a_drive_prefixed_path(): void
@@ -39,7 +39,7 @@ class DocumentStoreTest extends TestCase
         $this->assertSame('payslip.pdf', $stored['name']);
         $this->assertGreaterThan(0, $stored['bytes']);
 
-        // The module folder is looked up (or created) by name — "payslips",
+        // The module folder is looked up (or created) by name - "payslips",
         // the folder per module the plan doc calls for, not the whole
         // "payslips/2026-09" path, which Drive has no native concept of.
         Http::assertSent(fn ($request) => $request->method() === 'GET'
@@ -50,7 +50,7 @@ class DocumentStoreTest extends TestCase
     public function test_put_refuses_a_disallowed_extension_before_ever_reaching_drive(): void
     {
         $this->connectGoogleDrive();
-        // Deliberately no Http::fake() — reaching the network here is itself
+        // Deliberately no Http::fake() - reaching the network here is itself
         // the failure this test exists to catch.
 
         $exe = UploadedFile::fake()->create('resume.exe', 10);
@@ -62,7 +62,7 @@ class DocumentStoreTest extends TestCase
 
     public function test_put_throws_a_clear_message_when_drive_is_not_connected(): void
     {
-        // No connectGoogleDrive() call — the singleton row does not exist.
+        // No connectGoogleDrive() call - the singleton row does not exist.
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Google Drive is not connected');
@@ -71,12 +71,12 @@ class DocumentStoreTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       putBytes() — ALWAYS LOCAL, REGARDLESS OF DRIVE STATE
+       putBytes() - ALWAYS LOCAL, REGARDLESS OF DRIVE STATE
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_put_bytes_never_touches_drive_even_when_disconnected(): void
     {
-        // No connectGoogleDrive() — if putBytes() ever tried to reach Drive,
+        // No connectGoogleDrive() - if putBytes() ever tried to reach Drive,
         // this would throw exactly as the test above proves it does for
         // put(). It does not, because photos never go through that path.
         $stored = (new DocumentStore)->putBytes('employees/1/photo', 'png', 'fake-bytes');
@@ -88,7 +88,7 @@ class DocumentStoreTest extends TestCase
     public function test_put_bytes_ignores_a_connected_drive_too(): void
     {
         $this->connectGoogleDrive();
-        // No Http::fake() — a photo write must not attempt an HTTP call, so
+        // No Http::fake() - a photo write must not attempt an HTTP call, so
         // one succeeding here would still be the wrong behaviour to assert.
 
         $stored = (new DocumentStore)->putBytes('clients/1/photo', 'jpg', 'fake-bytes');
@@ -97,7 +97,7 @@ class DocumentStoreTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       exists() — TRUSTED FOR DRIVE, PROBED FOR LOCAL
+       exists() - TRUSTED FOR DRIVE, PROBED FOR LOCAL
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_exists_trusts_a_drive_path_without_any_http_call(): void
@@ -122,7 +122,7 @@ class DocumentStoreTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       download() and forget() — ROUTE ON THE PREFIX
+       download() and forget() - ROUTE ON THE PREFIX
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_download_streams_a_drive_files_bytes(): void
@@ -191,7 +191,7 @@ class DocumentStoreTest extends TestCase
 
     public function test_view_inline_prefers_an_explicit_mime_type_over_the_name(): void
     {
-        // EmployeeDocument stores a content-sniffed mime — more trustworthy
+        // EmployeeDocument stores a content-sniffed mime - more trustworthy
         // than a display name somebody could have typed anything into.
         $this->connectGoogleDrive();
 
@@ -214,7 +214,7 @@ class DocumentStoreTest extends TestCase
             'https://www.googleapis.com/drive/v3/files/file-id*' => Http::response('', 404),
         ]);
 
-        // A 404 on delete is success, not failure — see DriveClient::delete().
+        // A 404 on delete is success, not failure - see DriveClient::delete().
         (new DocumentStore)->forget('drive:file-id');
 
         $this->assertTrue(true); // reaching here without an exception is the assertion
@@ -242,7 +242,7 @@ class DocumentStoreTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       copy() — FOLLOWS THE SOURCE'S DRIVER, NOT THE DESTINATION'S
+       copy() - FOLLOWS THE SOURCE'S DRIVER, NOT THE DESTINATION'S
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_copy_of_a_local_photo_stays_local(): void
@@ -277,7 +277,7 @@ class DocumentStoreTest extends TestCase
         $this->assertSame('drive:new-file-id', $copied['path']);
         $this->assertSame(2048, $copied['bytes']);
 
-        // A copy, never a download-and-reupload — the bytes never pass
+        // A copy, never a download-and-reupload - the bytes never pass
         // through this application.
         Http::assertNotSent(fn ($request) => str_contains((string) $request->url(), 'alt=media'));
     }

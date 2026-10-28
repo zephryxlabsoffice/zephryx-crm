@@ -4,7 +4,7 @@
     use App\Models\Team as TeamModel;
     use App\Support\TeamPresenter as P;
 
-    // One template for creating and for editing — the fields and their
+    // One template for creating and for editing - the fields and their
     // validation are identical, and two files would mean every change made
     // twice, with the second one eventually forgotten.
     $editing = $team !== null;

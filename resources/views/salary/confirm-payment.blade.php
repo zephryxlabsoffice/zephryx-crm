@@ -37,7 +37,7 @@
         @include('partials.notice', [
             'tone' => 'warning',
             'title' => 'This records that the money has gone',
-            'message' => 'It does not transfer anything — the bank does that. Confirming marks these '.$records->count().' '.\Illuminate\Support\Str::plural('record', $records->count()).' as paid, and that is written to the audit log against your name.',
+            'message' => 'It does not transfer anything - the bank does that. Confirming marks these '.$records->count().' '.\Illuminate\Support\Str::plural('record', $records->count()).' as paid, and that is written to the audit log against your name.',
         ])
 
         @if ($skipped > 0)
@@ -105,7 +105,7 @@
                     @endforeach
 
                     {{-- Audited per record, and idempotent: an already-paid
-                         record is skipped, never re-dated — see
+                         record is skipped, never re-dated - see
                          SalaryController::pay. --}}
                     <button class="btn btn-primary" type="submit">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

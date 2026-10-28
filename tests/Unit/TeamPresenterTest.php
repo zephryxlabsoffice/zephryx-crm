@@ -44,13 +44,13 @@ class TeamPresenterTest extends TestCase
 
         $tenure = TeamPresenter::averageTenure($members);
 
-        $this->assertNotSame('—', $tenure);
+        $this->assertNotSame('-', $tenure);
         $this->assertStringContainsString('month', $tenure);
     }
 
     public function test_a_team_with_no_members_has_no_average(): void
     {
-        $this->assertSame('—', TeamPresenter::averageTenure([]));
+        $this->assertSame('-', TeamPresenter::averageTenure([]));
     }
 
     public function test_the_breakdown_groups_and_sums_to_the_whole(): void

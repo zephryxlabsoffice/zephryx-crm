@@ -7,7 +7,7 @@ use App\Support\Theme;
 use Tests\TestCase;
 
 /**
- * The authenticated shell — sidebar, topbar, navigation.
+ * The authenticated shell - sidebar, topbar, navigation.
  *
  * Foundation spec §5 (permission-filtered navigation), §12 (roadmap and the
  * deferred entries).
@@ -22,7 +22,7 @@ class AppShellTest extends TestCase
         /*
          * Every route in the staff realm is behind `realm:staff` now (§3.1), so
          * a page test has to be somebody. A CEO, because this file is about
-         * what the page renders rather than about who may see it — the guard
+         * what the page renders rather than about who may see it - the guard
          * and the permission filtering have their own tests.
          */
         $this->signInAsStaff();
@@ -63,7 +63,7 @@ class AppShellTest extends TestCase
     public function test_an_entry_whose_module_does_not_exist_is_not_rendered(): void
     {
         // An entry whose route is not registered is skipped rather than
-        // rendering a dead link — which is what lets config/navigation.php list
+        // rendering a dead link - which is what lets config/navigation.php list
         // the whole roadmap while modules land one at a time.
         config(['navigation' => array_merge((array) config('navigation'), [
             ['key' => 'ghost', 'label' => 'Ghost Module', 'icon' => 'reports',
@@ -81,7 +81,7 @@ class AppShellTest extends TestCase
          * middleware would refuse everybody else.
          *
          * That was wrong. The realms have separate sessions (§3): a staff
-         * session cannot open /admin at all — not for HR, not for the CEO, and
+         * session cannot open /admin at all - not for HR, not for the CEO, and
          * not for the owner, who signs in to the admin realm as a different
          * account. It was a link no staff session could ever follow, which is
          * precisely the "teaches them to expect 403s" problem this file's own
@@ -99,7 +99,7 @@ class AppShellTest extends TestCase
 
     public function test_deferred_modules_keep_their_entry_but_have_no_page(): void
     {
-        // §12 — Leads, Calendar and Reports ship as navigation entries returning
+        // §12 - Leads, Calendar and Reports ship as navigation entries returning
         // 404 so the navigation's shape stays stable when they arrive in v2.
         //
         // Driven off the configuration rather than a list written here, so a

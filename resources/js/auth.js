@@ -1,5 +1,5 @@
 /**
- * Authentication surfaces — progressive enhancement only.
+ * Authentication surfaces - progressive enhancement only.
  *
  * Every behaviour here is an upgrade on markup that already works: the form
  * posts, the OTP boxes accept typing, and the cooldown is rendered server-side.
@@ -38,7 +38,7 @@ function initEyeToggles() {
  * Server-rendered field errors describe the *previous* submission. Once the
  * user starts fixing a field, keeping it outlined in red is just noise, so the
  * error state is dropped on first edit. The message itself is only removed
- * from view — the next response re-renders whatever is still true.
+ * from view - the next response re-renders whatever is still true.
  */
 function initErrorClearing() {
     document.querySelectorAll('.field.has-error').forEach((field) => {

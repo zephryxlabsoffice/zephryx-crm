@@ -1,5 +1,5 @@
 @php
-    // Which field, if any, was just revealed — see EmployeeController::reveal.
+    // Which field, if any, was just revealed - see EmployeeController::reveal.
     // It survives this render and no other.
     $revealedField = $identity['revealed_field'] ?? null;
 @endphp
@@ -7,7 +7,7 @@
 {{--
     Identity and payment, for whoever holds `employees.identifiers`.
 
-    Every value here was masked in PHP before it reached this file — see
+    Every value here was masked in PHP before it reached this file - see
     EmployeeController::maskedIdentity. There is no full number in this markup,
     no data attribute holding one, and nothing for a stylesheet to un-hide. The
     single exception is a value just revealed on purpose, which is rendered once
@@ -31,7 +31,7 @@
         {{-- The state that matters operationally: nobody has set this person
              up, so they cannot be paid. An absence, stated. --}}
         <div class="prose">
-            <p>Nothing on file yet — no ID proof and no bank details, so this person cannot be paid.</p>
+            <p>Nothing on file yet - no ID proof and no bank details, so this person cannot be paid.</p>
         </div>
     @else
         @if ($revealedField)
@@ -93,7 +93,7 @@
         <div class="prose">
             <p>
                 Paying somebody does not require reading their account number: payroll uses
-                the bank transfer file. If one has to be checked, say which and why —
+                the bank transfer file. If one has to be checked, say which and why -
                 it is shown once, and the log keeps a record of your having looked.
             </p>
         </div>

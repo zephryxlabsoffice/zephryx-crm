@@ -1,7 +1,7 @@
 {{--
     The sign-in code. Inline styles and tables: see mail/layout.blade.php.
 
-    The code is in the body only — never the subject or the preheader, both of
+    The code is in the body only - never the subject or the preheader, both of
     which show in notification previews on a locked screen.
 --}}
 @extends('mail.layout')

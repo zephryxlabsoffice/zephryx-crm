@@ -14,8 +14,8 @@ use Illuminate\Support\Collection;
  * ─────────────────────────────────────────────────────────────────────────────
  * TWO SOURCES, ONE BOARD
  *
- * Authored posts are written by a person and live here. Milestone posts —
- * birthdays and work anniversaries — are COMPUTED from employee records by
+ * Authored posts are written by a person and live here. Milestone posts -
+ * birthdays and work anniversaries - are COMPUTED from employee records by
  * App\Support\Milestones and are never stored: a stored birthday post would be
  * wrong the following year, and would survive somebody opting out.
  *
@@ -42,8 +42,8 @@ class DemoAnnouncements
     {
         return [
             /*
-             * Holiday announcements carry `observed` — the days the OFFICE IS
-             * SHUT — as well as `from`/`to`, which is only how long the notice
+             * Holiday announcements carry `observed` - the days the OFFICE IS
+             * SHUT - as well as `from`/`to`, which is only how long the notice
              * stays on the board (added 2026-09-03).
              *
              * They are not the same range and confusing them is expensive: this
@@ -56,7 +56,7 @@ class DemoAnnouncements
                 'category' => 'holiday', 'author' => 'EMP005', 'audience' => 'everyone', 'audience_value' => null,
                 'from' => -2, 'to' => 12, 'draft' => false, 'pinned' => true, 'for_clients' => true,
                 'observed' => [10, 10],
-                'body' => 'The office is closed for the day. Client calls have been moved — check Meetings for the new times.',
+                'body' => 'The office is closed for the day. Client calls have been moved - check Meetings for the new times.',
             ],
             // A holiday that has already been and gone. Its notice is long
             // expired; the day it closed is still a day nobody was absent for,
@@ -82,7 +82,7 @@ class DemoAnnouncements
                 'body' => 'Tickets are still triaged daily over the festival week, but replies may take a little longer than usual.',
             ],
             [
-                'id' => 'ANN-2026-034', 'title' => 'Advanced Excel training — Thursday',
+                'id' => 'ANN-2026-034', 'title' => 'Advanced Excel training - Thursday',
                 'category' => 'training', 'author' => 'EMP005', 'audience' => 'everyone', 'audience_value' => null,
                 'from' => -1, 'to' => 3, 'draft' => false, 'pinned' => false,
                 'body' => 'Two hours, Thursday afternoon, run internally. Optional, but useful if you touch reporting.',
@@ -106,7 +106,7 @@ class DemoAnnouncements
                 'body' => 'From next week the design stand-up is at 9:30 rather than 10, so it does not clash with the client call.',
             ],
             [
-                'id' => 'ANN-2026-030', 'title' => 'Team outing — save the date',
+                'id' => 'ANN-2026-030', 'title' => 'Team outing - save the date',
                 'category' => 'event', 'author' => 'EMP005', 'audience' => 'everyone', 'audience_value' => null,
                 'from' => -30, 'to' => -12, 'draft' => false, 'pinned' => false,
                 'body' => 'A day out at the end of the month. Details to follow once numbers are confirmed.',
@@ -134,7 +134,7 @@ class DemoAnnouncements
     }
 
     /**
-     * The authored posts — what the managing table lists.
+     * The authored posts - what the managing table lists.
      *
      * @return Collection<int, array<string, mixed>>
      */
@@ -206,7 +206,7 @@ class DemoAnnouncements
      * Note what is NOT filtered here: status. A holiday whose notice expired
      * three weeks ago is still a day the office was closed, and dropping it
      * would mark everybody absent for it retrospectively. Only drafts are
-     * excluded — an unpublished notice closes nothing.
+     * excluded - an unpublished notice closes nothing.
      *
      * @return Collection<int, array<string, mixed>>
      */
@@ -257,7 +257,7 @@ class DemoAnnouncements
     }
 
     /**
-     * How many live announcements sit in each category — the rail list.
+     * How many live announcements sit in each category - the rail list.
      *
      * Computed from the board rather than stored, so a count can never
      * disagree with the list beneath it. The handover's counts were written in.

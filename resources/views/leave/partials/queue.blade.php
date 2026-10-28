@@ -7,7 +7,7 @@
 <div class="card table-card">
     {{-- Tabs are links with their own URL, so a queue is bookmarkable and the
          back button works. The handover used buttons wired up by an inline
-         <script>, which our CSP blocks — they would not have switched at all.
+         <script>, which our CSP blocks - they would not have switched at all.
 
          "Pending" is the default rather than "All": the page exists to clear a
          queue. --}}
@@ -137,7 +137,7 @@
                                 somebody's holiday. Deciding happens on the
                                 request, where the dates, the reason, the
                                 person's balance and who else is already off are
-                                all on screen — which is what the decision
+                                all on screen - which is what the decision
                                 actually turns on.
                             --}}
                             <a class="btn btn-outline btn-sm" href="{{ $url }}">

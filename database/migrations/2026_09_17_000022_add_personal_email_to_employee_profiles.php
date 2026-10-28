@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Schema;
  *   and it moves to the new account when an intern is converted.
  *
  *   PERSONAL EMAIL is a way to reach somebody. It signs in to nothing, it is
- *   not unique — a couple working here may share one — and its only jobs are
+ *   not unique - a couple working here may share one - and its only jobs are
  *   reaching somebody after they leave, and reaching them when the work account
  *   is the thing that is broken.
  *
@@ -32,7 +32,7 @@ use Illuminate\Support\Facades\Schema;
  * `employee_profiles` already holds the phone number, the addresses and the
  * emergency contact for exactly this reason: they are read by one page and no
  * list in the application joins on them. It follows the same rule as the rest
- * of that table — HR types it on the add form, and the person can ask for it to
+ * of that table - HR types it on the add form, and the person can ask for it to
  * be corrected through the change-request flow.
  * ═════════════════════════════════════════════════════════════════════════════
  */

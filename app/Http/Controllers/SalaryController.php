@@ -25,7 +25,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 /**
- * Salary — recording payslips and tracking who has been paid.
+ * Salary - recording payslips and tracking who has been paid.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * THIS APPLICATION DOES NOT CALCULATE PAYROLL
@@ -47,7 +47,7 @@ use Throwable;
  *    view of somebody else's record is a separate, separately guarded route.
  *
  * 3. IDENTIFIERS ARE MASKED IN PHP, AND ONLY ON YOUR OWN RECORD. Nothing
- *    unmasked reaches a view — not even to somebody who may see the record —
+ *    unmasked reaches a view - not even to somebody who may see the record -
  *    because "•••• 4567" is a display and the real value is a credential.
  *
  * 4. MARKING PAID IS A FINANCIAL WRITE. Single or bulk, it is audited, and it
@@ -65,7 +65,7 @@ class SalaryController extends Controller
     ) {}
 
     /**
-     * GET /salary — the month's payroll.
+     * GET /salary - the month's payroll.
      */
     public function index(Request $request): Response
     {
@@ -86,7 +86,7 @@ class SalaryController extends Controller
     }
 
     /**
-     * GET /salary/mine — the signed-in person's own pay.
+     * GET /salary/mine - the signed-in person's own pay.
      */
     public function mine(Request $request): Response
     {
@@ -106,7 +106,7 @@ class SalaryController extends Controller
     }
 
     /**
-     * GET /salary/payslip/{period} — the viewer's own payslip for a month.
+     * GET /salary/payslip/{period} - the viewer's own payslip for a month.
      *
      * No employee parameter by design; see the class comment.
      */
@@ -131,7 +131,7 @@ class SalaryController extends Controller
     }
 
     /**
-     * GET /salary/{employee}/{period} — one person's record, for whoever runs
+     * GET /salary/{employee}/{period} - one person's record, for whoever runs
      * payroll. This is where a payslip is added and the transfer marked done.
      */
     public function show(Request $request, string $employee, string $period): Response
@@ -152,7 +152,7 @@ class SalaryController extends Controller
             'own' => $own,
             /*
              * Not the viewer's own record, so nothing sensitive is passed at
-             * all — not even a masked string, because "•••• 4567" still
+             * all - not even a masked string, because "•••• 4567" still
              * confirms an account exists.
              */
             'identity' => $this->maskedIdentity($viewer, $subject),
@@ -161,7 +161,7 @@ class SalaryController extends Controller
     }
 
     /**
-     * POST /salary/pay/confirm — name who is about to be marked paid.
+     * POST /salary/pay/confirm - name who is about to be marked paid.
      *
      * A read, not a write: it renders the list and asks. Marking twelve people
      * paid by mis-click is a hard thing to notice and an awkward thing to undo,
@@ -204,7 +204,7 @@ class SalaryController extends Controller
      * Add the payslip for one person's month, and the figure it states.
      *
      * ─────────────────────────────────────────────────────────────────────────
-     * THE NET IS TYPED, NOT DERIVED — AND IT IS TYPED IN RUPEES
+     * THE NET IS TYPED, NOT DERIVED - AND IT IS TYPED IN RUPEES
      *
      * It is stored in paise as an integer, converted once here. Money is never
      * a float in this application: 0.1 + 0.2 is not 0.3 in binary floating
@@ -265,7 +265,7 @@ class SalaryController extends Controller
         } catch (Throwable $e) {
             /*
              * Nothing is saved on the way to this line, so there is no
-             * partial state to leave behind — unlike a meeting's calendar
+             * partial state to leave behind - unlike a meeting's calendar
              * event, a payslip upload that fails here simply never happened.
              * A validation error on the same field the "already paid" refusal
              * above uses, rather than a 500: the cause is Drive being
@@ -383,8 +383,8 @@ class SalaryController extends Controller
      * ─────────────────────────────────────────────────────────────────────────
      * THE ONE WAY A STORED FILE LEAVES THIS APPLICATION
      *
-     * Never a static path. This checks who is asking — your own payslip, or
-     * somebody holding `salary.view` — and writes an audit entry saying they
+     * Never a static path. This checks who is asking - your own payslip, or
+     * somebody holding `salary.view` - and writes an audit entry saying they
      * took it, before a single byte is streamed. §6 asks for exactly this, and
      * the reason is that a payslip under a guessable public URL is a link
      * somebody can forward.
@@ -398,7 +398,7 @@ class SalaryController extends Controller
     }
 
     /**
-     * GET /salary/{employee}/{period}/payslip/view — the same file, opened
+     * GET /salary/{employee}/{period}/payslip/view - the same file, opened
      * rather than saved (plan doc, "In-browser viewing is ours, not Drive's").
      *
      * Audited the same way as the download: both are "somebody obtained the
@@ -415,7 +415,7 @@ class SalaryController extends Controller
 
     /**
      * The guard, the lookup and the audit entry shared by the download and
-     * the view — everything except which shape the response takes.
+     * the view - everything except which shape the response takes.
      *
      * @return array{0: SalaryRecord, 1: bool}
      */
@@ -467,7 +467,7 @@ class SalaryController extends Controller
     }
 
     /**
-     * Mask a record's identifiers — or withhold them entirely.
+     * Mask a record's identifiers - or withhold them entirely.
      *
      * @return array<string, string>|null
      */
@@ -493,7 +493,7 @@ class SalaryController extends Controller
             'account' => Sensitive::accountNumber($banking['account']),
             'pan' => Sensitive::pan($banking['pan']),
             // The document's own name, and its number masked by that
-            // document's rule — see App\Support\IdProof.
+            // document's rule - see App\Support\IdProof.
             'id_proof_label' => $banking['id_proof_label'],
             'id_proof' => Sensitive::idProof($banking['id_proof_type'], $banking['id_proof_number']),
         ];

@@ -13,8 +13,8 @@ use Illuminate\Http\Response;
  * ─────────────────────────────────────────────────────────────────────────────
  * WHAT CAME OFF THE HANDOVER'S VERSION
  *
- * FOUR NAVIGATION CARDS. The design opened with "My Projects — view your active
- * and completed projects", "Invoices — view payment status", and two more, each
+ * FOUR NAVIGATION CARDS. The design opened with "My Projects - view your active
+ * and completed projects", "Invoices - view payment status", and two more, each
  * duplicating a sidebar entry sitting six inches to the left. A row of cards
  * that only repeats the navigation costs the reader the top of the page and
  * tells them nothing. What replaced them is the two things a client actually
@@ -23,14 +23,14 @@ use Illuminate\Http\Response;
  *
  * "COMPLETED TASKS: 18". Two problems. It is a lifetime count, so it reads zero
  * for a client whose project started this month and grows meaninglessly for one
- * who has been with us three years. And tasks are internal work items — a
+ * who has been with us three years. And tasks are internal work items - a
  * client's unit of progress is the project and the daily updates on it, which
  * is what the project pages show. Nothing here counts tasks.
  *
  * A FIFTH INVOICE TILE reading "Total Paid ₹18,75,000", which was a verbatim
  * repeat of the Paid tile's own subtitle. Four tiles, computed from the same
  * collections the tables list, so they cannot drift apart the way the
- * handover's did — its tiles claimed four pending invoices totalling ₹4,20,000
+ * handover's did - its tiles claimed four pending invoices totalling ₹4,20,000
  * above a table showing three totalling ₹6,70,000.
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -42,7 +42,7 @@ class DashboardController extends PortalController
 
         /*
          * The one route in this realm an Inactive client may still reach
-         * without a 403 — because it is what SHOWS them they are inactive,
+         * without a 403 - because it is what SHOWS them they are inactive,
          * with the one thing still theirs (Invoices) one click away. See
          * PortalController::requireActiveClient for the rule everywhere
          * else.

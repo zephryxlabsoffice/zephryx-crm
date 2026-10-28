@@ -37,7 +37,7 @@ class TaskPresenter
     }
 
     /**
-     * Priority shares its vocabulary with Projects — the same words must mean
+     * Priority shares its vocabulary with Projects - the same words must mean
      * the same thing in both places.
      *
      * @return array{tone: string, label: string}
@@ -63,7 +63,7 @@ class TaskPresenter
     /**
      * How long is left, and whether it is a problem.
      *
-     * A completed task past its date is not overdue — the same rule Projects
+     * A completed task past its date is not overdue - the same rule Projects
      * uses, so the two modules do not contradict each other.
      *
      * @return array{label: string, state: string}
@@ -115,8 +115,8 @@ class TaskPresenter
     /**
      * A human label for an attachment's kind, from its file name.
      *
-     * Only ever one of DocumentStore::ALLOWED — the upload is validated
-     * against that same list — so this is exhaustive rather than a fallback
+     * Only ever one of DocumentStore::ALLOWED - the upload is validated
+     * against that same list - so this is exhaustive rather than a fallback
      * for a type nothing here accepts.
      */
     public static function fileKind(string $filename): string
@@ -129,7 +129,7 @@ class TaskPresenter
     }
 
     /**
-     * Bytes, as somebody reads them — one decimal place above a megabyte,
+     * Bytes, as somebody reads them - one decimal place above a megabyte,
      * whole kilobytes below it.
      */
     public static function fileSize(int $bytes): string

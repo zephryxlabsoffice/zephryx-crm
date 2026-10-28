@@ -8,8 +8,8 @@
 | ─────────────────────────────────────────────────────────────────────────────
 | THERE IS ONE DASHBOARD, NOT ONE PER ROLE (decided 2026-09-07)
 |
-| The handover shipped five separate pages — Superadmin, Admin, HR, Mentor and
-| Employee — each a complete HTML file. This file is the argument against that,
+| The handover shipped five separate pages - Superadmin, Admin, HR, Mentor and
+| Employee - each a complete HTML file. This file is the argument against that,
 | and the reason is §2.4: roles STACK, additively.
 |
 | Manager + HR is a real person. So is Team Lead + Support. A fixed "HR
@@ -31,7 +31,7 @@
 |              App\Support\Dashboard\DashboardData; card widgets additionally
 |              resolve a Blade partial at resources/views/dashboard/widgets/.
 | `permission` the RBAC key required to see it. Filtering is a courtesy on top
-|              of the guards the underlying modules already carry — the widget
+|              of the guards the underlying modules already carry - the widget
 |              summarises a page, and that page checks for itself (§3.1).
 | `column`     `main` (wide, the work) or `rail` (narrow, the person).
 | `weight`     ascending. Gaps of ten so a widget can be slotted between two
@@ -44,7 +44,7 @@
 | The handover printed "12.5% vs last month" under every tile. All of them were
 | hardcoded, and the shape is wrong even when the figure is real: a percentage
 | change on a count of two is a hundred per cent, which reads as a crisis and
-| means one. Worse, this system has no history to compute one from — clients and
+| means one. Worse, this system has no history to compute one from - clients and
 | projects have no month-over-month record at all, so the number would have to
 | be invented, and an invented figure on a dashboard is one somebody eventually
 | quotes in a meeting.
@@ -67,7 +67,7 @@ return [
     | being an all-or-nothing block: a Team Lead who can see projects but not
     | payroll should get the projects tile, not an empty row.
     |
-    | Deliberately capped in the composer rather than here — see
+    | Deliberately capped in the composer rather than here - see
     | DashboardComposer::MAX_KPIS for why a viewer holding everything still gets
     | a readable row instead of eleven tiles wrapping onto three lines.
     |
@@ -92,7 +92,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Two columns, and the split is not cosmetic. `rail` is narrow and mostly
-    | personal — my day, my leave, my payslip. `main` is wide: queues,
+    | personal - my day, my leave, my payslip. `main` is wide: queues,
     | overviews, the things somebody else is waiting on.
     |
     | ─────────────────────────────────────────────────────────────────────────
@@ -100,8 +100,8 @@ return [
     |
     | A widget headed "Your tasks" needs an Employee base (§2.2); a widget
     | headed "Projects" needs sight of the module. They are not the same
-    | permission and they must not share a key, because a Mentor — read-only,
-    | no Employee base, no personal records at all (§2.1) — holds the second
+    | permission and they must not share a key, because a Mentor - read-only,
+    | no Employee base, no personal records at all (§2.1) - holds the second
     | and never the first.
     |
     | Get this wrong and a Mentor's dashboard fills with cards headed "Your"
@@ -120,7 +120,7 @@ return [
          * company it is the only thing they open this page to do, and a button
          * somebody has to scroll to is a button somebody stops using.
          *
-         * `attendance.self`, not `attendance.view` — punching in is the
+         * `attendance.self`, not `attendance.view` - punching in is the
          * Employee base, while `attendance.view` is the company-wide roll.
          */
         ['key' => 'punch',            'permission' => 'attendance.self',     'column' => 'rail', 'weight' => 10, 'icon' => 'attendance'],
@@ -131,7 +131,7 @@ return [
         /*
          * The two rail widgets that are NOT personal, and the only reason a
          * Mentor's rail is not empty. The board is published to the company and
-         * milestones are announced on it — reading either needs sight of
+         * milestones are announced on it - reading either needs sight of
          * Announcements, not an Employee base.
          */
         ['key' => 'announcements',    'permission' => 'announcements.view',  'column' => 'rail', 'weight' => 50, 'icon' => 'announcements'],

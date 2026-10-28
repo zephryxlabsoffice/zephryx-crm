@@ -8,7 +8,7 @@
     (/teams/mine). §12.1 keeps those as separate pages; the table itself is the
     same thing twice, so it lives here once.
 
-    `$tools` — whether to show search and filters. My Teams shows a handful of
+    `$tools` - whether to show search and filters. My Teams shows a handful of
     rows and does not need them.
 --}}
 @php $tools = $tools ?? true; @endphp
@@ -116,7 +116,7 @@
                             {{-- The handover made the whole <tr> clickable with an
                                  inline onclick. A row cannot be focused or opened
                                  from the keyboard, and inline handlers are blocked
-                                 by our CSP — so this is a real link. --}}
+                                 by our CSP - so this is a real link. --}}
                             <a class="row-menu" href="{{ route('teams.show', ['team' => $team['id']]) }}">
                                 <span class="sr-only">Open {{ $team['name'] }}</span>
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

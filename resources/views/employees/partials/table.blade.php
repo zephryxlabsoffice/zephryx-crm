@@ -89,7 +89,7 @@
                                 single action inside a menu is a click spent on
                                 nothing.
 
-                                Absent for somebody who cannot edit — the row is
+                                Absent for somebody who cannot edit - the row is
                                 still a link to the record, which they can read.
                             --}}
                             @if ($mayEdit)

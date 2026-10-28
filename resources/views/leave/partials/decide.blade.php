@@ -6,7 +6,7 @@
     The handover had a tick and a cross as unlabelled icon buttons thirty pixels
     apart in a table row. Both of those are somebody's holiday. Here the two acts
     are visually and structurally distinct, they sit under the dates, the reason,
-    the balance and the clash list, and the destructive one asks why — because
+    the balance and the clash list, and the destructive one asks why - because
     "rejected" with no explanation is the version people have to chase in person.
 --}}
 <div class="card lv-decide">
@@ -24,7 +24,7 @@
             of {{ \App\Support\LeavePolicy::label($request['type']) }}.
             @if ($clashes->isNotEmpty())
                 {{ $clashes->count() }} other {{ \Illuminate\Support\Str::plural('person', $clashes->count()) }}
-                {{ $clashes->count() === 1 ? 'is' : 'are' }} already off across those dates — see below.
+                {{ $clashes->count() === 1 ? 'is' : 'are' }} already off across those dates - see below.
             @endif
         </p>
     </div>
@@ -50,7 +50,7 @@
             <div class="form-field">
                 <label class="form-field-lbl" for="reject-reason">If you are rejecting, say why</label>
                 <textarea id="reject-reason" name="note" rows="2" minlength="5" maxlength="1000"
-                          placeholder="What would make this workable — a different week, shorter dates?">{{ old('note') }}</textarea>
+                          placeholder="What would make this workable - a different week, shorter dates?">{{ old('note') }}</textarea>
                 <span class="pay-hint">Sent to {{ $request['employee_record']['name'] }} with the decision.</span>
                 {{-- Required on a rejection and not on an approval: "yes" needs
                      no explanation, and demanding one only produces "ok". --}}

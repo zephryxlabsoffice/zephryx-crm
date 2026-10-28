@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
  *
  * The row shape CompOffPolicy and the views read: the stored columns, plus
  * `lapsed` and `takeable`, which are asked of CompOffPolicy rather than
- * stored — see the head of that class for why.
+ * stored - see the head of that class for why.
  */
 class CompOffDirectory
 {
@@ -82,7 +82,7 @@ class CompOffDirectory
     }
 
     /**
-     * Pending take-requests across everybody — the queue a manager or Team
+     * Pending take-requests across everybody - the queue a manager or Team
      * Lead works.
      *
      * @return Collection<int, array<string, mixed>>

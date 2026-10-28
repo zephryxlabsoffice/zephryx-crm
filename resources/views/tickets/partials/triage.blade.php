@@ -3,7 +3,7 @@
 {{--
     Triage: the step that turns a raw ticket into a routed one.
 
-    Shown only when the ticket needs it — unassigned, or escalated back for
+    Shown only when the ticket needs it - unassigned, or escalated back for
     someone else to route. The handover put this panel on a separate
     "reviewer" page, which meant a reviewer had to know which of four URLs to
     open; here it appears on the ticket when the ticket needs it.
@@ -72,7 +72,7 @@
 
         <div class="triage-actions">
             {{-- Behind `tickets.triage`, and audited with what the ticket said
-                 before and after — the queue is read by whoever is on shift,
+                 before and after - the queue is read by whoever is on shift,
                  and "who routed this here" is the question it gets asked. --}}
             <button class="btn btn-primary" type="submit">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

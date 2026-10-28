@@ -6,7 +6,7 @@ use App\Support\Theme;
 use Tests\TestCase;
 
 /**
- * POST /theme — foundation spec §3.2, §7.
+ * POST /theme - foundation spec §3.2, §7.
  */
 class ThemePreferenceTest extends TestCase
 {

@@ -49,7 +49,7 @@
             <div class="kpi-lbl">Awaiting a decision</div>
             <div class="kpi-val">{{ $balance['pending'] }}</div>
             {{-- Pending days are not deducted from the balance above, and this
-                 says so — otherwise somebody plans around days they may not
+                 says so - otherwise somebody plans around days they may not
                  get. --}}
             <span class="kpi-sub">Not deducted until approved</span>
         </div>

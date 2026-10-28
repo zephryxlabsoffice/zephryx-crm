@@ -25,13 +25,13 @@ use Illuminate\Support\Facades\Schema;
  * That table already solved this problem for the sign-in address: a change in
  * flight is a THING WITH A STATE, and the version that tries to live in the
  * record it is changing is the version that writes the new value in
- * immediately. Same here — pending row, live record untouched, spent rows kept
+ * immediately. Same here - pending row, live record untouched, spent rows kept
  * forever rather than deleted, because "somebody asked for this and it was
  * declined" is exactly the history an argument six months later turns on.
  *
  * ONE JSON COLUMN, NOT ELEVEN NULLABLE ONES
  *
- * A request carries only the fields that actually differ from the record — HR
+ * A request carries only the fields that actually differ from the record - HR
  * reads a list of changes, not eleven rows of which nine say "unchanged". A
  * column per field would make the common request a row of nulls, and would mean
  * a migration every time the requestable list grows. Nothing queries inside it:
@@ -40,7 +40,7 @@ use Illuminate\Support\Facades\Schema;
  * The keys are checked against App\Support\ProfilePolicy::requestable() on the
  * way in AND on the way out. Storing a field name in a column and later writing
  * to the column it names is exactly the shape that becomes a write-anything
- * primitive when the list is trusted — the same reasoning as the reveal
+ * primitive when the list is trusted - the same reasoning as the reveal
  * endpoint's fixed field list.
  *
  * THE PHOTO IS A FILE, SO IT CANNOT LIVE IN THE JSON
@@ -48,7 +48,7 @@ use Illuminate\Support\Facades\Schema;
  * A requested photo is stored on the private disk immediately, under its own
  * folder, and this row holds the path. The LIVE photo is untouched until the
  * request is applied. A declined or withdrawn request deletes the candidate
- * file — it is the one part of a spent request that is not kept, because a
+ * file - it is the one part of a spent request that is not kept, because a
  * photograph nobody accepted is not a record of anything and keeping it would
  * grow the disk forever.
  * ═════════════════════════════════════════════════════════════════════════════
@@ -68,8 +68,8 @@ return new class extends Migration
             $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
 
             /*
-             * Who asked. Normally the person themselves — this form is only on
-             * their own profile — but stored rather than assumed, because the
+             * Who asked. Normally the person themselves - this form is only on
+             * their own profile - but stored rather than assumed, because the
              * audit question is "who submitted this", and inferring it from
              * `employee_id` would answer a different one.
              */
@@ -83,8 +83,8 @@ return new class extends Migration
 
             /*
              * The three ways a request stops being live, each its own column
-             * rather than one `status` string. The dates are the record — when
-             * HR applied it, when it was declined — and a status column plus a
+             * rather than one `status` string. The dates are the record - when
+             * HR applied it, when it was declined - and a status column plus a
              * single `decided_at` cannot say which of the two a date belongs
              * to without reading the other column anyway.
              */
@@ -106,7 +106,7 @@ return new class extends Migration
 
             /*
              * The queue's only query: live requests, oldest first. Live is
-             * "none of the three stamps set", which no index can express — so
+             * "none of the three stamps set", which no index can express - so
              * this covers the employee lookup and the ordering, and the queue
              * filters the three nulls on top. At the size this table will ever
              * reach that is the right trade.

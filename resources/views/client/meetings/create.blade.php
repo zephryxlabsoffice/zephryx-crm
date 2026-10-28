@@ -40,7 +40,7 @@
                             <div class="form-field cl-form-wide">
                                 <label class="form-field-lbl" for="mt-agenda">What to cover</label>
                                 <textarea id="mt-agenda" name="agenda" rows="5" maxlength="2000"
-                                          placeholder="A couple of lines is plenty — it helps us bring the right person.">{{ old('agenda') }}</textarea>
+                                          placeholder="A couple of lines is plenty - it helps us bring the right person.">{{ old('agenda') }}</textarea>
                                 @error('agenda')
                                     <span class="field-error">{{ $message }}</span>
                                 @enderror
@@ -85,7 +85,7 @@
                                 <label class="form-field-lbl" for="mt-time">Preferred time</label>
                                 <input id="mt-time" name="time" type="time" required value="{{ old('time') }}">
                                 {{-- Times are shown and entered in the office's
-                                     timezone and stored UTC — every date on a
+                                     timezone and stored UTC - every date on a
                                      meeting record is UTC, which is the bug
                                      MeetingPresenter::statusOf was fixed for. --}}
                                 <span class="pay-hint">All times {{ $zone }}. We will confirm the exact slot.</span>
@@ -112,7 +112,7 @@
                     --}}
                     <p class="dash-note">
                         This is a request, not a booking. Nothing goes into a
-                        calendar until we confirm it — you will see it as
+                        calendar until we confirm it - you will see it as
                         "Awaiting confirmation" until then, and the invitation
                         arrives by email once a time is set.
                     </p>

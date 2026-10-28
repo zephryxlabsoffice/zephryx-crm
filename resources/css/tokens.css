@@ -1,11 +1,11 @@
 /* ============================================================================
-   ZephryxLabs CRM — design tokens
+   ZephryxLabs CRM - design tokens
    ----------------------------------------------------------------------------
    Foundation spec §7. These are the single source of colour truth for every
    module. Values are taken unchanged from the designer's handover
    (refference/Landing Page.html, refference/Login Page.html).
 
-   Never hard-code a colour in a module stylesheet — add a token here instead.
+   Never hard-code a colour in a module stylesheet - add a token here instead.
    `data-theme` is always rendered server-side on <html>, so there is no
    unthemed state and no flash of the wrong palette on first paint.
    ========================================================================= */
@@ -53,7 +53,7 @@
   --info-line:     #C7DEEF;
 
   /* ── categorical accents ──
-     For status pills that classify rather than warn — a project stage, a
+     For status pills that classify rather than warn - a project stage, a
      ticket priority, a leave type. Never reuse the feedback colours above for
      these: a blue "In progress" pill next to a blue "session expired" banner
      teaches people that colour means nothing. */

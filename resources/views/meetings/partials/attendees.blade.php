@@ -8,7 +8,7 @@
     Who is invited and what they said.
 
     Every response here came from Google Calendar. This application has no way
-    to accept on somebody's behalf and no route that tries — a person responds
+    to accept on somebody's behalf and no route that tries - a person responds
     in their own calendar, and there is deliberately no `setAttendance()` on
     App\Support\Meetings\MeetingProvider.
 --}}
@@ -48,7 +48,7 @@
     @if ($meeting['status'] === P::SCHEDULED)
         <p class="mt-attendee-note">
             {{ $accepted }} of {{ count($meeting['attendees']) }} have accepted.
-            Replies come from Google Calendar — nobody can answer here on somebody else’s behalf.
+            Replies come from Google Calendar - nobody can answer here on somebody else’s behalf.
         </p>
     @endif
 </div>

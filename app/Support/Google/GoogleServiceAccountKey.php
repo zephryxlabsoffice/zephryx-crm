@@ -5,7 +5,7 @@ namespace App\Support\Google;
 use InvalidArgumentException;
 
 /**
- * A parsed, validated service-account key — the JSON file Google Cloud hands
+ * A parsed, validated service-account key - the JSON file Google Cloud hands
  * out when the key is created, pasted whole into the Admin Panel.
  *
  * Parsing lives here rather than in the controller so the same validation
@@ -34,7 +34,7 @@ final class GoogleServiceAccountKey
         }
 
         if (($decoded['type'] ?? null) !== 'service_account') {
-            throw new InvalidArgumentException('That key is not a service-account key — Google Cloud Console → '
+            throw new InvalidArgumentException('That key is not a service-account key - Google Cloud Console → '
                 .'IAM & Admin → Service Accounts → Keys → Add key → JSON.');
         }
 

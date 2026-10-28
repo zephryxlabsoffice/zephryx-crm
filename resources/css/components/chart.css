@@ -4,7 +4,7 @@
    Shared by five modules: Employees (headcount by department), Teams
    (composition), Projects (status mix), Invoices (value by status) and
    Attendance (days by state). Moved out of pages/employees.css when the second
-   module needed it — two donuts would have drifted apart.
+   module needed it - two donuts would have drifted apart.
 
    ----------------------------------------------------------------------------
    RESTYLED 2026-09-14, IN CSS ALONE
@@ -68,7 +68,7 @@
     opacity var(--dur-fast) var(--ease);
 }
 
-/* Pointing at a slice answers "which one is that?" without a tooltip — the
+/* Pointing at a slice answers "which one is that?" without a tooltip - the
    legend row carries the same colour, and dimming the rest makes the pairing
    obvious. Decorative only: the SVG is aria-hidden and every figure it encodes
    is in the list below, so nothing here is the sole route to a number. */
@@ -131,7 +131,7 @@
 }
 .chart-leg:hover { background: var(--surface-2); }
 
-/* The swatch, with a halo of its own colour — it lifts an 8px dot off the card
+/* The swatch, with a halo of its own colour - it lifts an 8px dot off the card
    without inventing a second colour for it. `color-mix` is already how
    --focus-ring is built in tokens.css. */
 .chart-leg::before {

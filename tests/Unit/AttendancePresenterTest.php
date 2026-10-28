@@ -19,8 +19,8 @@ class AttendancePresenterTest extends TestCase
     {
         // A day with nothing recorded is not a day of zero hours, and drawing it
         // as "0h 00m" invites somebody to read it as one.
-        $this->assertSame('—', P::hours(null));
-        $this->assertSame('—', P::time('2026-09-03', null));
+        $this->assertSame('-', P::hours(null));
+        $this->assertSame('-', P::time('2026-09-03', null));
     }
 
     public function test_there_are_three_statuses_and_late_is_not_one_of_them(): void
@@ -36,7 +36,7 @@ class AttendancePresenterTest extends TestCase
 
     public function test_how_long_a_day_has_been_open_is_said_in_hours(): void
     {
-        // "Open 7 hr", not "Open 7h 12m" — the point is that it has been open a
+        // "Open 7 hr", not "Open 7h 12m" - the point is that it has been open a
         // long time, and minutes make it read as a measurement of work.
         $this->assertSame('Open 40 min', P::openFor(40));
         $this->assertSame('Open 7 hr', P::openFor(432));
@@ -90,7 +90,7 @@ class AttendancePresenterTest extends TestCase
         }
 
         // Leading and trailing cells belong to the neighbouring months and are
-        // drawn quiet rather than left blank — a blank cell reads as a missing
+        // drawn quiet rather than left blank - a blank cell reads as a missing
         // day.
         $this->assertFalse($weeks[0][0]['in_month']);
         $this->assertSame('Sunday', Carbon::parse($weeks[0][0]['date'])->format('l'));

@@ -2,7 +2,7 @@
     Where meetings actually live.
 
     Replaces the handover's "Need Immediate Help?" card, which carried a
-    hardcoded phone number and two obfuscated email addresses — a client-support
+    hardcoded phone number and two obfuscated email addresses - a client-support
     panel that had wandered onto an internal staff page.
 
     This says the thing a person on this page might actually be unsure about:
@@ -47,7 +47,7 @@
             </span>
             <span class="mt-fact-body">
                 <strong>The link is for people on the invite</strong>
-                <span>A Meet link is effectively a password, so it is shown to attendees only — not to everyone who can see the meeting exists.</span>
+                <span>A Meet link is effectively a password, so it is shown to attendees only - not to everyone who can see the meeting exists.</span>
             </span>
         </li>
 

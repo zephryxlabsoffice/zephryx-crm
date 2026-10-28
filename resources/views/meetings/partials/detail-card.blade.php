@@ -35,7 +35,7 @@
         </div>
         <div class="mt-field">
             <dt>Organiser</dt>
-            <dd>{{ $meeting['organiser_record']['name'] ?? '—' }}</dd>
+            <dd>{{ $meeting['organiser_record']['name'] ?? '-' }}</dd>
         </div>
     </dl>
 

@@ -11,7 +11,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
  * This is the class PermissiveGate was standing in for. Every sidebar entry,
  * every dashboard widget and every client page has been filtering through the
  * NavigationGate contract since the shell was built precisely so that this
- * swap would be a one-line binding change and nothing else — and it was.
+ * swap would be a one-line binding change and nothing else - and it was.
  *
  * It is a thin adapter rather than a second implementation. The union across
  * roles and the implicit Employee base are resolved in one place, App\Support\

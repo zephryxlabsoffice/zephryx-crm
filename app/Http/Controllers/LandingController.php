@@ -10,7 +10,7 @@ use Illuminate\Routing\Controller;
 class LandingController extends Controller
 {
     /**
-     * GET / — the public landing page (foundation spec §9.1).
+     * GET / - the public landing page (foundation spec §9.1).
      *
      * An already-authenticated visitor never sees it; they are sent to their
      * own realm's dashboard instead.

@@ -6,7 +6,7 @@
    (.kpi-c, .ma-kpi), the table (.cl-table again), the filter row (.att-tools,
    .ma-filters), the rail card (.rr-card, .tri-card), the donut (.donut, twice)
    and the pagination (.cl-pagination-trio). Only what is specific to attendance
-   is here — which is the calendar, the state dots, and the two-time cell.
+   is here - which is the calendar, the state dots, and the two-time cell.
 
    mark-attendance.css is gone entirely along with the screen it styled: there
    is no approval queue. See App\Http\Controllers\AttendanceController.
@@ -15,7 +15,7 @@
 .att-grid,
 .att-detail-grid {
   display: grid;
-  /* minmax(0, …), never 1fr — a bare 1fr track is forced open by a wide child
+  /* minmax(0, …), never 1fr - a bare 1fr track is forced open by a wide child
      and the whole page scrolls sideways. */
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: var(--density-gap);
@@ -37,7 +37,7 @@
    These are feedback colours where the state IS feedback (§7): green for a day
    worked, amber for one worth a look, red for a real absence. Weekly off and
    holiday get neutral and categorical tones instead, because neither is good
-   news or bad news — the handover drew both red, which made every calendar
+   news or bad news - the handover drew both red, which made every calendar
    scarlet on Sundays and taught people that red meant nothing.            */
 
 .att-dot {
@@ -63,7 +63,7 @@
 
    These same `att-dot-*` classes go on the chart legend's <li> and on the
    donut's <circle> as well as on a calendar dot, because all three read `--dot`
-   from the one definition above — which is what keeps an arc and its legend
+   from the one definition above - which is what keeps an arc and its legend
    entry from ever being different colours.
 
    Left unscoped, `.att-dot-half { transform: rotate(45deg) }` rotates the whole
@@ -72,7 +72,7 @@
 
 /* A diamond, so a half day is distinguishable from a full one without relying
    on the reader separating two shades. Colour is never the only carrier of
-   meaning (§7) — and every cell also names its state in screen-reader-only
+   meaning (§7) - and every cell also names its state in screen-reader-only
    text. */
 .att-dot.att-dot-half {
   border-radius: 0;
@@ -89,7 +89,7 @@
   height: 8px;
 }
 /* A square. Holiday and on-leave are both "away, and not absent", so they sit
-   next to each other in the palette — indigo against purple is a distinction
+   next to each other in the palette - indigo against purple is a distinction
    nobody can make at six pixels, and the two mean quite different things to the
    person reading their own month. */
 .att-dot.att-dot-holiday {
@@ -350,7 +350,7 @@
   color: var(--muted);
 }
 
-/* Rejection is bordered, not filled red. It is a correction, not an alarm —
+/* Rejection is bordered, not filled red. It is a correction, not an alarm -
    and the card is on screen before anything has been rejected. */
 .att-reject { border-color: var(--line-strong); }
 .att-reject .prose,

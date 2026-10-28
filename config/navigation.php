@@ -10,7 +10,7 @@
 | render time by App\Support\Navigation, which drops every entry whose
 | `permission` key the viewer does not hold (foundation spec §5).
 |
-| Hiding an entry is a courtesy, not a security boundary — the route itself is
+| Hiding an entry is a courtesy, not a security boundary - the route itself is
 | guarded too (§3.1). A nav that shows links a person cannot open teaches them
 | to expect 403s; a nav filtered without guarded routes is security theatre.
 | Both, always.
@@ -24,7 +24,7 @@
 |              navigation deliberately so the shape stays stable when they ship
 |              in v2. Their routes exist and return 404; the 404 view recognises
 |              them and says "not built yet" rather than "not found".
-|              Leads used to be here too — removed 2026-09-11: "No Leads
+|              Leads used to be here too - removed 2026-09-11: "No Leads
 |              module. The unused leads.view permission goes."
 |
 */
@@ -59,7 +59,7 @@ return [
      *
      * That was wrong, and building the Admin Panel is what made it obvious. The
      * realms have SEPARATE SESSIONS (§3): `zx_staff` and `zx_admin`. A staff
-     * session cannot open /admin at all — not for HR, not for the CEO, and not
+     * session cannot open /admin at all - not for HR, not for the CEO, and not
      * for the owner, who has to sign in to the admin realm as a different
      * account. So the entry was a link that no staff session could ever follow,
      * for anybody.

@@ -9,7 +9,7 @@ use RuntimeException;
 /**
  * Google Drive, through the Shared Drive the service account is a member of.
  *
- * No `impersonate` anywhere in this class — Drive access is Shared Drive
+ * No `impersonate` anywhere in this class - Drive access is Shared Drive
  * membership, not delegation (plan doc, "Note the asymmetry"). Calendar is
  * the one that impersonates, in GoogleMeetProvider, once that lands.
  *
@@ -17,8 +17,8 @@ use RuntimeException;
  * ONE FOLDER PER MODULE
  *
  * "One Google account holds the files, in a folder per module" (plan doc,
- * "How, concretely"). `upload()` and `copyFile()` take a `$module` — a plain
- * name like `payslips` or `employees` — and file into a folder of that name,
+ * "How, concretely"). `upload()` and `copyFile()` take a `$module` - a plain
+ * name like `payslips` or `employees` - and file into a folder of that name,
  * found by listing the Shared Drive or created the first time it is needed.
  * Looked up once per request and cached on the instance: App\Support\
  * Documents\DocumentStore builds a fresh client per request, so there is
@@ -47,7 +47,7 @@ class DriveClient
      * Two calls, not one multipart upload: create the metadata (name,
      * parent), then PATCH the content in as `uploadType=media`. Simpler than
      * assembling a `multipart/related` body by hand, and this is not a
-     * high-frequency path — a payslip or an attachment, not a page load.
+     * high-frequency path - a payslip or an attachment, not a page load.
      *
      * @throws RuntimeException naming which half failed
      */
@@ -166,7 +166,7 @@ class DriveClient
     }
 
     /**
-     * Remove a file. Tolerant of it already being gone (404) — the same
+     * Remove a file. Tolerant of it already being gone (404) - the same
      * shape as DocumentStore::forget() on the local disk, and for the same
      * reason: the caller is usually cleaning up after a replacement, and a
      * file that is already absent is success, not failure.
@@ -179,7 +179,7 @@ class DriveClient
     }
 
     /**
-     * Create and delete a small file directly in the Shared Drive — not
+     * Create and delete a small file directly in the Shared Drive - not
      * inside a module folder, deliberately: a connectivity check should not
      * also be a test of the folder-lookup path, and should not leave a
      * `_connection_test` folder behind as clutter.
@@ -188,12 +188,12 @@ class DriveClient
      * THIS IS THE POINT OF THE BUTTON
      *
      * A credential that can list a folder and cannot write to it is the
-     * failure the "Test connection" button exists to catch — otherwise it is
+     * failure the "Test connection" button exists to catch - otherwise it is
      * discovered by the first person trying to upload a payslip (plan doc,
      * "Connecting it", rule 5).
      * ─────────────────────────────────────────────────────────────────────────
      *
-     * @throws RuntimeException naming which half failed — creating or deleting
+     * @throws RuntimeException naming which half failed - creating or deleting
      */
     public function testConnection(): void
     {
@@ -235,7 +235,7 @@ class DriveClient
             return $this->folders[$module];
         }
 
-        // Drive's query syntax escapes a literal quote with a backslash —
+        // Drive's query syntax escapes a literal quote with a backslash -
         // the module name is ours (a fixed word per call site, never user
         // input), but this costs nothing and removes the question.
         $escaped = str_replace("'", "\\'", $module);

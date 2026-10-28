@@ -20,21 +20,21 @@ use Tests\TestCase;
  *
  * This application still does not calculate payroll (2026-08-27, unchanged).
  * HR works a month out in a spreadsheet and uploads the payslip that produced.
- * What landed on 2026-09-12 is the agreement underneath it — Basic, HRA, other
- * allowances, PF, PT, TDS — recorded so the person preparing that spreadsheet
+ * What landed on 2026-09-12 is the agreement underneath it - Basic, HRA, other
+ * allowances, PF, PT, TDS - recorded so the person preparing that spreadsheet
  * has the figures to start from.
  *
  * So there is no total anywhere, and the Salary page does not show this at all.
  * A breakdown printed beside a payslip invites a comparison, and the two
  * disagree in any month carrying a deduction, an arrear or a day of loss of
- * pay — at which point the screen is arguing with the document somebody was
+ * pay - at which point the screen is arguing with the document somebody was
  * actually paid against.
  *
  * THREE ENGAGEMENTS, THREE SHAPES
  *
  * Full-time gets the six components. An intern gets one monthly stipend, with
  * no PF and no HRA line, because neither is true of a stipend. A freelancer
- * gets a rate and a basis, recorded for the file — their payments happen
+ * gets a rate and a basis, recorded for the file - their payments happen
  * outside the CRM entirely.
  * ═════════════════════════════════════════════════════════════════════════════
  */
@@ -74,7 +74,7 @@ class EmployeeSalaryStructureTest extends TestCase
     {
         /*
          * The reason none of this is a float. A figure typed with paise has to
-         * come back as the same figure — 60000.55 is 6,000,055 paise and not
+         * come back as the same figure - 60000.55 is 6,000,055 paise and not
          * 6,000,054 after a binary rounding nobody sees until it is on a
          * payslip.
          */
@@ -87,7 +87,7 @@ class EmployeeSalaryStructureTest extends TestCase
 
     public function test_a_full_time_hire_must_state_every_component(): void
     {
-        // The owner's list: full-time, everything. A zero is a fine answer —
+        // The owner's list: full-time, everything. A zero is a fine answer -
         // an empty box is not an answer at all.
         $this->signInAsStaff(['employee', 'hr']);
 
@@ -140,7 +140,7 @@ class EmployeeSalaryStructureTest extends TestCase
         /*
          * The shape decides what may be written, not the request. Posting
          * `basic` alongside an intern's stipend must not put an HRA-less
-         * "basic" on a stipend row — the columns a kind does not use are not
+         * "basic" on a stipend row - the columns a kind does not use are not
          * merely unasked-for, they are meaningless for it.
          */
         $this->signInAsStaff(['employee', 'hr']);
@@ -218,7 +218,7 @@ class EmployeeSalaryStructureTest extends TestCase
         /*
          * What an audit trail has to answer is who changed somebody's salary
          * and when. Carrying the figures would make this table a permanent,
-         * unredactable history of everybody's pay — reachable by anybody who
+         * unredactable history of everybody's pay - reachable by anybody who
          * can open the audit screen, which is a wider set than `salary.view`.
          */
         $this->signInAsStaff(['employee', 'hr']);
@@ -261,7 +261,7 @@ class EmployeeSalaryStructureTest extends TestCase
 
     public function test_the_directory_permission_does_not_carry_the_pay_card(): void
     {
-        // Seeing what a colleague earns is itself the harm — which is why
+        // Seeing what a colleague earns is itself the harm - which is why
         // `salary.view` exists and why a Team Lead does not hold it.
         $this->signInAsStaff(['employee', 'hr']);
         $this->post('/employees', $this->payload());
@@ -280,7 +280,7 @@ class EmployeeSalaryStructureTest extends TestCase
     {
         /*
          * The gate that matters most here. Somebody granted `employees.edit`
-         * and not `salary.manage` may correct a department — and posting pay
+         * and not `salary.manage` may correct a department - and posting pay
          * fields at the same form must change nothing. The rules are not built
          * for them, so the keys never reach the data the write reads.
          */

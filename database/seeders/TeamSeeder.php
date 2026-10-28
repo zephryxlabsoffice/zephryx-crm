@@ -11,7 +11,7 @@ use Illuminate\Database\Seeder;
  * The demo teams and their membership. Local + debug only.
  *
  * Runs after EmployeeSeeder, because every lead and every member is an
- * employment record — a team pointing at people who do not exist is a page of
+ * employment record - a team pointing at people who do not exist is a page of
  * empty rows.
  *
  * Nothing here runs in production: real teams are created through the module by

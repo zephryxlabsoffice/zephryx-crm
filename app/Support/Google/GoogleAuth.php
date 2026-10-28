@@ -13,7 +13,7 @@ use RuntimeException;
  *
  * Every version of the official SDK pins `guzzlehttp/guzzle` to `^7.4.5`. This
  * application is on Guzzle 8, required by `laravel/framework` 13's own HTTP
- * client, and there is no version of the SDK that accepts it — installing it
+ * client, and there is no version of the SDK that accepts it - installing it
  * means downgrading Guzzle under the framework itself. What this application
  * actually needs from Google is small: one token exchange (the JWT-bearer
  * grant, RFC 7523) and a handful of Drive/Calendar REST calls. Hand-rolling
@@ -23,7 +23,7 @@ use RuntimeException;
  * THE JWT IS SIGNED WITH `openssl_sign`, NOT A JWT LIBRARY
  *
  * RS256 over a two-part payload is a few lines with the `openssl` extension,
- * which this application already requires (§11 — passwords, at-rest
+ * which this application already requires (§11 - passwords, at-rest
  * encryption). Pulling in a JWT package for one call site would be the same
  * mistake as the SDK, at a smaller scale.
  * ═════════════════════════════════════════════════════════════════════════════
@@ -36,7 +36,7 @@ class GoogleAuth
      * Exchange the service account's key for a bearer token good for the
      * given scopes.
      *
-     * `$impersonate` is the Calendar case only — a mailbox this key has
+     * `$impersonate` is the Calendar case only - a mailbox this key has
      * domain-wide delegation to act as. Drive needs no impersonation at all:
      * the service account is a member of the Shared Drive in its own right
      * (plan doc, "Note the asymmetry").
@@ -89,7 +89,7 @@ class GoogleAuth
         $signed = openssl_sign($signingInput, $signature, $this->key->privateKey, OPENSSL_ALGO_SHA256);
 
         if (! $signed) {
-            throw new RuntimeException('Could not sign a request with this key — it may be malformed.');
+            throw new RuntimeException('Could not sign a request with this key - it may be malformed.');
         }
 
         return $signingInput.'.'.rtrim(strtr(base64_encode($signature), '+/', '-_'), '=');

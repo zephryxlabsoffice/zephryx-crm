@@ -6,7 +6,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
- * Daily project updates — the end-of-day notes staff write against a project.
+ * Daily project updates - the end-of-day notes staff write against a project.
  *
  * ═════════════════════════════════════════════════════════════════════════════
  * EVERY UPDATE HAS A VISIBILITY, AND THE DEFAULT IS INTERNAL (decided 2026-09-07)
@@ -20,12 +20,12 @@ use Illuminate\Support\Collection;
  *
  * The alternative considered and rejected was making all updates client-visible
  * and asking people to write accordingly. That does not remove the internal
- * note — it removes the PLACE for one, so it ends up in a direct message where
+ * note - it removes the PLACE for one, so it ends up in a direct message where
  * nobody can find it later, or the update stops being written at all.
  *
  * So: one field, `visibility`, and it defaults to internal. The direction of
  * that default is the whole safety argument. Forgetting to set it hides an
- * update that should have been shared — an annoyance, fixed by a click. The
+ * update that should have been shared - an annoyance, fixed by a click. The
  * opposite default would mean forgetting publishes something, which is not
  * fixable at all once it has been read.
  *
@@ -62,7 +62,7 @@ class DemoProjectUpdates
      * Updates for one project, newest first, INTERNAL ONES INCLUDED.
      *
      * Protected, not public. This is the staff view of the log and the client
-     * portal must not be able to reach it — the only public reader below is the
+     * portal must not be able to reach it - the only public reader below is the
      * one that filters. When the staff-side EOD page is built it becomes a
      * public method on a staff-facing source, guarded by its own route.
      *
@@ -104,7 +104,7 @@ class DemoProjectUpdates
      * How many updates on a project are internal.
      *
      * For the staff side, so somebody writing an update can see the split. The
-     * client portal never asks — a count of what is being withheld is itself a
+     * client portal never asks - a count of what is being withheld is itself a
      * disclosure.
      */
     public static function internalCountFor(string $project): int
@@ -132,7 +132,7 @@ class DemoProjectUpdates
      * handover's fixed 2024 dates did.
      *
      * The internal rows below are not filler. They are the shape of note this
-     * module exists to keep out of the client's view — read them, and the
+     * module exists to keep out of the client's view - read them, and the
      * default makes its own argument.
      *
      * @return list<array<string, mixed>>
@@ -155,7 +155,7 @@ class DemoProjectUpdates
                 'id' => 'UPD-2026-060', 'project' => 'WD-2024-001', 'author' => 'EMP002',
                 'day' => -1, 'at' => [19, 5], 'visibility' => self::INTERNAL,
                 'title' => 'Holding the CMS migration',
-                'body' => 'Not starting the migration until the March invoice is settled — flagged '
+                'body' => 'Not starting the migration until the March invoice is settled - flagged '
                     .'to Vikram. Two days of work is ready to go the moment it clears.',
                 'attachments' => [],
             ],
@@ -171,7 +171,7 @@ class DemoProjectUpdates
                 'id' => 'UPD-2026-058', 'project' => 'WD-2024-001', 'author' => 'EMP007',
                 'day' => -3, 'at' => [18, 30], 'visibility' => self::INTERNAL,
                 'title' => 'Third round of banner copy',
-                'body' => 'Redoing the banner again — this is the third brief for the same block. '
+                'body' => 'Redoing the banner again - this is the third brief for the same block. '
                     .'Worth raising the change requests at the next call before it eats the buffer.',
                 'attachments' => [],
             ],

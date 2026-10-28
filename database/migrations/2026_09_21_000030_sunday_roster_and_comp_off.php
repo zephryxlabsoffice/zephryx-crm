@@ -9,19 +9,19 @@ use Illuminate\Support\Facades\Schema;
  * built 2026-09-21).
  *
  * ═════════════════════════════════════════════════════════════════════════════
- * ROSTERING IS AN ACT, NOT A REQUEST — AND THE TABLE SAYS SO
+ * ROSTERING IS AN ACT, NOT A REQUEST - AND THE TABLE SAYS SO
  *
  * "Sunday work is rostered by a Manager or Team Lead, not requested. No
  * approval step." `sunday_rosters` has no status column for exactly that
  * reason: a row existing IS the roster. `rostered_by` names who put the
  * person on it, for the same reason every other "who decided this" column in
- * this application exists — not to gate anything, only to answer the
+ * this application exists - not to gate anything, only to answer the
  * question afterwards.
  *
  * ONE ROW PER PERSON PER DATE, WHATEVER PUT THEM THERE
  *
  * A Sunday-against-leave approval also produces a row here (see
- * `sunday_against_leave_requests` below) — from that point on, the person IS
+ * `sunday_against_leave_requests` below) - from that point on, the person IS
  * rostered for that date, and AttendancePolicy::evaluate() cannot tell the
  * two paths apart on the day itself, on purpose: a full day worked earns a
  * comp-off the same way whichever door the rostering came through.
@@ -31,13 +31,13 @@ use Illuminate\Support\Facades\Schema;
  *
  * Same reasoning as AttendancePolicy::autoRejected: a comp-off past
  * `expires_on` reads as lapsed because the clock passed it, not because
- * anything wrote a flag — there is no job that could fail to run. The
+ * anything wrote a flag - there is no job that could fail to run. The
  * `status` enum therefore has no `lapsed` value; a reader compares
  * `expires_on` against today. See App\Support\CompOffPolicy.
  *
- * A comp-off is earned in whole units only. "Half a Sunday earns nothing —
+ * A comp-off is earned in whole units only. "Half a Sunday earns nothing -
  * only a full day earns one" (the decision that overrides an earlier,
- * looser answer) is why there is no fractional amount to store here at all —
+ * looser answer) is why there is no fractional amount to store here at all -
  * every row is worth exactly one day, which is also why `take_date` is a
  * single date rather than a range.
  *
@@ -48,11 +48,11 @@ use Illuminate\Support\Facades\Schema;
  * being earned on one date and spent (or left to lapse) on another, which is
  * exactly the shape a ledger has and a pure function does not. It is written
  * once, at check-out, the moment a rostered day resolves to a full day
- * present — the same "no midnight job" reasoning the rest of Attendance
+ * present - the same "no midnight job" reasoning the rest of Attendance
  * follows, applied to the one place here that needs a row to persist.
  *
  * ═════════════════════════════════════════════════════════════════════════════
- * `sunday_against_leave_requests` — A LINK TO THE LEAVE REQUEST IT PARTLY REVERSES
+ * `sunday_against_leave_requests` - A LINK TO THE LEAVE REQUEST IT PARTLY REVERSES
  *
  * "Working a Sunday against leave already taken needs manager approval. The
  * leave day returns to the balance." This module counts what is recorded
@@ -60,7 +60,7 @@ use Illuminate\Support\Facades\Schema;
  * request into two ranges: approval reduces `leave_requests.days` by one on
  * the linked request and creates a `sunday_rosters` row for the date, which
  * is the whole of what "returns to the balance" and "may now work it" mean
- * in this schema. Asked BEFORE working the Sunday, per the decision — there
+ * in this schema. Asked BEFORE working the Sunday, per the decision - there
  * is no path that creates the roster row after the fact from this table.
  * ═════════════════════════════════════════════════════════════════════════════
  */
@@ -75,7 +75,7 @@ return new class extends Migration
 
             $table->date('date');
 
-            // Who rostered them — a Manager or Team Lead. Nullable and
+            // Who rostered them - a Manager or Team Lead. Nullable and
             // nullOnDelete: the roster entry outlives whoever created it, the
             // same reason every "who decided" column elsewhere does.
             $table->foreignId('rostered_by')->nullable()
@@ -100,7 +100,7 @@ return new class extends Migration
             // the same date however the check-out route is called.
             $table->date('earned_on');
 
-            // The following Sunday — see CompOffPolicy::expiresOn(). Stored
+            // The following Sunday - see CompOffPolicy::expiresOn(). Stored
             // rather than computed on read because the rule that produced it
             // ("before the next Sunday") is itself company policy and this
             // way a row keeps the date it was actually granted against, even

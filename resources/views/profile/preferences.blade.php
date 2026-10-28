@@ -9,7 +9,7 @@
 
         Announcements decided (2026-08-28) that birthdays and work anniversaries
         post themselves and that anyone may opt out of their own. The flag has
-        existed on the employee record since — `announce_milestones` — and until
+        existed on the employee record since - `announce_milestones` - and until
         now there was nowhere to set it. A per-person opt-out nobody can reach is
         not an opt-out; it is a column.
 
@@ -35,7 +35,7 @@
                     <span class="pf-toggle-body">
                         <strong>Announce my birthday and work anniversary</strong>
                         <span>
-                            Posted to the board on the day, with your name and the date —
+                            Posted to the board on the day, with your name and the date -
                             never the year you were born. Turn this off and neither is
                             ever announced; nobody is told you opted out.
                         </span>
@@ -54,8 +54,8 @@
 
             <div class="prose prose-quiet pf-section-note">
                 <p>
-                    {{-- These three genuinely work already — they are cookie
-                         backed and shipped with the app shell — so the page
+                    {{-- These three genuinely work already - they are cookie
+                         backed and shipped with the app shell - so the page
                          shows their real current values rather than defaults it
                          cannot read. --}}
                     These are yours alone and take effect on this browser. They are
@@ -107,7 +107,7 @@
                     {{-- Honest about the ones that cannot be switched off, rather
                          than offering a control that quietly ignores them. --}}
                     What reaches the bell. Announcements to everyone, decisions on
-                    your leave and meeting invites always arrive — those are how
+                    your leave and meeting invites always arrive - those are how
                     work reaches you, and a decision nobody receives is not a
                     decision.
                 </p>
@@ -134,7 +134,7 @@
             </div>
 
             {{--
-                The handover's third toggle — "also send these by email" — is
+                The handover's third toggle - "also send these by email" - is
                 gone rather than disabled.
 
                 Nothing in this application emails a notification. A switch that

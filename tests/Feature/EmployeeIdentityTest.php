@@ -13,19 +13,19 @@ use Tests\TestCase;
  * ═════════════════════════════════════════════════════════════════════════════
  * A REVERSAL, RECORDED RATHER THAN QUIETLY APPLIED (2026-09-12)
  *
- * Until now nobody saw anybody else's identifiers at all — not HR, not the CEO
- * — and payroll was built around that: it pays people from a bank transfer file
+ * Until now nobody saw anybody else's identifiers at all - not HR, not the CEO
+ * - and payroll was built around that: it pays people from a bank transfer file
  * nobody reads rather than from a screen anybody can open.
  *
  * The owner reversed it: HR and the CEO may see them, one field at a time, with
  * an audit entry naming who looked at whose record. This file covers the half
- * that arrives first — the card exists, it is MASKED, and it is behind its own
+ * that arrives first - the card exists, it is MASKED, and it is behind its own
  * sensitive permission. The reveal itself lands next, and until it does the
  * full values are on no page at all.
  *
  * WHY A SEPARATE PERMISSION AND NOT `employees.view`
  *
- * Every staff role above Employee holds `employees.view` — that is the
+ * Every staff role above Employee holds `employees.view` - that is the
  * directory, the thing people use to find a colleague's extension. Identity
  * documents are not the directory. A Team Lead looking up who is in Design must
  * not thereby be looking at their passport number.
@@ -50,8 +50,8 @@ class EmployeeIdentityTest extends TestCase
     public function test_the_permission_exists_and_is_marked_sensitive(): void
     {
         /*
-         * A route guarded by a key with no row fails CLOSED — Rbac::can cannot
-         * grant a permission that does not exist — so a missing row here would
+         * A route guarded by a key with no row fails CLOSED - Rbac::can cannot
+         * grant a permission that does not exist - so a missing row here would
          * lock HR out silently rather than raise anything.
          */
         $permission = Permission::where('permission_key', 'employees.identifiers')->first();
@@ -91,7 +91,7 @@ class EmployeeIdentityTest extends TestCase
         $html = $this->get('/employees/'.$subject)->assertOk()->getContent();
 
         // The document is named, and its number is masked by that document's
-        // own rule — see App\Support\IdProof.
+        // own rule - see App\Support\IdProof.
         $this->assertStringContainsString('Aadhaar', $html);
         $this->assertStringContainsString('XXXX XXXX '.substr($banking->id_proof_number, -4), $html);
         $this->assertStringContainsString('•••• •••• '.substr($banking->account_number, -4), $html);

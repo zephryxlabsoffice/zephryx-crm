@@ -21,7 +21,7 @@
 
     {{--
         Said explicitly, because a reset email is the one somebody is most
-        likely to receive without having asked — and doing nothing really is
+        likely to receive without having asked - and doing nothing really is
         the right response. A link nobody clicks expires on its own.
     --}}
     <p style="margin: 0; color: #5C6B65;">

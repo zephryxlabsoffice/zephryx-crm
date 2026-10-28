@@ -1,5 +1,5 @@
 /* ============================================================================
-   App shell — sidebar + topbar + page chrome.
+   App shell - sidebar + topbar + page chrome.
 
    Taken from the handover (refference/shell.css). Every authenticated surface
    lives inside this, so anything here is load-bearing for all 18 modules.
@@ -7,7 +7,7 @@
    Tokens are NOT redefined here: the handover carried its own `:root` block
    with slightly different values, which would have silently shifted the
    landing and auth pages. It is folded into resources/css/tokens.css instead
-   (spec §7 — one source of colour truth).
+   (spec §7 - one source of colour truth).
    ========================================================================= */
 
 body.app-body {
@@ -156,7 +156,7 @@ body.app-body {
   display: grid;
   /* minmax(0, …), not 1fr: a bare 1fr track has an automatic minimum of its
      content's width, so the search box refuses to shrink and pushes the whole
-     topbar — navigation included — off the side of the page. */
+     topbar - navigation included - off the side of the page. */
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 24px;
@@ -371,7 +371,7 @@ body.app-body {
 .notif-item:hover { background: var(--surface-2); }
 .notif-item:last-child { border-bottom: 0; }
 /* An unread item carries a green rail, so "new" is not signalled by weight
-   alone — weight is hard to see at a glance in a list of ten. */
+   alone - weight is hard to see at a glance in a list of ten. */
 .notif-item.is-unread { box-shadow: inset 3px 0 0 var(--green); }
 
 .notif-ic {

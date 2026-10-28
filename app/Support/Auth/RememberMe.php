@@ -26,7 +26,7 @@ use Symfony\Component\HttpFoundation\Cookie;
  * goes stale the next time the real owner visits.
  *
  * The stale token is then the alarm. When one is presented, exactly one of two
- * things has happened — the token was stolen and is being replayed, or it was
+ * things has happened - the token was stolen and is being replayed, or it was
  * stolen and the thief got there first and the real owner is now replaying.
  * There is no way to tell which, and no need to: both mean the chain is
  * compromised, so the whole chain is revoked and both parties have to sign in
@@ -36,7 +36,7 @@ use Symfony\Component\HttpFoundation\Cookie;
  * thief's fresh token working.
  * ═════════════════════════════════════════════════════════════════════════════
  *
- * NEVER THE ADMIN ACCOUNT (§4.5), and issuing is refused rather than skipped —
+ * NEVER THE ADMIN ACCOUNT (§4.5), and issuing is refused rather than skipped -
  * a silent no-op would leave somebody believing they were remembered.
  *
  * Restoring a session never bypasses the OTP on an untrusted device. The two
@@ -94,7 +94,7 @@ class RememberMe
      * Resolve a remember-me cookie to its user, rotating the token.
      *
      * Returns null when there is nothing valid to restore. A theft signal also
-     * returns null — after revoking the chain and writing an audit entry.
+     * returns null - after revoking the chain and writing an audit entry.
      *
      * @return array{user: User, cookie: Cookie}|null
      */

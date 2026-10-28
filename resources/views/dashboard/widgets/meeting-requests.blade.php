@@ -3,7 +3,7 @@
 {{--
     Meetings a client has asked for and nobody has created yet.
 
-    A requested meeting has no Google Calendar event behind it — that is what
+    A requested meeting has no Google Calendar event behind it - that is what
     makes it a request rather than a meeting. It sits here until a project
     manager or the system admin creates one, which is the only act that puts it
     in anybody's calendar.

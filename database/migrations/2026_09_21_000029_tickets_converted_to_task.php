@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Schema;
  * task a ticket became, so the ticket page can link straight to it, the same
  * reason `converted_from_id`/`convertedTo` thread an intern's old and new
  * employment records together. Never cascades and never restricts on the
- * task side — tasks are never deleted (§ every module in this build), so
+ * task side - tasks are never deleted (§ every module in this build), so
  * there is no delete for this to react to.
  *
  * The conversion does not close the ticket, escalate it or touch anything

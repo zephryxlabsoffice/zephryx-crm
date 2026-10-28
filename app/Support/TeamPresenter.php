@@ -35,7 +35,7 @@ class TeamPresenter
 
     /**
      * Initials for a team's chip: one letter per significant word, two at most.
-     * "Web Development Team" → WD, not WDT — the trailing "Team" is on every
+     * "Web Development Team" → WD, not WDT - the trailing "Team" is on every
      * one of them and distinguishes nothing.
      */
     public static function chip(string $name): string
@@ -81,7 +81,7 @@ class TeamPresenter
     public static function averageTenure(array $members): string
     {
         if ($members === []) {
-            return '—';
+            return '-';
         }
 
         $days = collect($members)

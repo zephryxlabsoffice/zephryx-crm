@@ -15,7 +15,7 @@ use Illuminate\Support\Collection;
  *
  * 1. A comment carries `visibility` of `public` or `internal`. Internal notes
  *    must never reach the client realm. `commentsFor()` is the only method
- *    that returns them and it takes the audience explicitly — there is no way
+ *    that returns them and it takes the audience explicitly - there is no way
  *    to fetch "the comments" without saying who is reading.
  *
  * 2. A client ticket carries `client`. When /client is built, every read must
@@ -172,7 +172,7 @@ class DemoTickets
     /**
      * The review queue. Escalation is flat: one shared queue that whoever
      * holds the triage permission works through, rather than an L1→L2→L3
-     * ladder (decided 2026-08-27 — with six staff most rungs would be empty).
+     * ladder (decided 2026-08-27 - with six staff most rungs would be empty).
      *
      * @return Collection<int, array<string, mixed>>
      */
@@ -213,7 +213,7 @@ class DemoTickets
      * The thread on a ticket, for a stated audience.
      *
      * The audience is a required argument on purpose. There is deliberately no
-     * `comments($ticket)` that returns everything — a caller must say who is
+     * `comments($ticket)` that returns everything - a caller must say who is
      * reading, so that forgetting to filter is a syntax error rather than a
      * client reading an internal note.
      *
@@ -249,9 +249,9 @@ class DemoTickets
                 ['author' => 'GreenLeaf Foods', 'role' => 'Client', 'visibility' => 'public', 'at' => $base->copy()->addMinutes(5),
                  'body' => 'Two of our customers reported this yesterday evening. Screenshots attached.'],
                 ['author' => 'Vikram Joshi', 'role' => 'Support Engineer', 'visibility' => 'internal', 'at' => $base->copy()->addHours(2),
-                 'body' => 'Reproduced on Android Chrome. Looks like the hero image is not being served in WebP — the CDN rule from last week is the likely cause. Not telling them that until I have confirmed it.'],
+                 'body' => 'Reproduced on Android Chrome. Looks like the hero image is not being served in WebP - the CDN rule from last week is the likely cause. Not telling them that until I have confirmed it.'],
                 ['author' => 'Vikram Joshi', 'role' => 'Support Engineer', 'visibility' => 'public', 'at' => $base->copy()->addHours(3),
-                 'body' => 'Thanks — we have reproduced it and are working on a fix. We will update you today.'],
+                 'body' => 'Thanks - we have reproduced it and are working on a fix. We will update you today.'],
             ],
             'TKT-2026-152' => [
                 ['author' => 'Amit Verma', 'role' => 'Frontend Developer', 'visibility' => 'internal', 'at' => $base->copy()->addHours(1),
@@ -261,7 +261,7 @@ class DemoTickets
                 ['author' => 'TechNova Solutions', 'role' => 'Client', 'visibility' => 'public', 'at' => $base->copy()->addMinutes(10),
                  'body' => 'Could you re-issue the invoice with the correct rate?'],
                 ['author' => 'Amit Verma', 'role' => 'Frontend Developer', 'visibility' => 'internal', 'at' => $base->copy()->addDay(),
-                 'body' => 'Escalating — this needs someone who can re-issue an invoice, which I cannot do.'],
+                 'body' => 'Escalating - this needs someone who can re-issue an invoice, which I cannot do.'],
             ],
             default => [],
         };
@@ -270,7 +270,7 @@ class DemoTickets
     /**
      * Files on a ticket. Client uploads are untrusted input: §6 requires them
      * validated by type and size, stored outside the web root and served
-     * through an authorising controller — never linked directly.
+     * through an authorising controller - never linked directly.
      *
      * @return list<array<string, string>>
      */

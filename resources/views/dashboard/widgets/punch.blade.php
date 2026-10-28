@@ -13,7 +13,7 @@
     server's, so there is nothing to fill in and nothing to tamper with. See the
     head of App\Http\Controllers\AttendanceController.
 
-    This is the second place the button appears, which is one more than ideal —
+    This is the second place the button appears, which is one more than ideal -
     but the dashboard is where somebody lands at 09:20, and making them navigate
     to punch in is how a check-in gets forgotten until 11:00.
 --}}
@@ -40,7 +40,7 @@
             @elseif ($w['checkedIn'])
                 <span class="stat-value-quiet">Still in</span>
             @else
-                <span class="stat-value-quiet">—</span>
+                <span class="stat-value-quiet">-</span>
             @endif
         </span>
     </div>
@@ -57,12 +57,12 @@
             {{-- A day the office is shut is not a day somebody failed to check
                  in on, and offering the button would imply it was. --}}
             <p class="dash-note">
-                {{ $w['holiday'] ? $w['holiday'].' — the office is closed.' : 'Not a working day.' }}
+                {{ $w['holiday'] ? $w['holiday'].' - the office is closed.' : 'Not a working day.' }}
             </p>
         @elseif (! $w['checkedIn'])
             <form method="POST" action="{{ route('attendance.check-in') }}">
                 @csrf
-                {{-- The server's clock, never a posted time — see
+                {{-- The server's clock, never a posted time - see
                      AttendanceController::checkIn. --}}
                 <button class="btn btn-primary" type="submit">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

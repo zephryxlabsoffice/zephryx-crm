@@ -1,7 +1,7 @@
 @php use App\Support\Avatar; @endphp
 
 {{--
-    Who raised it. A client is an organisation, an employee is a person — the
+    Who raised it. A client is an organisation, an employee is a person - the
     handover drew both with a round avatar, which made a company look like a
     colleague. A client keeps the square chip used for organisations elsewhere.
 --}}

@@ -14,8 +14,8 @@ use Throwable;
  * CONFIG IS THE DEFAULT; THIS TABLE IS THE DECISION
  *
  * `apply()` runs once per request, at boot, and pushes every stored row into
- * the config repository. Everything downstream — AttendancePolicy, LeavePolicy,
- * the announcements window, the brand name — keeps calling `config()` and knows
+ * the config repository. Everything downstream - AttendancePolicy, LeavePolicy,
+ * the announcements window, the brand name - keeps calling `config()` and knows
  * nothing about this class.
  *
  * That is deliberate and it is the only design that could be retrofitted
@@ -31,7 +31,7 @@ use Throwable;
  * settings loader that threw in those situations would make the migration that
  * creates its own table impossible to run.
  *
- * So a missing table is silence, not an error — this is the one place in the
+ * So a missing table is silence, not an error - this is the one place in the
  * application where swallowing is correct, because the fallback is exactly the
  * behaviour the application had before the table existed.
  * ═════════════════════════════════════════════════════════════════════════════
@@ -47,7 +47,7 @@ class CompanySettings
             /*
              * Only keys the catalogue knows about. A row for `app.key` would
              * otherwise be a way to rewrite anything in the configuration from
-             * a table — and the catalogue is already the definition of what a
+             * a table - and the catalogue is already the definition of what a
              * setting is, so the check belongs here as well as at the write.
              */
             if (SettingsCatalogue::find($key) === null) {
@@ -75,7 +75,7 @@ class CompanySettings
                 ->map(fn (string $value) => json_decode($value, true))
                 ->all();
         } catch (Throwable) {
-            // No database at all — `artisan` on a fresh checkout, or a
+            // No database at all - `artisan` on a fresh checkout, or a
             // misconfigured connection. See the head of this class.
             return [];
         }
@@ -85,7 +85,7 @@ class CompanySettings
      * Store a value and apply it to the running request.
      *
      * Applied immediately as well as stored, so the redirect that follows a
-     * save renders the new value rather than the old one — the page would
+     * save renders the new value rather than the old one - the page would
      * otherwise show what the person just changed away from, and they would
      * press the button again.
      */

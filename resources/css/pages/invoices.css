@@ -3,7 +3,7 @@
 
    Only what is genuinely specific to this module. Tables, KPI tiles, filters,
    pagination, rail cards, money cells, form fields and section headings all
-   come from components/ — the handover's `invoices.css` re-derived several of
+   come from components/ - the handover's `invoices.css` re-derived several of
    them again under `.kpi-c`, `.cl-table` and `.rp-row`.
    ─────────────────────────────────────────────────────────────────────────── */
 
@@ -18,7 +18,7 @@
   align-items: start;
 }
 
-/* An invoice number is an identifier, not prose — broken over three lines it
+/* An invoice number is an identifier, not prose - broken over three lines it
    stops being scannable, which is the whole job of the leading column. It
    holds its line and the table scrolls inside its card instead. */
 .inv-ref {
@@ -71,7 +71,7 @@
  * The printable copy.
  *
  * `.inv-print-note` explains what the page is and how to save it, and is hidden
- * when the page is actually printed — a sheet of paper carrying an instruction
+ * when the page is actually printed - a sheet of paper carrying an instruction
  * about how to make a sheet of paper is the sort of thing nobody notices until
  * it is filed with an invoice.
  */

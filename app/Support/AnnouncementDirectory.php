@@ -14,14 +14,14 @@ use Illuminate\Support\Collection;
  *
  * `authored()` is the table. `milestones()` is computed from employee records
  * and stored nowhere. `board()` merges them so the page reads as one feed, and
- * the managing table paginates `authored()` alone — a computed post has nothing
+ * the managing table paginates `authored()` alone - a computed post has nothing
  * to edit, schedule or delete.
  * ═════════════════════════════════════════════════════════════════════════════
  */
 class AnnouncementDirectory
 {
     /**
-     * The managing query — every authored post, drafts included.
+     * The managing query - every authored post, drafts included.
      *
      * @param  array<string, mixed>  $filters
      * @return Builder<Announcement>
@@ -40,7 +40,7 @@ class AnnouncementDirectory
                     ->orWhere('reference', 'like', $like);
             }))
             ->when($filters['category'] ?? null, fn (Builder $q, string $v) => $q->where('category', $v))
-            // Pinned first, then newest — the order the board is read in.
+            // Pinned first, then newest - the order the board is read in.
             ->orderByDesc('pinned')
             ->orderByDesc('starts_on')
             ->orderByDesc('id');
@@ -110,10 +110,10 @@ class AnnouncementDirectory
     /**
      * The client board: live announcements marked `for_clients`, newest first.
      *
-     * No milestones — those are internal (birthdays, anniversaries) and were
+     * No milestones - those are internal (birthdays, anniversaries) and were
      * never meant for a client to read. No `audience` filtering either: that
      * column narrows which STAFF see a post and a client account holds none
-     * of `everyone`/`department`/`managers` — see Announcement::scopeForClientBoard.
+     * of `everyone`/`department`/`managers` - see Announcement::scopeForClientBoard.
      *
      * @return Collection<int, array<string, mixed>>
      */
@@ -130,7 +130,7 @@ class AnnouncementDirectory
 
     /**
      * One client-visible announcement, or null if it is not on the client
-     * board — closed off the same way an unowned record 404s, rather than
+     * board - closed off the same way an unowned record 404s, rather than
      * fetched and then checked.
      *
      * @return array<string, mixed>|null
@@ -149,7 +149,7 @@ class AnnouncementDirectory
     /**
      * Every holiday notice that has been published, for App\Support\Holidays.
      *
-     * Published only — a draft closes nothing.
+     * Published only - a draft closes nothing.
      *
      * @return list<array<string, mixed>>
      */
@@ -200,7 +200,7 @@ class AnnouncementDirectory
      *
      * Counted from the board itself, so a figure can never disagree with the
      * list beneath it. A category with nothing in it is left out rather than
-     * shown as a zero — an empty filter is a control that does nothing.
+     * shown as a zero - an empty filter is a control that does nothing.
      *
      * @return list<array{key: string, label: string, tone: string, icon: string, count: int}>
      */
@@ -223,7 +223,7 @@ class AnnouncementDirectory
     }
 
     /**
-     * The next reference — year-scoped, from the highest existing one.
+     * The next reference - year-scoped, from the highest existing one.
      */
     public static function nextReference(): string
     {

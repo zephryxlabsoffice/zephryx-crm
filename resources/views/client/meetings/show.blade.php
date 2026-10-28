@@ -9,8 +9,8 @@
 
     No join button and no attendee list. The join link lives in the calendar
     invite (see the index rail's note, and Meeting::toRecordArray, which
-    withholds `join_url` from anybody not on the invite — a client account
-    never is one). The attendee list is staff — see decorate() on the
+    withholds `join_url` from anybody not on the invite - a client account
+    never is one). The attendee list is staff - see decorate() on the
     controller for why `organiser_record` arrives here trimmed to a name
     before this file ever sees it.
 --}}
@@ -99,7 +99,7 @@
                     <div class="prose prose-quiet">
                         <p>
                             Tell us why, and we will withdraw the invite if one has already gone
-                            out. This cannot be undone from here — ask us to reschedule if you
+                            out. This cannot be undone from here - ask us to reschedule if you
                             still need the call.
                         </p>
                     </div>
@@ -110,7 +110,7 @@
                         <div class="form-field">
                             <label class="form-field-lbl" for="cancel-reason">Reason</label>
                             <textarea id="cancel-reason" name="reason" rows="3" required minlength="5" maxlength="500"
-                                      placeholder="e.g. No longer needed — we resolved this over email.">{{ old('reason') }}</textarea>
+                                      placeholder="e.g. No longer needed - we resolved this over email.">{{ old('reason') }}</textarea>
                             @error('reason')
                                 <span class="field-error">{{ $message }}</span>
                             @enderror

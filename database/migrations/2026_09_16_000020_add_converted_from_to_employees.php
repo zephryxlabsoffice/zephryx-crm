@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Schema;
  * A CONVERSION MAKES TWO RECORDS, AND WITHOUT THIS NOTHING JOINS THEM
  *
  * Decided 2026-09-11: converting an intern issues a NEW staff ID and closes the
- * old record rather than editing the one that exists. That is the right shape —
+ * old record rather than editing the one that exists. That is the right shape -
  * the leave balance starts again, the engagement type is set at creation and
  * never edited, and six months of intern attendance stays filed under the
  * identifier it was recorded against.
@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Schema;
  * It also means that, with nothing else, the two records are strangers. Somebody
  * looking at ZEPH261007 has no way to find the ZEPH262004 the person spent
  * their first year under, and "how long have they been here" becomes a question
- * the database cannot answer — which is exactly the sort of thing that is asked
+ * the database cannot answer - which is exactly the sort of thing that is asked
  * when a work anniversary, a notice period or a reference is involved.
  *
  * So one nullable self-reference, set on the new row at the moment of

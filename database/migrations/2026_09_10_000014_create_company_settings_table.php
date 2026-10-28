@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Schema;
  * THE VALUE IS JSON BECAUSE A SETTING IS NOT ALWAYS A SCALAR
  *
  * `attendance.week_off` is a list of weekday numbers, and the policy compares
- * with a strict `in_array` — so a column that flattened it to "0,6" would need
+ * with a strict `in_array` - so a column that flattened it to "0,6" would need
  * parsing at every read, and the day somebody parsed it as strings the weekly
  * off would silently match nothing. Storing the shape means the value that
  * comes out is the value that went in.
@@ -50,9 +50,9 @@ return new class extends Migration
             $table->json('value');
 
             /*
-             * Who changed it. Nullable on delete rather than restricted — a
+             * Who changed it. Nullable on delete rather than restricted - a
              * setting must not become unchangeable because the account that
-             * last touched it was removed — and the audit log holds the
+             * last touched it was removed - and the audit log holds the
              * accountable record either way, with the actor's name copied in.
              */
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();

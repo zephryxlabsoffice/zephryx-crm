@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
  * STATUS IS DERIVED, NOT STORED
  *
  * An invoice does not have a status column that somebody sets. It has a total,
- * a set of payments, a due date, and a cancelled flag — and the status falls
+ * a set of payments, a due date, and a cancelled flag - and the status falls
  * out of those. Nobody can mark an unpaid invoice "Paid", because there is no
  * field to mark; the way to make an invoice paid is to record the payment that
  * makes it paid.
@@ -36,14 +36,14 @@ class InvoicePresenter
         self::PARTIAL => ['pill-amber', 'Partly paid', 'Some of it has been received'],
         self::PAID => ['pill-green', 'Paid', 'Settled in full'],
         self::OVERDUE => ['pill-red', 'Overdue', 'Past its due date and unpaid'],
-        self::CANCELLED => ['pill-gray', 'Cancelled', 'Withdrawn — never delete an invoice'],
+        self::CANCELLED => ['pill-gray', 'Cancelled', 'Withdrawn - never delete an invoice'],
     ];
 
     /**
      * Work out where an invoice stands.
      *
      * Order matters. Cancelled outranks everything, because a cancelled invoice
-     * that happens to be past its due date is not "overdue" — nobody owes it.
+     * that happens to be past its due date is not "overdue" - nobody owes it.
      * Paid outranks overdue for the same reason: money that arrived late is
      * history, not an outstanding debt. This mirrors the rule Projects and
      * Tasks already use for late-but-finished work.
@@ -89,7 +89,7 @@ class InvoicePresenter
     }
 
     /**
-     * Days until due — negative once it has passed.
+     * Days until due - negative once it has passed.
      *
      * @param  array<string, mixed>  $invoice
      */
@@ -102,7 +102,7 @@ class InvoicePresenter
      * How the due date should read, and whether it is worth colouring.
      *
      * Only a problem gets a colour. Colouring every date red the moment it
-     * passes — which the handover did — means the colour stops meaning
+     * passes - which the handover did - means the colour stops meaning
      * anything, and a settled invoice from March is not a problem.
      *
      * @param  array<string, mixed>  $invoice
@@ -192,7 +192,7 @@ class InvoicePresenter
      * The payment terms an invoice was written on, stated in words.
      *
      * Derived from the two dates rather than stored, so it can never contradict
-     * them — "Net 30" beside dates 45 days apart is the kind of detail a client
+     * them - "Net 30" beside dates 45 days apart is the kind of detail a client
      * notices and queries.
      *
      * @param  array<string, mixed>  $invoice

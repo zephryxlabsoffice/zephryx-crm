@@ -47,7 +47,7 @@
 
                 Every one of these was published deliberately. Staff write EOD
                 notes against a project and each carries a visibility that
-                defaults to internal — see the head of
+                defaults to internal - see the head of
                 App\Support\Demo\DemoProjectUpdates. Nothing on this page has
                 been filtered by the template: the internal ones never reach it.
 
@@ -86,7 +86,7 @@
                                         gone with the fixture that fed it.
 
                                         `project_updates` has no attachment
-                                        table behind it and never had one — the
+                                        table behind it and never had one - the
                                         files were invented for the mockup. The
                                         markup rendered nothing against real
                                         rows and would have gone on rendering

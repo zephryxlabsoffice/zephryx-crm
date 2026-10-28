@@ -1,5 +1,5 @@
 /**
- * App shell — sidebar collapse, mobile drawer, notification panel.
+ * App shell - sidebar collapse, mobile drawer, notification panel.
  *
  * The server renders `data-sidebar` and `data-density` onto <html> and <body>,
  * so the shell is already in the right state on first paint. Everything here
@@ -162,7 +162,7 @@ function initNotifications() {
 
 /**
  * Submits a list's filter form as soon as a select changes, so choosing a
- * status does not also need a click on "Search". An enhancement only — the
+ * status does not also need a click on "Search". An enhancement only - the
  * submit button is always there, and inline `onchange` is not an option under
  * our Content-Security-Policy.
  */
@@ -176,7 +176,7 @@ function initAutoSubmit() {
 
 /**
  * Copies the value of the nearest `[data-copy-source]` and confirms in the
- * button itself — a toast for a one-word action is more interruption than the
+ * button itself - a toast for a one-word action is more interruption than the
  * action is worth.
  *
  * The identifier is always visible as text beside the button, so if the
@@ -213,7 +213,7 @@ function initCopyButtons() {
  *
  * Strictly an enhancement: every row box is a real form control, and the form
  * submits without any of this. That matters here because the form it serves
- * marks people paid — a bulk action that only works when JavaScript loads is a
+ * marks people paid - a bulk action that only works when JavaScript loads is a
  * bulk action that half-works.
  *
  * The header box also reflects the rows: tick them all by hand and it fills in,

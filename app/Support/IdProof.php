@@ -8,7 +8,7 @@ namespace App\Support;
  * ═════════════════════════════════════════════════════════════════════════════
  * WHY THIS IS NOT AN AADHAAR COLUMN (decided 2026-09-12)
  *
- * The record held Aadhaar alone, and a private employer cannot require it —
+ * The record held Aadhaar alone, and a private employer cannot require it -
  * Puttaswamy, 2018. Asked to make it mandatory, the honest answer was that the
  * requirement is an IDENTITY DOCUMENT CARRYING AN ADDRESS, and Aadhaar is one
  * of four answers to that rather than the question itself.
@@ -77,7 +77,7 @@ class IdProof
      * "identity number" rule loose enough to accept both would accept anything,
      * which is the same as having no rule while looking like having one.
      *
-     * An unknown type gets no format rule rather than a permissive one — it
+     * An unknown type gets no format rule rather than a permissive one - it
      * cannot reach validation anyway, because the type itself is checked
      * against this class's list first.
      * ─────────────────────────────────────────────────────────────────────────

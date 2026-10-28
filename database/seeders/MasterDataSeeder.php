@@ -12,7 +12,7 @@ use Illuminate\Database\Seeder;
  * ═════════════════════════════════════════════════════════════════════════════
  * WHY THESE ARE SEEDED RATHER THAN TYPED IN AFTER LAUNCH
  *
- * Unlike the demo people, these rows are not sample content — the application
+ * Unlike the demo people, these rows are not sample content - the application
  * does not function without them. An employee form with an empty department
  * list cannot create an employee, and leave types are referenced by policy code
  * that already exists. Shipping an empty database would mean an administrator
@@ -23,7 +23,7 @@ use Illuminate\Database\Seeder;
  * deactivated or added to through Admin Panel → Master Data.
  *
  * Idempotent on (list, code), so re-running after a deploy adds what is new and
- * leaves every existing row — including ones somebody renamed — alone.
+ * leaves every existing row - including ones somebody renamed - alone.
  * ═════════════════════════════════════════════════════════════════════════════
  */
 class MasterDataSeeder extends Seeder
@@ -98,7 +98,7 @@ class MasterDataSeeder extends Seeder
     }
 
     /**
-     * Joined master data 2026-09-21 — the same seven values
+     * Joined master data 2026-09-21 - the same seven values
      * config('tickets.categories') carried before the move.
      */
     protected function ticketCategories(): void
@@ -117,7 +117,7 @@ class MasterDataSeeder extends Seeder
     /**
      * Joined master data 2026-09-21. The CODE is what
      * AnnouncementPresenter::categories() lowercases back to the key the rest
-     * of the application already reads — 'HOLIDAY' has to stay 'HOLIDAY',
+     * of the application already reads - 'HOLIDAY' has to stay 'HOLIDAY',
      * because App\Support\Holidays and AnnouncementPresenter::HOLIDAY are
      * written against the lowercase string 'holiday', and 'MILESTONE'
      * because `isAuthorable()` checks for the literal string 'milestone'.
@@ -142,7 +142,7 @@ class MasterDataSeeder extends Seeder
     {
         /*
          * firstOrCreate, not updateOrCreate. The name and the order are the
-         * starting values only — a seeder that wrote them every run would undo
+         * starting values only - a seeder that wrote them every run would undo
          * a rename on the next deploy, silently, and the administrator who
          * renamed the department would find it back the way it was with nothing
          * to explain why.

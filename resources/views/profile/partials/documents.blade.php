@@ -6,7 +6,7 @@
 
     A PAN or Aadhaar scan is not the same class of data as a masked number.
     App\Support\Sensitive keeps the NUMBERS off screens; these are the cards
-    themselves — photograph, address, full number — in files that can be
+    themselves - photograph, address, full number - in files that can be
     downloaded once and then exist somewhere nobody is tracking.
 
     WHAT THE BACKEND OWES, AND NONE OF IT IS OPTIONAL (§6):
@@ -20,7 +20,7 @@
        who downloaded whose document and when. `profile.documents.download`
        exists for that; it must never become a redirect to a static path.
 
-    3. REACHABLE BY TWO PARTIES ONLY — the person themselves and whoever holds
+    3. REACHABLE BY TWO PARTIES ONLY - the person themselves and whoever holds
        the HR permission. Not managers, not the person's team, not anybody who
        happens to be an admin of something else.
 
@@ -42,7 +42,7 @@
     @else
         <div class="rail-list">
             @foreach ($documents as $document)
-                {{-- Opens in the browser's own viewer, not as a download —
+                {{-- Opens in the browser's own viewer, not as a download -
                      see salary/record.blade.php for the same choice and why. --}}
                 <a class="rail-row" href="{{ route('profile.documents.view', ['document' => $document['id']]) }}" target="_blank" rel="noopener">
                     <span class="rail-ic {{ $document['kind'] === 'identity' ? 'tone-danger' : 'tone-accent' }}" aria-hidden="true">

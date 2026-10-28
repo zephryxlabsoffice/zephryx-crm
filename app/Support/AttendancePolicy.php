@@ -28,12 +28,12 @@ use Illuminate\Support\Carbon;
  * There is no "late". Arriving at 09:47 is not a status: it produced a full
  * day's work or it did not, and that is already in the hours. A late flag adds
  * a fourth thing for people to argue about, needs a grace period to define it,
- * and then needs a policy about what three of them mean — none of which this
+ * and then needs a policy about what three of them mean - none of which this
  * company has decided, and all of which would be a guess written into a record
  * that follows somebody around.
  *
- * The everything-else states — weekly off, holiday, on leave, not marked,
- * rejected — are not statuses in that sense. They are reasons a day is not
+ * The everything-else states - weekly off, holiday, on leave, not marked,
+ * rejected - are not statuses in that sense. They are reasons a day is not
  * being judged at all.
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -46,7 +46,7 @@ use Illuminate\Support\Carbon;
  *
  * What IS computed is how long somebody was here and which state that makes the
  * day. All of it is reproducible from two timestamps and the policy, so it can
- * be checked by hand when somebody disputes it — and somebody will.
+ * be checked by hand when somebody disputes it - and somebody will.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 class AttendancePolicy
@@ -125,7 +125,7 @@ class AttendancePolicy
      * The days the office is shut, from the holiday announcements.
      *
      * NOT from this module's configuration. HR announces a holiday on the board
-     * once and it closes the office — see App\Support\Holidays for why a second
+     * once and it closes the office - see App\Support\Holidays for why a second
      * list here would be the one that goes stale.
      *
      * @return array<string, string> date => name
@@ -231,7 +231,7 @@ class AttendancePolicy
      *
      * Once it has been open past the auto-reject window there are NO hours at
      * all. Running the clock on a day somebody forgot to close produces "51h
-     * 46m", which is not a long day — it is a missing timestamp dressed up as a
+     * 46m", which is not a long day - it is a missing timestamp dressed up as a
      * number, and one that would then be counted as work. See `autoRejected`.
      *
      * Null when there is no check-in to measure from.
@@ -259,14 +259,14 @@ class AttendancePolicy
     /**
      * Everything a page needs to draw one day, derived from the record.
      *
-     * `$onLeave` comes from the Leave module — approved leave is the reason
+     * `$onLeave` comes from the Leave module - approved leave is the reason
      * somebody is not here, and a day the company already granted must never
      * be drawn as an absence. Attendance does not store it; it asks.
      *
      * `$rostered` comes from the roster (decided 2026-09-11): a Sunday or
      * holiday a Manager or Team Lead put this specific person on is a working
      * day FOR THEM, whatever the company calendar says about everyone else.
-     * Rostered and absent reads as absent, not as a week off — see `state()`.
+     * Rostered and absent reads as absent, not as a week off - see `state()`.
      *
      * @param  array<string, mixed>|null  $record
      * @return array{
@@ -311,14 +311,14 @@ class AttendancePolicy
      * Order matters, and it is this order because each rule answers a question
      * the ones below it cannot:
      *
-     *  1. A rejected record is rejected whatever its times say — that is the
+     *  1. A rejected record is rejected whatever its times say - that is the
      *     point of rejecting it.
      *  2. Weekly offs and holidays are not working days, so nothing about them
      *     depends on whether anybody checked in. Somebody who did work a
      *     Saturday still shows as present, because the record exists and
      *     hiding it would erase work that was done.
      *  3. A ROSTERED day is a working day for that person, whatever the
-     *     calendar says about everyone else — checked before the week-off and
+     *     calendar says about everyone else - checked before the week-off and
      *     holiday branches below, because rostering exists precisely to
      *     override them for one person on one date.
      *  4. Approved leave beats absence. The company granted the day.
@@ -358,12 +358,12 @@ class AttendancePolicy
             }
 
             // Before tracking began there was nothing to check in to. Only an
-            // absence is hidden this way — a record made earlier still counts.
+            // absence is hidden this way - a record made earlier still counts.
             if (self::beforeTracking($day)) {
                 return AttendancePresenter::NOT_TRACKED;
             }
 
-            // A working day still under way is not yet an absence — marking
+            // A working day still under way is not yet an absence - marking
             // somebody absent at 09:31 is how a system loses its credibility
             // before lunch. Nor is a day that has not arrived: a calendar that
             // draws next Tuesday red is a calendar nobody believes.
@@ -374,7 +374,7 @@ class AttendancePolicy
 
         // An open record is measured to now, so it is short all morning by
         // definition. It reports as present until it is closed and can be
-        // judged — or until the auto-reject window closes it, which is handled
+        // judged - or until the auto-reject window closes it, which is handled
         // by the rejection check above.
         if (! $open && $worked !== null && $worked < self::halfDayHours() * 60) {
             return AttendancePresenter::HALF_DAY;
@@ -394,7 +394,7 @@ class AttendancePolicy
      * inventing a check-out time, or leaving the day counted as present on
      * evidence that stops at 09:18.
      *
-     * This is DERIVED, not stamped. No job runs at midnight to write a flag —
+     * This is DERIVED, not stamped. No job runs at midnight to write a flag -
      * the record simply reads as rejected once the clock passes the window,
      * which means it is right even if nothing was running that night. It also
      * means it cannot be undone by lifting a flag, because there is no flag:
@@ -420,7 +420,7 @@ class AttendancePolicy
      *
      * Its screens had no idea this state existed: a record with a check-in and
      * no check-out simply showed a blank cell. It is the single most common
-     * attendance data problem there is — somebody closes their laptop and goes
+     * attendance data problem there is - somebody closes their laptop and goes
      * home.
      *
      * It is the same condition as `autoRejected`, named separately because the
@@ -454,7 +454,7 @@ class AttendancePolicy
      * and holidays vanish the same way.
      *
      * So the calendar is the spine and the records are looked up against it.
-     * The month is walked only as far as today — counting the whole of
+     * The month is walked only as far as today - counting the whole of
      * September on the 3rd puts everybody's attendance at eleven per cent.
      * ─────────────────────────────────────────────────────────────────────────
      *
@@ -503,7 +503,7 @@ class AttendancePolicy
             'working_days' => self::workingDaysInMonth($month),
             // A half day is a day somebody attended. It is counted here and
             // shown separately in its own tile, rather than being rounded to
-            // half a day in a figure captioned "days" — which is the sort of
+            // half a day in a figure captioned "days" - which is the sort of
             // arithmetic nobody can reproduce from their own calendar.
             'attended' => $counts[AttendancePresenter::PRESENT] + $counts[AttendancePresenter::HALF_DAY],
             // Every day the month was walked over, which is what the donut's

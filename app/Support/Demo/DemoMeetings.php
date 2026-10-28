@@ -13,7 +13,7 @@ use Illuminate\Support\Collection;
  * ─────────────────────────────────────────────────────────────────────────────
  * WHAT A MEETING RECORD IS
  *
- * Who is meeting, about what, when — plus a reference to the Google event that
+ * Who is meeting, about what, when - plus a reference to the Google event that
  * actually hosts it. `event_id` and `join_url` come back FROM Google; nothing
  * here invents them, and a meeting with neither has not been created yet.
  *
@@ -25,7 +25,7 @@ use Illuminate\Support\Collection;
  *
  * Every `starts_at` and `ends_at` below is UTC, and only App\Support\
  * MeetingPresenter turns one into something a person reads. The offsets are
- * relative to now so the pages have something live to show — the handover's
+ * relative to now so the pages have something live to show - the handover's
  * were all in May 2024, which makes every meeting "ended" and the upcoming
  * list impossible to review.
  * ─────────────────────────────────────────────────────────────────────────────
@@ -41,7 +41,7 @@ class DemoMeetings
     }
 
     /**
-     * `day` is days from today and `at` is the start time in the display zone —
+     * `day` is days from today and `at` is the start time in the display zone -
      * meetings happen in working hours, not at whatever o'clock the page is
      * being reviewed. `mins` is how long it runs.
      *
@@ -72,7 +72,7 @@ class DemoMeetings
             [
                 'id' => 'MTG-2026-056', 'title' => 'Payment gateway issue', 'project' => 'EC-2024-005',
                 'day' => 2, 'at' => '15:30', 'mins' => 30, 'organiser' => 'EMP006',
-                'agenda' => 'Card payments failing at the final step — walk through the logs together.',
+                'agenda' => 'Card payments failing at the final step - walk through the logs together.',
                 'staff' => ['EMP006' => 'accepted', 'EMP004' => 'accepted'],
                 'clients' => ['MediCare Services' => 'awaiting'],
                 'event_id' => 'gcal_56d1f8', 'requested_by' => 'MediCare Services', 'cancelled' => false, 'cancel_reason' => null,
@@ -158,7 +158,7 @@ class DemoMeetings
         return collect(self::rows())->map(function (array $row) use ($employees, $projects) {
             // A row is either anchored to a working hour in the display zone,
             // or offset from now for the one that has to be imminent. Either
-            // way it is converted to UTC here — nothing downstream ever sees a
+            // way it is converted to UTC here - nothing downstream ever sees a
             // local time it might mistake for a stored one.
             $starts = isset($row['at'])
                 ? Carbon::parse(
@@ -208,7 +208,7 @@ class DemoMeetings
                 'project_record' => $row['project'] ? $projects->get($row['project']) : null,
                 'attendees' => $attendees,
                 // Only ever what Google gave back. A link is never assembled
-                // from an event id — see App\Support\Meetings\GoogleMeetProvider.
+                // from an event id - see App\Support\Meetings\GoogleMeetProvider.
                 'join_url' => $row['event_id'] ? 'https://meet.google.com/'.self::linkFor($row['event_id']) : null,
                 'cancelled_at' => $row['cancelled'] ? $starts->copy()->subDays(2)->toDateTimeString() : null,
                 'created_at' => $starts->copy()->subDays(3)->toDateTimeString(),

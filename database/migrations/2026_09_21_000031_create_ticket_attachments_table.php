@@ -8,14 +8,14 @@ use Illuminate\Support\Facades\Schema;
  * Ticket attachments (review round, Tickets: "Attachments allowed", decided
  * 2026-09-21).
  *
- * Exactly `task_attachments`' shape — see
+ * Exactly `task_attachments`' shape - see
  * 2026_09_21_000028_tasks_multiple_assignees_comments_attachments.php for the
  * reasoning this repeats rather than re-derives: several files per ticket,
  * `document_path`/`document_name`/`document_bytes` per row, always through
  * DocumentStore::put() to Google Drive, add-only (no delete route, matching
  * every other module this round).
  *
- * Read by both realms this ticket is visible in — the staff queue and, when
+ * Read by both realms this ticket is visible in - the staff queue and, when
  * it is a client ticket, the client portal. Uploading is staff-only for now;
  * see TicketController for the routes and the plan doc for the reasoning.
  */

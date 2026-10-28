@@ -38,7 +38,7 @@ use Tests\TestCase;
  *
  * These tests used to switch clients with `?as=`, because the portal read a
  * fixture keyed on a company name and there was no other way to see two. That
- * switch is gone, so each half signs in as the account that owns the record —
+ * switch is gone, so each half signs in as the account that owns the record -
  * which is what the ownership check actually reads, and therefore what is worth
  * testing.
  * ─────────────────────────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ class ClientPortalTest extends TestCase
 
         /*
          * The portal is behind `realm:client` (§3.1). A staff session is
-         * refused here before any data is read — see RealmGuardTest, which is
+         * refused here before any data is read - see RealmGuardTest, which is
          * the assertion that guard exists for.
          */
         $this->asClient(self::OURS);
@@ -91,7 +91,7 @@ class ClientPortalTest extends TestCase
 
     /**
      * A record belonging to the OTHER client, found from the data rather than
-     * hardcoded — a fixed id rots the first time the seed is edited.
+     * hardcoded - a fixed id rots the first time the seed is edited.
      */
     protected function theirProject(): string
     {
@@ -163,7 +163,7 @@ class ClientPortalTest extends TestCase
     {
         /*
          * Both answers must be the same 404. If "not yours" and "no such thing"
-         * differed — by status, by wording, by anything — the difference could
+         * differed - by status, by wording, by anything - the difference could
          * be walked to learn which references are real, which is the first half
          * of the leak this portal is guarding against.
          */
@@ -177,8 +177,8 @@ class ClientPortalTest extends TestCase
         /*
          * The bodies differ only where the 404 page echoes the URL that was
          * asked for, which the reader already knows. Compared with that stripped
-         * out rather than not compared at all: a difference anywhere else — a
-         * word, a heading, a different template — would be the signal.
+         * out rather than not compared at all: a difference anywhere else - a
+         * word, a heading, a different template - would be the signal.
          */
         $strip = fn (string $html, string $url) => str_replace($url, '', $html);
 
@@ -214,7 +214,7 @@ class ClientPortalTest extends TestCase
          * Asserted by reflection rather than by reading the class, so adding a
          * convenient all() later fails here instead of in production. And the
          * argument is typed `Client` now rather than being a string named
-         * `$client` — a name is not an identifier, and a method taking one
+         * `$client` - a name is not an identifier, and a method taking one
          * could be handed anything.
          */
         $reflection = new \ReflectionClass(ClientPortal::class);
@@ -285,7 +285,7 @@ class ClientPortalTest extends TestCase
     public function test_the_page_does_not_say_how_much_is_being_withheld(): void
     {
         /*
-         * A line reading "4 internal updates hidden" is itself a disclosure —
+         * A line reading "4 internal updates hidden" is itself a disclosure -
          * it tells the client there is something they are not being shown, on
          * the exact day it was written.
          *
@@ -305,7 +305,7 @@ class ClientPortalTest extends TestCase
     public function test_internal_ticket_comments_never_reach_the_client(): void
     {
         /*
-         * Any client ticket that actually carries an internal note — found from
+         * Any client ticket that actually carries an internal note - found from
          * the data rather than named here, so this keeps testing something when
          * the seeded threads are edited.
          */
@@ -339,8 +339,8 @@ class ClientPortalTest extends TestCase
         /*
          * The staff thread partial bundles a composer with an "Internal note"
          * button and a caption explaining that internal notes are never shown
-         * to the client. Rendering it here leaked no comment — the audience
-         * filter held — but it told the client there is a private channel on
+         * to the client. Rendering it here leaked no comment - the audience
+         * filter held - but it told the client there is a private channel on
          * their own ticket, on the page where that lands worst.
          *
          * A component that is safe with the right data can still be wrong for
@@ -360,7 +360,7 @@ class ClientPortalTest extends TestCase
         /*
          * A client account is an organisation, not a person: the portal greets
          * the company. And it has to be the company whose records are on the
-         * page — otherwise a correctly-scoped page looks broken and a leaking
+         * page - otherwise a correctly-scoped page looks broken and a leaking
          * one looks correct.
          */
         $this->asClient(self::THEIRS);
@@ -379,7 +379,7 @@ class ClientPortalTest extends TestCase
 
         $this->asClient($draft->client->name);
 
-        // Not in the list, and not reachable by id either — the filter is part
+        // Not in the list, and not reachable by id either - the filter is part
         // of the query, so it applies to the lookup as well as the table.
         $this->assertStringNotContainsString($draft->number, $this->pageBody('/client/invoices'));
 
@@ -426,7 +426,7 @@ class ClientPortalTest extends TestCase
          * The control half writes its own notification rather than leaning on
          * the seed. The bell is per-account, so "a staff session sees
          * something" is only demonstrated by a row addressed to the account
-         * doing the looking — and a control that quietly stopped controlling
+         * doing the looking - and a control that quietly stopped controlling
          * for anything is worse than no control at all.
          */
         $staffUser = $this->signInAsStaff();
@@ -453,7 +453,7 @@ class ClientPortalTest extends TestCase
     {
         /*
          * The rule the store route exists to hold. There is no `client_id` in
-         * its validated set, so a posted one is dropped before it can be read —
+         * its validated set, so a posted one is dropped before it can be read -
          * not overwritten afterwards, which is the version that breaks the day
          * somebody reorders two lines.
          */
@@ -493,7 +493,7 @@ class ClientPortalTest extends TestCase
     {
         /*
          * `visibility` is not read from the request at all, so there is no
-         * branch here that could be made to post one — which is stronger than a
+         * branch here that could be made to post one - which is stronger than a
          * check that forces the value.
          */
         $ticket = Ticket::query()->where('client_id', $this->ours()->id)->firstOrFail();
@@ -548,7 +548,7 @@ class ClientPortalTest extends TestCase
     public function test_the_document_is_the_clients_own_and_is_logged(): void
     {
         /*
-         * The seeded invoices carry no document — see InvoiceSeeder, which
+         * The seeded invoices carry no document - see InvoiceSeeder, which
          * follows SalarySeeder's own reasoning: there is no PDF to invent,
          * and a row whose `document_path` pointed at nothing would break the
          * download route rather than demonstrate it. So this test attaches
@@ -588,7 +588,7 @@ class ClientPortalTest extends TestCase
 
     public function test_an_invoice_with_no_document_yet_404s_rather_than_erroring(): void
     {
-        // The seeded set demonstrates exactly this state — see the note on
+        // The seeded set demonstrates exactly this state - see the note on
         // the test above.
         $invoice = Invoice::query()
             ->where('client_id', $this->ours()->id)
@@ -608,7 +608,7 @@ class ClientPortalTest extends TestCase
     public function test_the_client_board_shows_only_announcements_marked_for_clients(): void
     {
         /*
-         * `for_clients` is the only filter — see Announcement::scopeForClientBoard.
+         * `for_clients` is the only filter - see Announcement::scopeForClientBoard.
          * An internal-only live announcement in the seed must not appear here,
          * and the one marked for clients must.
          */
@@ -628,7 +628,7 @@ class ClientPortalTest extends TestCase
     {
         $notMarked = Announcement::query()->where('for_clients', false)->live()->firstOrFail();
 
-        // Not fetched and then hidden — AnnouncementDirectory::findForClients
+        // Not fetched and then hidden - AnnouncementDirectory::findForClients
         // never returns it in the first place, so a direct reference 404s the
         // same way an imaginary one does.
         $this->get('/client/announcements/'.$notMarked->reference)->assertNotFound();
@@ -750,7 +750,7 @@ class ClientPortalTest extends TestCase
     {
         /*
          * A client asks; a project manager creates. And responses belong to
-         * Google Calendar — a second accept button here would be a second
+         * Google Calendar - a second accept button here would be a second
          * source of truth for the same fact.
          */
         $this->assertFalse(app('router')->has('client.meetings.store'));

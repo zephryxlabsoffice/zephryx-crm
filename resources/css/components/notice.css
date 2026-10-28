@@ -1,5 +1,5 @@
 /* ============================================================================
-   Notices — the banner used for form-level feedback.
+   Notices - the banner used for form-level feedback.
 
    Four tones: danger (a failure), warning (a temporary block, e.g. lockout),
    info (a neutral fact, e.g. "your session expired"), success. Every module
@@ -30,7 +30,7 @@
 
 .notice-body { min-width: 0; flex: 1; }
 
-/* A notice that carries its own way out — "nobody is assigned" beside an
+/* A notice that carries its own way out - "nobody is assigned" beside an
    Assign button. The action wraps below on a narrow screen rather than
    squeezing the message. */
 .notice-action {

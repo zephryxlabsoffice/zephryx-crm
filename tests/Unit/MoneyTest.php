@@ -70,7 +70,7 @@ class MoneyTest extends TestCase
 
     public function test_rupees_use_indian_digit_grouping(): void
     {
-        // 1,20,000 — not 120,000. Western grouping on an invoice sent to an
+        // 1,20,000 - not 120,000. Western grouping on an invoice sent to an
         // Indian client reads as a mistake, because it is one.
         $this->assertSame('₹1,20,000.00', Money::of(12000000)->format());
         $this->assertSame('₹1,00,00,000.00', Money::of(1000000000)->format());

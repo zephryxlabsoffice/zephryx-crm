@@ -66,7 +66,7 @@ return [
     |
     | Laravel ships this as UTC and nothing before Attendance noticed: an
     | invoice date is the same day either way. A check-in is not. Under UTC,
-    | "09:30" in the attendance policy means 09:30 UTC — 15:00 in the office —
+    | "09:30" in the attendance policy means 09:30 UTC - 15:00 in the office -
     | so everybody is on time forever, and `Carbon::today()` rolls over to the
     | next day at 05:30 in the morning, which puts the first two hours of every
     | working day on the wrong date.

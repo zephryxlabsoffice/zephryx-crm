@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Tickets — internal operations and client support — and their comments.
+ * Tickets - internal operations and client support - and their comments.
  *
  * ═════════════════════════════════════════════════════════════════════════════
  * `visibility` ON A COMMENT IS THIS MODULE'S CONTRACT
@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Schema;
  * one of them is not for the client to read.
  *
  * It defaults to `public` here and NOT to internal, which is the opposite of a
- * project update — deliberately. A ticket comment is a REPLY: the normal case
+ * project update - deliberately. A ticket comment is a REPLY: the normal case
  * is answering the person who asked, and a thread where the default silently
  * hides the answer is a thread where the client is left waiting for a response
  * that was written days ago. The internal note is the exception here, and the
@@ -46,7 +46,7 @@ return new class extends Migration
             /*
              * Who it is for. `internal` is somebody here asking IT or HR for
              * something; `client` is a company asking us. They share a table
-             * because they share a queue, a triage step and a thread — and
+             * because they share a queue, a triage step and a thread - and
              * differ only in who raised it and who may read it.
              */
             $table->enum('type', ['internal', 'client'])->index();
@@ -66,7 +66,7 @@ return new class extends Migration
             $table->foreignId('project_id')->nullable()
                 ->constrained()->nullOnDelete();
 
-            // Null means nobody has picked it up — the triage queue.
+            // Null means nobody has picked it up - the triage queue.
             $table->foreignId('assignee_id')->nullable()
                 ->constrained('employees')->nullOnDelete();
 
@@ -76,7 +76,7 @@ return new class extends Migration
 
             /*
              * Null until triage. A priority nobody set is different from a low
-             * one, and the queue is sorted on the difference — an untriaged
+             * one, and the queue is sorted on the difference - an untriaged
              * ticket is not a low-priority ticket, it is one nobody has looked
              * at.
              */
@@ -109,7 +109,7 @@ return new class extends Migration
 
             /*
              * Exactly one of these is set. A comment is written by somebody
-             * here or by somebody at the client, and both are accounts —
+             * here or by somebody at the client, and both are accounts -
              * `users`, not `employees`, because a client has no employment
              * record at all (§2.1).
              */
@@ -132,7 +132,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // The thread, oldest first — the one query this table has.
+            // The thread, oldest first - the one query this table has.
             $table->index(['ticket_id', 'created_at']);
         });
     }

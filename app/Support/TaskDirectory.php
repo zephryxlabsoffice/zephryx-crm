@@ -12,12 +12,12 @@ use Illuminate\Support\Facades\DB;
  * Tasks, read from the database.
  *
  * The row shape the four task pages already read: id (the reference), name,
- * project, team, assignees, status, priority, due — plus the `*_record`
+ * project, team, assignees, status, priority, due - plus the `*_record`
  * values the templates draw and the `due_meta` reading. The controller used
  * to attach those in a decorate() step; they belong with the rest of the
  * shape.
  *
- * `assignees`/`assignee_records` are lists, not a single value — several
+ * `assignees`/`assignee_records` are lists, not a single value - several
  * assignees per task (decided) replaced the single `assignee_id` foreign key
  * with the `task_assignees` pivot; see the head of App\Models\Task.
  */
@@ -126,7 +126,7 @@ class TaskDirectory
     }
 
     /**
-     * What has happened to one task, oldest first — from the audit log (§6).
+     * What has happened to one task, oldest first - from the audit log (§6).
      *
      * The demo timeline invented four events from the task's own fields, which
      * looked like history and was a reconstruction: it could say a task had
@@ -177,7 +177,7 @@ class TaskDirectory
     }
 
     /**
-     * The next task reference — from the highest existing one, never a
+     * The next task reference - from the highest existing one, never a
      * count. Owned here rather than by TaskController alone because
      * TicketController::convertToTask needs to mint one too, and two copies
      * of the same numbering logic is the version that drifts.

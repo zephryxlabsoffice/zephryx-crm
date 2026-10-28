@@ -10,7 +10,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Validation\Rule;
 
 /**
- * Notifications — the other half of Announcements, and deliberately separate.
+ * Notifications - the other half of Announcements, and deliberately separate.
  *
  * One page: `/notifications`, the full version of what the topbar bell shows.
  *
@@ -30,12 +30,12 @@ use Illuminate\Validation\Rule;
  *    else's queue is not something a forgotten `where` can cause.
  *
  * 2. MARKING READ IS THE READER'S OWN. `read()` works on the signed-in
- *    account's rows and takes no id, so there is no parameter to tamper with —
+ *    account's rows and takes no id, so there is no parameter to tamper with -
  *    nobody clears anybody else's, and nothing marks a row read on behalf of a
  *    person who has not seen it.
  *
  * 3. A LINK POINTS SOMEWHERE REAL. Checked at render, from a stored route name
- *    — see Notification::link().
+ *    - see Notification::link().
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * NO PERMISSION GATES ANYWHERE ON THIS PAGE
@@ -44,7 +44,7 @@ use Illuminate\Validation\Rule;
  * and it is not a gap: the page shows the signed-in person their own queue and
  * the only write marks their own rows read. A permission would be a control
  * over whether somebody may read something addressed to them, which is not a
- * question the company has — and one nobody would ever be safe to revoke,
+ * question the company has - and one nobody would ever be safe to revoke,
  * because it would silently stop leave decisions reaching people.
  *
  * NOT AUDITED, FOR THE SAME REASON
@@ -82,7 +82,7 @@ class NotificationController extends Controller
     }
 
     /**
-     * POST /notifications/read — mark the reader's own unread rows read.
+     * POST /notifications/read - mark the reader's own unread rows read.
      *
      * Takes nothing. There is no `{notification}` to pass, because a route that
      * accepted one would need a check that it belonged to the person asking,

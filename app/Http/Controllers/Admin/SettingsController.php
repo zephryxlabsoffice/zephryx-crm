@@ -20,15 +20,15 @@ use Illuminate\Support\Facades\Validator;
  *
  * The reason is the finding at the head of App\Support\Admin\SettingsCatalogue:
  * Attendance and Leave do not store their judgements. Half days, days that
- * stopped counting, weekly offs, leave balances — all derived on read, from
+ * stopped counting, weekly offs, leave balances - all derived on read, from
  * these values, every time somebody opens a page.
  *
  * So changing `half_day_hours` is not a change that takes effect tomorrow. It
  * reclassifies months of days that have already been worked and reported on,
  * with no notification and no trace in the records themselves.
  *
- * `preview()` computes exactly what would move and names it — "47 days across
- * 11 people would be re-judged", with examples — before anything is written.
+ * `preview()` computes exactly what would move and names it - "47 days across
+ * 11 people would be re-judged", with examples - before anything is written.
  * Only the second step saves, and the audit entry records the EFFECT alongside
  * the value, because "half_day_hours: 4 → 6" is a true log line and a useless
  * one.
@@ -43,7 +43,7 @@ use Illuminate\Support\Facades\Validator;
  * 1. IT WRITES TO `company_settings` (§8), not to config files. A deployed
  *    application cannot edit its own source, and a value that lives in a file
  *    is a value the next deploy silently reverts. Config stays the DEFAULT and
- *    the table is the decision — see App\Support\Admin\CompanySettings.
+ *    the table is the decision - see App\Support\Admin\CompanySettings.
  *
  * 2. EVERY CHANGE IS AUDITED with actor, before, after and the computed effect
  *    (§6). The effect is the point: "half_day_hours: 4 → 6" is a true log line
@@ -55,7 +55,7 @@ use Illuminate\Support\Facades\Validator;
  *    means agreeing to a number nobody ever saw.
  *
  * 4. THE CATALOGUE IS THE VALIDATOR. A key not in SettingsCatalogue::groups()
- *    is not a setting — the form is not the guard, and `config([$key => …])`
+ *    is not a setting - the form is not the guard, and `config([$key => …])`
  *    with an unchecked key would let a posted field rewrite anything in the
  *    configuration.
  */
@@ -74,7 +74,7 @@ class SettingsController extends Controller
     }
 
     /**
-     * POST /admin/settings/preview — what the proposed change would do.
+     * POST /admin/settings/preview - what the proposed change would do.
      *
      * A POST that renders. The proposed values should not end up in a URL that
      * gets bookmarked, shared or written to an access log, which is the same
@@ -87,7 +87,7 @@ class SettingsController extends Controller
             // not a setting, whatever the form posted.
             'key' => ['required', 'string', 'max:120'],
             // Not `required`: the weekly off is a set, and clearing it to none
-            // is a legitimate — and very consequential — change. `required`
+            // is a legitimate - and very consequential - change. `required`
             // would silently refuse the one edit most worth reviewing.
             'value' => ['nullable'],
             'value.*' => ['string'],
@@ -114,7 +114,7 @@ class SettingsController extends Controller
                 : null,
             /*
              * What the person is about to agree to, in one string. Posted back
-             * with the save and compared against a freshly computed one — see
+             * with the save and compared against a freshly computed one - see
              * `update()`. Not a security token: it is a "has the world moved"
              * check, and the CSRF token next to it is the security one.
              */
@@ -123,7 +123,7 @@ class SettingsController extends Controller
     }
 
     /**
-     * POST /admin/settings — the second step, and the one that writes.
+     * POST /admin/settings - the second step, and the one that writes.
      */
     public function update(Request $request): RedirectResponse
     {
@@ -158,7 +158,7 @@ class SettingsController extends Controller
          *
          * The figures the person read were computed on the previous request.
          * Somebody checking in, a leave request being approved, or simply the
-         * clock passing midnight can all move them — and the whole argument for
+         * clock passing midnight can all move them - and the whole argument for
          * the two-step is that the second step is agreement to a specific
          * number.
          *
@@ -173,7 +173,7 @@ class SettingsController extends Controller
             return redirect()
                 ->route('admin.settings')
                 ->with('status', 'The records this would change have moved since you looked. '
-                    .'Nothing was saved — start again so you are agreeing to the current figures.')
+                    .'Nothing was saved - start again so you are agreeing to the current figures.')
                 ->with('status_tone', 'warning');
         }
 
@@ -190,11 +190,11 @@ class SettingsController extends Controller
             /*
              * The effect, not just the value. §6's `after` is meant to describe
              * what happened, and for these keys what happened is that records
-             * nobody edited now read differently — which the records themselves
+             * nobody edited now read differently - which the records themselves
              * do not show.
              */
             after: $this->readable($proposed)
-                .($effect !== null && $effect['affected'] > 0 ? ' — '.$effect['summary'] : ''),
+                .($effect !== null && $effect['affected'] > 0 ? ' - '.$effect['summary'] : ''),
             request: $request,
         );
 
@@ -211,7 +211,7 @@ class SettingsController extends Controller
      * Everything arrives from a form as a string or an array of strings.
      * `week_off` is a list of integers and the policy compares with `in_array`
      * using strict types, so leaving them as strings would make every day
-     * silently fail to match — the preview would report no change on the one
+     * silently fail to match - the preview would report no change on the one
      * setting whose change is most dramatic.
      *
      * @param  array<string, mixed>  $setting
@@ -222,7 +222,7 @@ class SettingsController extends Controller
             return array_values(array_map('intval', (array) ($value ?? [])));
         }
 
-        // Blank clears the date. Anything else has to be a real day — a value
+        // Blank clears the date. Anything else has to be a real day - a value
         // the policy cannot parse would quietly mean "always tracked".
         if ($setting['type'] === 'date') {
             if ($value === null || $value === '') {

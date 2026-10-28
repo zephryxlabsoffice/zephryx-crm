@@ -1,7 +1,7 @@
 /* ============================================================================
    The Admin Panel.
 
-   Same shell, same primitives as everything else — .card, .kpi, .data-table,
+   Same shell, same primitives as everything else - .card, .kpi, .data-table,
    .stat-row, .rail-card, .form-field. What is here is the handful of pieces
    only this realm has, and they are mostly about making consequences visible:
    the blast radius under a permission, the before/after of a change, the count
@@ -27,7 +27,7 @@
 /* ----------------------------------------------------------------------------
    Settings.
 
-   One row per setting, each its own form — see the head of
+   One row per setting, each its own form - see the head of
    resources/views/admin/settings/index.blade.php for why there is no "save
    all" button.
    -------------------------------------------------------------------------- */
@@ -321,7 +321,7 @@
   gap: 6px;
 }
 
-/* The full permission union for one account. A wall of keys on purpose —
+/* The full permission union for one account. A wall of keys on purpose -
    the point is the size of it. */
 .ad-effective {
   display: flex;

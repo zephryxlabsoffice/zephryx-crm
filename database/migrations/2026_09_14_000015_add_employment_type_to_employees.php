@@ -23,8 +23,8 @@ use Illuminate\Support\Facades\Schema;
  *
  * WHY EVERY EXISTING ROW BECOMES FULL-TIME
  *
- * There were no interns or freelancers in the system when this landed — the
- * distinction did not exist to be recorded — so `full_time` is not a guess
+ * There were no interns or freelancers in the system when this landed - the
+ * distinction did not exist to be recorded - so `full_time` is not a guess
  * about those rows, it is what all of them are.
  * ═════════════════════════════════════════════════════════════════════════════
  */

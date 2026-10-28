@@ -19,7 +19,7 @@
             <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
         <label class="sr-only" for="tb-search-input">Search</label>
-        <input id="tb-search-input" type="search" placeholder="Search — coming soon" disabled>
+        <input id="tb-search-input" type="search" placeholder="Search - coming soon" disabled>
     </div>
 
     <div class="tb-right">

@@ -17,7 +17,7 @@
             </span>
             <span class="an-fact-body">
                 <strong>This board</strong>
-                <span>Things everyone should read — policy, holidays, events, and birthdays and work anniversaries.</span>
+                <span>Things everyone should read - policy, holidays, events, and birthdays and work anniversaries.</span>
             </span>
         </li>
 
@@ -32,7 +32,7 @@
                 {{-- One expression: a Blade newline before the full stop
                      renders as "See yours ." --}}
                 <span>
-                    Things addressed to you — a task assigned, a ticket escalated, leave decided.
+                    Things addressed to you - a task assigned, a ticket escalated, leave decided.
                     {!! '<a class="card-link" href="'.e(route('notifications.index')).'">See yours</a>.' !!}
                 </span>
             </span>
@@ -47,7 +47,7 @@
             </span>
             <span class="an-fact-body">
                 <strong>Milestones post themselves</strong>
-                <span>Birthdays and anniversaries go up on the day. You can keep your own off the board — ask HR to switch it off.</span>
+                <span>Birthdays and anniversaries go up on the day. You can keep your own off the board - ask HR to switch it off.</span>
             </span>
         </li>
     </ul>

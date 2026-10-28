@@ -14,7 +14,7 @@
 
             Every value below was masked in PHP before it reached this template
             (App\Support\Sensitive). The full numbers are not in the HTML, not
-            in a data attribute, and not in any payload this page received —
+            in a data attribute, and not in any payload this page received -
             masking done in the browser is a decoration over a leak, because
             whatever the browser was sent has already been read by whoever is
             sitting at it.
@@ -47,7 +47,7 @@
         </div>
 
         <p class="sl-privacy">
-            Shown only to you. Nobody else sees these on any screen — correcting
+            Shown only to you. Nobody else sees these on any screen - correcting
             them is a request to HR, so a change to where your pay lands is
             never a thing that happens quietly.
         </p>

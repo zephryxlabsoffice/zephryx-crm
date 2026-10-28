@@ -5,7 +5,7 @@
 @section('content')
     <div class="page-hd-row">
         <div class="page-hd">
-            {{-- Reached from the roll, so it needs a way back — but only for
+            {{-- Reached from the roll, so it needs a way back - but only for
                  the people who could have come from there.
                  TODO (backend phase): gate on `attendance.view.all`. --}}
             @if ($canTrack)
@@ -31,7 +31,7 @@
             </div>
         @endif
         {{-- No check-in/out CTA here. Checking in and out is one button, it
-             lives in one place — the card at the top of the rail — and
+             lives in one place - the card at the top of the rail - and
              duplicating it in the header would mean two controls for one
              act, one of which is always the wrong one to press. --}}
     </div>

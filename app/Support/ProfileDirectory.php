@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
  * EVERY METHOD TAKES THE PERSON, AND THERE IS NO DEFAULT
  *
  * The same shape as NotificationDirectory and for the same reason. There is no
- * `find()` with a fallback to "the current user" — a profile read that resolves
+ * `find()` with a fallback to "the current user" - a profile read that resolves
  * its own subject is one that can be made to resolve the wrong one by a caller
  * that forgot to pass anything.
  *
@@ -34,7 +34,7 @@ use Illuminate\Support\Facades\DB;
  * ACTIVITY IS THE AUDIT LOG, FILTERED TO ONE ACCOUNT
  *
  * Not a second log. §6 records the whole application and this page answers a
- * narrower question — "what has happened to my account" — which is what
+ * narrower question - "what has happened to my account" - which is what
  * somebody asks when they are worried. The mapping from audit actions to the
  * kinds the page draws is `ACTIVITY_KINDS` below; an action not in it does not
  * appear, because a profile page is not a window into the audit log.
@@ -47,7 +47,7 @@ class ProfileDirectory
      * as.
      *
      * Deliberately short. Everything here is either something the person did to
-     * their own account, or something done TO their record by somebody else —
+     * their own account, or something done TO their record by somebody else -
      * which is the entry they should not first learn about from a payslip.
      *
      * Note what is absent: every module action. That somebody completed a task
@@ -104,7 +104,7 @@ class ProfileDirectory
                 : null,
             /*
              * The sign-in facts, all from `users` and none of them typed by
-             * anybody — ProfilePolicy::SYSTEM. `username` is deliberately the
+             * anybody - ProfilePolicy::SYSTEM. `username` is deliberately the
              * email: this application has one sign-in identifier and inventing
              * a second name for it on one screen would suggest otherwise.
              */
@@ -195,7 +195,7 @@ class ProfileDirectory
     }
 
     /**
-     * The next document reference — from the highest existing one, never a
+     * The next document reference - from the highest existing one, never a
      * count. A count reuses a reference the moment anything is removed.
      */
     public static function nextDocumentReference(): string
@@ -212,12 +212,12 @@ class ProfileDirectory
      * This account's own audit entries, newest first.
      *
      * ─────────────────────────────────────────────────────────────────────────
-     * SCOPED BY ENTITY, NOT BY ACTOR — AND THAT IS THE WHOLE POINT
+     * SCOPED BY ENTITY, NOT BY ACTOR - AND THAT IS THE WHOLE POINT
      *
      * A filter on `actor_user_id` would show what this person DID. This page
      * has to show what happened TO them, which includes the entries where they
-     * are not the actor: HR changing their designation, and — the one that
-     * matters — a sign-in they did not make.
+     * are not the actor: HR changing their designation, and - the one that
+     * matters - a sign-in they did not make.
      *
      * So it reads entries whose entity is this account OR whose actor is, and
      * marks the ones that were not them. An activity page that only listed
@@ -259,7 +259,7 @@ class ProfileDirectory
      * What one entry says on the page.
      *
      * The audit entry's `after` where there is one, because that is the field
-     * §6 exists for — an entry saying a value changed without saying to what
+     * §6 exists for - an entry saying a value changed without saying to what
      * cannot answer the question anybody arrives with. The action's label is
      * the fallback, never the first choice.
      */
@@ -286,7 +286,7 @@ class ProfileDirectory
      * The employment record behind an account, or null.
      *
      * A Mentor and the owner hold no Employee base (§2.1), so they have no
-     * profile to show — which the controller turns into a 403 rather than an
+     * profile to show - which the controller turns into a 403 rather than an
      * empty page pretending they have one.
      */
     public static function employeeFor(?User $user): ?Employee

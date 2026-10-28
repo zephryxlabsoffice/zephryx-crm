@@ -10,8 +10,8 @@
              $holidayWorked (int), $holidayAnnouncement (string|null).
 
     Its own partial so the doubt branch below can be rendered in a test. It
-    cannot occur in the demo data by construction — nobody has a record on a
-    holiday, because the generator does not write records on non-working days —
+    cannot occur in the demo data by construction - nobody has a record on a
+    holiday, because the generator does not write records on non-working days -
     and a branch that only appears when something has gone wrong is exactly the
     one that gets shipped broken.
 --}}
@@ -21,7 +21,7 @@
         The holiday itself is in doubt.
 
         Holidays come from the announcements, so a mis-typed date on a notice
-        closes the office on a day it was open — and the damage is quiet,
+        closes the office on a day it was open - and the damage is quiet,
         because it hides absences rather than showing anything wrong. Nothing is
         maintained to catch this: a real closure has a handful of records, a
         wrong date has most of the company, and that is the signal. See
@@ -32,7 +32,7 @@
         'title' => 'This day is marked a holiday, but '.$holidayWorked.' of '.$headcount.' people checked in',
         'message' => 'That is enough of the company that the closure date may be wrong rather than the attendance. '
             .'Nobody here is being counted absent, which is worth knowing before this month is read as a good one. '
-            .'The dates come from the announcement — “'.$holiday.'” — and correcting them there corrects this.',
+            .'The dates come from the announcement - “'.$holiday.'” - and correcting them there corrects this.',
     ])
 
     @if ($holidayAnnouncement !== null)
@@ -47,7 +47,7 @@
         'tone' => 'info',
         'title' => $holiday,
         'message' => 'A company holiday, from the announcement of the same name. Nobody was expected in, so nobody is counted absent'
-            .($holidayWorked > 0 ? ' — and '.$holidayWorked.' '.($holidayWorked === 1 ? 'person' : 'people').' checked in anyway.' : '.'),
+            .($holidayWorked > 0 ? ' - and '.$holidayWorked.' '.($holidayWorked === 1 ? 'person' : 'people').' checked in anyway.' : '.'),
     ])
 @elseif (! $workingDay)
     @include('partials.notice', [

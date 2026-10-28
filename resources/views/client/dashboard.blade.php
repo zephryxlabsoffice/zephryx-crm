@@ -19,7 +19,7 @@
     {{--
         Two actions, not four navigation cards.
 
-        The handover opened this page with "My Projects — view your active and
+        The handover opened this page with "My Projects - view your active and
         completed projects" and three siblings, each duplicating a sidebar entry
         a few inches to the left. These are the two things a client arrives to
         DO and cannot do from the sidebar in one click.
@@ -46,7 +46,7 @@
     --}}
     {{--
         Open tickets, then upcoming meetings, then outstanding invoices, then
-        active projects — the order the client portal decisions (Q4,
+        active projects - the order the client portal decisions (Q4,
         2026-09-21) settled on, leading with the two things most likely to
         need a client's attention today rather than the slowest-moving one.
     --}}

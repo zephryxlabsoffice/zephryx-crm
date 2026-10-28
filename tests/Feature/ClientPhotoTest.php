@@ -14,7 +14,7 @@ use Tests\TestCase;
  * ═════════════════════════════════════════════════════════════════════════════
  * THIS ROUTE WAS A 501 FOR THREE WEEKS, ON PURPOSE
  *
- * A client account is an ORGANISATION, so what it uploads is a company logo —
+ * A client account is an ORGANISATION, so what it uploads is a company logo -
  * and a logo appears on invoices, which made "may a client set the image on
  * their own invoice" a question nobody had answered. Building it anyway would
  * have been answering a business question by writing code.
@@ -27,8 +27,8 @@ use Tests\TestCase;
  *
  * A staff photograph became a request to HR on 2026-09-14, because the profile
  * is the company's record of a person and is corrected against documents. A
- * client's avatar is a record of nothing — there is no document to check it
- * against and no HR relationship to check it — so queueing it would put a
+ * client's avatar is a record of nothing - there is no document to check it
+ * against and no HR relationship to check it - so queueing it would put a
  * picture in front of somebody whose only possible answer is "fine".
  * ═════════════════════════════════════════════════════════════════════════════
  */

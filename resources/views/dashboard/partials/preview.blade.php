@@ -13,7 +13,7 @@
     every widget at once, which is the one layout no real account will ever see.
     `?as=hr` narrows it to one role's set.
 
-    It is links, not a form and not a script — a GET that changes nothing, so it
+    It is links, not a form and not a script - a GET that changes nothing, so it
     is bookmarkable, back-buttonable, and needs no CSRF token because it writes
     nothing.
 
@@ -28,7 +28,7 @@
             <span class="dash-preview-tag">Development preview</span>
             <p>
                 @if ($preview)
-                    Showing the dashboard as a <strong>{{ $preview['label'] }}</strong> sees it —
+                    Showing the dashboard as a <strong>{{ $preview['label'] }}</strong> sees it -
                     narrowed from what your own account holds, never widened.
                     {{ $preview['note'] }}
                 @else
@@ -37,7 +37,7 @@
                          (2026-09-07). This now shows what the signed-in account
                          actually holds; the roles below only ever subtract. --}}
                     Showing what <strong>your own account</strong> holds. Picking a role
-                    narrows the page to that role's composition — the preview is
+                    narrows the page to that role's composition - the preview is
                     intersected with your permissions and can only ever hide widgets.
                 @endif
             </p>

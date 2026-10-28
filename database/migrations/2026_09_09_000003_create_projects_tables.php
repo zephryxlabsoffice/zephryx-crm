@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Schema;
  * settled" and "third brief for the same block". Every one of those is true,
  * worth recording, and disastrous in front of the client it is about.
  *
- * So the column exists and IT DEFAULTS TO INTERNAL — in the database, not in a
+ * So the column exists and IT DEFAULTS TO INTERNAL - in the database, not in a
  * form, so a row inserted by a seeder, a script or a future import is internal
  * unless it says otherwise. The direction of that default is the whole safety
  * argument: forgetting to set it hides something that should have been shared,
@@ -28,14 +28,14 @@ use Illuminate\Support\Facades\Schema;
  *
  * Every page in this module is built around what is late. A project with no
  * deadline has no answer for the column, the KPI, the sort order or the
- * "upcoming" rail — it would be a row that quietly means "ignore me" on five
+ * "upcoming" rail - it would be a row that quietly means "ignore me" on five
  * screens. A start date has no such job: it is history, and a project can be
  * agreed before anybody has begun.
  *
  * WHAT IS NOT HERE YET: ATTACHMENTS
  *
- * The demo updates carried files. Storing uploads safely — where they live, who
- * may fetch one, and the audited download route §12 asks for — is one problem
+ * The demo updates carried files. Storing uploads safely - where they live, who
+ * may fetch one, and the audited download route §12 asks for - is one problem
  * to solve once, and profile documents are waiting on the same answer. An
  * update takes text today; the attachment table joins it when that lands,
  * rather than a half-built version of it being embedded here.
@@ -57,7 +57,7 @@ return new class extends Migration
              * Restricted, and required. Work in this application is work for
              * somebody: a project whose client had been removed would be an
              * invoice nobody could explain the origin of. Clients are never
-             * deleted anyway — they are marked completed — so the constraint is
+             * deleted anyway - they are marked completed - so the constraint is
              * a statement of intent as much as a guard.
              */
             $table->foreignId('client_id')->constrained()->restrictOnDelete();
@@ -70,7 +70,7 @@ return new class extends Migration
                 ->constrained('employees')->nullOnDelete();
 
             // 0–100. A tiny integer because it is a percentage somebody types,
-            // not a computed figure — see the model for why it is not derived
+            // not a computed figure - see the model for why it is not derived
             // from tasks yet.
             $table->unsignedTinyInteger('progress')->default(0);
 
@@ -88,7 +88,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // "What is this client working on with us" — asked by the client
+            // "What is this client working on with us" - asked by the client
             // portal on every page it draws.
             $table->index('client_id');
         });
@@ -138,7 +138,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // The project's log, newest first — the one query this table has.
+            // The project's log, newest first - the one query this table has.
             $table->index(['project_id', 'created_at']);
         });
     }

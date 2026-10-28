@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
  * WHAT A LEAVE REQUEST IS
  *
  * Who asked, what type, which dates, how many days it costs, why, and what was
- * decided. `days` is stated by the requester — this module counts what is
+ * decided. `days` is stated by the requester - this module counts what is
  * recorded rather than working out what should be counted (decided 2026-08-28;
  * see App\Support\LeavePolicy).
  *
@@ -73,7 +73,7 @@ class DemoLeave
             ['id' => 'LV-2026-032', 'employee' => 'EMP002', 'type' => 'casual', 'from' => -20, 'to' => -18, 'days' => 3,
              'reason' => 'Long weekend', 'applied' => -24, 'status' => 'rejected', 'decided_by' => 'EMP005',
              'note' => 'Client review was scheduled for that week. Happy to approve the following week instead.', 'contact' => '+91 98200 55667'],
-            // Withdrawn by the person who asked — not the same as refused.
+            // Withdrawn by the person who asked - not the same as refused.
             ['id' => 'LV-2026-031', 'employee' => 'EMP002', 'type' => 'casual', 'from' => -40, 'to' => -40, 'days' => 1,
              'reason' => 'Personal work', 'applied' => -44, 'status' => 'cancelled', 'decided_by' => null,
              'note' => 'Plans changed, no longer needed.', 'contact' => '+91 98200 55667'],
@@ -85,7 +85,7 @@ class DemoLeave
              'reason' => 'Moving flat', 'applied' => -18, 'status' => 'approved', 'decided_by' => 'EMP005', 'note' => null, 'contact' => '+91 98200 88990'],
             ['id' => 'LV-2026-027', 'employee' => 'EMP012', 'type' => 'casual', 'from' => -50, 'to' => -49, 'days' => 2,
              'reason' => 'Personal', 'applied' => -55, 'status' => 'rejected', 'decided_by' => 'EMP005',
-             'note' => 'Notice period — handover was scheduled for those days.', 'contact' => '+91 98200 12345'],
+             'note' => 'Notice period - handover was scheduled for those days.', 'contact' => '+91 98200 12345'],
         ];
     }
 
@@ -192,7 +192,7 @@ class DemoLeave
     }
 
     /**
-     * Who is off today and over the next fortnight — the rail on the managing
+     * Who is off today and over the next fortnight - the rail on the managing
      * page, and the thing somebody actually opens this module to check.
      *
      * @return Collection<int, array<string, mixed>>

@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * One note on a task.
  *
- * No visibility column, unlike TicketComment: a task has one readership —
- * staff — so there is no audience to get wrong. The author's name is still
+ * No visibility column, unlike TicketComment: a task has one readership -
+ * staff - so there is no audience to get wrong. The author's name is still
  * copied at write time, for the same reason the audit log and ticket threads
  * do it: a thread whose author's account was later removed must not read
  * "somebody said".

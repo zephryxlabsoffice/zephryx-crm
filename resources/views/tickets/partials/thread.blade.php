@@ -75,13 +75,13 @@
         A toggle has a default, and a default is a thing to get wrong on the one
         occasion it matters. Two labelled verbs make the choice explicit every
         time, and the internal button does not look like a quieter version of
-        the other — it carries its own colour so the pair never reads as
+        the other - it carries its own colour so the pair never reads as
         primary and secondary.
     --}}
     @if ($ticket['status'] !== 'closed')
         <form class="composer" method="POST" action="{{ route('tickets.comment', ['ticket' => $ticket['id']]) }}">
             @csrf
-            <span class="avatar tint-1" aria-hidden="true">—</span>
+            <span class="avatar tint-1" aria-hidden="true">-</span>
 
             <div class="composer-body">
                 <label class="sr-only" for="ticket-comment">Add an update</label>

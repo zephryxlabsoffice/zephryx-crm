@@ -26,7 +26,7 @@ return new class extends Migration
     public function up(): void
     {
         /*
-         * §4.2 step 1 — rate limiting is per identifier AND per IP.
+         * §4.2 step 1 - rate limiting is per identifier AND per IP.
          *
          * Per identifier alone lets one attacker spread attempts across a
          * botnet; per IP alone lets one office lock out its own staff. Both,
@@ -42,7 +42,7 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('ip_address', 45)->index();
             $table->boolean('succeeded')->default(false);
-            // `invalid_credentials`, `inactive`, `throttled`, `otp_failed` — for
+            // `invalid_credentials`, `inactive`, `throttled`, `otp_failed` - for
             // the audit log and for answering "what actually happened" later.
             // It is never shown to the person attempting (§4.2 step 3).
             $table->string('failure_reason', 64)->nullable();
@@ -50,7 +50,7 @@ return new class extends Migration
         });
 
         /*
-         * §4.3 — six digits, ten minutes, five attempts, single use.
+         * §4.3 - six digits, ten minutes, five attempts, single use.
          *
          * `attempts` is on the CODE, not on the session or the IP. Five guesses
          * at a six-digit code is a 1-in-200,000 chance; five guesses per code
@@ -69,7 +69,7 @@ return new class extends Migration
         });
 
         /*
-         * §4.3 — a device trusted for seven days skips the code, not the
+         * §4.3 - a device trusted for seven days skips the code, not the
          * password.
          *
          * User agent and IP are stored so somebody reviewing their own devices
@@ -90,11 +90,11 @@ return new class extends Migration
         });
 
         /*
-         * §4.5 — a ROTATING token, and `previous_token_hash` is the whole point.
+         * §4.5 - a ROTATING token, and `previous_token_hash` is the whole point.
          *
          * Each use issues a fresh token and retires the old one. If a retired
-         * token is ever presented, the token was copied — the real owner has
-         * already rotated past it — so the entire chain is revoked as a theft
+         * token is ever presented, the token was copied - the real owner has
+         * already rotated past it - so the entire chain is revoked as a theft
          * signal rather than the request simply being refused.
          *
          * Never issued to the admin account (§4.5), and it restores a session
@@ -111,7 +111,7 @@ return new class extends Migration
         });
 
         /*
-         * §4.6 — single use, hashed, sixty minutes.
+         * §4.6 - single use, hashed, sixty minutes.
          *
          * Laravel's stock `password_reset_tokens` is keyed by email and has no
          * expiry column or consumption record, so it cannot express any of
@@ -131,7 +131,7 @@ return new class extends Migration
         Schema::dropIfExists('password_reset_tokens');
 
         /*
-         * §6 — the audit log: actor, action, entity, before/after, IP, user
+         * §6 - the audit log: actor, action, entity, before/after, IP, user
          * agent, timestamp.
          *
          * Before and after are JSON because what changed differs per entity,
@@ -139,7 +139,7 @@ return new class extends Migration
          * from what to what cannot answer the question anybody arrives with.
          *
          * `actor_user_id` is nullOnDelete and `actor_label` is stored beside it.
-         * The record of what happened has to outlive the people in it — an
+         * The record of what happened has to outlive the people in it - an
          * audit entry that reads "somebody changed a permission" because the
          * account was removed is not an audit entry.
          */

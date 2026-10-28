@@ -64,7 +64,7 @@ class EmployeePresenterTest extends TestCase
     {
         $this->assertSame('dot-1', EmployeePresenter::dot(0));
         $this->assertSame('dot-8', EmployeePresenter::dot(7));
-        // Departments are master data — the ninth must not be colourless.
+        // Departments are master data - the ninth must not be colourless.
         $this->assertSame('dot-1', EmployeePresenter::dot(8));
         $this->assertSame('dot-4', EmployeePresenter::dot(19));
     }

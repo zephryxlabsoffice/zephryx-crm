@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Schema;
  * §8 lists a single `link` column. It is split here into `link_route` and
  * `link_params` because of the rule already decided on 2026-08-28: a
  * notification only links somewhere that exists, and the check is
- * `Route::has()`. A stored URL cannot be checked — it can only be trusted — so
+ * `Route::has()`. A stored URL cannot be checked - it can only be trusted - so
  * the day a route is renamed the bell fills with links that 404 at the moment
  * somebody acts on them, which is the exact failure that rule was written to
  * prevent. It would also bake the host into the row, so a notification written
@@ -49,7 +49,7 @@ return new class extends Migration
             $table->id();
 
             /*
-             * The reader — an ACCOUNT, not an employment record.
+             * The reader - an ACCOUNT, not an employment record.
              *
              * §8 keys this on `user_id` and that is right for more than
              * consistency: a Mentor and the owner hold no Employee base (§2.1),
@@ -59,7 +59,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
 
             /*
-             * Which module it came out of — task, ticket, meeting, leave. Drives
+             * Which module it came out of - task, ticket, meeting, leave. Drives
              * the icon and nothing else; there is no filter on it, because a
              * queue somebody has to slice by category is already too long.
              */

@@ -17,7 +17,7 @@ class Team extends Model
      *
      * Neither means "deleted": tasks and projects point at teams, so one that
      * stops being used is marked inactive and keeps everything it holds.
-     * There used to be a third, `archived` — dropped 2026-09-21 (review round
+     * There used to be a third, `archived` - dropped 2026-09-21 (review round
      * decision) because nothing in this application ever read it differently
      * from `inactive`; see the migration that folded it in.
      *
@@ -45,7 +45,7 @@ class Team extends Model
     /**
      * Who is in the team.
      *
-     * Ordered by the pivot's own key so the list is stable between requests —
+     * Ordered by the pivot's own key so the list is stable between requests -
      * without it the order is whatever the database happens to return, and a
      * page that reshuffles on reload looks broken to the person reading it.
      *

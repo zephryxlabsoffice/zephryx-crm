@@ -2,8 +2,8 @@
    Dashboard.
 
    Almost nothing here is a new component. The page is built from the shared
-   primitives every other module already uses — .kpi, .card, .rail-card,
-   .data-table, .stat-row — which is what makes a dashboard assembled from
+   primitives every other module already uses - .kpi, .card, .rail-card,
+   .data-table, .stat-row - which is what makes a dashboard assembled from
    fourteen widgets look like one page rather than fourteen.
 
    What IS here is the layout that holds them, and the handful of small pieces
@@ -21,13 +21,13 @@
 /* ----------------------------------------------------------------------------
    The two columns.
 
-   `main` is the work — queues, overviews, the things somebody else is waiting
-   on. `rail` is the person — my day, my leave, my payslip. The split is the
+   `main` is the work - queues, overviews, the things somebody else is waiting
+   on. `rail` is the person - my day, my leave, my payslip. The split is the
    same one config/dashboard.php makes, so a widget's column in configuration
    is its column on screen with nothing in between to disagree.
 
    A Mentor renders with no rail at all (no Employee base, §2.1), so the grid
-   has to look deliberate at one column as well as two — hence `minmax(0, 1fr)`
+   has to look deliberate at one column as well as two - hence `minmax(0, 1fr)`
    on the main column rather than a fixed width, and the rail simply absent.
    -------------------------------------------------------------------------- */
 
@@ -54,7 +54,7 @@
 
    The tile is a link when there is a page behind the number, because a figure
    somebody wants to act on is a figure they will try to click. The hover is the
-   only thing that says so — a tile that looked like a button would compete with
+   only thing that says so - a tile that looked like a button would compete with
    the actual actions on the page.
    -------------------------------------------------------------------------- */
 
@@ -71,7 +71,7 @@
 /* ----------------------------------------------------------------------------
    The role preview.
 
-   Development only — App\Support\Demo\DemoRoles returns nothing outside local +
+   Development only - App\Support\Demo\DemoRoles returns nothing outside local +
    debug, so this block does not render in a deployed application at all.
 
    Styled to look like scaffolding rather than product: a dashed border and a
@@ -153,7 +153,7 @@
   color: var(--muted);
 }
 
-/* A sentence inside a card — a consequence, a warning, a state. Never a
+/* A sentence inside a card - a consequence, a warning, a state. Never a
    paragraph: if it needs two, it belongs on the module's own page. */
 .dash-note {
   margin: 10px 0 0;

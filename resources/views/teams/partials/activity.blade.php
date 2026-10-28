@@ -1,6 +1,6 @@
 {{--
-    Recent changes to teams. Reads from the audit log (§8) once that exists —
-    who did what, when — which is exactly the shape here.
+    Recent changes to teams. Reads from the audit log (§8) once that exists -
+    who did what, when - which is exactly the shape here.
 --}}
 <section class="rail-card">
     <div class="rail-hd">

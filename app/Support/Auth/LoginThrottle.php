@@ -13,10 +13,10 @@ use Illuminate\Support\Facades\DB;
  *
  * Either one alone fails in a way the other covers:
  *
- *   Per identifier only — an attacker spreads attempts for one account across
+ *   Per identifier only - an attacker spreads attempts for one account across
  *   a botnet and never trips it.
  *
- *   Per IP only — an attacker with one address rotates through every address
+ *   Per IP only - an attacker with one address rotates through every address
  *   in the company and gets a handful of guesses at each; meanwhile one office
  *   behind a single NAT locks out its own staff by getting their own passwords
  *   wrong.
@@ -29,7 +29,7 @@ use Illuminate\Support\Facades\DB;
  *
  * Counted from `login_attempts`, which is written for every attempt anyway
  * (§4.2 step 3, §6). A separate cache counter would be a second source of truth
- * that a cache flush silently resets — and a cache flush is not something the
+ * that a cache flush silently resets - and a cache flush is not something the
  * lockout should survive being.
  */
 class LoginThrottle
@@ -96,7 +96,7 @@ class LoginThrottle
          * not after the newest.
          *
          * Measuring from the newest would let somebody keep an account locked
-         * indefinitely by failing once every few minutes — a denial of service
+         * indefinitely by failing once every few minutes - a denial of service
          * against a colleague that costs the attacker nothing.
          */
         $oldest = \Illuminate\Support\Carbon::parse($failures->last());
@@ -106,7 +106,7 @@ class LoginThrottle
     }
 
     /**
-     * Record an attempt (§4.2 step 3 — "Attempt logged").
+     * Record an attempt (§4.2 step 3 - "Attempt logged").
      *
      * Successes are recorded too, and not only for the throttle: a successful
      * sign-in from an unfamiliar address is the thing somebody investigating an
@@ -128,7 +128,7 @@ class LoginThrottle
     /**
      * Clear an identifier's failures after a successful sign-in.
      *
-     * The identifier's only — never the IP's. Someone who guesses one password
+     * The identifier's only - never the IP's. Someone who guesses one password
      * correctly on a shared address must not thereby reset the counter
      * protecting everybody else behind it.
      */

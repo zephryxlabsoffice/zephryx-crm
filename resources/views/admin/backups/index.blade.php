@@ -38,7 +38,7 @@
         @include('partials.notice', [
             'tone' => 'warning',
             'title' => 'The last backup is more than a day old',
-            'message' => 'Taken '.$lastAt->format('d M Y, g:i A').'. The nightly Cron Job may have stopped — check it in cPanel.',
+            'message' => 'Taken '.$lastAt->format('d M Y, g:i A').'. The nightly Cron Job may have stopped - check it in cPanel.',
         ])
     @elseif ($last['drive'] !== 'sent')
         @include('partials.notice', [

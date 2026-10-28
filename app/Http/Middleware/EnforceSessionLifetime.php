@@ -35,19 +35,19 @@ use Symfony\Component\HttpFoundation\Response;
  * Both stamps live in the session itself, so they travel with it and cannot
  * drift from it.
  * ─────────────────────────────────────────────────────────────────────────────
- * THE CEILING OUTLIVES NOTHING — READ THIS BEFORE "FIXING" THE 30 DAYS
+ * THE CEILING OUTLIVES NOTHING - READ THIS BEFORE "FIXING" THE 30 DAYS
  *
  * The staff idle window is longer than the absolute ceiling, so on its own it
  * never fires: a session hits seven days first. That is deliberate, not an
  * oversight to tidy up (decided 2026-09-08).
  *
  * Staying signed in for thirty days is remember-me's job (§4.5), and it is
- * better at it — the token rotates on every use, and a spent one coming back
+ * better at it - the token rotates on every use, and a spent one coming back
  * revokes the whole chain as a theft signal. A session cookie has no such
  * tell, so a copied one must age out on its own; seven days is that horizon.
  *
  * The thirty days is what governs when the ceiling is not the binding
- * constraint — a session restored from remember-me is stamped fresh, and this
+ * constraint - a session restored from remember-me is stamped fresh, and this
  * is the window it then idles against.
  * ═════════════════════════════════════════════════════════════════════════════
  *

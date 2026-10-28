@@ -16,7 +16,7 @@ class ProfilePresenter
      * TABS ARE ROUTES, NOT BUTTONS
      *
      * The handover's four tabs were <button>s switched by an inline <script>,
-     * which our Content-Security-Policy blocks — so they would not have switched
+     * which our Content-Security-Policy blocks - so they would not have switched
      * at all. They are also four genuinely different things: a form, a set of
      * preferences, a security action and a log. Each gets its own URL, so it is
      * bookmarkable, the back button works, and each can be permission-checked on
@@ -54,7 +54,7 @@ class ProfilePresenter
      * ─────────────────────────────────────────────────────────────────────────
      * THIS LOG ONLY CLAIMS WHAT IS ACTUALLY RECORDED
      *
-     * The handover's read "New login from Kolkata, IN" — which means IP
+     * The handover's read "New login from Kolkata, IN" - which means IP
      * geolocation, a third-party lookup service, and a location attached to
      * every sign-in. None of that exists, and none of it was decided. An entry
      * that invents a fact is worse than no entry, because this is the screen
@@ -115,12 +115,12 @@ class ProfilePresenter
 
     public static function date(Carbon|string|null $when): string
     {
-        return $when === null ? '—' : Carbon::parse($when)->format('d M Y');
+        return $when === null ? '-' : Carbon::parse($when)->format('d M Y');
     }
 
     public static function dateTime(Carbon|string|null $when): string
     {
-        return $when === null ? '—' : Carbon::parse($when)->format('d M Y, g:i A');
+        return $when === null ? '-' : Carbon::parse($when)->format('d M Y, g:i A');
     }
 
     /**
@@ -128,22 +128,22 @@ class ProfilePresenter
      *
      * The same rule Announcements holds to (App\Support\Milestones): a colleague
      * needs to know when to say happy birthday, not how old somebody is. It
-     * applies on a person's OWN profile too — not to protect them from
+     * applies on a person's OWN profile too - not to protect them from
      * themselves, but because a screenshot of this page is a screenshot of this
      * page, and the year is the half that matters if it leaves the building.
      */
     public static function dayAndMonth(Carbon|string|null $when): string
     {
-        return $when === null ? '—' : Carbon::parse($when)->format('d F');
+        return $when === null ? '-' : Carbon::parse($when)->format('d F');
     }
 
     /**
-     * `2 years, 4 months` — how long somebody has been here.
+     * `2 years, 4 months` - how long somebody has been here.
      */
     public static function tenure(Carbon|string|null $joined): string
     {
         if ($joined === null) {
-            return '—';
+            return '-';
         }
 
         $start = Carbon::parse($joined);
@@ -192,7 +192,7 @@ class ProfilePresenter
      * ─────────────────────────────────────────────────────────────────────────
      * A NUMBER, NOT A NAG
      *
-     * §4.7 is explicit that there is NO forced rotation — it is known to produce
+     * §4.7 is explicit that there is NO forced rotation - it is known to produce
      * weaker passwords, because people iterate a digit rather than think. So
      * this reports the age and stops. It does not expire anything, does not
      * colour it red at ninety days, and does not ask anybody to change a

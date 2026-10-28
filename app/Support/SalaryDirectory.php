@@ -15,14 +15,14 @@ use Illuminate\Support\Collection;
  * NOTHING HERE RETURNS AN UNMASKED IDENTIFIER TO A CALLER THAT DID NOT ASK
  *
  * `banked()` returns the real values, because the only honest place to decide
- * what a viewer may see is App\Support\Sensitive with a viewer in hand — and
+ * what a viewer may see is App\Support\Sensitive with a viewer in hand - and
  * the bank transfer file, when it exists, needs the real ones. Every page goes
  * through the controller's masking step; nothing renders this directly.
  *
  * THE PAYROLL PAGE LISTS PEOPLE, NOT RECORDS
  *
  * A month's list built from salary records is a list in which the people who
- * have no record are missing — and those are exactly the ones worth seeing,
+ * have no record are missing - and those are exactly the ones worth seeing,
  * because a person with no record is a person who quietly does not get paid.
  * `forPeriod` therefore walks the employees and looks records up against them,
  * the same shape as the attendance roll.
@@ -106,7 +106,7 @@ class SalaryDirectory
      * One row in the shape SalaryPresenter and the views read.
      *
      * Takes the employee as well as the record because a person with no record
-     * for the month still gets a row — see the head of this class.
+     * for the month still gets a row - see the head of this class.
      *
      * @return array<string, mixed>
      */
@@ -187,7 +187,7 @@ class SalaryDirectory
             $withStatus(SalaryPresenter::PAID)->map(fn (array $r) => $r['net'])
         );
 
-        // Everything with a payslip on file, paid or not — what the month costs.
+        // Everything with a payslip on file, paid or not - what the month costs.
         $onFile = MoneyBag::of(
             $records->reject(fn (array $r) => $r['net'] === null)->map(fn (array $r) => $r['net'])
         );
@@ -245,7 +245,7 @@ class SalaryDirectory
      * Everybody who was employed during a month.
      *
      * Somebody who joined in October has no September pay, and somebody whose
-     * record was closed is not on this month's payroll — but a closed record is
+     * record was closed is not on this month's payroll - but a closed record is
      * still on the months they worked, because they were paid for them.
      *
      * @return Collection<int, Employee>

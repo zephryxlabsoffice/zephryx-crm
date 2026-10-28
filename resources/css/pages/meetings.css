@@ -3,7 +3,7 @@
 
    The handover's meetings.css re-derived the KPI tile (.mt-stat), the table
    (.mt-table), the toolbar (.mt-toolbar, .mt-tool-btn) and the status pill
-   (.mt-status) — components that already exist. Only what is specific to
+   (.mt-status) - components that already exist. Only what is specific to
    meetings is here.
    ─────────────────────────────────────────────────────────────────────────── */
 
@@ -11,7 +11,7 @@
 .mt-detail-grid,
 .mt-form-grid {
   display: grid;
-  /* minmax(0, …), never 1fr — a bare 1fr track is forced open by a wide child
+  /* minmax(0, …), never 1fr - a bare 1fr track is forced open by a wide child
      and the whole page scrolls sideways. */
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: var(--density-gap);

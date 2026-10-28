@@ -14,7 +14,7 @@ use InvalidArgumentException;
  * 754 doubles. Sum a few hundred invoice lines that way and the total is off by
  * a paisa; reconcile that against a bank statement and somebody spends an
  * afternoon looking for it. Money is stored and passed around as an integer
- * count of the smallest unit — paise for INR, cents for USD — and only ever
+ * count of the smallest unit - paise for INR, cents for USD - and only ever
  * becomes a decimal at the moment it is printed.
  *
  * When the database lands, the column is a BIGINT of minor units beside a
@@ -22,7 +22,7 @@ use InvalidArgumentException;
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * Two amounts in different currencies cannot be added. That is not a limitation
- * to work around — it is the point. See MoneyBag for totalling a mixed set.
+ * to work around - it is the point. See MoneyBag for totalling a mixed set.
  */
 final class Money
 {
@@ -53,7 +53,7 @@ final class Money
     ) {}
 
     /**
-     * @param  int  $minor  paise, cents — never rupees or dollars
+     * @param  int  $minor  paise, cents - never rupees or dollars
      */
     public static function of(int $minor, string $currency = self::DEFAULT_CURRENCY): self
     {
@@ -72,7 +72,7 @@ final class Money
     }
 
     /**
-     * Build from a major-unit figure — a form field, a spreadsheet import.
+     * Build from a major-unit figure - a form field, a spreadsheet import.
      *
      * Rounds half up at the minor unit, because the alternative is truncating
      * somebody's money away. This is the only place a float is allowed near an
@@ -156,7 +156,7 @@ final class Money
             // looks right and means nothing.
             throw new InvalidArgumentException(
                 "Cannot combine {$this->currency} with {$other->currency}. ".
-                'Amounts in different currencies have no common total — use MoneyBag.'
+                'Amounts in different currencies have no common total - use MoneyBag.'
             );
         }
     }
@@ -202,7 +202,7 @@ final class Money
     }
 
     /**
-     * The number with NO grouping — `75000.50`, not `75,000.50`.
+     * The number with NO grouping - `75000.50`, not `75,000.50`.
      *
      * ─────────────────────────────────────────────────────────────────────────
      * FOR FORM FIELDS, AND ONLY FOR FORM FIELDS
@@ -212,7 +212,7 @@ final class Money
      * somebody saves without touching it, and the server refuses a value it
      * wrote itself.
      *
-     * Computed with integer arithmetic, like everything else here — dividing by
+     * Computed with integer arithmetic, like everything else here - dividing by
      * 100 to build a display string is how a float gets back into money.
      * ─────────────────────────────────────────────────────────────────────────
      */
@@ -231,7 +231,7 @@ final class Money
     }
 
     /**
-     * A short form for tight spaces — no decimals when they are zero.
+     * A short form for tight spaces - no decimals when they are zero.
      * Only for aggregates that are already approximate in the reader's mind
      * (a KPI tile), never for an amount somebody has to pay.
      */
@@ -286,7 +286,7 @@ final class Money
         $options = [];
 
         foreach (self::CURRENCIES as $code => $meta) {
-            $options[$code] = $code.' — '.$meta['name'];
+            $options[$code] = $code.' - '.$meta['name'];
         }
 
         return $options;

@@ -4,7 +4,7 @@
    The handover's leave-requests.css and my-leave.css came to ~21KB re-deriving
    the KPI tile (.lv-kpi, .ml-kpi), the tabs (.lv-tab, .ml-tab), the filter row
    (.lv-filter, .ml-filter), the table (.lv-table) and the detail row (.rd-row,
-   .pol-row) — components that already exist twice over. Only what is specific
+   .pol-row) - components that already exist twice over. Only what is specific
    to leave is here.
    ─────────────────────────────────────────────────────────────────────────── */
 
@@ -12,7 +12,7 @@
 .lv-detail-grid,
 .lv-form-grid {
   display: grid;
-  /* minmax(0, …), never 1fr — a bare 1fr track is forced open by a wide child
+  /* minmax(0, …), never 1fr - a bare 1fr track is forced open by a wide child
      and the whole page scrolls sideways. */
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: var(--density-gap);

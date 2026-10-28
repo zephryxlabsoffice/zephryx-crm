@@ -1,5 +1,5 @@
 {{--
-    Three tiles, shared by the managing and personal faces — the numbers differ,
+    Three tiles, shared by the managing and personal faces - the numbers differ,
     the shape does not. `$scope` changes the sub-labels so "Total Teams" on
     /teams/mine does not read as the company total.
 --}}

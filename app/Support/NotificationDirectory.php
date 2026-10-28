@@ -19,7 +19,7 @@ use Illuminate\Support\Collection;
  * than one person reading another's queue.
  *
  * It matters more now than it did against a fixture. `Notification::query()` is
- * still reachable — this is not a sandbox — but nothing in the application
+ * still reachable - this is not a sandbox - but nothing in the application
  * reaches for it, so a review question as blunt as "who calls the unscoped
  * query" has an answer, and the answer is nobody.
  * ═════════════════════════════════════════════════════════════════════════════
@@ -44,7 +44,7 @@ class NotificationDirectory
         return Notification::query()
             ->where('user_id', $reader->id)
             // `id` and not `created_at`: several notifications out of one write
-            // — a meeting scheduled for four people — share a timestamp to the
+            // - a meeting scheduled for four people - share a timestamp to the
             // second, and a tie there puts them in whatever order the database
             // felt like.
             ->orderByDesc('id');

@@ -68,7 +68,7 @@ class AuthenticationTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       §4.2 — ONE MESSAGE, WHATEVER WENT WRONG
+       §4.2 - ONE MESSAGE, WHATEVER WENT WRONG
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_an_unknown_identifier_and_a_wrong_password_are_indistinguishable(): void
@@ -80,8 +80,8 @@ class AuthenticationTest extends TestCase
          * an address, read the response, repeat. §4.2 step 3.
          *
          * Asserted against the exact string rather than by comparing the two
-         * responses, so that softening the message to something helpful — "no
-         * account with that email" — fails here rather than passing because
+         * responses, so that softening the message to something helpful - "no
+         * account with that email" - fails here rather than passing because
          * both were softened the same way.
          */
         $this->from('/login')->post('/login', [
@@ -107,7 +107,7 @@ class AuthenticationTest extends TestCase
             'password' => self::PASSWORD,
         ]);
 
-        // They are sent to the closed-account page, which explains — but only
+        // They are sent to the closed-account page, which explains - but only
         // because they proved they hold the credentials.
         $response->assertRedirect(route('account.inactive'));
         $this->assertGuest();
@@ -126,7 +126,7 @@ class AuthenticationTest extends TestCase
 
     public function test_a_user_id_signs_in_as_well_as_an_email(): void
     {
-        // §4.1 — one field, an `@` decides how it is read.
+        // §4.1 - one field, an `@` decides how it is read.
         Mail::fake();
 
         $user = $this->user(['user_id' => 'EMP999']);
@@ -136,14 +136,14 @@ class AuthenticationTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       §4.2 STEP 6 — NO SESSION UNTIL THE CODE IS VERIFIED
+       §4.2 STEP 6 - NO SESSION UNTIL THE CODE IS VERIFIED
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_a_correct_password_alone_does_not_sign_anybody_in(): void
     {
         /*
          * The one that makes two-factor mean anything. Signing somebody in and
-         * then asking for a code makes the code decorative — whatever holds a
+         * then asking for a code makes the code decorative - whatever holds a
          * session cookie is already inside.
          */
         $this->toVerifyStep();
@@ -211,7 +211,7 @@ class AuthenticationTest extends TestCase
 
     public function test_five_wrong_codes_burn_the_code(): void
     {
-        // §4.3 — maximum 5 attempts per code, then invalidated. Otherwise five
+        // §4.3 - maximum 5 attempts per code, then invalidated. Otherwise five
         // guesses per code plus unlimited resends is unlimited guesses.
         ['code' => $code] = $this->toVerifyStep();
 
@@ -235,7 +235,7 @@ class AuthenticationTest extends TestCase
 
         $this->post('/login/resend');
 
-        // The first code no longer works — there is never more than one live.
+        // The first code no longer works - there is never more than one live.
         $this->post('/login/verify', ['code' => str_split($first)]);
         $this->assertGuest();
     }
@@ -247,13 +247,13 @@ class AuthenticationTest extends TestCase
         Mail::fake();
         $this->post('/login/resend');
 
-        // §4.3 — the cooldown is measured from the live code's creation, so it
+        // §4.3 - the cooldown is measured from the live code's creation, so it
         // cannot be sidestepped.
         Mail::assertNothingSent();
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       §4.2 STEP 1 — RATE LIMITING
+       §4.2 STEP 1 - RATE LIMITING
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_repeated_failures_lock_the_identifier(): void
@@ -277,7 +277,7 @@ class AuthenticationTest extends TestCase
     {
         /*
          * Measuring from the newest would let somebody hold a colleague's
-         * account locked forever by failing once every few minutes — a denial
+         * account locked forever by failing once every few minutes - a denial
          * of service that costs the attacker nothing.
          */
         $user = $this->user();
@@ -321,7 +321,7 @@ class AuthenticationTest extends TestCase
 
     public function test_every_attempt_is_recorded(): void
     {
-        // §4.2 step 3 — "Attempt logged". Successes too: a sign-in from an
+        // §4.2 step 3 - "Attempt logged". Successes too: a sign-in from an
         // unfamiliar address is what an investigation actually needs.
         $user = $this->user();
 
@@ -334,7 +334,7 @@ class AuthenticationTest extends TestCase
         $this->post('/login', ['identifier' => $user->email, 'password' => self::PASSWORD]);
 
         /*
-         * The success is recorded, and it CLEARS this identifier's failures —
+         * The success is recorded, and it CLEARS this identifier's failures -
          * so the count is one, not two. Somebody who signs in correctly should
          * not be one bad afternoon away from locking themselves out.
          *
@@ -348,7 +348,7 @@ class AuthenticationTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       §4.3 — TRUSTED DEVICES
+       §4.3 - TRUSTED DEVICES
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_a_verified_code_trusts_the_device_and_the_next_sign_in_skips_it(): void
@@ -364,7 +364,7 @@ class AuthenticationTest extends TestCase
 
         Mail::fake();
 
-        // Same device, correct password — straight in, no code.
+        // Same device, correct password - straight in, no code.
         $this->withCookie(TrustedDevices::COOKIE, $cookie->getValue())
             ->post('/login', ['identifier' => $user->email, 'password' => self::PASSWORD])
             ->assertRedirect(Realm::dashboardFor($user));
@@ -393,14 +393,14 @@ class AuthenticationTest extends TestCase
 
     public function test_signing_out_revokes_the_trust_on_that_device(): void
     {
-        // §4.4 — logout destroys the session, the remember-me token and the
+        // §4.4 - logout destroys the session, the remember-me token and the
         // device trust. On a shared machine, all three or none.
         ['user' => $user, 'code' => $code] = $this->toVerifyStep();
 
         $cookie = $this->post('/login/verify', ['code' => str_split($code)])
             ->getCookie(TrustedDevices::COOKIE);
 
-        // The cookie has to travel with the sign-out, as it does in a browser —
+        // The cookie has to travel with the sign-out, as it does in a browser -
         // revoking "this device" means the one the request came from.
         $this->withCookie(TrustedDevices::COOKIE, $cookie->getValue())->post('/logout');
 
@@ -415,7 +415,7 @@ class AuthenticationTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       §4.5 — REMEMBER ME
+       §4.5 - REMEMBER ME
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_the_admin_account_is_never_remembered(): void
@@ -441,7 +441,7 @@ class AuthenticationTest extends TestCase
     {
         /*
          * §4.5's theft signal. A token that has already been rotated past means
-         * the cookie was copied — refusing just that request would leave the
+         * the cookie was copied - refusing just that request would leave the
          * thief's fresh token working.
          */
         $user = $this->user();
@@ -463,9 +463,9 @@ class AuthenticationTest extends TestCase
     public function test_remembering_does_not_bypass_the_code_on_an_untrusted_device(): void
     {
         /*
-         * §4.5 in one line. The two cookies answer different questions —
+         * §4.5 in one line. The two cookies answer different questions -
          * remember-me says WHO, device trust says whether a code is still owed
-         * — and getting this wrong turns one stolen cookie into permanent
+         * - and getting this wrong turns one stolen cookie into permanent
          * two-factor bypass.
          */
         $user = $this->user();
@@ -480,7 +480,7 @@ class AuthenticationTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       §4.4 — SESSION LIFETIME
+       §4.4 - SESSION LIFETIME
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_an_idle_staff_session_expires_after_thirty_days(): void
@@ -488,7 +488,7 @@ class AuthenticationTest extends TestCase
         /*
          * Thirty days is the staff idle window as of 2026-09-08. Reaching it
          * needs the seven-day ceiling held back, because otherwise that fires
-         * first and this would pass for the wrong reason — so the session is
+         * first and this would pass for the wrong reason - so the session is
          * stamped as issued a moment ago and idle for a month, which is a state
          * only remember-me produces in practice (§4.5 restores a session and
          * stamps it fresh).
@@ -540,7 +540,7 @@ class AuthenticationTest extends TestCase
     {
         /*
          * The absolute ceiling. Laravel's own lifetime is idle-based, so a
-         * session used daily would otherwise live forever — and a stolen cookie
+         * session used daily would otherwise live forever - and a stolen cookie
          * with it.
          *
          * This is also what stops the thirty-day idle window from being
@@ -559,7 +559,7 @@ class AuthenticationTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
-       §4.6 — PASSWORD RESET
+       §4.6 - PASSWORD RESET
        ══════════════════════════════════════════════════════════════════════ */
 
     public function test_the_reset_form_answers_identically_for_a_missing_account(): void
@@ -607,7 +607,7 @@ class AuthenticationTest extends TestCase
             'password_confirmation' => 'a-brand-new-passphrase',
         ])->assertRedirect(route('login'));
 
-        // §4.6 — all four.
+        // §4.6 - all four.
         $this->assertTrue(\Illuminate\Support\Facades\Hash::check('a-brand-new-passphrase', $user->fresh()->password));
         $this->assertSame(0, DB::table('remember_tokens')->where('user_id', $user->id)->count());
         $this->assertSame(0, DB::table('trusted_devices')->where('user_id', $user->id)->whereNull('revoked_at')->count());

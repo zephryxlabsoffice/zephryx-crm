@@ -1,7 +1,7 @@
 @php use App\Support\MeetingPresenter as P; @endphp
 
 {{--
-    The next meeting the VIEWER is on — not simply the company's next meeting.
+    The next meeting the VIEWER is on - not simply the company's next meeting.
 
     A card headed "Next meeting" showing one somebody is not invited to is worse
     than showing nothing: they will act on it. The handover's card hardcoded a
@@ -34,7 +34,7 @@
             @if ($next['join_url'])
                 {{--
                     A real link to a real room, and only because the viewer is
-                    on the invite — the controller strips it otherwise.
+                    on the invite - the controller strips it otherwise.
 
                     rel="noopener noreferrer" on a target="_blank": without
                     noopener the opened page can reach back through
@@ -49,7 +49,7 @@
                     Join on Google Meet
                 </a>
             @else
-                <p class="mt-next-note">No link yet — it appears once the meeting is created on Google.</p>
+                <p class="mt-next-note">No link yet - it appears once the meeting is created on Google.</p>
             @endif
         </div>
     @endif

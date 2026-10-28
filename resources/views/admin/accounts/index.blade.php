@@ -21,7 +21,7 @@
 
     {{--
         Not the employee directory. That is HR's, in Employees, and it owns the
-        person's record — department, designation, reporting line. This owns the
+        person's record - department, designation, reporting line. This owns the
         login and its roles, which is the owner's. See the head of
         App\Http\Controllers\Admin\AccountController.
     --}}

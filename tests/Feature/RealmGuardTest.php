@@ -16,7 +16,7 @@ use Tests\TestCase;
  * staff session hitting /admin is refused."
  *
  * Most of this file is that sentence, checked. The rest is about the guard
- * being STRUCTURAL — applied to a route group by the file a route lives in, so
+ * being STRUCTURAL - applied to a route group by the file a route lives in, so
  * that adding a page tomorrow cannot accidentally skip it.
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -48,7 +48,7 @@ class RealmGuardTest extends TestCase
     {
         /*
          * Including the CEO's. The Admin Panel is a separate account in a
-         * separate realm with its own session cookie (§3) — it is not the top
+         * separate realm with its own session cookie (§3) - it is not the top
          * of the staff hierarchy, and no amount of seniority reaches it.
          *
          * This is why Settings is not in the staff sidebar.
@@ -81,8 +81,8 @@ class RealmGuardTest extends TestCase
         /*
          * "Forbidden" confirms the surface exists, which tells somebody probing
          * that there is an admin panel at that address and it is worth
-         * attacking. Within a realm a 403 is right — it says "you are in the
-         * right place and lack a permission" — but across one it is a
+         * attacking. Within a realm a 403 is right - it says "you are in the
+         * right place and lack a permission" - but across one it is a
          * disclosure.
          */
         $this->signInAsStaff();
@@ -106,7 +106,7 @@ class RealmGuardTest extends TestCase
     public function test_the_public_surfaces_stay_public(): void
     {
         // The landing page, the sign-in form and password reset are reachable
-        // without a session, and must stay that way — a guard that swallowed
+        // without a session, and must stay that way - a guard that swallowed
         // the login page would lock everybody out permanently.
         $this->get('/')->assertOk();
         $this->get('/login')->assertOk();
@@ -162,7 +162,7 @@ class RealmGuardTest extends TestCase
          * router rather than trusting a list.
          *
          * If somebody adds a staff page and it appears here without
-         * `realm:staff`, they have written it in the wrong file — which is
+         * `realm:staff`, they have written it in the wrong file - which is
          * exactly the mistake the split exists to make impossible.
          */
         $expected = [
@@ -193,7 +193,7 @@ class RealmGuardTest extends TestCase
     {
         /*
          * Staff routes have no name prefix to filter on, so this checks the one
-         * from every module instead — chosen to span the whole file, because
+         * from every module instead - chosen to span the whole file, because
          * the risk is a section that fell outside the group rather than a
          * single route.
          */
@@ -214,7 +214,7 @@ class RealmGuardTest extends TestCase
         /*
          * It existed for one commit, while realm enforcement was in place and
          * §4's credential check was not. Now that signing in works, a route
-         * that skips it must not survive anywhere — "it's only local" is one
+         * that skips it must not survive anywhere - "it's only local" is one
          * APP_DEBUG on the wrong server away from being the security model.
          */
         $this->assertFalse(app('router')->has('dev.sign-in'));
@@ -258,7 +258,7 @@ class RealmGuardTest extends TestCase
          * that is not yet on any account, opened by somebody who has never
          * signed in. Behind the staff guard the new-address half would be
          * unusable, and the flow would quietly degrade to confirming from the
-         * old address only — which is the flow it exists to not be. Its
+         * old address only - which is the flow it exists to not be. Its
          * authority is the token, not the session, and it reveals nothing: the
          * response says whether a link was live, never whose it was.
          */

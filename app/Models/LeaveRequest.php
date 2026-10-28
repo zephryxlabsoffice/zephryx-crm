@@ -53,7 +53,7 @@ class LeaveRequest extends Model
     /**
      * The row shape the presenter, the policy and the views all read.
      *
-     * They predate this table and are tested against plain arrays — see
+     * They predate this table and are tested against plain arrays - see
      * App\Support\LeaveDirectory for why the row shape is a contract rather
      * than an implementation detail.
      *
@@ -103,7 +103,7 @@ class LeaveRequest extends Model
     /**
      * Requests covering any day in a range.
      *
-     * Inclusive at both ends, matching LeavePresenter::overlaps — a request
+     * Inclusive at both ends, matching LeavePresenter::overlaps - a request
      * ending the day another begins does not overlap, one ending the same day
      * another ends does.
      *

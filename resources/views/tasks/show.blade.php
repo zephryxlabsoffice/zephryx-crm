@@ -109,7 +109,7 @@
                 </div>
                 {{-- The task's own description. This was a fixed paragraph
                      about wireframes and brand guidelines, printed identically
-                     on all fourteen demo tasks — it read as real, which is
+                     on all fourteen demo tasks - it read as real, which is
                      what made it worth removing. --}}
                 <div class="prose">
                     @if ($task['description'])
@@ -135,9 +135,9 @@
                         <p class="rail-empty">No files on this task.</p>
                     @else
                         <div class="attachment-grid">
-                            {{-- Served through an authorising controller — see
+                            {{-- Served through an authorising controller - see
                                  TaskController::viewAttachment/downloadAttachment
-                                 — never from a public path (§6). --}}
+                                 - never from a public path (§6). --}}
                             @foreach ($attachments as $file)
                                 @php $type = P::fileType($file['name']); @endphp
                                 <span class="attachment">
@@ -211,7 +211,7 @@
 
                     {{-- The Team Lead's daily act, on the page rather than
                          behind the edit form: the rest of that form is the
-                         plan — the project, the deadline, the priority — and
+                         plan - the project, the deadline, the priority - and
                          changing who picks a task up is not changing the plan.
 
                          A multiple select, not checkboxes or a script: it

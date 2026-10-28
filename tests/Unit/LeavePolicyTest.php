@@ -23,7 +23,7 @@ class LeavePolicyTest extends TestCase
     public function test_the_policy_comes_from_configuration(): void
     {
         // Leave types and entitlements belong to the Admin Panel (§12). When
-        // Settings ships, only `types()` changes — everything else in the
+        // Settings ships, only `types()` changes - everything else in the
         // module already goes through this class.
         config(['leave.types' => [
             'annual' => ['label' => 'Annual Leave', 'days' => 20, 'tone' => 'lv-casual', 'note' => ''],
@@ -214,7 +214,7 @@ class LeavePolicyTest extends TestCase
 
         $casual = collect($balance['types'])->firstWhere('key', 'casual');
 
-        // 3 accrued, 2 taken, 1 left — not the flat annual figure.
+        // 3 accrued, 2 taken, 1 left - not the flat annual figure.
         $this->assertSame(3, $casual['entitlement']);
         $this->assertSame(12, $casual['annual_entitlement']);
         $this->assertSame(1, $casual['remaining']);

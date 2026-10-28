@@ -10,7 +10,7 @@
     birthday post would be wrong the following year and would survive somebody
     opting out of their own.
 
-    A birthday shows a day and a month and never a year — a colleague needs to
+    A birthday shows a day and a month and never a year - a colleague needs to
     know when to say happy birthday, not how old somebody is. An anniversary
     does show its year count, because "three years today" is the whole point.
 --}}

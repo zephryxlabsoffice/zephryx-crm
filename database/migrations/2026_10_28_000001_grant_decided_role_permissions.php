@@ -8,15 +8,15 @@ use Illuminate\Support\Facades\DB;
  * site gets them through Admin → Updates rather than by hand.
  *
  * Added:
- * - System Administrator: `meetings.schedule` — "only a project manager or
+ * - System Administrator: `meetings.schedule` - "only a project manager or
  *   the system admin creates" a meeting (spec, Meetings, 2026-08-28).
- * - Manager: `tickets.triage` — a new client ticket goes to "the Support role
+ * - Manager: `tickets.triage` - a new client ticket goes to "the Support role
  *   and the Project Manager first; once they assign it…" (plan, Notifications).
- * - HR: `invoices.view` and `invoices.manage` — "CEO and HR" manage invoices
+ * - HR: `invoices.view` and `invoices.manage` - "CEO and HR" manage invoices
  *   (owner, 2026-10-28).
  *
  * Taken away:
- * - `leave.approve` from every role but HR and CEO — "only HR and CEO, no one
+ * - `leave.approve` from every role but HR and CEO - "only HR and CEO, no one
  *   else" (owner, 2026-10-28). This is the one deliberate revocation; RbacSeeder
  *   itself never removes a grant, so it has to happen here.
  */

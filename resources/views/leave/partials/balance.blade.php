@@ -5,7 +5,7 @@
 
     Bars rather than a donut. The handover used a donut whose segments were sized
     with inline `style="transform: rotate(...)"` and whose legend coloured itself
-    with `style="--dot:#3B82F6"` — both blocked outright by our CSP, so it would
+    with `style="--dot:#3B82F6"` - both blocked outright by our CSP, so it would
     have rendered as a grey ring beside a colourless list.
 
     Bars are also the better chart here: a donut shows how a whole divides into

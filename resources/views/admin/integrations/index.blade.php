@@ -6,8 +6,8 @@
     <div class="page-hd">
         <h1>Integrations</h1>
         <p>
-            The one Google connection this company has. Files — payslips, invoices, ticket and task
-            attachments — go to a Shared Drive through it. Calendar and Meet will read the same
+            The one Google connection this company has. Files - payslips, invoices, ticket and task
+            attachments - go to a Shared Drive through it. Calendar and Meet will read the same
             connection once that module is built; it is not wired up yet.
         </p>
     </div>
@@ -29,7 +29,7 @@
                         'tone' => 'warning',
                         'title' => 'The key is never shown again',
                         'message' => 'Paste the full JSON key file once. Afterwards this screen shows only the '
-                            .'service account\'s email, its fingerprint and when it was connected — never the key '
+                            .'service account\'s email, its fingerprint and when it was connected - never the key '
                             .'itself.',
                     ])
 
@@ -52,7 +52,7 @@
                             <input id="ig-drive" name="shared_drive_id" type="text" required
                                    value="{{ old('shared_drive_id', $connection->shared_drive_id) }}">
                             <p class="ad-setting-note">
-                                The Shared Drive this service account was added to as a member — not a folder in
+                                The Shared Drive this service account was added to as a member - not a folder in
                                 anybody's personal Drive (decided 2026-09-16: a service account cannot own files
                                 on one of those, and the folder leaves with whoever shared it).
                             </p>
@@ -80,7 +80,7 @@
                                    value="{{ old('impersonate_email', $connection->impersonate_email) }}">
                             <p class="ad-setting-note">
                                 The Workspace mailbox every meeting is created under. This key needs domain-wide
-                                delegation to use it — Drive does not need any.
+                                delegation to use it - Drive does not need any.
                             </p>
                             @error('impersonate_email')
                                 <span class="field-error">{{ $message }}</span>

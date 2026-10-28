@@ -33,7 +33,7 @@
                     at the bottom of a profile form.
                 --}}
                 <input id="pf-current" name="current_password" type="password" autocomplete="current-password" required>
-                <span class="pay-hint">Asked for even though you are signed in — it is what stops somebody using an unlocked screen.</span>
+                <span class="pay-hint">Asked for even though you are signed in - it is what stops somebody using an unlocked screen.</span>
             </div>
 
             <div class="form-field">
@@ -63,7 +63,7 @@
 
             Written out because a rule people can read is a rule they can meet
             on the first attempt, and because two of these are absences that are
-            worth being explicit about — a password field that does not demand a
+            worth being explicit about - a password field that does not demand a
             capital and a symbol looks broken to anybody used to ones that do.
         --}}
         <div class="prose pf-policy">
@@ -71,7 +71,7 @@
                 <li><strong>At least twelve characters.</strong> Length is what makes a password hard to guess; a long ordinary phrase beats a short scrambled one.</li>
                 <li><strong>Not a common password.</strong> Checked against a blocklist of the ones that get tried first.</li>
                 <li><strong>No composition rules.</strong> No required capital, digit or symbol. They push people towards <code>Password1!</code>, which is on every blocklist there is.</li>
-                <li><strong>No expiry.</strong> Nothing here will ever ask you to change a good password on a schedule — forced rotation produces weaker ones, because people add a digit rather than think.</li>
+                <li><strong>No expiry.</strong> Nothing here will ever ask you to change a good password on a schedule - forced rotation produces weaker ones, because people add a digit rather than think.</li>
             </ul>
         </div>
     </div>

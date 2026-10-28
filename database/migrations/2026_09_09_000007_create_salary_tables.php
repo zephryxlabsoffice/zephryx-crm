@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Schema;
  * that calculation produced, the net figure that document states, and when the
  * transfer was made. There is no salary structure, no earnings breakdown and no
  * deductions engine, because a second version of somebody else's calculation is
- * a liability rather than a feature — it disagrees with the payslip, and the
+ * a liability rather than a feature - it disagrees with the payslip, and the
  * payslip is what the person was actually paid.
  *
  * `net_minor` IS AN INTEGER OF PAISE
@@ -48,7 +48,7 @@ return new class extends Migration
             $table->foreignId('employee_id')->unique()->constrained()->restrictOnDelete();
 
             // The bank's name and the branch code are not identifying on their
-            // own — "HDFC Bank" is not a secret — so they are plain.
+            // own - "HDFC Bank" is not a secret - so they are plain.
             $table->string('bank_name', 120);
             $table->string('ifsc', 16);
 
@@ -81,7 +81,7 @@ return new class extends Migration
 
             /*
              * The payslip document. The file itself lives on a private disk and
-             * is served only through an authorising, audited route — never from
+             * is served only through an authorising, audited route - never from
              * the webroot, where a guessable path is a link somebody can
              * forward.
              */
@@ -94,8 +94,8 @@ return new class extends Migration
 
             /*
              * When the transfer was made, and null until it was. Marking paid
-             * must be idempotent — running it against an already-paid record
-             * must not move this date — which is why it is a nullable date and
+             * must be idempotent - running it against an already-paid record
+             * must not move this date - which is why it is a nullable date and
              * not a boolean somebody flips.
              */
             $table->date('paid_on')->nullable();

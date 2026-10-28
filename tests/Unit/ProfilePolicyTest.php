@@ -29,7 +29,7 @@ class ProfilePolicyTest extends TestCase
     public function test_an_unrecognised_field_is_not_the_persons(): void
     {
         // The safe default for "who may change this" is somebody other than the
-        // subject of it — a field added without a decision is locked, not open.
+        // subject of it - a field added without a decision is locked, not open.
         $this->assertSame(ProfilePolicy::HR, ProfilePolicy::ownerOf('anything_at_all'));
     }
 
@@ -74,7 +74,7 @@ class ProfilePolicyTest extends TestCase
     {
         // Shown next to each one. "Read-only" with no reason reads as the
         // application being unfinished, and the first thing somebody does about
-        // it is ask — which is the support request the text exists to save.
+        // it is ask - which is the support request the text exists to save.
         foreach (ProfilePolicy::fieldsOwnedBy(ProfilePolicy::HR) as $field) {
             $this->assertNotSame('', ProfilePolicy::whyOf($field));
             $this->assertNotSame('', ProfilePolicy::labelOf($field));
@@ -87,7 +87,7 @@ class ProfilePolicyTest extends TestCase
          * Reversed on 2026-09-14: these are no longer saved on the strength of
          * the form, they are REQUESTED and HR applies them against the document
          * that was handed in. Locking them outright would have been the other
-         * failure — a record nobody can get corrected at all.
+         * failure - a record nobody can get corrected at all.
          */
         $requestable = ProfilePolicy::requestable();
 
@@ -101,8 +101,8 @@ class ProfilePolicyTest extends TestCase
     {
         /*
          * Deliberately left as SELF. They are settings, not a record of
-         * anything — nothing is checked against a document and nothing
-         * downstream depends on them being true — and an approval queue full of
+         * anything - nothing is checked against a document and nothing
+         * downstream depends on them being true - and an approval queue full of
          * dark-mode requests would bury the ones that matter.
          */
         $editable = ProfilePolicy::selfEditable();

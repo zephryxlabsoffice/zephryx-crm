@@ -16,7 +16,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
  * ─────────────────────────────────────────────────────────────────────────────
  * THREE COLUMNS DECIDE EVERYTHING ELSE
  *
- * `account_type` is the realm (§3) — checked in middleware on every request
+ * `account_type` is the realm (§3) - checked in middleware on every request
  * before any data is read.
  *
  * `staff_kind` grants the Employee base (§5). It is not a role, and it lives
@@ -44,7 +44,7 @@ class User extends Authenticatable
      * ─────────────────────────────────────────────────────────────────────────
      * THIS REPLACED Laravel's `Notifiable`, AND HAD TO
      *
-     * The stock trait was on this model from the scaffold and never used —
+     * The stock trait was on this model from the scaffold and never used -
      * nothing in the application calls `notify()`, and every message this
      * system sends goes out through a Mailable. What it did do was claim the
      * `notifications` table for `DatabaseNotification`, whose shape (a uuid
@@ -52,7 +52,7 @@ class User extends Authenticatable
      * one §8 specifies and this module built.
      *
      * Left in place, `$user->notifications` would have quietly queried our
-     * table through Laravel's model and returned rows with no `data` — a
+     * table through Laravel's model and returned rows with no `data` - a
      * collision that produces wrong answers rather than an error, and only on
      * the day somebody reaches for the relation they assume is there.
      *
@@ -111,7 +111,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Whether this account carries the Employee base — my attendance, my leave,
+     * Whether this account carries the Employee base - my attendance, my leave,
      * my payslips, my profile (§2.2).
      *
      * Staff of kind `employee` only. A Mentor is staff and has none of it
@@ -130,7 +130,7 @@ class User extends Authenticatable
     /**
      * What the topbar calls this account's role.
      *
-     * The roles it actually holds, not a stored label — a display string that
+     * The roles it actually holds, not a stored label - a display string that
      * can disagree with the permissions is a support ticket waiting to happen.
      */
     public function getDisplayRoleAttribute(): string
@@ -139,6 +139,22 @@ class User extends Authenticatable
             Realm::ADMIN => 'Owner',
             Realm::CLIENT => 'Client',
             default => $this->roles->pluck('role_name')->join(' · ') ?: 'No roles',
+        };
+    }
+
+    /**
+     * What the topbar shows under the name: the position held, not the roles.
+     *
+     * Somebody may hold several roles, and listing them all overflowed the
+     * corner of every page (owner, 2026-10-28). A position is one line. Staff
+     * with no designation on file show "-".
+     */
+    public function getDisplayPositionAttribute(): string
+    {
+        return match ($this->account_type) {
+            Realm::ADMIN => 'Owner',
+            Realm::CLIENT => 'Client',
+            default => (string) ($this->employee?->designation?->name ?: '-'),
         };
     }
 }

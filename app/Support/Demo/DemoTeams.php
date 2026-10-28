@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
  * Sample teams for reviewing the Teams pages before the database exists.
  *
  * Local + debug only, like DemoClients and DemoEmployees. Members are drawn
- * from DemoEmployees so the two modules agree with each other — a team whose
+ * from DemoEmployees so the two modules agree with each other - a team whose
  * members do not exist in the employee list would be a confusing thing to
  * review.
  */

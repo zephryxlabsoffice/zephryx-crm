@@ -20,7 +20,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
- * Clients — the organisations this company works for (foundation spec §12).
+ * Clients - the organisations this company works for (foundation spec §12).
  *
  * Reads the `clients` table through App\Support\ClientDirectory, which owns the
  * row shape the views expect. Filtering and pagination happen in SQL.
@@ -37,7 +37,7 @@ use Illuminate\Validation\Rule;
  *
  * Creating a client does not create a login. §1 says every account is created
  * by an administrator, and giving somebody the ability to read a company's
- * invoices is a bigger decision than recording that the company exists — so it
+ * invoices is a bigger decision than recording that the company exists - so it
  * is its own route, its own permission, and its own audit entry.
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -167,8 +167,8 @@ class ClientController extends Controller
      * Move a client between engagement states.
      *
      * Separate from the edit form because it is the one field with consequences
-     * beyond the record — the list, the KPIs and eventually the invoicing all
-     * key on it — and because it wants its own audit action, so "who put this
+     * beyond the record - the list, the KPIs and eventually the invoicing all
+     * key on it - and because it wants its own audit action, so "who put this
      * client on hold, and when" is a question with a one-line answer.
      *
      * It does NOT touch anybody's login. A completed client's people can still
@@ -228,7 +228,7 @@ class ClientController extends Controller
      * mean renaming a company silently detached its portal from its records.
      *
      * Nobody types the password. The account is created with a random one
-     * nobody sees and the person sets their own through a single-use link — the
+     * nobody sees and the person sets their own through a single-use link - the
      * same reason as on the employee form.
      * ─────────────────────────────────────────────────────────────────────────
      */
@@ -354,7 +354,7 @@ class ClientController extends Controller
      * The next client reference.
      *
      * Derived from the highest existing one rather than from a count, because a
-     * count reissues a reference the moment anything is removed — and a
+     * count reissues a reference the moment anything is removed - and a
      * reference that has belonged to two clients is one that makes an invoice
      * trail ambiguous.
      */

@@ -1,5 +1,5 @@
 /* ============================================================================
-   Projects — /projects, /projects/mine, /projects/updates, /projects/{project}.
+   Projects - /projects, /projects/mine, /projects/updates, /projects/{project}.
 
    As with Teams, the handover's four stylesheets largely re-derived the table,
    KPI tiles, rail cards and pagination under new names (`.kpi-row-5`,
@@ -85,7 +85,7 @@
 
 /* The status control on the overview. The handover had a custom listbox that
    changed the status in place; that is a write, and there is no backend for
-   it yet, so it renders as a disabled select — the shape of the control is
+   it yet, so it renders as a disabled select - the shape of the control is
    preserved and nothing pretends to work. */
 .status-select {
   appearance: none;

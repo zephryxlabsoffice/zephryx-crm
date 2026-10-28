@@ -91,7 +91,7 @@ class MilestonesTest extends TestCase
 
     public function test_somebody_who_opted_out_is_never_celebrated(): void
     {
-        // Opting out removes them entirely — it does not post a quieter version.
+        // Opting out removes them entirely - it does not post a quieter version.
         // Read from the directory, not the fixture: the fixture is inert once
         // seedDemoWorkforce() has put the environment back.
         $optedOut = \App\Support\EmployeeDirectory::all()
@@ -217,7 +217,7 @@ class MilestonesTest extends TestCase
          * This replaced "nothing is returned outside local + debug", which was
          * true only because milestones came from a fixture that switched itself
          * off. They come from the `employees` table now, and in production a
-         * real birthday SHOULD be announced — asserting otherwise would have
+         * real birthday SHOULD be announced - asserting otherwise would have
          * been asserting the feature does not work where it matters.
          *
          * What survives is the guarantee underneath it: nobody is invented. No

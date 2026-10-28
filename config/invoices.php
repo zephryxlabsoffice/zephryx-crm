@@ -32,7 +32,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Days from the invoice date to the due date, used to prefill the form. The
-    | due date is stored per invoice — this only decides what the field starts
+    | due date is stored per invoice - this only decides what the field starts
     | at, because terms are agreed per client and this is a starting point
     | rather than a rule.
     |

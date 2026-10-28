@@ -51,7 +51,7 @@
                                     {{-- Nobody decides their own, so there is
                                          nothing to open. Said, rather than
                                          rendered as a link that would 403. --}}
-                                    <span class="an-optional">Yours — somebody else decides it</span>
+                                    <span class="an-optional">Yours - somebody else decides it</span>
                                 @else
                                     <a class="btn btn-outline btn-sm"
                                        href="{{ route('employees.requests.show', ['profileRequest' => $row['request']->id]) }}">

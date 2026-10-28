@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 /**
  * One person's one day.
  *
- * The reference — `ATT-2026-09-09-EMP002` — is composed rather than stored,
+ * The reference - `ATT-2026-09-09-EMP002` - is composed rather than stored,
  * because it IS the two columns that identify the row. A stored copy could
  * disagree with them, and there is nothing it could say that they do not.
  */
@@ -76,7 +76,7 @@ class AttendanceRecord extends Model
      * The row shape App\Support\AttendancePolicy reads.
      *
      * Kept in the model because the policy is the thing every page's judgement
-     * goes through, and it takes plain arrays — its tests are written against
+     * goes through, and it takes plain arrays - its tests are written against
      * that shape and predate this table.
      *
      * @return array<string, mixed>
@@ -100,7 +100,7 @@ class AttendanceRecord extends Model
      *
      * SQLite returns the string it was given and MySQL returns 'HH:MM:SS', so
      * without this the same record renders as "09:21" on one machine and
-     * "09:21:00" on another — and the policy parses both but the page shows the
+     * "09:21:00" on another - and the policy parses both but the page shows the
      * difference.
      */
     protected function clock(?string $time): ?string
@@ -109,7 +109,7 @@ class AttendanceRecord extends Model
     }
 
     /**
-     * Days still open — checked into and not out of.
+     * Days still open - checked into and not out of.
      *
      * @param  Builder<AttendanceRecord>  $query
      * @return Builder<AttendanceRecord>
@@ -120,7 +120,7 @@ class AttendanceRecord extends Model
     }
 
     /**
-     * Records a PERSON rejected — not the ones the clock closed on, which are
+     * Records a PERSON rejected - not the ones the clock closed on, which are
      * derived and have no column to filter by.
      *
      * @param  Builder<AttendanceRecord>  $query

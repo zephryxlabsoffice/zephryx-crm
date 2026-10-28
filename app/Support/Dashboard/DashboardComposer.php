@@ -11,7 +11,7 @@ namespace App\Support\Dashboard;
  * the head of config/dashboard.php for that argument).
  *
  * The filter takes a callable rather than a NavigationGate so the caller
- * decides what "allowed" means — the real gate in normal use, the real gate
+ * decides what "allowed" means - the real gate in normal use, the real gate
  * intersected with a preview role while the RBAC engine does not exist yet.
  * See DashboardController::gate.
  */
@@ -23,7 +23,7 @@ class DashboardComposer
      * The registry lists eight, and somebody holding all eight gets a row that
      * wraps onto a second and third line of small numbers nobody reads. Four is
      * one clean row at every width the grid supports, and the tiles are ordered
-     * so the four that survive are the four closest to the viewer's own work —
+     * so the four that survive are the four closest to the viewer's own work -
      * personal first, company-wide last.
      *
      * Everything trimmed here is still on the page: each tile summarises a
@@ -61,7 +61,7 @@ class DashboardComposer
      * Every widget the viewer may see, across both columns.
      *
      * The controller hydrates from this list and nothing else, so a widget that
-     * did not survive the filter never has its data assembled — the numbers
+     * did not survive the filter never has its data assembled - the numbers
      * behind a card you cannot see are never read, let alone rendered into a
      * page and hidden with CSS.
      *

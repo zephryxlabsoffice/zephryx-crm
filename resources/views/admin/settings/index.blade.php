@@ -14,7 +14,7 @@
 
         Each row is its own form. That is not an accident of layout: several of
         these values re-judge records that already exist, so each change has to
-        be reviewed on its own terms — a single "Save all" button would batch a
+        be reviewed on its own terms - a single "Save all" button would batch a
         harmless brand-name edit together with a change that reclassifies two
         months of attendance, and present one confirmation for both.
 

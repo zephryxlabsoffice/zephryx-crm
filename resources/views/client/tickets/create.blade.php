@@ -49,7 +49,7 @@
                                     route must re-check the posted value against
                                     the session's client rather than trusting
                                     it. A select is a form field, and a form
-                                    field is something anyone can type into —
+                                    field is something anyone can type into -
                                     otherwise raising a ticket becomes a way to
                                     file one against somebody else's project.
                                 --}}
@@ -68,7 +68,7 @@
 
                                 A ticket arrives unprioritised, and an
                                 unprioritised ticket is one nobody has looked at
-                                — not one judged unimportant. The queue sorts on
+                                - not one judged unimportant. The queue sorts on
                                 that difference. Letting the person raising it
                                 set the priority makes every ticket high, which
                                 is the same as none of them being, and the staff
@@ -93,7 +93,7 @@
                     <p class="dash-note">
                         The ticket goes into the support queue and someone picks it
                         up. You will see it move through Open, In Progress and
-                        Resolved on this page — and every reply from us appears on
+                        Resolved on this page - and every reply from us appears on
                         the ticket itself.
                     </p>
 

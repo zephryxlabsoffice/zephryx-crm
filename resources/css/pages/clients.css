@@ -1,5 +1,5 @@
 /* ============================================================================
-   Clients — GET /clients.
+   Clients - GET /clients.
 
    Only genuinely Clients-specific rules live here. The buttons, table,
    pagination, KPI tiles, rail cards and quick-action tiles the handover
@@ -32,7 +32,7 @@
   transition: color 0.14s;
 }
 
-/* Avatars and their tints are shared by every list that shows a name — see
+/* Avatars and their tints are shared by every list that shows a name - see
    components/ui.css. */
 
 /* ── meetings rail ── */

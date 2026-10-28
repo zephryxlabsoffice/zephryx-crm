@@ -36,7 +36,7 @@ Route::post('/theme', [ThemeController::class, 'store'])
 | Authentication
 |--------------------------------------------------------------------------
 |
-| Front end only for now — see App\Http\Controllers\Auth\LoginController. The
+| Front end only for now - see App\Http\Controllers\Auth\LoginController. The
 | throttles below are the shape §4.2 calls for and stay in place when the real
 | credential check lands; they are not a substitute for it.
 |
@@ -77,12 +77,12 @@ Route::post('/reset-password', [PasswordResetController::class, 'reset'])
  * Half of these links go to an address that is not yet on any account, opened
  * by somebody on a phone that has never signed in to this application. Behind
  * the staff guard, the new-address half would be unusable by exactly the people
- * it is for — and the flow would quietly degrade to "confirm from the old
+ * it is for - and the flow would quietly degrade to "confirm from the old
  * address only", which is the flow it exists to not be.
  *
  * Safe because the token is the whole authority: 64 characters from a CSPRNG,
  * stored hashed, carrying which change and which half. Nothing else in the
- * request is trusted, including who is signed in — see App\Support\Auth\
+ * request is trusted, including who is signed in - see App\Support\Auth\
  * EmailChanges.
  *
  * Throttled like the reset links, because it is an unauthenticated route that
@@ -104,7 +104,7 @@ Route::post('/logout', LogoutController::class)->name('logout');
  * one-shot session value the login flow sets AFTER the password has been
  * checked and found correct, and redirects to the login form otherwise.
  *
- * §4.2 still stands at the form itself — an inactive account gets the generic
+ * §4.2 still stands at the form itself - an inactive account gets the generic
  * "Invalid credentials" there, because saying more before a password is checked
  * tells anybody who types an address whether it belongs to a real account. This
  * route is what happens one step later, to somebody who has already proved they
@@ -121,7 +121,7 @@ Route::get('/account/inactive', AccountStatusController::class)->name('account.i
 | THE GUARD IS THE FILE (foundation spec §3.1, 2026-09-07)
 |
 | Each realm's routes live in their own file, mounted here behind their own
-| middleware. A route is inside the guard because of the file it is written in —
+| middleware. A route is inside the guard because of the file it is written in -
 | not because somebody remembered to add middleware to it.
 |
 | This replaced one flat 750-line file whose staff section carried a comment
@@ -171,7 +171,7 @@ if (app()->environment('local') && config('app.debug')) {
 
     /*
      * The closed-account page, which is otherwise reachable only by having a
-     * correct password on a closed account — so in practice never, during
+     * correct password on a closed account - so in practice never, during
      * development. A page nobody can look at is a page that ships with a broken
      * layout and a sentence nobody read.
      *
@@ -187,7 +187,7 @@ if (app()->environment('local') && config('app.debug')) {
      * There was a `/dev/sign-in/{account}` authentication bypass here.
      *
      * It existed for one commit, because realm middleware and the RBAC engine
-     * landed before §4's credential check did — which left every page correctly
+     * landed before §4's credential check did - which left every page correctly
      * guarded and completely unreachable. Its own comment said to delete it
      * when LoginController::attempt became real. It has, so it is gone.
      *

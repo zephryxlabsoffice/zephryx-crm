@@ -23,7 +23,7 @@ class Notification extends Model
      * navigation already makes, and a copy of it on every row would leave last
      * year's notifications pointing at an icon the application no longer has.
      *
-     * A kind missing from here still renders — see `icon()` — because a
+     * A kind missing from here still renders - see `icon()` - because a
      * notification that reaches somebody without a picture is better than one
      * that 500s the page it appears on, and the bell is on every page.
      */
@@ -68,8 +68,8 @@ class Notification extends Model
      * A route that exists, or nothing.
      *
      * Decided 2026-08-28 and carried over from DemoNotifications: a
-     * notification pointing at a page that has not been built — or at one that
-     * has since been renamed — is worse than one with no link. It is a promise
+     * notification pointing at a page that has not been built - or at one that
+     * has since been renamed - is worse than one with no link. It is a promise
      * the application cannot keep, and it fails at the moment somebody acts on
      * it, which is the one moment the notification was for.
      *

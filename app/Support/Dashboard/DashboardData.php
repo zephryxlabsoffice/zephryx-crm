@@ -58,7 +58,7 @@ use Illuminate\Support\Collection;
  * THE VIEWER IS THE EMPLOYMENT RECORD, AND IT CAN BE NULL
  *
  * It used to be a staff-id string standing in for the session. It is an
- * `?Employee` now, resolved once by the controller — and nullable on purpose: a
+ * `?Employee` now, resolved once by the controller - and nullable on purpose: a
  * Mentor and the owner hold no Employee base (§2.1), so "my tasks" and "my
  * leave" have no answer for them rather than an empty one. Every personal
  * method below draws that case.
@@ -215,7 +215,7 @@ class DashboardData
      * Money, and the one tile that cannot always be a single number.
      *
      * A mixed-currency set has no total without an exchange rate this system
-     * does not have — see App\Support\MoneyBag. `headline()` gives the dominant
+     * does not have - see App\Support\MoneyBag. `headline()` gives the dominant
      * currency and names the others rather than inventing a conversion.
      *
      * @return array<string, mixed>
@@ -284,7 +284,7 @@ class DashboardData
     }
 
     /* ---------------------------------------------------------------------
-     | The rail — the person
+     | The rail - the person
      --------------------------------------------------------------------- */
 
     /**
@@ -309,7 +309,7 @@ class DashboardData
             // A day the office is shut is not a day somebody failed to check
             // in on, and the card must not imply otherwise.
             // Unless they are rostered for it, which makes it a working day
-            // for them — the same exception the Attendance page makes.
+            // for them - the same exception the Attendance page makes.
             'workingDay' => AttendancePolicy::isWorkingDay(Carbon::today())
                 || ($viewer !== null && in_array(Carbon::today()->toDateString(), AttendanceDirectory::rosteredDates($viewer->id), true)),
             'holiday' => AttendancePolicy::holidayOn(Carbon::today()),
@@ -328,7 +328,7 @@ class DashboardData
          * empty card.
          *
          * Attendance is a row in `meeting_attendees` keyed on the USER, not the
-         * employment record — a meeting is something an account is invited to —
+         * employment record - a meeting is something an account is invited to -
          * so this is the one personal widget that resolves back to the user.
          */
         $user = $viewer?->user;
@@ -414,7 +414,7 @@ class DashboardData
     protected static function milestones(): array
     {
         /*
-         * Computed from employee records on every request, never stored — a
+         * Computed from employee records on every request, never stored - a
          * stored milestone is wrong the following year and survives somebody
          * opting out of their own being announced. Milestones::upcoming already
          * honours both the opt-out and the inactive check.
@@ -423,7 +423,7 @@ class DashboardData
     }
 
     /* ---------------------------------------------------------------------
-     | The main column — the work
+     | The main column - the work
      --------------------------------------------------------------------- */
 
     /**
@@ -432,7 +432,7 @@ class DashboardData
     protected static function myTasks(?Employee $viewer): array
     {
         return [
-            // Soonest first, and overdue sorts to the top — that is the order
+            // Soonest first, and overdue sorts to the top - that is the order
             // somebody works in. TaskDirectory::query already orders by due
             // date, so this is a limit rather than a re-sort.
             'items' => self::myTaskQuery($viewer)->limit(5)->get()
@@ -469,7 +469,7 @@ class DashboardData
     protected static function leaveApprovals(?Employee $viewer): array
     {
         /*
-         * NOBODY DECIDES THEIR OWN REQUEST (§2.6) — owner included. Excluded
+         * NOBODY DECIDES THEIR OWN REQUEST (§2.6) - owner included. Excluded
          * here as well as in the write, because a queue that lists your own
          * request next to an Approve button is an invitation to find out the
          * hard way that the server says no.
@@ -558,8 +558,8 @@ class DashboardData
             'teams' => $teams->take(3)->map(fn (Team $team) => TeamDirectory::row($team))->values(),
             'total' => $teams->count(),
             /*
-             * The people, deduplicated across teams — somebody on three teams
-             * is one colleague, not three — and never the viewer. A card headed
+             * The people, deduplicated across teams - somebody on three teams
+             * is one colleague, not three - and never the viewer. A card headed
              * "who you work with" that lists you is a card nobody trusts the
              * rest of.
              */
@@ -586,7 +586,7 @@ class DashboardData
             // them is the entire reason to look at this card.
             'items' => $invoices
                 ->filter(fn (array $i) => InvoicePresenter::statusOf($i) === InvoicePresenter::OVERDUE)
-                // Longest overdue first — the one that has been ignored the
+                // Longest overdue first - the one that has been ignored the
                 // longest is the one worth a call.
                 ->sortBy('due_date')
                 ->take(4)
@@ -599,7 +599,7 @@ class DashboardData
      *
      * Read whole rather than counted in SQL because the figures this feeds are
      * money in several currencies, and MoneyBag has to see each amount to
-     * decide whether a total exists at all — a `SUM()` over mixed currencies is
+     * decide whether a total exists at all - a `SUM()` over mixed currencies is
      * exactly the invented conversion §9 refuses.
      *
      * @return Collection<int, array<string, mixed>>
@@ -623,7 +623,7 @@ class DashboardData
         return [
             'period' => $period,
             'stats' => SalaryDirectory::stats($records),
-            // People who cannot be paid even if somebody presses the button —
+            // People who cannot be paid even if somebody presses the button -
             // no bank details on file. Worth surfacing before payroll day, not
             // during it.
             'unbanked' => SalaryDirectory::withoutBanking()->count(),

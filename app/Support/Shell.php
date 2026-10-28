@@ -60,7 +60,7 @@ class Shell
         $words = preg_split('/\s+/', trim($name), -1, PREG_SPLIT_NO_EMPTY) ?: [];
 
         if ($words === []) {
-            return '—';
+            return '-';
         }
 
         $first = mb_substr($words[0], 0, 1);

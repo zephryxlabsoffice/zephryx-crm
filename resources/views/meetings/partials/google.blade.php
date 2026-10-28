@@ -42,7 +42,7 @@
             manager or the system admin may take it (decided 2026-08-28);
             clients can ask for a meeting but not create one.
 
-            Behind `meetings.schedule`, audited, and idempotent — see
+            Behind `meetings.schedule`, audited, and idempotent - see
             MeetingController::createEvent: pressing twice does not produce
             two events and two sets of invites.
         --}}

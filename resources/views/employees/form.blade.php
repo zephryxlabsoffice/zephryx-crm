@@ -3,7 +3,7 @@
 @php
     // One template for adding and for editing. The fields, their validation and
     // their explanations are identical, and two files would mean every future
-    // change made twice — with the second one eventually forgotten.
+    // change made twice - with the second one eventually forgotten.
     $editing = $employee !== null;
     $user = $editing ? $employee->user : null;
 @endphp
@@ -109,7 +109,7 @@
                             @if ($editing)
                                 {{-- Deliberately not editable. Converting an intern
                                      issues a NEW staff ID and closes the old record,
-                                     which is its own act with its own audit entry —
+                                     which is its own act with its own audit entry -
                                      not a dropdown somebody can nudge while fixing a
                                      phone number. --}}
                                 <input id="emp-type" type="text"
@@ -157,7 +157,7 @@
                             <label class="form-field-lbl" for="emp-department">Department</label>
                             {{-- Only active master data is offered. A deactivated
                                  department keeps the people already in it and stops
-                                 being offered for new ones — that is the whole
+                                 being offered for new ones - that is the whole
                                  difference between deactivating and deleting. --}}
                             <select id="emp-department" name="department_id">
                                 <option value="">Not set</option>
@@ -272,7 +272,7 @@
                             <input id="emp-dob" name="date_of_birth" type="date"
                                    value="{{ old('date_of_birth', $employee?->date_of_birth?->toDateString()) }}"
                                    @if ($errors->has('date_of_birth')) aria-invalid="true" aria-describedby="emp-dob-error" @endif>
-                            <span class="pay-hint">Only ever shown as a day and a month — never the year, and never an age.</span>
+                            <span class="pay-hint">Only ever shown as a day and a month - never the year, and never an age.</span>
                             @error('date_of_birth')
                                 <span class="field-error" id="emp-dob-error">{{ $message }}</span>
                             @enderror
@@ -396,7 +396,7 @@
                             </p>
                         @else
                             <p>
-                                Held encrypted, and shown masked everywhere afterwards — including to
+                                Held encrypted, and shown masked everywhere afterwards - including to
                                 you. The photocopy itself is submitted to the office on paper.
                             </p>
                         @endif
@@ -485,7 +485,7 @@
                                    autocomplete="off" spellcheck="false" autocapitalize="characters"
                                    value="{{ old('ifsc', $onFile ? $identity['ifsc'] : '') }}"
                                    @if ($errors->has('ifsc')) aria-invalid="true" aria-describedby="emp-ifsc-error" @endif>
-                            <span class="pay-hint">Identifies a branch, not a person — it is printed on every cheque.</span>
+                            <span class="pay-hint">Identifies a branch, not a person - it is printed on every cheque.</span>
                             @error('ifsc')
                                 <span class="field-error" id="emp-ifsc-error">{{ $message }}</span>
                             @enderror
@@ -522,8 +522,8 @@
                             <p>
                                 The record is updated and the change is written to the audit log
                                 with your name against it. Their staff ID does not change, and
-                                nothing they have already recorded — attendance, leave, payslips
-                                — is touched.
+                                nothing they have already recorded - attendance, leave, payslips
+                                - is touched.
                             </p>
                         @else
                             <p>

@@ -71,7 +71,7 @@ class ProjectPresenter
     /**
      * How a deadline reads: the words, and whether it is a problem.
      *
-     * A completed project past its date is not overdue — it landed late, which
+     * A completed project past its date is not overdue - it landed late, which
      * is history, not an outstanding risk. The handover coloured every past
      * date red regardless.
      *
