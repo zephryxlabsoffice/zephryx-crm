@@ -145,7 +145,9 @@ class SettingsCatalogue
 
             self::setting('attendance.starts_on', 'Attendance starts on', 'date', AttendancePolicy::startsOn()?->toDateString(),
                 'Days before this with no check-in show as "Not tracked" instead of Absent. '
-                .'Blank means attendance has always been tracked.',
+                .'Blank means attendance has always been tracked. It is also the launch day: '
+                .'everybody is emailed a welcome that morning and sees a welcome on their first visit. '
+                .'A future date is fine.',
                 retroactive: true,
                 affects: 'Absences before the new date become "Not tracked"; moving it earlier turns '
                     .'those days back into absences.'),

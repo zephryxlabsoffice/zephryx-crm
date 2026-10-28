@@ -24,5 +24,11 @@ Artisan::command('backup:database', function (App\Support\Backups\Backups $backu
     $this->info('Backup taken: '.$status['file'].' ('.$status['tables'].' tables, '
         .number_format($status['bytes'] / 1024, 1).' KB). Google Drive: '.$status['drive'].'.');
 
+    // The only job on a timer, so it also sends the launch-day welcome at
+    // 2 AM on the day (once). See App\Support\Launch.
+    if (($welcomed = App\Support\Launch::sendWelcomeIfDue()) > 0) {
+        $this->info('Launch day: welcome emailed to '.$welcomed.' people.');
+    }
+
     return $status['drive'] === 'sent' || $status['drive'] === 'not connected' ? 0 : 1;
 })->purpose('Back up the database to storage/app/backups and the Google Shared Drive');

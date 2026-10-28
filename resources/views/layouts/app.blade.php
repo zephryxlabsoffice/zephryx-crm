@@ -81,6 +81,15 @@
                 @endif
 
                 @yield('content')
+
+                {{-- Launch day: the email if it has not gone yet, and the welcome
+                     once per person. See App\Support\Launch. --}}
+                @if (($realm ?? null) === \App\Support\Realm::STAFF)
+                    @php \App\Support\Launch::sendWelcomeIfDue(); @endphp
+                    @if (\App\Support\Launch::popupFor(auth()->user()))
+                        @include('partials.launch-welcome')
+                    @endif
+                @endif
             </main>
         </div>
     </div>

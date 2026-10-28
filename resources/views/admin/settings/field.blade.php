@@ -44,8 +44,8 @@
         @break
 
     @case('date')
-        <input id="{{ $id }}" name="value" type="date" value="{{ $setting['value'] }}"
-               max="{{ \Illuminate\Support\Carbon::today()->toDateString() }}">
+        {{-- No max: a future date is how a launch date is set ahead (2026-10-28). --}}
+        <input id="{{ $id }}" name="value" type="date" value="{{ $setting['value'] }}">
         @break
 
     @case('hours')

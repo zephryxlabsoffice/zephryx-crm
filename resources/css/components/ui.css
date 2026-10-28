@@ -1418,3 +1418,101 @@
   color: #FFFFFF;
 }
 .btn-alarm:hover:not([disabled]) { filter: brightness(0.92); }
+
+/* ─────────────────────────  launch-day welcome  ─────────────────────────
+   resources/views/partials/launch-welcome.blade.php */
+
+dialog.launch {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 16px;
+  border: 0;
+  background: rgba(10, 20, 15, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+dialog.launch:not([open]) { display: none; }
+
+.launch-card {
+  position: relative;
+  z-index: 1;
+  max-width: 420px;
+  width: 100%;
+  padding: 28px 24px;
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--ink);
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: launch-pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.launch-mark { width: 56px; height: 56px; margin: 0 auto 12px; color: var(--green); }
+.launch-mark svg { width: 100%; height: 100%; animation: launch-lift 1.2s ease-out 0.3s both; }
+.launch-title { margin: 0 0 12px; font-size: 1.5rem; }
+.launch-text { margin: 0 0 12px; }
+.launch-card form { margin-top: 18px; }
+
+.launch-confetti { position: absolute; inset: 0; pointer-events: none; }
+.launch-confetti span {
+  position: absolute;
+  top: -12px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: launch-fall 3.2s linear forwards;
+}
+.launch-confetti span:nth-child(4n+1) { background: #0E7A36; }
+.launch-confetti span:nth-child(4n+2) { background: #F2B705; }
+.launch-confetti span:nth-child(4n+3) { background: #2F80ED; }
+.launch-confetti span:nth-child(4n)   { background: #E5484D; }
+.launch-confetti span:nth-child(1)  { left: 3%;  animation-delay: 0s; }
+.launch-confetti span:nth-child(2)  { left: 8%;  animation-delay: 0.4s; }
+.launch-confetti span:nth-child(3)  { left: 13%; animation-delay: 0.15s; }
+.launch-confetti span:nth-child(4)  { left: 18%; animation-delay: 0.7s; }
+.launch-confetti span:nth-child(5)  { left: 23%; animation-delay: 0.3s; }
+.launch-confetti span:nth-child(6)  { left: 28%; animation-delay: 0.9s; }
+.launch-confetti span:nth-child(7)  { left: 33%; animation-delay: 0.05s; }
+.launch-confetti span:nth-child(8)  { left: 38%; animation-delay: 0.55s; }
+.launch-confetti span:nth-child(9)  { left: 43%; animation-delay: 0.25s; }
+.launch-confetti span:nth-child(10) { left: 48%; animation-delay: 0.8s; }
+.launch-confetti span:nth-child(11) { left: 53%; animation-delay: 0.1s; }
+.launch-confetti span:nth-child(12) { left: 58%; animation-delay: 0.6s; }
+.launch-confetti span:nth-child(13) { left: 63%; animation-delay: 0.35s; }
+.launch-confetti span:nth-child(14) { left: 68%; animation-delay: 1s; }
+.launch-confetti span:nth-child(15) { left: 73%; animation-delay: 0.2s; }
+.launch-confetti span:nth-child(16) { left: 78%; animation-delay: 0.65s; }
+.launch-confetti span:nth-child(17) { left: 83%; animation-delay: 0.45s; }
+.launch-confetti span:nth-child(18) { left: 88%; animation-delay: 0.85s; }
+.launch-confetti span:nth-child(19) { left: 93%; animation-delay: 0.12s; }
+.launch-confetti span:nth-child(20) { left: 97%; animation-delay: 0.5s; }
+.launch-confetti span:nth-child(21) { left: 11%; animation-delay: 1.2s; }
+.launch-confetti span:nth-child(22) { left: 41%; animation-delay: 1.35s; }
+.launch-confetti span:nth-child(23) { left: 66%; animation-delay: 1.1s; }
+.launch-confetti span:nth-child(24) { left: 86%; animation-delay: 1.45s; }
+
+@keyframes launch-fall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(105vh) rotate(720deg); opacity: 0.8; }
+}
+@keyframes launch-pop {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+@keyframes launch-lift {
+  0%   { transform: translateY(12px); }
+  60%  { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .launch-confetti { display: none; }
+  .launch-card, .launch-mark svg { animation: none; }
+}

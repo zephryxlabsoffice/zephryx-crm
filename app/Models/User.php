@@ -83,6 +83,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password_changed_at' => 'datetime',
+            'launch_welcomed_for' => 'date',
             'password' => 'hashed',
         ];
     }
