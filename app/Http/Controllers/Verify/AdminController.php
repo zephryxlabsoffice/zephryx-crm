@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Verify;
 
+use App\Models\CompanyRegistration;
 use App\Support\Audit\AuditLog;
 use App\Support\Verify\VerifyDirectory;
 use App\Support\Verify\VerifySignature;
@@ -13,6 +14,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 /**
  * verify.zephryxlabs.in/admin (2026-10-29): who is on file, how often their
@@ -32,7 +35,8 @@ class AdminController extends Controller
             'search' => $search,
             'phone' => VerifyDirectory::setting(VerifyDirectory::PHONE),
             'email' => VerifyDirectory::setting(VerifyDirectory::EMAIL),
-            'registrationAt' => VerifyDirectory::setting(VerifyDirectory::REGISTRATION),
+            'registrations' => CompanyRegistration::orderBy('sort_order')->orderBy('id')->get(),
+            'registrationTypes' => CompanyRegistration::TYPES,
         ]);
     }
 
@@ -106,25 +110,30 @@ class AdminController extends Controller
     }
 
     /**
-     * POST /admin/registration - replace (or remove) the company registration PDF.
+     * POST /admin/registrations - add one: a type, its number, and a
+     * document if there is one. "Add ID" again for the next.
      */
-    public function registration(Request $request): RedirectResponse
+    public function addRegistration(Request $request): RedirectResponse
     {
-        if ($request->boolean('remove')) {
-            Storage::disk('local')->delete(VerifyDirectory::REGISTRATION_PATH);
-            VerifyDirectory::putSetting(VerifyDirectory::REGISTRATION, null);
-            $after = 'Removed';
-        } else {
-            $request->validate([
-                'registration' => ['required', 'file', 'mimes:pdf', 'max:10240'],
-            ], [
-                'registration.mimes' => 'Upload a PDF.',
-                'registration.max' => 'The PDF must be 10 MB or smaller.',
-            ]);
+        $data = $request->validate([
+            'type' => ['required', Rule::in(array_keys(CompanyRegistration::TYPES))],
+            'number' => ['required', 'string', 'max:100'],
+            'document' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
+        ], [
+            'document.mimes' => 'The document must be a PDF.',
+            'document.max' => 'The document must be 10 MB or smaller.',
+        ]);
 
-            Storage::disk('local')->put(VerifyDirectory::REGISTRATION_PATH, $request->file('registration')->get());
-            VerifyDirectory::putSetting(VerifyDirectory::REGISTRATION, now()->toDateTimeString());
-            $after = 'Uploaded';
+        $registration = CompanyRegistration::create([
+            'type' => $data['type'],
+            'number' => trim($data['number']),
+            'sort_order' => (int) CompanyRegistration::max('sort_order') + 1,
+        ]);
+
+        if ($request->hasFile('document')) {
+            $path = VerifyDirectory::REGISTRATION_DIR.'/'.$registration->id.'-'.Str::random(16).'.pdf';
+            Storage::disk('local')->put($path, $request->file('document')->get());
+            $registration->update(['document_path' => $path]);
         }
 
         $this->audit->record(
@@ -132,12 +141,38 @@ class AdminController extends Controller
             actor: $request->user(),
             entityType: 'verify',
             entityId: 'registration',
-            after: 'Company registration PDF: '.$after,
+            after: 'Added '.$registration->label().': '.$registration->number.($registration->document_path ? ' (with document)' : ''),
             request: $request,
         );
 
         return redirect()->route('verify.admin')
-            ->with('status', 'Company registration PDF '.strtolower($after).'.')
+            ->with('status', $registration->label().' added.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * POST /admin/registrations/{registration}/delete
+     */
+    public function removeRegistration(Request $request, CompanyRegistration $registration): RedirectResponse
+    {
+        if ($registration->document_path !== null) {
+            Storage::disk('local')->delete($registration->document_path);
+        }
+
+        $label = $registration->label();
+        $registration->delete();
+
+        $this->audit->record(
+            action: AuditLog::VERIFY_SETTINGS_CHANGED,
+            actor: $request->user(),
+            entityType: 'verify',
+            entityId: 'registration',
+            after: 'Removed '.$label.': '.$registration->number,
+            request: $request,
+        );
+
+        return redirect()->route('verify.admin')
+            ->with('status', $label.' removed.')
             ->with('status_tone', 'success');
     }
 }

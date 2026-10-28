@@ -40,10 +40,8 @@ class VerifyDirectory
 
     public const EMAIL = 'verify.email';
 
-    public const REGISTRATION = 'verify.registration_uploaded_at';
-
-    /** Where the company registration PDF lives, on the private disk. */
-    public const REGISTRATION_PATH = 'verify/company-registration.pdf';
+    /** Where registration documents live, on the private disk. */
+    public const REGISTRATION_DIR = 'verify/registrations';
 
     public static function find(string $employeeId): ?Employee
     {

@@ -1,5 +1,24 @@
-{{-- The enquiry buttons and the registration PDF, set on the verify dashboard. --}}
-@if ($phone || $email || $hasRegistration)
+{{-- The enquiry buttons and the company's registration IDs, set on the verify dashboard. --}}
+@if ($registrations->isNotEmpty())
+    <section class="vf-regs" aria-label="Company registration">
+        <p class="vf-contact-hd">{{ config('zephryx.brand.name') }} registration</p>
+        <dl class="vf-facts">
+            @foreach ($registrations as $registration)
+                <div>
+                    <dt>{{ $registration->label() }}</dt>
+                    <dd>
+                        <span class="vf-mono">{{ $registration->number }}</span>
+                        @if ($registration->document_path)
+                            · <a href="{{ route('verify.registration', $registration) }}" target="_blank" rel="noopener">View</a>
+                        @endif
+                    </dd>
+                </div>
+            @endforeach
+        </dl>
+    </section>
+@endif
+
+@if ($phone || $email)
     <section class="vf-contact">
         <p class="vf-contact-hd">Questions about this verification?</p>
 
@@ -18,11 +37,6 @@
                         <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>
                     </svg>
                     Email
-                </a>
-            @endif
-            @if ($hasRegistration)
-                <a class="btn btn-ghost" href="{{ route('verify.registration') }}" target="_blank" rel="noopener">
-                    Company registration (PDF)
                 </a>
             @endif
         </div>

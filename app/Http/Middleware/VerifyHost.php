@@ -23,8 +23,8 @@ use Symfony\Component\HttpFoundation\Response;
 class VerifyHost
 {
     protected const OPEN = [
-        '/', 'search', 'verify/*', 'company-registration',
-        'admin', 'admin/qr/*', 'admin/settings', 'admin/registration',
+        '/', 'search', 'verify/*', 'registration/*',
+        'admin', 'admin/qr/*', 'admin/settings', 'admin/registrations', 'admin/registrations/*',
         'login', 'login/*', 'logout', 'forgot-password', 'reset-password', 'reset-password/*',
         'account/on-hold', 'account/inactive', 'theme', 'up',
     ];

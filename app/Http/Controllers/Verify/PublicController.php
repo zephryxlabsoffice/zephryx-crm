@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Verify;
 
+use App\Models\CompanyRegistration;
 use App\Support\Documents\DocumentStore;
 use App\Support\Verify\VerifyDirectory;
 use App\Support\Verify\VerifySignature;
@@ -101,22 +102,25 @@ class PublicController extends Controller
     }
 
     /**
-     * GET /company-registration - the PDF uploaded on the verify dashboard.
+     * GET /registration/{registration} - one registration's document, if it
+     * has one. Public, like the number beside it.
      */
-    public function registration(): StreamedResponse
+    public function registration(CompanyRegistration $registration): StreamedResponse
     {
-        abort_unless(Storage::disk('local')->exists(VerifyDirectory::REGISTRATION_PATH), 404);
+        $path = $registration->document_path;
+
+        abort_if($path === null || ! Storage::disk('local')->exists($path), 404);
 
         return Storage::disk('local')->response(
-            VerifyDirectory::REGISTRATION_PATH,
-            'company-registration.pdf',
+            $path,
+            str($registration->type)->slug().'.pdf',
             ['Content-Type' => 'application/pdf'],
             'inline',
         );
     }
 
     /**
-     * The enquiry buttons and the registration link, from the dashboard.
+     * The enquiry buttons and the registration IDs, from the dashboard.
      *
      * @return array<string, mixed>
      */
@@ -125,7 +129,7 @@ class PublicController extends Controller
         return [
             'phone' => VerifyDirectory::setting(VerifyDirectory::PHONE),
             'email' => VerifyDirectory::setting(VerifyDirectory::EMAIL),
-            'hasRegistration' => Storage::disk('local')->exists(VerifyDirectory::REGISTRATION_PATH),
+            'registrations' => CompanyRegistration::orderBy('sort_order')->orderBy('id')->get(),
         ];
     }
 }

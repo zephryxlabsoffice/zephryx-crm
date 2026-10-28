@@ -290,7 +290,8 @@ class RealmGuardTest extends TestCase
             // web.php. Public pages need a signature; /admin is VerifyAdmin.
             'verify.admin',
             'verify.admin.qr',
-            'verify.admin.registration',
+            'verify.admin.registrations.add',
+            'verify.admin.registrations.remove',
             'verify.admin.settings',
             'verify.landing',
             'verify.photo',

@@ -122,30 +122,56 @@
         <section class="card">
             <div class="card-hd"><span class="card-title">Company registration</span></div>
             <div class="card-body">
-                <p class="prose-quiet">
-                    @if ($registrationAt)
-                        A PDF is on the verify pages, uploaded {{ \Illuminate\Support\Carbon::parse($registrationAt)->format('j M Y, g:i A') }}.
-                        <a href="{{ route('verify.registration') }}" target="_blank" rel="noopener">Open it</a>.
-                    @else
-                        No PDF yet; the link is hidden until one is uploaded.
-                    @endif
-                </p>
-                <form method="POST" action="{{ route('verify.admin.registration') }}" enctype="multipart/form-data">
-                    @csrf
-                    <div class="form-field">
-                        <label class="form-field-lbl" for="vf-reg">PDF, up to 10 MB</label>
-                        <input id="vf-reg" name="registration" type="file" accept="application/pdf">
-                        @error('registration') <span class="field-error">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="form-actions"><button class="btn btn-primary" type="submit">Upload</button></div>
-                </form>
-                @if ($registrationAt)
-                    <form method="POST" action="{{ route('verify.admin.registration') }}">
-                        @csrf
-                        <input type="hidden" name="remove" value="1">
-                        <button class="btn btn-ghost btn-sm" type="submit">Remove the PDF</button>
-                    </form>
+                <p class="prose-quiet">Shown on every verify page. A number alone is fine; the document is optional.</p>
+
+                @if ($registrations->isNotEmpty())
+                    <ul class="vf-reg-list">
+                        @foreach ($registrations as $registration)
+                            <li>
+                                <span>
+                                    <strong>{{ $registration->label() }}</strong><br>
+                                    <span class="vf-mono">{{ $registration->number }}</span>
+                                    @if ($registration->document_path)
+                                        · <a href="{{ route('verify.registration', $registration) }}" target="_blank" rel="noopener">Document</a>
+                                    @endif
+                                </span>
+                                <form method="POST" action="{{ route('verify.admin.registrations.remove', $registration) }}">
+                                    @csrf
+                                    <button class="btn btn-ghost btn-sm" type="submit">Remove</button>
+                                </form>
+                            </li>
+                        @endforeach
+                    </ul>
                 @endif
+
+                <form method="POST" action="{{ route('verify.admin.registrations.add') }}" enctype="multipart/form-data">
+                    @csrf
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="vf-reg-type">ID type</label>
+                            <select id="vf-reg-type" name="type" required>
+                                <option value="">Choose…</option>
+                                @foreach ($registrationTypes as $key => $label)
+                                    <option value="{{ $key }}" @selected(old('type') === $key)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @error('type') <span class="field-error">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="vf-reg-number">Number</label>
+                            <input id="vf-reg-number" name="number" type="text" required maxlength="100" value="{{ old('number') }}">
+                            @error('number') <span class="field-error">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="vf-reg-doc">Document <span class="prose-quiet">(optional, PDF up to 10 MB)</span></label>
+                            <input id="vf-reg-doc" name="document" type="file" accept="application/pdf">
+                            @error('document') <span class="field-error">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-primary" type="submit">{{ $registrations->isEmpty() ? 'Add ID' : '+ Add another ID' }}</button>
+                    </div>
+                </form>
             </div>
         </section>
     </div>

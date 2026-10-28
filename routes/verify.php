@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 |
 | Public: the search page, a person's verify page (needs a signature - see
 | VerifySignature), their photo under the same signature, and the company
-| registration PDF. Rate limited per IP, because an Employee ID is short and
+| registration documents. Rate limited per IP, because an Employee ID is short and
 | a search box is an invitation to try them all.
 |
 | /admin: the CRM owner's Admin account only (VerifyAdmin).
@@ -36,7 +36,9 @@ Route::get('/verify/{employee}/photo', [VerifyPublicController::class, 'photo'])
     ->middleware('throttle:60,1')
     ->name('verify.photo');
 
-Route::get('/company-registration', [VerifyPublicController::class, 'registration'])
+// A company registration's document, if it has one (see CompanyRegistration).
+Route::get('/registration/{registration}', [VerifyPublicController::class, 'registration'])
+    ->where('registration', '[0-9]+')
     ->middleware('throttle:30,1')
     ->name('verify.registration');
 
@@ -46,5 +48,8 @@ Route::middleware(VerifyAdmin::class)->prefix('admin')->group(function () {
         ->where('employee', '[A-Za-z0-9-]{1,32}')
         ->name('verify.admin.qr');
     Route::post('/settings', [VerifyAdminController::class, 'settings'])->name('verify.admin.settings');
-    Route::post('/registration', [VerifyAdminController::class, 'registration'])->name('verify.admin.registration');
+    Route::post('/registrations', [VerifyAdminController::class, 'addRegistration'])->name('verify.admin.registrations.add');
+    Route::post('/registrations/{registration}/delete', [VerifyAdminController::class, 'removeRegistration'])
+        ->where('registration', '[0-9]+')
+        ->name('verify.admin.registrations.remove');
 });

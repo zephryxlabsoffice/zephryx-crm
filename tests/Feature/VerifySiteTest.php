@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\Verify\AdminController;
+use App\Models\CompanyRegistration;
 use App\Models\Employee;
 use App\Models\MasterDataItem;
 use App\Models\Role;
@@ -206,23 +207,48 @@ class VerifySiteTest extends TestCase
         $this->assertSame(1, DB::table('audit_log')->where('action', AuditLog::VERIFY_QR_DOWNLOADED)->count());
     }
 
-    public function test_enquiry_buttons_and_the_registration_pdf_come_from_the_dashboard(): void
+    public function test_enquiry_buttons_and_registration_ids_come_from_the_dashboard(): void
     {
         $this->person('ZEPH261001', 'Asha Rao');
         $this->signInAsAdmin();
 
         $this->post(self::HOST.'/admin/settings', ['phone' => '+91 98765 43210', 'email' => 'hr@zephryxlabs.in'])
             ->assertRedirect();
-        $this->post(self::HOST.'/admin/registration', [
-            'registration' => UploadedFile::fake()->create('reg.pdf', 100, 'application/pdf'),
+
+        // A number on its own, and one with its document.
+        $this->post(self::HOST.'/admin/registrations', ['type' => 'gstin', 'number' => '19ABCDE1234F1Z5'])->assertRedirect();
+        $this->post(self::HOST.'/admin/registrations', [
+            'type' => 'udyam',
+            'number' => 'UDYAM-WB-10-0012345',
+            'document' => UploadedFile::fake()->create('udyam.pdf', 100, 'application/pdf'),
         ])->assertRedirect();
+
+        $this->get(self::HOST.'/admin')->assertSee('+ Add another ID')->assertSee('Startup India (DPIIT Recognition)');
 
         $this->get(self::HOST.'/verify/ZEPH261001?signature='.VerifySignature::forCard('ZEPH261001'))
             ->assertSee('tel:+919876543210', false)
             ->assertSee('mailto:hr@zephryxlabs.in', false)
-            ->assertSee('Company registration (PDF)');
+            ->assertSee('GST Registration (GSTIN)')
+            ->assertSee('19ABCDE1234F1Z5')
+            ->assertSee('Udyam Registration (MSME)');
 
-        $this->get(self::HOST.'/company-registration')->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $udyam = CompanyRegistration::where('type', 'udyam')->firstOrFail();
+        $gst = CompanyRegistration::where('type', 'gstin')->firstOrFail();
+        $this->get(self::HOST.'/registration/'.$udyam->id)->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->get(self::HOST.'/registration/'.$gst->id)->assertNotFound();
+
+        // Removing one takes its document with it.
+        $this->post(self::HOST.'/admin/registrations/'.$udyam->id.'/delete')->assertRedirect();
+        $this->assertNull(CompanyRegistration::find($udyam->id));
+        Storage::disk('local')->assertMissing($udyam->document_path);
+    }
+
+    public function test_a_registration_needs_a_known_type_and_a_number(): void
+    {
+        $this->signInAsAdmin();
+
+        $this->post(self::HOST.'/admin/registrations', ['type' => 'made_up', 'number' => ''])
+            ->assertSessionHasErrors(['type', 'number']);
     }
 
     /* ══════════════════════════════════════════════════════════════════════
