@@ -84,6 +84,7 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'password_changed_at' => 'datetime',
             'launch_welcomed_for' => 'date',
+            'portal_tour_seen_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

@@ -90,6 +90,11 @@
                         @include('partials.launch-welcome')
                     @endif
                 @endif
+
+                {{-- A client's first visit, or "Take the tour". See PortalTour. --}}
+                @if (($realm ?? null) === \App\Support\Realm::CLIENT && \App\Support\PortalTour::shouldShow(auth()->user(), request()))
+                    @include('client.partials.tour')
+                @endif
             </main>
         </div>
     </div>

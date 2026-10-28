@@ -1516,3 +1516,31 @@ dialog.launch:not([open]) { display: none; }
   .launch-confetti { display: none; }
   .launch-card, .launch-mark svg { animation: none; }
 }
+
+/* ─────────────────────────  client portal tour  ─────────────────────────
+   resources/views/client/partials/tour.blade.php - reuses .launch for the frame. */
+
+.tour-radio { position: absolute; opacity: 0; pointer-events: none; }
+.tour-step { display: none; }
+.tour-mark svg { width: 100%; height: 100%; animation: none; }
+.tour-count { margin: 0 0 4px; font-size: 0.8rem; color: var(--muted); }
+.tour-actions { display: flex; justify-content: center; gap: 10px; margin-top: 18px; }
+.tour-actions form { margin: 0; }
+.tour-actions label { cursor: pointer; }
+.tour-dots { display: flex; justify-content: center; gap: 6px; margin-top: 16px; }
+.tour-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); cursor: pointer; }
+#tour-step-1:checked ~ .tour-steps .tour-step-1 { display: block; animation: launch-pop 0.3s ease-out both; }
+#tour-step-1:checked ~ .tour-dots .tour-dot-1 { background: var(--green); }
+#tour-step-2:checked ~ .tour-steps .tour-step-2 { display: block; animation: launch-pop 0.3s ease-out both; }
+#tour-step-2:checked ~ .tour-dots .tour-dot-2 { background: var(--green); }
+#tour-step-3:checked ~ .tour-steps .tour-step-3 { display: block; animation: launch-pop 0.3s ease-out both; }
+#tour-step-3:checked ~ .tour-dots .tour-dot-3 { background: var(--green); }
+#tour-step-4:checked ~ .tour-steps .tour-step-4 { display: block; animation: launch-pop 0.3s ease-out both; }
+#tour-step-4:checked ~ .tour-dots .tour-dot-4 { background: var(--green); }
+#tour-step-5:checked ~ .tour-steps .tour-step-5 { display: block; animation: launch-pop 0.3s ease-out both; }
+#tour-step-5:checked ~ .tour-dots .tour-dot-5 { background: var(--green); }
+#tour-step-6:checked ~ .tour-steps .tour-step-6 { display: block; animation: launch-pop 0.3s ease-out both; }
+#tour-step-6:checked ~ .tour-dots .tour-dot-6 { background: var(--green); }
+#tour-step-7:checked ~ .tour-steps .tour-step-7 { display: block; animation: launch-pop 0.3s ease-out both; }
+#tour-step-7:checked ~ .tour-dots .tour-dot-7 { background: var(--green); }
+@media (prefers-reduced-motion: reduce) { .tour-step { animation: none !important; } }

@@ -24,5 +24,6 @@
     <div class="dash-punch-action">
         <a class="btn btn-outline" href="{{ route('client.tickets.create') }}">Raise a ticket</a>
         <a class="dash-link" href="{{ SupportContact::mailto('Client portal') }}">{{ SupportContact::address() }}</a>
+        <a class="dash-link" href="{{ route('client.dashboard', ['tour' => 1]) }}">Take the tour</a>
     </div>
 </section>
