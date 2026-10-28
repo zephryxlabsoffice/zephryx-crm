@@ -33,15 +33,27 @@
             @endif
 
             @if ($isOrganiser && $meeting['status'] === P::SCHEDULED)
-                <form method="POST" action="{{ route('meetings.cancel', ['meeting' => $meeting['id']]) }}">
+                {{-- The reason goes to every attendee with the withdrawal,
+                     so it is asked for here rather than on a second page. --}}
+                <form class="mt-cancel" method="POST" action="{{ route('meetings.cancel', ['meeting' => $meeting['id']]) }}">
                     @csrf
-                    <button class="btn btn-outline btn-danger" type="submit" disabled title="Cancelling is not built yet">
+                    <input name="reason" type="text" required minlength="5" maxlength="500"
+                           placeholder="Why it is off" aria-label="Reason for cancelling" value="{{ old('reason') }}">
+                    <button class="btn btn-outline btn-danger" type="submit">
                         Cancel meeting
                     </button>
                 </form>
             @endif
         </div>
     </div>
+
+    @error('reason')
+        @include('partials.notice', [
+            'tone' => 'danger',
+            'title' => 'The meeting was not cancelled',
+            'message' => $message,
+        ])
+    @enderror
 
     @if ($meeting['status'] === P::CANCELLED)
         @include('partials.notice', [

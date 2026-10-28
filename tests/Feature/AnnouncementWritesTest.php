@@ -71,6 +71,28 @@ class AnnouncementWritesTest extends TestCase
         $this->assertSame(1, DB::table('audit_log')->where('action', AuditLog::ANNOUNCEMENT_DRAFTED)->count());
     }
 
+    public function test_a_draft_can_be_published_and_then_taken_down_from_its_page(): void
+    {
+        // The buttons on the announcement page shipped disabled long after the
+        // writes behind them worked, so a draft could never go up later.
+        $this->signInAsHr();
+        $this->post('/announcements', $this->validPayload(['publish' => 0]));
+
+        $announcement = Announcement::firstOrFail();
+        $page = '/announcements/'.$announcement->reference;
+
+        $html = $this->get($page)->assertOk()->getContent();
+        $this->assertStringContainsString('Publish now', $html);
+        $this->assertStringNotContainsString('not built yet', $html);
+
+        $this->post($page.'/publish')->assertRedirect();
+        $this->assertNotNull($announcement->fresh()->published_at);
+
+        $html = $this->get($page)->assertOk()->getContent();
+        $this->assertStringContainsString('Take off the board', $html);
+        $this->assertStringNotContainsString('not built yet', $html);
+    }
+
     public function test_a_narrowed_audience_must_name_a_department(): void
     {
         $this->signInAsHr();

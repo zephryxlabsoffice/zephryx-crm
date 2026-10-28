@@ -140,7 +140,20 @@ class MeetingController extends Controller
                 ->sortBy('name')
                 ->values()
                 ->all(),
-            'clients' => Client::query()->whereNot('status', 'inactive')->orderBy('name')->get(['id', 'name']),
+            // Client portal accounts, not client companies: an invite goes to a
+            // person, and `attendees[]` is a list of user ids either way.
+            'clients' => Client::query()
+                ->whereNot('status', 'inactive')
+                ->with('accounts')
+                ->orderBy('name')
+                ->get()
+                ->flatMap(fn (Client $c) => $c->accounts->map(fn (User $u) => [
+                    'id' => $u->id,
+                    'name' => (string) $u->name,
+                    'detail' => (string) $c->name,
+                ]))
+                ->values()
+                ->all(),
             'projects' => $this->projectOptions(),
             'defaultDuration' => (int) config('meetings.default_duration', 30),
             'zone' => MeetingPresenter::zone(),

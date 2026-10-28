@@ -36,19 +36,19 @@
         </div>
     </div>
 
-    @if ($meeting['status'] === P::REQUESTED)
+    @if ($meeting['status'] === P::REQUESTED && $maySchedule)
         {{--
             The one action on this page that talks to Google. Only a project
             manager or the system admin may take it (decided 2026-08-28);
             clients can ask for a meeting but not create one.
 
-            TODO (backend phase): §2.6 for the permission, §6 for the audit
-            entry, and it must be idempotent — pressing twice must not produce
+            Behind `meetings.schedule`, audited, and idempotent — see
+            MeetingController::createEvent: pressing twice does not produce
             two events and two sets of invites.
         --}}
         <form class="mt-create" method="POST" action="{{ route('meetings.create.event', ['meeting' => $meeting['id']]) }}">
             @csrf
-            <button class="btn btn-primary" type="submit" disabled title="Creating the Google event is not built yet">
+            <button class="btn btn-primary" type="submit">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
                     <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>

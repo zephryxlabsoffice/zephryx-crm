@@ -272,6 +272,8 @@ class SalaryPageTest extends TestCase
         $response->assertSee('About to be marked paid', false);
         // The commit button is on the confirmation, not on the list.
         $response->assertSee('Yes, mark', false);
+        // And it can be pressed — it shipped disabled after the write worked.
+        $response->assertDontSee('not built yet', false);
     }
 
     public function test_the_confirmation_names_everybody_and_totals_them(): void

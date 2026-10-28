@@ -116,11 +116,18 @@ class MeetingController extends PortalController
     {
         $client = $this->requireActiveClient($request);
 
+        // The row carries the reference; the write validates the numeric id.
+        $keys = Project::where('client_id', $client->id)->pluck('id', 'reference');
+
         return response()->view('client.meetings.create', $this->shell($request, 'meetings') + [
             // Their own projects only, and the write must re-check rather than
             // trusting what the select posts back.
-            'projects' => ClientPortal::projects($client),
+            'projects' => ClientPortal::projects($client)
+                ->map(fn (array $p) => $p + ['key' => $keys[$p['id']]])
+                ->all(),
             'zone' => MeetingPresenter::zone(),
+            'today' => now(MeetingPresenter::zone())->toDateString(),
+            'defaultDuration' => (int) config('meetings.default_duration', 30),
         ]);
     }
 

@@ -16,12 +16,6 @@
         </div>
     </div>
 
-    @include('partials.notice', [
-        'tone' => 'info',
-        'title' => 'This form does not submit yet',
-        'message' => 'The fields and the validation shape are real; the Google Calendar call lands with the backend. Nothing typed here is stored, and no invite goes anywhere.',
-    ])
-
     <form class="mt-form" method="POST" action="{{ route('meetings.store') }}">
         @csrf
 
@@ -39,46 +33,65 @@
                     <div class="form-grid">
                         <div class="form-field mt-form-wide">
                             <label class="form-field-lbl" for="mt-title">Title</label>
-                            <input id="mt-title" name="title" type="text" placeholder="Sprint planning, invoice query…" disabled>
+                            <input id="mt-title" name="title" type="text" maxlength="200" required
+                                   placeholder="Sprint planning, invoice query…" value="{{ old('title') }}">
                             <span class="pay-hint">This is what everyone sees in their calendar.</span>
+                            @error('title')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-field">
                             <label class="form-field-lbl" for="mt-date">Date</label>
-                            <input id="mt-date" name="date" type="date" disabled>
+                            <input id="mt-date" name="date" type="date" required value="{{ old('date') }}">
+                            @error('date')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-field">
                             <label class="form-field-lbl" for="mt-time">Start time</label>
-                            <input id="mt-time" name="time" type="time" disabled>
+                            <input id="mt-time" name="time" type="time" required value="{{ old('time') }}">
                             {{-- Says which clock. Times are stored in UTC and
                                  shown in one zone, so what is typed here is
                                  unambiguous even when the client is abroad. --}}
                             <span class="pay-hint">{{ $zone }}. Stored as UTC so it cannot drift when clocks change.</span>
+                            @error('time')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-field">
                             <label class="form-field-lbl" for="mt-duration">Length</label>
-                            <select id="mt-duration" name="duration" disabled>
+                            <select id="mt-duration" name="duration">
                                 @foreach ([15, 30, 45, 60, 90] as $minutes)
-                                    <option value="{{ $minutes }}" @selected($minutes === $defaultDuration)>{{ $minutes }} minutes</option>
+                                    <option value="{{ $minutes }}" @selected($minutes === (int) old('duration', $defaultDuration))>{{ $minutes }} minutes</option>
                                 @endforeach
                             </select>
+                            @error('duration')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-field">
                             <label class="form-field-lbl" for="mt-project">Project <span class="mt-optional">(optional)</span></label>
-                            <select id="mt-project" name="project" disabled>
+                            <select id="mt-project" name="project_id">
                                 <option value="">Internal — no project</option>
                                 @foreach ($projects as $option)
-                                    <option value="{{ $option['id'] }}">{{ $option['name'] }}</option>
+                                    <option value="{{ $option['key'] }}" @selected((int) old('project_id') === $option['key'])>{{ $option['name'] }}</option>
                                 @endforeach
                             </select>
+                            @error('project_id')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-field mt-form-wide">
                             <label class="form-field-lbl" for="mt-agenda">What it is about</label>
-                            <textarea id="mt-agenda" name="agenda" rows="3" placeholder="A line is enough — it goes into the invite." disabled></textarea>
+                            <textarea id="mt-agenda" name="agenda" rows="3" maxlength="2000" placeholder="A line is enough — it goes into the invite.">{{ old('agenda') }}</textarea>
+                            @error('agenda')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
                         </div>
                     </div>
                 </div>
@@ -92,26 +105,34 @@
                         Who is coming
                     </div>
 
+                    @php $picked = array_map('intval', (array) old('attendees', [])); @endphp
+
                     <div class="form-grid">
                         <div class="form-field">
                             <label class="form-field-lbl" for="mt-staff">Colleagues</label>
                             {{-- A multiple select, not a JavaScript token field:
                                  it works without a script, submits an array the
                                  backend can validate, and is operable from a
-                                 keyboard by default. --}}
-                            <select id="mt-staff" name="staff[]" multiple size="6" disabled>
+                                 keyboard by default. Both selects post into the
+                                 same `attendees[]` — an invite is to a person,
+                                 staff or client alike. --}}
+                            <select id="mt-staff" name="attendees[]" multiple size="6">
                                 @foreach ($employees as $person)
-                                    <option value="{{ $person['id'] }}">{{ $person['name'] }} — {{ $person['detail'] }}</option>
+                                    @continue($person['id'] === null)
+                                    <option value="{{ $person['id'] }}" @selected(in_array($person['id'], $picked, true))>{{ $person['name'] }} — {{ $person['detail'] }}</option>
                                 @endforeach
                             </select>
-                            <span class="pay-hint">Ctrl or Cmd to pick more than one.</span>
+                            <span class="pay-hint">Ctrl or Cmd to pick more than one. You are always on the invite.</span>
+                            @error('attendees.*')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-field">
                             <label class="form-field-lbl" for="mt-clients">Clients <span class="mt-optional">(optional)</span></label>
-                            <select id="mt-clients" name="clients[]" multiple size="6" disabled>
-                                @foreach ($clients as $client)
-                                    <option value="{{ $client }}">{{ $client }}</option>
+                            <select id="mt-clients" name="attendees[]" multiple size="6">
+                                @foreach ($clients as $person)
+                                    <option value="{{ $person['id'] }}" @selected(in_array($person['id'], $picked, true))>{{ $person['name'] }} — {{ $person['detail'] }}</option>
                                 @endforeach
                             </select>
                             {{-- Clients join from outside the Workspace, which
@@ -136,7 +157,7 @@
                     </ol>
 
                     <div class="mt-submit">
-                        <button class="btn btn-primary" type="submit" disabled title="Creating the Google event is not built yet">
+                        <button class="btn btn-primary" type="submit">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
                             </svg>

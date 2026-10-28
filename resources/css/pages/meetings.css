@@ -300,6 +300,10 @@
 }
 .mt-create .btn { width: 100%; justify-content: center; }
 
+/* Cancel sits in the header actions with its reason beside it. */
+.mt-cancel { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.mt-cancel input { min-width: 0; flex: 1 1 180px; }
+
 /* ─────────────────────────  the form  ───────────────────────── */
 
 .mt-form-wide { grid-column: 1 / -1; }

@@ -16,12 +16,6 @@
         </div>
     </div>
 
-    @include('partials.notice', [
-        'tone' => 'info',
-        'title' => 'This form does not submit yet',
-        'message' => 'The fields and the validation shape are real; the write lands with the backend. Nothing typed here is stored and nobody is notified.',
-    ])
-
     <form method="POST" action="{{ route('client.meetings.request') }}">
         @csrf
 
@@ -36,36 +30,68 @@
                         <div class="form-grid">
                             <div class="form-field cl-form-wide">
                                 <label class="form-field-lbl" for="mt-title">Subject</label>
-                                <input id="mt-title" name="title" type="text"
-                                       placeholder="Walk through the admissions page" disabled>
+                                <input id="mt-title" name="title" type="text" maxlength="200" required
+                                       placeholder="Walk through the admissions page" value="{{ old('title') }}">
+                                @error('title')
+                                    <span class="field-error">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             <div class="form-field cl-form-wide">
                                 <label class="form-field-lbl" for="mt-agenda">What to cover</label>
-                                <textarea id="mt-agenda" name="agenda" rows="5"
-                                          placeholder="A couple of lines is plenty — it helps us bring the right person." disabled></textarea>
+                                <textarea id="mt-agenda" name="agenda" rows="5" maxlength="2000"
+                                          placeholder="A couple of lines is plenty — it helps us bring the right person.">{{ old('agenda') }}</textarea>
+                                @error('agenda')
+                                    <span class="field-error">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             <div class="form-field">
                                 <label class="form-field-lbl" for="mt-project">Project</label>
                                 {{-- Their own projects, re-checked server-side
                                      against the session's client on submit. --}}
-                                <select id="mt-project" name="project" disabled>
+                                <select id="mt-project" name="project_id">
                                     <option value="">Not about a specific project</option>
                                     @foreach ($projects as $project)
-                                        <option value="{{ $project['id'] }}">{{ $project['name'] }}</option>
+                                        <option value="{{ $project['key'] }}" @selected((int) old('project_id') === $project['key'])>{{ $project['name'] }}</option>
                                     @endforeach
                                 </select>
+                                @error('project_id')
+                                    <span class="field-error">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             <div class="form-field">
-                                <label class="form-field-lbl" for="mt-preferred">Roughly when</label>
-                                <input id="mt-preferred" name="preferred_at" type="datetime-local" disabled>
+                                <label class="form-field-lbl" for="mt-duration">Length</label>
+                                <select id="mt-duration" name="duration">
+                                    @foreach ([15, 30, 45, 60, 90] as $minutes)
+                                        <option value="{{ $minutes }}" @selected($minutes === (int) old('duration', $defaultDuration))>{{ $minutes }} minutes</option>
+                                    @endforeach
+                                </select>
+                                @error('duration')
+                                    <span class="field-error">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-field">
+                                <label class="form-field-lbl" for="mt-date">Preferred date</label>
+                                <input id="mt-date" name="date" type="date" required min="{{ $today }}" value="{{ old('date') }}">
+                                @error('date')
+                                    <span class="field-error">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="form-field">
+                                <label class="form-field-lbl" for="mt-time">Preferred time</label>
+                                <input id="mt-time" name="time" type="time" required value="{{ old('time') }}">
                                 {{-- Times are shown and entered in the office's
                                      timezone and stored UTC — every date on a
                                      meeting record is UTC, which is the bug
                                      MeetingPresenter::statusOf was fixed for. --}}
                                 <span class="pay-hint">All times {{ $zone }}. We will confirm the exact slot.</span>
+                                @error('time')
+                                    <span class="field-error">{{ $message }}</span>
+                                @enderror
                             </div>
                         </div>
                     </div>
@@ -92,7 +118,7 @@
                     </p>
 
                     <div class="dash-punch-action">
-                        <button class="btn btn-primary" type="submit" disabled title="Requesting a meeting is not built yet">
+                        <button class="btn btn-primary" type="submit">
                             Send request
                         </button>
                     </div>

@@ -35,7 +35,7 @@
                 @if ($announcement['status'] === P::DRAFT)
                     <form method="POST" action="{{ route('announcements.publish', ['announcement' => $announcement['id']]) }}">
                         @csrf
-                        <button class="btn btn-primary" type="submit" disabled title="Publishing is not built yet">
+                        <button class="btn btn-primary" type="submit">
                             Publish now
                         </button>
                     </form>
@@ -44,7 +44,7 @@
                          said and when is worth being able to look up. --}}
                     <form method="POST" action="{{ route('announcements.expire', ['announcement' => $announcement['id']]) }}">
                         @csrf
-                        <button class="btn btn-outline" type="submit" disabled title="Taking it down is not built yet">
+                        <button class="btn btn-outline" type="submit">
                             Take off the board
                         </button>
                     </form>

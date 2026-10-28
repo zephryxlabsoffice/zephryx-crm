@@ -104,12 +104,10 @@
                         <input type="hidden" name="employees[]" value="{{ $record['employee'] }}">
                     @endforeach
 
-                    {{-- TODO (backend phase): the write. §6 wants an audit entry
-                         naming who confirmed it and for which period, and §2.6
-                         restricts it to the finance role. It must be
-                         idempotent — running it against an already-paid record
-                         must not move that record's payment date. --}}
-                    <button class="btn btn-primary" type="submit" disabled title="Recording payment is not built yet">
+                    {{-- Audited per record, and idempotent: an already-paid
+                         record is skipped, never re-dated — see
+                         SalaryController::pay. --}}
+                    <button class="btn btn-primary" type="submit">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <polyline points="20 6 9 17 4 12"/>
                         </svg>

@@ -308,8 +308,12 @@ class DashboardData
             'window' => (int) AttendancePolicy::autoRejectAfterHours(),
             // A day the office is shut is not a day somebody failed to check
             // in on, and the card must not imply otherwise.
-            'workingDay' => AttendancePolicy::isWorkingDay(Carbon::today()),
+            // Unless they are rostered for it, which makes it a working day
+            // for them — the same exception the Attendance page makes.
+            'workingDay' => AttendancePolicy::isWorkingDay(Carbon::today())
+                || ($viewer !== null && in_array(Carbon::today()->toDateString(), AttendanceDirectory::rosteredDates($viewer->id), true)),
             'holiday' => AttendancePolicy::holidayOn(Carbon::today()),
+            'attends' => $viewer === null || $viewer->attendsWork(),
         ];
     }
 

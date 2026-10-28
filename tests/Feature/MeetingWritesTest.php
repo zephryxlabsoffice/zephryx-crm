@@ -63,6 +63,60 @@ class MeetingWritesTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
+       THE FORMS POST WHAT THE WRITES READ
+
+       The writes above were tested by posting straight at them, while the
+       pages still carried the design-stage form: every field disabled and
+       named differently (`project`, `staff[]`, `preferred_at`). Nobody could
+       schedule or request a meeting from a browser, and no test noticed.
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_the_schedule_form_is_live_and_names_the_fields_the_write_reads(): void
+    {
+        $this->signInAsManager();
+
+        $html = $this->get('/meetings/schedule')->assertOk()->getContent();
+
+        foreach (['title', 'date', 'time', 'duration', 'project_id', 'agenda', 'attendees[]'] as $field) {
+            $this->assertStringContainsString('name="'.$field.'"', $html);
+        }
+        $this->assertStringNotContainsString('does not submit yet', $html);
+        $this->assertStringNotContainsString('not built yet', $html);
+    }
+
+    public function test_the_client_request_form_is_live_and_names_the_fields_the_write_reads(): void
+    {
+        $this->signInAsClient('DGL International School');
+
+        $html = $this->get('/client/meetings/request')->assertOk()->getContent();
+
+        foreach (['title', 'agenda', 'project_id', 'duration', 'date', 'time'] as $field) {
+            $this->assertStringContainsString('name="'.$field.'"', $html);
+        }
+        $this->assertStringNotContainsString('not built yet', $html);
+    }
+
+    public function test_the_organiser_can_cancel_and_create_from_the_meeting_page(): void
+    {
+        $this->failingProvider();
+        $this->signInAsManager();
+        $this->post('/meetings', $this->validPayload());
+
+        // Failed create: requested, so "Create on Google" is the live action.
+        $meeting = Meeting::firstOrFail();
+        $html = $this->get('/meetings/'.$meeting->reference)->assertOk()->getContent();
+        $this->assertStringContainsString('Create on Google', $html);
+        $this->assertStringNotContainsString('not built yet', $html);
+
+        $this->fakeProvider();
+        $this->post('/meetings/'.$meeting->reference.'/create')->assertRedirect();
+
+        $html = $this->get('/meetings/'.$meeting->reference)->assertOk()->getContent();
+        $this->assertStringContainsString('name="reason"', $html);
+        $this->assertStringNotContainsString('not built yet', $html);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
        TIMES, AND THE ONE PLACE THEY ARE CONVERTED
        ══════════════════════════════════════════════════════════════════════ */
 
