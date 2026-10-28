@@ -6,6 +6,8 @@ Hello {!! $name !!},
 
 The link works for {!! $hours !!} hours. If it has expired, ask for a new one from My Profile.
 
-If you did not expect this, tell HR before using the link.
+Did not ask for this? Do not verify. Open this link instead to lock the account; the administrators are told:
+
+{!! $notMeUrl !!}
 
 @include('mail.text.footer')

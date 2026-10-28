@@ -51,7 +51,7 @@ class EmployeeProfile extends Model
             $user = $profile->employee?->user;
 
             if ($profile->wasChanged('personal_email') && $profile->personal_email_verified_at === null && $user !== null) {
-                EmailVerification::addressChanged($user, (string) $profile->personal_email);
+                EmailVerification::addressChanged($user, (string) $profile->personal_email, $profile->getOriginal('personal_email'));
             }
         });
     }

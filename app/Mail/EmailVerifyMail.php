@@ -17,6 +17,7 @@ class EmailVerifyMail extends Mailable
         public string $name,
         public string $address,
         public int $hours,
+        public string $notMeUrl = '',
     ) {
     }
 
@@ -35,6 +36,7 @@ class EmailVerifyMail extends Mailable
                 'name' => $this->name,
                 'address' => $this->address,
                 'hours' => $this->hours,
+                'notMeUrl' => $this->notMeUrl,
             ],
         );
     }

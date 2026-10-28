@@ -13,6 +13,24 @@
         <p>Whether this system is set up the way you meant it to be.</p>
     </div>
 
+    {{-- Accounts locked from a "This wasn't me" link and still locked. --}}
+    @php
+        $securityLocked = \App\Models\User::query()
+            ->where('status', 'suspended')
+            ->whereIn('user_id', \Illuminate\Support\Facades\DB::table('audit_log')
+                ->where('action', \App\Support\Audit\AuditLog::SECURITY_LOCKED)
+                ->select('entity_id'))
+            ->orderBy('name')
+            ->get(['name', 'user_id']);
+    @endphp
+    @foreach ($securityLocked as $lockedAccount)
+        @include('partials.notice', [
+            'tone' => 'danger',
+            'title' => 'Security: '.$lockedAccount->name.'\'s account is locked',
+            'message' => 'Somebody pressed "This wasn\'t me" on an email-change message. Check with them in person, then set the account back to Active from Accounts → '.$lockedAccount->user_id.'.',
+        ])
+    @endforeach
+
     @php $pendingUpdates = \App\Support\Updates::pending(); @endphp
     @if ($pendingUpdates !== [])
         @include('partials.notice', [

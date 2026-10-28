@@ -104,6 +104,16 @@ Route::get('/verify-email/{user}/{hash}', [EmailVerificationController::class, '
     ->middleware(['signed', 'throttle:10,1'])
     ->name('email.verify');
 
+// "This wasn't me": a page, then a press that locks the account.
+Route::get('/account/not-me/{user}', [EmailVerificationController::class, 'notMe'])
+    ->where('user', '[0-9]+')
+    ->middleware(['signed', 'throttle:10,1'])
+    ->name('account.not-me');
+Route::post('/account/not-me/{user}', [EmailVerificationController::class, 'lock'])
+    ->where('user', '[0-9]+')
+    ->middleware(['signed', 'throttle:10,1'])
+    ->name('account.not-me.lock');
+
 Route::post('/logout', LogoutController::class)->name('logout');
 
 /*

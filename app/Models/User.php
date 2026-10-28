@@ -102,7 +102,7 @@ class User extends Authenticatable
 
         static::updated(function (User $user) {
             if ($user->wasChanged('email') && $user->email_verified_at === null) {
-                EmailVerification::addressChanged($user, (string) $user->email);
+                EmailVerification::addressChanged($user, (string) $user->email, $user->getOriginal('email'));
             }
         });
     }

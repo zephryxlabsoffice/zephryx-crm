@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Mail\EmailChangedNoticeMail;
 use App\Mail\EmailVerifyMail;
 use App\Mail\OneTimeCodeMail;
 use App\Mail\PasswordResetMail;
+use App\Mail\SecurityAlertMail;
 use App\Models\Employee;
 use App\Models\EmployeeProfile;
 use App\Models\Role;
@@ -156,6 +158,70 @@ class EmailVerificationTest extends TestCase
         Mail::assertSent(EmailVerifyMail::class, fn (EmailVerifyMail $m) => $m->hasTo('unproven@example.com'));
         // The work email is already verified, so it gets nothing.
         Mail::assertSent(EmailVerifyMail::class, 1);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       "THIS WASN'T ME"
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_the_old_address_is_told_and_both_emails_carry_the_red_button(): void
+    {
+        [, $profile] = $this->staffWithWorkEmail();
+
+        $profile->update(['personal_email' => 'new@example.com']);
+
+        Mail::assertSent(EmailChangedNoticeMail::class, fn (EmailChangedNoticeMail $m) => $m->hasTo('me@example.com')
+            && $m->newAddress === 'new@example.com' && str_contains($m->notMeUrl, '/account/not-me/'));
+        Mail::assertSent(EmailVerifyMail::class, fn (EmailVerifyMail $m) => str_contains($m->notMeUrl, '/account/not-me/'));
+
+        $this->assertStringContainsString("This wasn't me", (new EmailChangedNoticeMail('A', 'a@x.com', 'b@x.com', 'https://x'))->render());
+    }
+
+    public function test_the_red_button_locks_the_account_signs_it_out_and_tells_the_admins(): void
+    {
+        [$user, $profile] = $this->staffWithWorkEmail();
+
+        $owner = $this->signInAsAdmin();
+        $sysadmin = User::factory()->create(['account_type' => Realm::STAFF, 'staff_kind' => 'employee']);
+        $sysadmin->roles()->sync(Role::where('role_key', 'system_admin')->pluck('id'));
+        auth()->logout();
+
+        DB::table('sessions')->insert(['id' => 'live-session', 'user_id' => $user->id, 'payload' => '', 'last_activity' => time()]);
+
+        $profile->update(['personal_email' => 'new@example.com']);
+
+        $notMe = null;
+        Mail::assertSent(EmailChangedNoticeMail::class, function (EmailChangedNoticeMail $m) use (&$notMe) {
+            $notMe = $m->notMeUrl;
+
+            return true;
+        });
+
+        // Opening the link changes nothing - mail scanners open links.
+        $this->get($notMe)->assertOk()->assertSee('lock the account');
+        $this->assertSame('active', $user->fresh()->status);
+
+        $this->post($notMe)->assertOk()->assertSee('The account is locked');
+
+        $this->assertSame('suspended', $user->fresh()->status);
+        $this->assertSame(0, DB::table('sessions')->where('user_id', $user->id)->count());
+        $this->assertSame(1, DB::table('audit_log')->where('action', AuditLog::SECURITY_LOCKED)->count());
+
+        Mail::assertSent(SecurityAlertMail::class, fn (SecurityAlertMail $m) => $m->hasTo($owner->email));
+        Mail::assertSent(SecurityAlertMail::class, fn (SecurityAlertMail $m) => $m->hasTo($sysadmin->email));
+        $this->assertSame(1, DB::table('notifications')->where('user_id', $sysadmin->id)->where('kind', 'security')->count());
+
+        // And the owner's Overview says so until it is unlocked.
+        $this->actingAs($owner)->get('/admin/dashboard')->assertSee('account is locked');
+    }
+
+    public function test_a_tampered_red_button_is_refused(): void
+    {
+        [$user, $profile] = $this->staffWithWorkEmail();
+        $profile->update(['personal_email' => 'new@example.com']);
+
+        $this->post('/account/not-me/'.$user->id.'?address=x')->assertForbidden();
+        $this->assertSame('active', $user->fresh()->status);
     }
 
     /**

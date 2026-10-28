@@ -20,9 +20,14 @@
         My Profile.
     </p>
 
-    <p style="margin: 0; color: #5C6B65;">
-        If you did not expect this, tell HR before using the link.
+    <p style="margin: 0 0 8px; color: #5C6B65;">
+        Did not ask for this? Do not verify. Press the red button instead: the account
+        is locked and signed out everywhere, and the administrators are told.
     </p>
+
+    @if ($notMeUrl !== '')
+        @include('mail.partials.alarm-button', ['url' => $notMeUrl])
+    @endif
 
     @include('mail.partials.fallback-link', ['url' => $url])
 @endsection

@@ -1410,3 +1410,11 @@
 
 /* A quieter paragraph inside running text - a caveat under a statement. */
 .prose-quiet { color: var(--muted); font-size: 12.5px; }
+
+/* A solid red button for the one action that is an alarm ("This wasn't me"). */
+.btn-alarm {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #FFFFFF;
+}
+.btn-alarm:hover:not([disabled]) { filter: brightness(0.92); }

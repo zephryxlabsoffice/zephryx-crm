@@ -387,6 +387,9 @@ class AuditLog
     // An address proven by following its verification link (2026-10-28).
     public const EMAIL_VERIFIED = 'profile.email_verified';
 
+    // Locked from a "This wasn't me" link in an address-change email.
+    public const SECURITY_LOCKED = 'auth.security_locked';
+
     /*
      * Correcting one's own details is a request now, not a save (2026-09-14),
      * so there are four entries where there used to be one `profile.updated`.

@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Auth;
 use App\Models\User;
 use App\Support\Audit\AuditLog;
 use App\Support\Auth\EmailVerification;
+use App\Support\Auth\SecurityLock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Throwable;
 
@@ -43,6 +45,35 @@ class EmailVerificationController extends Controller
                 ? 'Your email is verified.'
                 : 'That link is for an address no longer on your account. Ask for a new one from My Profile.')
             ->with('status_tone', $confirmed ? 'success' : 'warning');
+    }
+
+    /**
+     * GET /account/not-me/{user} - the red button's page. Signed; nothing
+     * changes until the button on it is pressed.
+     */
+    public function notMe(Request $request, User $user): Response
+    {
+        return response()->view('account.not-me', [
+            'name' => (string) $user->name,
+            'address' => (string) $request->query('address'),
+            'action' => $request->fullUrl(),
+            'locked' => false,
+        ]);
+    }
+
+    /**
+     * POST /account/not-me/{user} - lock it. See App\Support\Auth\SecurityLock.
+     */
+    public function lock(Request $request, User $user): Response
+    {
+        SecurityLock::lock($user, (string) $request->query('address'), $request);
+
+        return response()->view('account.not-me', [
+            'name' => (string) $user->name,
+            'address' => (string) $request->query('address'),
+            'action' => $request->fullUrl(),
+            'locked' => true,
+        ]);
     }
 
     /**

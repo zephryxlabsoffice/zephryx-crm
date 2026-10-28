@@ -2,6 +2,7 @@
 
 namespace App\Support\Auth;
 
+use App\Mail\EmailChangedNoticeMail;
 use App\Mail\EmailVerifyMail;
 use App\Models\EmployeeProfile;
 use App\Models\User;
@@ -38,9 +39,11 @@ class EmailVerification
      * An address on this account changed and is now unproven. Sends the link;
      * a failed send is reported, never allowed to undo the change.
      */
-    public static function addressChanged(User $user, string $address): void
+    public static function addressChanged(User $user, string $address, ?string $old = null): void
     {
         $address = trim($address);
+
+        self::warnOldAddress($user, (string) $old, $address);
 
         if ($address === '' || ! self::needsProof($user, $address)) {
             return;
@@ -140,7 +143,47 @@ class EmailVerification
             ['user' => $user->id, 'hash' => self::hash($address)],
         );
 
-        Mail::to($address)->send(new EmailVerifyMail($url, (string) $user->name, $address, self::LINK_HOURS));
+        Mail::to($address)->send(new EmailVerifyMail($url, (string) $user->name, $address, self::LINK_HOURS, self::notMeUrl($user, $address)));
+    }
+
+    /**
+     * The red button: a signed link to the "This wasn't me" page. See
+     * AppSupportAuthSecurityLock.
+     */
+    public static function notMeUrl(User $user, string $address): string
+    {
+        return URL::temporarySignedRoute(
+            'account.not-me',
+            now()->addDays(SecurityLock::LINK_DAYS),
+            ['user' => $user->id, 'address' => $address],
+        );
+    }
+
+    /**
+     * Tell the address that was replaced. Its owner is the one who would
+     * notice a change they did not make, so the red button matters most here.
+     */
+    protected static function warnOldAddress(User $user, string $old, string $new): void
+    {
+        $old = trim($old);
+
+        if ($old === '' || self::same($old, $new)) {
+            return;
+        }
+
+        $sent = (array) request()->attributes->get('change_notice_sent', []);
+
+        if (in_array(strtolower($old), $sent, true)) {
+            return;
+        }
+
+        request()->attributes->set('change_notice_sent', [...$sent, strtolower($old)]);
+
+        try {
+            Mail::to($old)->send(new EmailChangedNoticeMail((string) $user->name, $old, $new, self::notMeUrl($user, $old)));
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     /**
