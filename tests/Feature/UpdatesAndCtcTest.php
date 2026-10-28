@@ -52,11 +52,11 @@ class UpdatesAndCtcTest extends TestCase
     {
         $this->signInAsAdmin();
 
-        // Nine steps: the CTC column, and the eight 2026-10-28 updates after it.
-        Artisan::call('migrate:rollback', ['--step' => 9, '--force' => true]);
+        // Ten steps: the CTC column, the eight 2026-10-28 updates and the verify site's.
+        Artisan::call('migrate:rollback', ['--step' => 10, '--force' => true]);
         $this->assertFalse(Schema::hasColumn('employee_salary_structures', 'ctc_minor'));
 
-        $this->assertCount(9, Updates::pending());
+        $this->assertCount(10, Updates::pending());
         $this->get('/admin/dashboard')->assertOk()->assertSee('An update is waiting to be applied');
         $this->get('/admin/updates')->assertOk()->assertSee('Add ctc to employee salary structures');
 

@@ -1,10 +1,12 @@
 <?php
 
 /*
- * Builds the two upload zips for shared hosting (docs/DEPLOY.md):
+ * Builds the upload zips for shared hosting (docs/DEPLOY.md):
  *
- *   upload/zephryx-crm.zip   the application → extract BESIDE public_html
- *   upload/public_html.zip   the web root    → extract INTO public_html
+ *   upload/zephryx-crm.zip              the application → extract BESIDE public_html
+ *   upload/public_html.zip              the web root    → extract INTO public_html
+ *   upload/verify.zephryxlabs.in.zip    the verify site's web root → extract INTO
+ *                                       verify.zephryxlabs.in, BESIDE public_html
  *
  * Run from the project root:  php deploy/build.php   (or MAKE-UPLOAD.bat)
  *
@@ -149,10 +151,22 @@ step('Zipping');
 is_dir($out) || mkdir($out, 0777, true);
 zipDir($app, $out.'/zephryx-crm.zip');
 zipDir($web, $out.'/public_html.zip');
+
+/*
+ * verify.zephryxlabs.in (2026-10-29): the same web root without the
+ * installer, extracted into its own folder BESIDE public_html. Its index.php
+ * already looks in ../zephryx-crm, so it runs the same application, which
+ * serves the verify site on that host (see config/verify.php).
+ */
+@unlink($web.'/install.php');
+zipDir($web, $out.'/verify.zephryxlabs.in.zip');
 rrmdir($stage);
 
 printf("\nDone - built from commit %s.\n  %s (%.1f MB)\n  %s (%.1f MB)\n",
     $commit,
     $out.DIRECTORY_SEPARATOR.'zephryx-crm.zip', filesize($out.'/zephryx-crm.zip') / 1048576,
     $out.DIRECTORY_SEPARATOR.'public_html.zip', filesize($out.'/public_html.zip') / 1048576,
+);
+printf("  %s (%.1f MB)\n",
+    $out.DIRECTORY_SEPARATOR.'verify.zephryxlabs.in.zip', filesize($out.'/verify.zephryxlabs.in.zip') / 1048576,
 );

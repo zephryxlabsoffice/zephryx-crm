@@ -521,6 +521,8 @@ class EmployeeController extends Controller
 
         $data = $request->validate([
             'status' => ['required', Rule::in(['active', 'inactive', 'suspended'])],
+            // The day they left, shown on verify.zephryxlabs.in. Today if blank.
+            'left_on' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today'],
         ]);
 
         if ($record->user_id === $request->user()->id) {
@@ -552,6 +554,13 @@ class EmployeeController extends Controller
         $before = $record->user->status;
 
         $record->user->update(['status' => $data['status']]);
+
+        // Closing records the leaving date; reopening clears it.
+        $record->update(['left_on' => match ($data['status']) {
+            'inactive' => $data['left_on'] ?? now()->toDateString(),
+            'active' => null,
+            default => $record->left_on,
+        }]);
 
         /*
          * Everything they hold is re-resolved from scratch. An inactive account

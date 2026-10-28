@@ -26,6 +26,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// verify.zephryxlabs.in first, so its pages win on that host - see routes/verify.php.
+Route::domain(config('verify.domain'))->group(base_path('routes/verify.php'));
+
 Route::get('/', LandingController::class)->name('landing');
 
 Route::post('/theme', [ThemeController::class, 'store'])

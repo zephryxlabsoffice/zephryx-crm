@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsureRealm;
 use App\Http\Middleware\RestoreRememberedSession;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\VerifyHost;
 use App\Support\Shell;
 use App\Support\Theme;
 use Illuminate\Foundation\Application;
@@ -23,6 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Applied to every response so new surfaces inherit the hardening
         // headers rather than opting into them (foundation spec §6).
         $middleware->append(SecurityHeaders::class);
+
+        // verify.zephryxlabs.in: its own cookie and only its own pages. Before
+        // the session starts, so it is global rather than in the web group.
+        $middleware->prepend(VerifyHost::class);
 
         /*
          * Realm enforcement (§3.1), applied to route GROUPS in routes/web.php

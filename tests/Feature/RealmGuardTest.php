@@ -286,6 +286,17 @@ class RealmGuardTest extends TestCase
             'storage.local',
             'storage.local.upload',
             'theme.store',
+            // verify.zephryxlabs.in (2026-10-29): mounted on its own domain from
+            // web.php. Public pages need a signature; /admin is VerifyAdmin.
+            'verify.admin',
+            'verify.admin.qr',
+            'verify.admin.registration',
+            'verify.admin.settings',
+            'verify.landing',
+            'verify.photo',
+            'verify.registration',
+            'verify.search',
+            'verify.show',
         ], $public);
     }
 }

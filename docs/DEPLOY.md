@@ -151,6 +151,9 @@ is safe; deleting the folder first is not.
 2. Upload `public_html.zip` → **Extract** (overwrite) → delete the zip.
 3. Zips made after 2026-10-27 have no `install.php`. If one is ever there,
    delete it.
+4. Once verify.zephryxlabs.in is set up (Part C): the same again for its
+   folder - open `verify.zephryxlabs.in`, delete its `build` folder, upload
+   `verify.zephryxlabs.in.zip`, **Extract** (overwrite), delete the zip.
 
 ## B5. Check
 
@@ -163,6 +166,53 @@ is safe; deleting the folder first is not.
 
 If something is broken: re-extract the previous zips (keep the last good pair
 in `upload\` on the PC) and, only if data went wrong, restore the backup.
+
+---
+
+# Part C - verify.zephryxlabs.in (set up once, 2026-10-29)
+
+The ID card verification site. It is NOT a second application: it is a second
+web folder running the same `zephryx-crm`, which serves the verify pages when
+the request is for verify.zephryxlabs.in (`config/verify.php`). One upload
+updates both sites.
+
+```
+<site folder>/
+├── public_html/             ← crm.zephryxlabs.in
+├── verify.zephryxlabs.in/   ← verify.zephryxlabs.in  (new)
+└── zephryx-crm/             ← the application, shared by both
+```
+
+## C1. cPanel - the domain
+1. **Domains → Create A New Domain**: `verify.zephryxlabs.in`.
+2. **Untick** "Share document root". Set the document root to the folder
+   `verify.zephryxlabs.in` **in the same site folder as `public_html`** (File
+   Manager shows the path of `public_html` - use the same parent). If cPanel
+   will only put it somewhere else, stop and ask: its `index.php` looks for
+   `../zephryx-crm`.
+3. **SSL/TLS Status → Run AutoSSL** so the new domain gets a certificate.
+
+## C2. Cloudflare - DNS
+Add a record for `verify` exactly like the one for `crm` (same type, same
+target, **orange cloud / proxied**). SSL mode is already Full (strict).
+
+## C3. File Manager - the files
+1. Open the folder `verify.zephryxlabs.in` (cPanel made it in C1).
+2. Upload `verify.zephryxlabs.in.zip` → **Extract** → delete the zip.
+
+## C4. The database
+Admin → **Updates** → **Back up and apply** (the verify site's tables).
+
+## C5. Check
+- [ ] https://verify.zephryxlabs.in shows the search page.
+- [ ] https://verify.zephryxlabs.in/admin asks you to sign in; sign in with the
+      CRM **Admin** account (same email, password and code).
+- [ ] Set the phone and email, upload the company registration PDF.
+- [ ] Download one person's QR, scan it with a phone: their page opens.
+- [ ] https://verify.zephryxlabs.in/dashboard is "Not Found" (the CRM is
+      never served on the verify address).
+
+**APP_KEY must never change**: every printed QR is signed with it.
 
 ---
 

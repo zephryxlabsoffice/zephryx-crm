@@ -195,6 +195,14 @@
                     <form method="POST" action="{{ route('employees.status', ['employee' => $employee['user_id']]) }}">
                         @csrf
                         <input type="hidden" name="status" value="{{ $user->status === 'active' ? 'inactive' : 'active' }}">
+                        @if ($user->status === 'active')
+                            {{-- Shown on verify.zephryxlabs.in to anybody checking their card. --}}
+                            <div class="form-field">
+                                <label class="form-field-lbl" for="emp-left-on">Last working day</label>
+                                <input id="emp-left-on" name="left_on" type="date" max="{{ now()->toDateString() }}"
+                                       value="{{ old('left_on', now()->toDateString()) }}">
+                            </div>
+                        @endif
                         <button class="btn {{ $user->status === 'active' ? 'btn-outline' : 'btn-primary' }}" type="submit">
                             {{ $user->status === 'active' ? 'Close the record' : 'Reopen the record' }}
                         </button>

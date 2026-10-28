@@ -481,6 +481,11 @@ class AuditLog
 
     public const MAINTENANCE_ENDED = 'admin.maintenance_ended';
 
+    // verify.zephryxlabs.in dashboard (2026-10-29).
+    public const VERIFY_QR_DOWNLOADED = 'admin.verify_qr_downloaded';
+
+    public const VERIFY_SETTINGS_CHANGED = 'admin.verify_settings_changed';
+
     /**
      * Write one entry.
      *

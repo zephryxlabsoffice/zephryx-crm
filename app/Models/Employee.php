@@ -51,7 +51,7 @@ class Employee extends Model
     protected $fillable = [
         'user_id', 'department_id', 'designation_id', 'reports_to',
         'employment_type', 'converted_from_id',
-        'joined_on', 'date_of_birth', 'announce_milestones',
+        'joined_on', 'date_of_birth', 'announce_milestones', 'left_on',
     ];
 
     protected $attributes = [
@@ -63,6 +63,7 @@ class Employee extends Model
         return [
             'joined_on' => 'date',
             'date_of_birth' => 'date',
+            'left_on' => 'date',
             'announce_milestones' => 'boolean',
         ];
     }

@@ -28,6 +28,12 @@ class Realm
      */
     public static function dashboardFor(?Authenticatable $user): string
     {
+        // On verify.zephryxlabs.in the only dashboard is the verify one; any
+        // other account lands there too and is refused by VerifyAdmin.
+        if (\App\Http\Middleware\VerifyHost::is(request())) {
+            return '/admin';
+        }
+
         return match ($user?->account_type ?? null) {
             self::ADMIN  => '/admin/dashboard',
             self::CLIENT => '/client/dashboard',

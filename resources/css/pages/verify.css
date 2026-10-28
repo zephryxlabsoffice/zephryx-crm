@@ -1,0 +1,143 @@
+/* ─────────────────────────  verify.zephryxlabs.in  ─────────────────────────
+   resources/views/layouts/verify.blade.php and resources/views/verify/*.
+   Mobile first: most visits are somebody's phone camera on a QR code. */
+
+.vf-body { background: var(--page); color: var(--ink); }
+
+.vf {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.vf-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.vf-main {
+  flex: 1;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 8px 16px 32px;
+}
+.vf-main-wide { max-width: 1100px; }
+
+.vf-foot {
+  padding: 20px 16px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* the search page */
+.vf-hero { text-align: center; padding: 24px 0 8px; }
+.vf-hero h1 { margin: 0 0 10px; font-size: 1.6rem; }
+.vf-hero p { margin: 0 0 22px; color: var(--muted); }
+
+.vf-search { display: flex; gap: 8px; }
+.vf-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.vf-search input::placeholder { text-transform: none; letter-spacing: 0; }
+.vf-search-error { margin-top: 10px; }
+
+/* the result */
+.vf-card {
+  margin-top: 8px;
+  padding: 24px 20px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 6px solid var(--line-strong);
+  text-align: center;
+}
+.vf-card-good { border-top-color: var(--green); }
+.vf-card-bad { border-top-color: var(--danger); }
+
+.vf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.vf-badge svg { width: 20px; height: 20px; flex: none; }
+.vf-badge-good { background: var(--green-soft); color: var(--green-deep); }
+.vf-badge-bad { background: var(--danger-soft); color: var(--danger); }
+
+.vf-photo { margin: 20px auto 12px; width: 140px; height: 140px; }
+.vf-photo img,
+.vf-initials {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--green-soft);
+}
+.vf-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green-soft);
+  color: var(--green-deep);
+  font-size: 2.6rem;
+  font-weight: 700;
+}
+
+.vf-name { margin: 14px 0 4px; font-size: 1.5rem; }
+.vf-role { margin: 0 0 16px; color: var(--muted); font-weight: 600; }
+
+.vf-facts {
+  margin: 16px 0 0;
+  display: grid;
+  gap: 10px;
+  text-align: left;
+}
+.vf-facts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.vf-facts dt { color: var(--muted); }
+.vf-facts dd { margin: 0; font-weight: 600; text-align: right; }
+.vf-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.5px; }
+
+.vf-note { margin: 16px 0 0; color: var(--muted); font-size: 0.9rem; }
+.vf-card .btn { margin-top: 18px; }
+.vf-checked { margin: 18px 0 0; font-size: 0.8rem; color: var(--muted); }
+
+/* the enquiry block */
+.vf-contact { margin-top: 20px; text-align: center; }
+.vf-contact-hd { margin: 0 0 10px; color: var(--muted); font-size: 0.9rem; }
+.vf-contact-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.vf-contact-actions .btn svg { width: 16px; height: 16px; }
+
+/* the dashboard */
+.vf-filter { display: flex; gap: 6px; }
+.vf-filter input { min-width: 0; padding: 6px 10px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.vf-row-actions { white-space: nowrap; text-align: right; }
+.vf-row-actions .btn + .btn { margin-left: 6px; }
+.vf-empty { text-align: center; color: var(--muted); padding: 20px; }
+.vf-settings { display: grid; gap: 16px; margin-top: 16px; }
+@media (min-width: 900px) { .vf-settings { grid-template-columns: 1fr 1fr; } }
