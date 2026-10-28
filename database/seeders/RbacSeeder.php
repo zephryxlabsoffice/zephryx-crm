@@ -494,6 +494,9 @@ class RbacSeeder extends Seeder
                     'salary.manage',
                     // Invoices are managed by the CEO and HR (owner, 2026-10-28).
                     'invoices.view', 'invoices.manage',
+                    // And the clients those invoices belong to, in full (owner,
+                    // 2026-10-28).
+                    'clients.view', 'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
                 ],
                 'ranks' => ['people' => 80, 'finance' => 70, 'work' => 30, 'support' => 20, 'system' => 10],
             ],

@@ -397,4 +397,20 @@ class RbacTest extends TestCase
             ->pluck('role_key')->sort()->values()->all();
         $this->assertSame(['ceo', 'hr'], $approvers);
     }
+
+    public function test_hr_has_the_clients_module_in_full_on_a_live_site_too(): void
+    {
+        // Owner, 2026-10-28: HR adds clients and gives them portal access.
+        $keys = ['clients.view', 'clients.create', 'clients.edit', 'clients.status', 'clients.invite'];
+        $hr = Role::where('role_key', 'hr')->first();
+
+        $hr->permissions()->detach(Permission::whereIn('permission_key', $keys)->pluck('id'));
+
+        (require database_path('migrations/2026_10_28_000007_grant_clients_to_hr.php'))->up();
+
+        $this->assertEqualsCanonicalizing($keys, $hr->permissions()->whereIn('permission_key', $keys)->pluck('permission_key')->all());
+
+        $user = $this->staff(['employee', 'hr']);
+        $this->actingAs($user)->get('/clients/create')->assertOk();
+    }
 }
