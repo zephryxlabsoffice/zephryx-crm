@@ -264,6 +264,9 @@ class RealmGuardTest extends TestCase
          */
         $this->assertSame([
             'account.inactive',
+            // Following an emailed verification link works signed out; the
+            // signature is the gate (2026-10-28).
+            'email.verify',
             'landing',
             'login',
             'login.attempt',

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Auth\EmailVerification;
 use App\Support\Realm;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -84,6 +85,26 @@ class User extends Authenticatable
             'password_changed_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * A new sign-in address is unproven until its link is followed - unless
+     * the same save stamps it, as EmailChanges::apply does after its own
+     * confirmation. See App\Support\Auth\EmailVerification.
+     */
+    protected static function booted(): void
+    {
+        static::updating(function (User $user) {
+            if ($user->isDirty('email') && ! $user->isDirty('email_verified_at')) {
+                $user->email_verified_at = null;
+            }
+        });
+
+        static::updated(function (User $user) {
+            if ($user->wasChanged('email') && $user->email_verified_at === null) {
+                EmailVerification::addressChanged($user, (string) $user->email);
+            }
+        });
     }
 
     /**

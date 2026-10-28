@@ -52,7 +52,7 @@ class LoginPageTest extends TestCase
         // §4.1 - one field for both; the handover labelled it "Username".
         $response = $this->get('/login');
 
-        $response->assertSee('Email or User ID', false);
+        $response->assertSee('Email or Employee ID', false);
         $response->assertDontSee('placeholder="Username"', false);
     }
 

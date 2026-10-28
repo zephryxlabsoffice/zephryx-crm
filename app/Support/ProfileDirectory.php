@@ -110,6 +110,8 @@ class ProfileDirectory
              */
             'username' => $employee->user?->email,
             'email_verified_at' => $employee->user?->email_verified_at,
+            // Its own stamp: the personal email signs in too (2026-10-28).
+            'personal_email_verified_at' => $employee->profile?->personal_email_verified_at,
             'last_login_at' => $employee->user?->last_login_at,
             'password_changed_at' => $employee->user?->password_changed_at,
         ];

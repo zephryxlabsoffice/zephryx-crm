@@ -13,7 +13,7 @@
         <h1 class="auth-heading">Forgot your password?</h1>
 
         <p class="auth-subheading">
-            Enter your email address or user ID and we'll send you a link to set a new one.
+            Enter your email address or Employee ID and we'll send you a link to set a new one.
         </p>
 
         @if (session('status'))
@@ -24,7 +24,7 @@
         @endif
 
         <label class="field {{ $errors->has('identifier') ? 'has-error' : '' }}">
-            <span class="sr-only">Email or User ID</span>
+            <span class="sr-only">Email or Employee ID</span>
             <span class="field-ic" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -34,7 +34,7 @@
             <input type="text"
                    name="identifier"
                    value="{{ old('identifier') }}"
-                   placeholder="Email or User ID"
+                   placeholder="Email or Employee ID"
                    autocomplete="username"
                    autocapitalize="none"
                    spellcheck="false"

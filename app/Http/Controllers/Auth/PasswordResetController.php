@@ -6,6 +6,7 @@ use App\Mail\PasswordResetMail;
 use App\Models\User;
 use App\Rules\NotACommonPassword;
 use App\Support\Audit\AuditLog;
+use App\Support\Auth\EmailVerification;
 use App\Support\Auth\PasswordResets;
 use App\Support\Auth\RememberMe;
 use App\Support\Auth\TrustedDevices;
@@ -76,7 +77,7 @@ class PasswordResetController extends Controller
         $validated = $request->validate([
             'identifier' => ['required', 'string', 'max:255'],
         ], [
-            'identifier.required' => 'Enter your email address or user ID.',
+            'identifier.required' => 'Enter your email address or Employee ID.',
         ]);
 
         $identifier = trim($validated['identifier']);
@@ -85,7 +86,7 @@ class PasswordResetController extends Controller
         // one), whichever address was typed. See App\Support\StaffEmails.
         $user = str_contains($identifier, '@')
             ? StaffEmails::findUser($identifier)
-            : User::where('user_id', $identifier)->first();
+            : User::where('user_id', strtoupper($identifier))->first();
 
         /*
          * A suspended account gets no link either, and gets it silently. Saying
@@ -162,6 +163,10 @@ class PasswordResetController extends Controller
             'password' => $validated['password'],
             'password_changed_at' => now(),
         ])->save();
+
+        // The link reached them at this address, which is the proof
+        // (owner, 2026-10-28).
+        EmailVerification::proveSignInAddress($user);
 
         /*
          * §4.6, all four. The order matters only in that none of them may be

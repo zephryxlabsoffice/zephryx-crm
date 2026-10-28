@@ -6,6 +6,7 @@ use App\Http\Middleware\EnforceSessionLifetime;
 use App\Mail\OneTimeCodeMail;
 use App\Models\User;
 use App\Support\Audit\AuditLog;
+use App\Support\Auth\EmailVerification;
 use App\Support\Auth\LoginThrottle;
 use App\Support\Auth\OneTimeCode;
 use App\Support\Auth\RememberMe;
@@ -126,7 +127,7 @@ class LoginController extends Controller
             'identifier' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ], [
-            'identifier.required' => 'Enter your email address or user ID.',
+            'identifier.required' => 'Enter your email address or Employee ID.',
             'password.required' => 'Enter your password.',
         ]);
 
@@ -259,6 +260,9 @@ class LoginController extends Controller
 
         $remember = (bool) $request->session()->get(self::PENDING_REMEMBER, false);
 
+        // The code was emailed to the sign-in address; entering it proves it.
+        EmailVerification::proveSignInAddress($pending);
+
         return $this->establish($pending, $request, $remember, trustDevice: true);
     }
 
@@ -301,7 +305,8 @@ class LoginController extends Controller
         // (both sign in since 2026-10-27 - see App\Support\StaffEmails).
         return str_contains($identifier, '@')
             ? StaffEmails::findUser($identifier)
-            : User::where('user_id', $identifier)->first();
+            // Employee IDs are issued in capitals (ZEPH261001); typed in any case.
+            : User::where('user_id', strtoupper($identifier))->first();
     }
 
     /**

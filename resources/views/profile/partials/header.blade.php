@@ -129,6 +129,33 @@
                     @endif
                 </span>
             </div>
+            {{-- The personal email signs in too, so it is verified on its own
+                 when it is a different address (2026-10-28). --}}
+            @php
+                $personal = trim((string) ($profile['personal_email'] ?? ''));
+                $personalSeparate = $personal !== '' && strcasecmp($personal, (string) $profile['username']) !== 0;
+                $anyUnverified = $profile['email_verified_at'] === null
+                    || ($personalSeparate && $profile['personal_email_verified_at'] === null);
+            @endphp
+            @if ($personalSeparate)
+                <div class="stat-row">
+                    <span class="stat-label">Personal email</span>
+                    <span class="stat-value">
+                        {{ $personal }} ·
+                        @if ($profile['personal_email_verified_at'] !== null)
+                            <span class="pf-verified">Verified</span>
+                        @else
+                            <span class="is-warn">Not verified</span>
+                        @endif
+                    </span>
+                </div>
+            @endif
+            @if ($anyUnverified)
+                <form method="POST" action="{{ route('profile.email.verify') }}">
+                    @csrf
+                    <button class="btn btn-outline btn-sm" type="submit">Send verification link</button>
+                </form>
+            @endif
             <div class="stat-row">
                 <span class="stat-label">{{ ProfilePolicy::labelOf('last_login') }}</span>
                 <span class="stat-value">{{ P::dateTime($profile['last_login_at']) }}</span>

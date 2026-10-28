@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Auth\EmailVerification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -30,7 +31,29 @@ class EmployeeProfile extends Model
             'skills' => 'array',
             'notify_tasks' => 'boolean',
             'notify_tickets' => 'boolean',
+            'personal_email_verified_at' => 'datetime',
         ];
+    }
+
+    /**
+     * A changed personal email signs in too, so it is unproven until its link
+     * is followed (owner, 2026-10-28). See App\Support\Auth\EmailVerification.
+     */
+    protected static function booted(): void
+    {
+        static::updating(function (EmployeeProfile $profile) {
+            if ($profile->isDirty('personal_email') && ! $profile->isDirty('personal_email_verified_at')) {
+                $profile->personal_email_verified_at = null;
+            }
+        });
+
+        static::updated(function (EmployeeProfile $profile) {
+            $user = $profile->employee?->user;
+
+            if ($profile->wasChanged('personal_email') && $profile->personal_email_verified_at === null && $user !== null) {
+                EmailVerification::addressChanged($user, (string) $profile->personal_email);
+            }
+        });
     }
 
     /**

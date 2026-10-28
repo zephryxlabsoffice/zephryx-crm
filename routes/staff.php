@@ -976,6 +976,9 @@ Route::post('/profile/preferences', [ProfileController::class, 'updatePreference
 Route::post('/profile/password', [ProfileController::class, 'updatePassword'])
     ->name('profile.password.update');
 Route::post('/profile/email', [ProfileController::class, 'changeEmail'])->name('profile.email.change');
+Route::post('/profile/email/verify', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'send'])
+    ->middleware('throttle:5,1')
+    ->name('profile.email.verify');
 
 /*
  * Taking back a request HR has not decided yet. No identifier: it is whatever

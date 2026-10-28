@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AccountStatusController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -93,6 +94,15 @@ Route::get('/profile/email/confirm/{token}', [ProfileController::class, 'confirm
     ->where('token', '[A-Za-z0-9._-]{1,128}')
     ->middleware('throttle:10,1')
     ->name('profile.email.confirm');
+
+/*
+ * Verifying an email address (2026-10-28). Signed and expiring, so it works
+ * signed out, and throttled like the other links that touch an account.
+ */
+Route::get('/verify-email/{user}/{hash}', [EmailVerificationController::class, 'confirm'])
+    ->where(['user' => '[0-9]+', 'hash' => '[a-f0-9]{40}'])
+    ->middleware(['signed', 'throttle:10,1'])
+    ->name('email.verify');
 
 Route::post('/logout', LogoutController::class)->name('logout');
 

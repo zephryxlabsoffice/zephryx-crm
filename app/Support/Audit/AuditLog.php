@@ -384,6 +384,9 @@ class AuditLog
 
     public const PROFILE_EMAIL_CHANGED = 'profile.email_changed';
 
+    // An address proven by following its verification link (2026-10-28).
+    public const EMAIL_VERIFIED = 'profile.email_verified';
+
     /*
      * Correcting one's own details is a request now, not a save (2026-09-14),
      * so there are four entries where there used to be one `profile.updated`.
