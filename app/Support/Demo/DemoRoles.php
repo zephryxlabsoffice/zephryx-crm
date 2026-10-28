@@ -104,12 +104,11 @@ class DemoRoles
 
             'manager' => [
                 'label' => 'Manager',
-                'note' => 'Authority over projects and teams — and the leave decisions that follow from it.',
+                'note' => 'Authority over projects and teams.',
                 'permissions' => [
                     ...$base,
                     'employees.view',
                     'clients.view',
-                    'leave.approve',
                     'meetings.schedule',
                 ],
             ],

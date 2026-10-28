@@ -363,22 +363,38 @@ class RbacTest extends TestCase
     {
         /*
          * A live site's roles were seeded once and are only ever migrated
-         * after that, so a grant added to RbacSeeder alone never reaches it.
-         * The 2026-10-28 migration carries the two that were decided and
-         * missing: System Administrator schedules meetings, Manager triages.
+         * after that, so a change to RbacSeeder alone never reaches it. The
+         * 2026-10-28 migration carries the owner's decisions: System
+         * Administrator schedules meetings, Manager triages, HR manages
+         * invoices — and only HR and the CEO approve leave.
          */
-        $grants = ['system_admin' => 'meetings.schedule', 'manager' => 'tickets.triage'];
+        $grants = [
+            ['system_admin', 'meetings.schedule'],
+            ['manager', 'tickets.triage'],
+            ['hr', 'invoices.view'],
+            ['hr', 'invoices.manage'],
+        ];
 
-        foreach ($grants as $role => $key) {
+        foreach ($grants as [$role, $key]) {
             Role::where('role_key', $role)->first()->permissions()
                 ->detach(Permission::where('permission_key', $key)->value('id'));
         }
 
-        (require database_path('migrations/2026_10_28_000001_grant_decided_role_permissions.php'))->up();
-        (require database_path('migrations/2026_10_28_000001_grant_decided_role_permissions.php'))->up();
+        // As a live site seeded before the decision would have it.
+        $approve = Permission::where('permission_key', 'leave.approve')->value('id');
+        Role::where('role_key', 'manager')->first()->permissions()->syncWithoutDetaching([$approve]);
+        Role::where('role_key', 'team_lead')->first()->permissions()->syncWithoutDetaching([$approve]);
 
-        foreach ($grants as $role => $key) {
+        $migration = database_path('migrations/2026_10_28_000001_grant_decided_role_permissions.php');
+        (require $migration)->up();
+        (require $migration)->up();
+
+        foreach ($grants as [$role, $key]) {
             $this->assertSame(1, Role::where('role_key', $role)->first()->permissions()->where('permission_key', $key)->count(), $role.' lacks '.$key);
         }
+
+        $approvers = Role::whereHas('permissions', fn ($q) => $q->where('permission_key', 'leave.approve'))
+            ->pluck('role_key')->sort()->values()->all();
+        $this->assertSame(['ceo', 'hr'], $approvers);
     }
 }

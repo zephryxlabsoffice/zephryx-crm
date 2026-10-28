@@ -436,9 +436,11 @@ class RbacSeeder extends Seeder
 
             'manager' => [
                 'name' => 'Manager',
-                'description' => 'Authority over projects and teams, and the leave decisions that follow.',
+                'description' => 'Authority over projects and teams.',
                 'permissions' => [
-                    ...$staffReading, 'employees.view', 'clients.view', 'leave.approve',
+                    // Not `leave.approve`: leave is decided by HR and the CEO
+                    // only (owner, 2026-10-28).
+                    ...$staffReading, 'employees.view', 'clients.view',
                     'meetings.schedule',
                     // A new client ticket goes to Support and the project
                     // manager first, and either may assign it (review round).
@@ -488,6 +490,8 @@ class RbacSeeder extends Seeder
                     // And who runs payroll: adds the payslip Excel produced and
                     // marks the transfer done.
                     'salary.manage',
+                    // Invoices are managed by the CEO and HR (owner, 2026-10-28).
+                    'invoices.view', 'invoices.manage',
                 ],
                 'ranks' => ['people' => 80, 'finance' => 70, 'work' => 30, 'support' => 20, 'system' => 10],
             ],
