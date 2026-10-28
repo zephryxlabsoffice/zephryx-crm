@@ -114,6 +114,9 @@ Route::post('/account/not-me/{user}', [EmailVerificationController::class, 'lock
     ->middleware(['signed', 'throttle:10,1'])
     ->name('account.not-me.lock');
 
+// Where an account on hold for security lands at sign-in.
+Route::view('/account/on-hold', 'account.on-hold')->name('account.on-hold');
+
 Route::post('/logout', LogoutController::class)->name('logout');
 
 /*

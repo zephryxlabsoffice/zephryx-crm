@@ -120,6 +120,8 @@ class RbacSeeder extends Seeder
          * seeded. See Rbac::ADMIN_BASE for why it is its own key.
          */
         'admin.integrations.view',
+        // Every account's sign-in, roles and status - System Administrator only.
+        'accounts.manage',
     ];
 
     /**
@@ -511,6 +513,9 @@ class RbacSeeder extends Seeder
                     // "Only a project manager or the system admin creates" a
                     // meeting (decided 2026-08-28).
                     'meetings.schedule',
+                    // The Accounts pages, to sort out sign-in problems without
+                    // the owner (owner, 2026-10-28).
+                    'accounts.manage',
                 ],
                 // Outranks HR in system and is outranked by them everywhere
                 // else - the row that makes rank per-domain rather than a

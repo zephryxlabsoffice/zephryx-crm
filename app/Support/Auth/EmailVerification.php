@@ -143,20 +143,7 @@ class EmailVerification
             ['user' => $user->id, 'hash' => self::hash($address)],
         );
 
-        Mail::to($address)->send(new EmailVerifyMail($url, (string) $user->name, $address, self::LINK_HOURS, self::notMeUrl($user, $address)));
-    }
-
-    /**
-     * The red button: a signed link to the "This wasn't me" page. See
-     * AppSupportAuthSecurityLock.
-     */
-    public static function notMeUrl(User $user, string $address): string
-    {
-        return URL::temporarySignedRoute(
-            'account.not-me',
-            now()->addDays(SecurityLock::LINK_DAYS),
-            ['user' => $user->id, 'address' => $address],
-        );
+        Mail::to($address)->send(new EmailVerifyMail($url, (string) $user->name, $address, self::LINK_HOURS, SecurityLock::url($user, $address, SecurityLock::EMAIL)));
     }
 
     /**
@@ -180,7 +167,7 @@ class EmailVerification
         request()->attributes->set('change_notice_sent', [...$sent, strtolower($old)]);
 
         try {
-            Mail::to($old)->send(new EmailChangedNoticeMail((string) $user->name, $old, $new, self::notMeUrl($user, $old)));
+            Mail::to($old)->send(new EmailChangedNoticeMail((string) $user->name, $old, $new, SecurityLock::url($user, $old, SecurityLock::EMAIL)));
         } catch (Throwable $e) {
             report($e);
         }

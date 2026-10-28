@@ -18,6 +18,8 @@ class EmployeePresenter
         'on_leave' => ['pill-amber', 'On Leave'],
         'inactive' => ['pill-gray', 'Inactive'],
         'suspended' => ['pill-red', 'Suspended'],
+        // Put on hold from a "This wasn't me" button (2026-10-28).
+        'on_hold' => ['pill-amber', 'On hold (security)'],
     ];
 
     /**

@@ -15,6 +15,7 @@ use App\Support\Admin\AccountDirectory;
 use App\Support\Audit\AuditLog;
 use App\Support\Auth\PasswordResets;
 use App\Support\Auth\RememberMe;
+use App\Support\Auth\SecurityLock;
 use App\Support\Auth\TrustedDevices;
 use App\Support\Rbac\Rbac;
 use App\Support\Realm;
@@ -82,6 +83,7 @@ class AccountController extends Controller
     public function index(Request $request): Response
     {
         return response()->view('admin.accounts.index', [
+            'ar' => $this->route(''),
             'activeNav' => 'accounts',
             'accounts' => AccountDirectory::all(),
             'stats' => AccountDirectory::stats(),
@@ -108,6 +110,7 @@ class AccountController extends Controller
     public function create(Request $request): Response
     {
         return response()->view('admin.accounts.create', [
+            'ar' => $this->route(''),
             'activeNav' => 'accounts',
             'kind' => old('kind', $request->query('kind')) === 'normal' ? 'normal' : 'employee',
             'roles' => AccessDirectory::roles()->keyBy('key'),
@@ -148,6 +151,8 @@ class AccountController extends Controller
         ], [
             'roles.required' => 'A normal account can do nothing without a role. Tick at least one.',
         ]);
+
+        $this->guardTopRoles([], $data['roles'] ?? []);
 
         if ($normal) {
             return $this->storeNormal($request, $data);
@@ -221,7 +226,7 @@ class AccountController extends Controller
         );
 
         return redirect()
-            ->route('admin.accounts.show', ['account' => $user->user_id])
+            ->route($this->route('show'), ['account' => $user->user_id])
             ->with('status', $user->name.' was added as '.$user->user_id.' and emailed a link to set their password. '
                 .'HR can now complete their department, documents and salary in Employees.')
             ->with('status_tone', 'success');
@@ -243,7 +248,7 @@ class AccountController extends Controller
         $blockers = $removal->blockers($user);
 
         if ($blockers !== []) {
-            return redirect()->route('admin.accounts.show', ['account' => $user->user_id])
+            return redirect()->route($this->route('show'), ['account' => $user->user_id])
                 ->with('status', 'This account cannot be deleted - it has been used: '.implode(', ', $blockers)
                     .'. Deactivate it instead.')
                 ->with('status_tone', 'danger');
@@ -271,7 +276,7 @@ class AccountController extends Controller
             request: $request,
         );
 
-        return redirect()->route('admin.accounts.index')
+        return redirect()->route($this->route('index'))
             ->with('status', $user->name.' ('.$user->user_id.') was deleted. The email '.$user->email.' can be used again.')
             ->with('status_tone', 'success');
     }
@@ -314,7 +319,7 @@ class AccountController extends Controller
         $after = $this->companyLine($employee->fresh(['department', 'designation', 'manager.user']));
 
         if ($before === $after) {
-            return redirect()->route('admin.accounts.show', ['account' => $user->user_id])
+            return redirect()->route($this->route('show'), ['account' => $user->user_id])
                 ->with('status', 'Nothing changed.')
                 ->with('status_tone', 'info');
         }
@@ -329,7 +334,7 @@ class AccountController extends Controller
             request: $request,
         );
 
-        return redirect()->route('admin.accounts.show', ['account' => $user->user_id])
+        return redirect()->route($this->route('show'), ['account' => $user->user_id])
             ->with('status', 'Company details saved.')
             ->with('status_tone', 'success');
     }
@@ -409,7 +414,7 @@ class AccountController extends Controller
         );
 
         return redirect()
-            ->route('admin.accounts.show', ['account' => $user->user_id])
+            ->route($this->route('show'), ['account' => $user->user_id])
             ->with('status', $user->name.' was added as '.$user->user_id.' (normal account, not an employee) '
                 .'and emailed a link to set the password.')
             ->with('status_tone', 'success');
@@ -434,6 +439,7 @@ class AccountController extends Controller
         $employee = Employee::with(['department', 'designation', 'manager.user'])->where('user_id', $user->id)->first();
 
         return response()->view('admin.accounts.show', [
+            'ar' => $this->route(''),
             'activeNav' => 'accounts',
             /*
              * Company details - who works where (2026-10-27). A record, never
@@ -500,7 +506,7 @@ class AccountController extends Controller
 
         if ($was === $data['status']) {
             return redirect()
-                ->route('admin.accounts.show', ['account' => $user->user_id])
+                ->route($this->route('show'), ['account' => $user->user_id])
                 ->with('status', 'Nothing changed.')
                 ->with('status_tone', 'info');
         }
@@ -524,8 +530,28 @@ class AccountController extends Controller
             request: $request,
         );
 
+        /*
+         * Off a security hold: the old password may be known to whoever caused
+         * it, so the person is sent a link to choose a new one. An admin's
+         * link, so it carries no "This wasn't me" button (owner, 2026-10-28).
+         */
+        if ($was === SecurityLock::STATUS && $data['status'] === 'active') {
+            $token = $this->resets->issue($user, $request);
+
+            Mail::to($user->email)->send(new PasswordResetMail(
+                url: route('password.reset.form', ['token' => $token]),
+                name: $user->name,
+                ip: $request->ip(),
+            ));
+
+            return redirect()
+                ->route($this->route('show'), ['account' => $user->user_id])
+                ->with('status', $user->name.' is off hold and has been emailed a link to choose a new password.')
+                ->with('status_tone', 'success');
+        }
+
         return redirect()
-            ->route('admin.accounts.show', ['account' => $user->user_id])
+            ->route($this->route('show'), ['account' => $user->user_id])
             ->with('status', $data['status'] === 'active'
                 ? $user->name.' can sign in again.'
                 : $user->name.' can no longer sign in, and anywhere they were signed in has been signed out.')
@@ -568,6 +594,11 @@ class AccountController extends Controller
 
         $was = collect(AccessDirectory::rolesOf($user))->sort()->values();
 
+        $this->guardTopRoles(
+            $user->roles()->pluck('role_key'),
+            $data['roles'] ?? [],
+        );
+
         $ids = Role::whereIn('role_key', $data['roles'] ?? [])->pluck('id');
 
         $user->roles()->sync(
@@ -584,7 +615,7 @@ class AccountController extends Controller
 
         if ($was->all() === $now->all()) {
             return redirect()
-                ->route('admin.accounts.show', ['account' => $user->user_id])
+                ->route($this->route('show'), ['account' => $user->user_id])
                 ->with('status', 'Nothing changed.')
                 ->with('status_tone', 'info');
         }
@@ -607,7 +638,7 @@ class AccountController extends Controller
         );
 
         return redirect()
-            ->route('admin.accounts.show', ['account' => $user->user_id])
+            ->route($this->route('show'), ['account' => $user->user_id])
             ->with('status', 'Roles saved.')
             ->with('status_tone', 'success');
     }
@@ -653,7 +684,7 @@ class AccountController extends Controller
         );
 
         return redirect()
-            ->route('admin.accounts.show', ['account' => $user->user_id])
+            ->route($this->route('show'), ['account' => $user->user_id])
             ->with('status', $user->name.' has been emailed a reset link, and is signed out everywhere until they use it.')
             ->with('status_tone', 'success');
     }
@@ -684,7 +715,7 @@ class AccountController extends Controller
         );
 
         return redirect()
-            ->route('admin.accounts.show', ['account' => $user->user_id])
+            ->route($this->route('show'), ['account' => $user->user_id])
             ->with('status', $user->name.' has been signed out everywhere.')
             ->with('status_tone', 'success');
     }
@@ -714,7 +745,7 @@ class AccountController extends Controller
         );
 
         return redirect()
-            ->route('admin.accounts.show', ['account' => $user->user_id])
+            ->route($this->route('show'), ['account' => $user->user_id])
             ->with('status', 'Every device trusted for '.$user->name.' has been forgotten. The next sign-in anywhere asks for a code.')
             ->with('status_tone', 'success');
     }
@@ -735,7 +766,52 @@ class AccountController extends Controller
 
         abort_if($user === null, 404);
 
+        /*
+         * A System Administrator reaches these pages from the staff side
+         * (owner, 2026-10-28) and is a person with an account of their own, so
+         * the rules for acting on people apply (§2.6): not on themselves, and
+         * not on anybody who does not rank below them in `system` - which
+         * leaves a second System Administrator to the owner.
+         */
+        $actor = request()->user();
+
+        if ($actor !== null && $actor->account_type === Realm::STAFF) {
+            abort_if($actor->is($user) || ! $this->rbac->outranks($actor, $user, 'system'), 403);
+        }
+
         return $user;
+    }
+
+    /**
+     * The route name for an accounts page, on whichever side this request came
+     * from: the Admin Panel (`admin.accounts.*`) or a System Administrator's
+     * staff sidebar (`staff-accounts.*`).
+     */
+    protected function route(string $name): string
+    {
+        return (request()->is('admin/*') ? 'admin.accounts.' : 'staff-accounts.').$name;
+    }
+
+    /**
+     * Roles a System Administrator may neither give nor take away: their own,
+     * and the CEO's. Only the owner hands out the top of the ladder.
+     *
+     * @param  iterable<string>  $before
+     * @param  iterable<string>  $after
+     */
+    protected function guardTopRoles(iterable $before, iterable $after): void
+    {
+        if (request()->user()?->account_type !== Realm::STAFF) {
+            return;
+        }
+
+        $changed = collect($before)->diff($after)->merge(collect($after)->diff($before));
+
+        if ($changed->intersect(['system_admin', 'ceo'])->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'roles' => 'Only the owner can give or take away the CEO and System Administrator roles.',
+            ]);
+        }
     }
 
     /**

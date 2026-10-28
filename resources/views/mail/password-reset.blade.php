@@ -33,4 +33,6 @@
     </p>
 
     @include('mail.partials.fallback-link', ['url' => $url])
+
+    @include('mail.partials.not-me')
 @endsection

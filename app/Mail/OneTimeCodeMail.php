@@ -28,6 +28,8 @@ class OneTimeCodeMail extends Mailable
         public string $code,
         public string $name,
         public ?string $ip = null,
+        // The red "This wasn't me" link; empty for a reset an admin sent.
+        public string $notMeUrl = '',
     ) {
     }
 
@@ -50,6 +52,7 @@ class OneTimeCodeMail extends Mailable
                 'code' => $this->code,
                 'name' => $this->name,
                 'ip' => $this->ip,
+                'notMeUrl' => $this->notMeUrl,
                 'minutes' => OneTimeCode::EXPIRY_MINUTES,
             ],
         );

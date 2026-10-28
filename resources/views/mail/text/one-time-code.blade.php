@@ -11,4 +11,6 @@ Didn't try to sign in? Somebody else has your password. Change it as soon as you
 
 Nobody from {!! config('zephryx.brand.name') !!} will ever phone or email to ask you for this code.
 
+@include('mail.text.not-me')
+
 @include('mail.text.footer')

@@ -46,6 +46,8 @@ return [
     ['key' => 'calendar',      'label' => 'Calendar',       'icon' => 'calendar',      'route' => 'calendar.index', 'permission' => 'calendar.view', 'deferred' => true],
     ['key' => 'reports',       'label' => 'Reports',        'icon' => 'reports',       'route' => 'reports.index', 'permission' => 'reports.view', 'deferred' => true],
     ['key' => 'announcements', 'label' => 'Announcements',  'icon' => 'announcements', 'route' => 'announcements.index', 'permission' => 'announcements.view'],
+    // System Administrator only (2026-10-28): the Admin Panel's Accounts pages from the staff side.
+    ['key' => 'accounts',      'label' => 'Accounts',       'icon' => 'employees',     'route' => 'staff-accounts.index', 'permission' => 'accounts.manage'],
     ['key' => 'profile',       'label' => 'My Profile',     'icon' => 'profile',       'route' => 'profile.show',  'permission' => 'profile.view'],
     ['key' => 'support',       'label' => 'Support',        'icon' => 'support',       'route' => 'support.show',  'permission' => 'support.view'],
 

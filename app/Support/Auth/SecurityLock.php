@@ -10,28 +10,66 @@ use App\Support\Realm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Throwable;
 
 /**
  * "This wasn't me" (owner, 2026-10-28).
  *
- * Every email about an address change carries a red button. Pressing it
- * locks the account: it is suspended (the same status the Admin Panel sets,
- * so the Admin Panel is also how it is unlocked), every session, remember-me
- * token and trusted device is revoked, and the owner and every System
- * Administrator are told by email and on their dashboard.
+ * Every email a person gets because of their own account - the sign-in code,
+ * a password reset they asked for, an email change - carries a red button.
+ * The one exception is a reset link an administrator sent: that was not
+ * something the person did, so there is nothing for them to disown.
+ *
+ * Pressing it puts the account ON HOLD: a status of its own, not a
+ * suspension, so it reads as "held for your safety" rather than "removed".
+ * Every session, remember-me token and trusted device is revoked, and the
+ * owner and every System Administrator are told by email and on their
+ * dashboards. Taking it off hold (Accounts → Restore) emails the person a
+ * fresh password link.
  */
 class SecurityLock
 {
+    public const STATUS = 'on_hold';
+
     public const LINK_DAYS = 7;
 
-    public static function lock(User $user, string $address, Request $request): void
+    /** What the email was about, for the page and the alert. */
+    public const SIGN_IN = 'sign-in';
+
+    public const RESET = 'reset';
+
+    public const EMAIL = 'email';
+
+    /** The red button's link. */
+    public static function url(User $user, string $address, string $reason): string
     {
-        if ($user->status === 'suspended') {
+        return URL::temporarySignedRoute(
+            'account.not-me',
+            now()->addDays(self::LINK_DAYS),
+            ['user' => $user->id, 'address' => $address, 'reason' => $reason],
+        );
+    }
+
+    /** What happened, in words, for each reason. */
+    public static function describe(string $reason): string
+    {
+        return match ($reason) {
+            self::SIGN_IN => 'a sign-in code',
+            self::RESET => 'a password reset link',
+            default => 'an email change',
+        };
+    }
+
+    public static function lock(User $user, string $address, string $reason, Request $request): void
+    {
+        if ($user->status === self::STATUS) {
             return;
         }
 
-        $user->forceFill(['status' => 'suspended'])->save();
+        $was = $user->status;
+
+        $user->forceFill(['status' => self::STATUS])->save();
 
         app(RememberMe::class)->revokeAll($user);
         app(TrustedDevices::class)->revokeAll($user);
@@ -42,12 +80,12 @@ class SecurityLock
             actor: $user,
             entityType: 'user',
             entityId: $user->user_id,
-            before: 'active',
-            after: 'Locked from the "This wasn\'t me" link sent to '.$address.'; signed out everywhere',
+            before: $was,
+            after: 'On hold: "This wasn\'t me" on '.self::describe($reason).' sent to '.$address.'; signed out everywhere',
             request: $request,
         );
 
-        self::tell($user, $address);
+        self::tell($user, $address, $reason);
     }
 
     /**
@@ -55,10 +93,11 @@ class SecurityLock
      * email each, and a notification on the staff dashboard for the latter
      * (the Admin Panel shows its own alert - see admin/dashboard).
      */
-    protected static function tell(User $user, string $address): void
+    protected static function tell(User $user, string $address, string $reason): void
     {
         $admins = User::query()
             ->where('status', 'active')
+            ->whereKeyNot($user->id)
             ->where(fn ($q) => $q
                 ->where('account_type', Realm::ADMIN)
                 ->orWhereHas('roles', fn ($r) => $r->where('role_key', 'system_admin')))
@@ -69,13 +108,23 @@ class SecurityLock
                 app(Notifier::class)->send(
                     reader: $admin,
                     kind: 'security',
-                    title: $user->name.'\'s account was locked',
-                    body: 'Somebody at '.$address.' said they did not ask for an email change. The account is suspended until an admin restores it.',
+                    title: $user->name.'\'s account is on hold',
+                    body: 'Somebody at '.$address.' said they did not ask for '.self::describe($reason).'. Restore it from Accounts once you have checked with them.',
+                    route: 'staff-accounts.show',
+                    params: ['account' => $user->user_id],
                 );
             }
 
             try {
-                Mail::to($admin->email)->send(new SecurityAlertMail((string) $user->name, (string) $user->user_id, $address));
+                Mail::to($admin->email)->send(new SecurityAlertMail(
+                    (string) $user->name,
+                    (string) $user->user_id,
+                    $address,
+                    self::describe($reason),
+                    $admin->account_type === Realm::ADMIN
+                        ? url('/admin/accounts/'.$user->user_id)
+                        : url('/accounts/'.$user->user_id),
+                ));
             } catch (Throwable $e) {
                 report($e);
             }

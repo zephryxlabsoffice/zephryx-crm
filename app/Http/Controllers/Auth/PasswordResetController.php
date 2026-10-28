@@ -9,6 +9,7 @@ use App\Support\Audit\AuditLog;
 use App\Support\Auth\EmailVerification;
 use App\Support\Auth\PasswordResets;
 use App\Support\Auth\RememberMe;
+use App\Support\Auth\SecurityLock;
 use App\Support\Auth\TrustedDevices;
 use App\Support\Realm;
 use App\Support\StaffEmails;
@@ -100,6 +101,9 @@ class PasswordResetController extends Controller
                 url: route('password.reset.form', ['token' => $token]),
                 name: $user->name,
                 ip: $request->ip(),
+                // Asked for by somebody typing at the form, so the person can
+                // disown it - unlike a reset an admin sends.
+                notMeUrl: SecurityLock::url($user, (string) $user->email, SecurityLock::RESET),
             ));
 
             $this->audit->record(

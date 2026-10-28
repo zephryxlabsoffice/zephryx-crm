@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Support\Admin\AccessDirectory;
 use App\Support\Audit\AuditLog;
 use App\Support\Auth\PasswordResets;
+use App\Support\Auth\SecurityLock;
 use App\Support\Documents\DocumentStore;
 use App\Support\EmployeeDirectory;
 use App\Support\EmployeePresenter;
@@ -527,6 +528,14 @@ class EmployeeController extends Controller
             // either. A control somebody can apply to themselves is not one.
             throw ValidationException::withMessages([
                 'status' => 'You cannot change the status of your own record.',
+            ]);
+        }
+
+        // A security hold is lifted from Accounts, where lifting it sends a
+        // fresh password link - not from here, where it would not.
+        if ($record->user?->status === SecurityLock::STATUS) {
+            throw ValidationException::withMessages([
+                'status' => 'This account is on hold for security. The owner or a System Administrator restores it from Accounts.',
             ]);
         }
 

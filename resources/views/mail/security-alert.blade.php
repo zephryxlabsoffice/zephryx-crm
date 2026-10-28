@@ -1,24 +1,22 @@
 {{-- Inline styles and tables: see mail/layout.blade.php. --}}
 @extends('mail.layout')
 
-@section('preheader', $name.'\'s account was locked after "This wasn\'t me" was pressed.')
+@section('preheader', $name.'\'s account was put on hold after "This wasn\'t me" was pressed.')
 
-@section('heading', 'An account was locked')
+@section('heading', 'An account is on hold')
 
 @section('content')
     <p style="margin: 0 0 16px;">Hello,</p>
 
     <p style="margin: 0 0 20px;">
-        Somebody using <strong>{{ $address }}</strong> pressed "This wasn't me" on an
-        email about a change to <strong>{{ $name }}</strong>'s ({{ $staffId }}) email
-        address. The account has been locked: it is suspended, and it was signed out
-        everywhere.
+        Somebody using <strong>{{ $address }}</strong> pressed "This wasn't me" on
+        {{ $what }} email for <strong>{{ $name }}</strong> ({{ $staffId }}). The account
+        is on hold for security: nobody can sign in, and it was signed out everywhere.
     </p>
 
     <p style="margin: 0 0 20px;">
-        Check with {{ $name }} in person. If the change was genuine, correct the email if
-        needed and set the account back to Active from the Admin Panel. If it was not,
-        find out who made the change before unlocking it.
+        Check with {{ $name }} in person. When it is safe, open the account and press
+        Restore: they will be emailed a link to choose a new password.
     </p>
 
     @include('mail.partials.button', ['url' => $url, 'label' => 'Open the account'])

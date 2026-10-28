@@ -33,6 +33,8 @@ class EmailChangeMail extends Mailable
         public string $fromEmail,
         public string $toEmail,
         public ?string $ip = null,
+        // The red "This wasn't me" link; empty for a reset an admin sent.
+        public string $notMeUrl = '',
     ) {
     }
 
@@ -57,6 +59,7 @@ class EmailChangeMail extends Mailable
                 'fromEmail' => $this->fromEmail,
                 'toEmail' => $this->toEmail,
                 'ip' => $this->ip,
+                'notMeUrl' => $this->notMeUrl,
                 'hours' => EmailChanges::EXPIRY_HOURS,
             ],
         );

@@ -12,7 +12,7 @@
 @section('content')
     <div class="page-hd-row">
         <div class="page-hd">
-            <a class="back-link" href="{{ route('admin.accounts.index') }}">
+            <a class="back-link" href="{{ route($ar.'index') }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polyline points="15 18 9 12 15 6"/>
                 </svg>
@@ -36,7 +36,7 @@
                         narrower of them (§2.4).
                     </p>
 
-                    <form method="POST" action="{{ route('admin.accounts.roles', $account['user_id']) }}">
+                    <form method="POST" action="{{ route($ar.'roles', $account['user_id']) }}">
                         @csrf
 
                         <div class="ad-perms">
@@ -74,7 +74,7 @@
                             and salary stay with HR in Employees.
                         </p>
 
-                        <form method="POST" action="{{ route('admin.accounts.company', $account['user_id']) }}">
+                        <form method="POST" action="{{ route($ar.'company', $account['user_id']) }}">
                             @csrf
 
                             <div class="form-grid">
@@ -213,7 +213,15 @@
                     <strong>Sign-in</strong>
                 </div>
 
-                <form method="POST" action="{{ route('admin.accounts.status', $account['user_id']) }}">
+                @if ($account['status'] === 'on_hold')
+                    @include('partials.notice', [
+                        'tone' => 'danger',
+                        'title' => 'On hold for security',
+                        'message' => 'Somebody pressed "This wasn\'t me" on an email for this account (see the Audit Log). Check with them in person; restoring emails them a link to choose a new password.',
+                    ])
+                @endif
+
+                <form method="POST" action="{{ route($ar.'status', $account['user_id']) }}">
                     @csrf
 
                     {{--
@@ -244,7 +252,7 @@
 
                     <div class="dash-punch-action">
                         <button class="btn btn-outline" type="submit">
-                            {{ $account['status'] === 'active' ? 'Suspend account' : 'Restore account' }}
+                            {{ $account['status'] === 'active' ? 'Suspend account' : ($account['status'] === 'on_hold' ? 'Restore and email a password link' : 'Restore account') }}
                         </button>
                     </div>
                 </form>
@@ -265,7 +273,7 @@
                     <strong>If something is wrong</strong>
                 </div>
 
-                <form method="POST" action="{{ route('admin.accounts.force-password-reset', $account['user_id']) }}">
+                <form method="POST" action="{{ route($ar.'force-password-reset', $account['user_id']) }}">
                     @csrf
                     <p class="dash-note">
                         Emails a reset link and signs them out everywhere until they use
@@ -276,7 +284,7 @@
                     </div>
                 </form>
 
-                <form method="POST" action="{{ route('admin.accounts.sign-out', $account['user_id']) }}">
+                <form method="POST" action="{{ route($ar.'sign-out', $account['user_id']) }}">
                     @csrf
                     <p class="dash-note">
                         Ends every session and remember-me chain. The password and any
@@ -288,7 +296,7 @@
                     </div>
                 </form>
 
-                <form method="POST" action="{{ route('admin.accounts.untrust-devices', $account['user_id']) }}">
+                <form method="POST" action="{{ route($ar.'untrust-devices', $account['user_id']) }}">
                     @csrf
                     <p class="dash-note">
                         Forgets every device this account skipped the code on. The next
@@ -309,7 +317,7 @@
                 </div>
 
                 @if ($deleteBlockers === [])
-                    <form method="POST" action="{{ route('admin.accounts.delete', $account['user_id']) }}">
+                    <form method="POST" action="{{ route($ar.'delete', $account['user_id']) }}">
                         @csrf
                         <p class="dash-note">
                             This account has never been used, so it can be removed completely

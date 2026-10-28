@@ -12,7 +12,7 @@
     @php $normal = $kind === 'normal'; @endphp
 
     <div class="page-hd">
-        <a class="back-link" href="{{ route('admin.accounts.index') }}">
+        <a class="back-link" href="{{ route($ar.'index') }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="15 18 9 12 15 6"/>
             </svg>
@@ -23,13 +23,13 @@
     </div>
 
     <nav class="tabs" aria-label="Kind of account">
-        <a class="tab @if (! $normal) active @endif" href="{{ route('admin.accounts.create') }}"
+        <a class="tab @if (! $normal) active @endif" href="{{ route($ar.'create') }}"
            @if (! $normal) aria-current="page" @endif>Employee</a>
-        <a class="tab @if ($normal) active @endif" href="{{ route('admin.accounts.create', ['kind' => 'normal']) }}"
+        <a class="tab @if ($normal) active @endif" href="{{ route($ar.'create', ['kind' => 'normal']) }}"
            @if ($normal) aria-current="page" @endif>Normal account</a>
     </nav>
 
-    <form method="POST" action="{{ route('admin.accounts.store') }}">
+    <form method="POST" action="{{ route($ar.'store') }}">
         @csrf
         <input type="hidden" name="kind" value="{{ $kind }}">
 

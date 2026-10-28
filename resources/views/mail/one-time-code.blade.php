@@ -52,4 +52,6 @@
     <p style="margin: 20px 0 0; font-size: 13px; color: #7A8A83;">
         Nobody from {{ config('zephryx.brand.name') }} will ever phone or email to ask you for this code.
     </p>
+
+    @include('mail.partials.not-me')
 @endsection

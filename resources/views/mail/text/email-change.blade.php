@@ -26,4 +26,6 @@ Didn't ask for this? Do nothing. The change cannot go through without this link,
 If you were not expecting this, ignore it. Nothing about this address changes unless the link is opened.
 @endif
 
+@include('mail.text.not-me')
+
 @include('mail.text.footer')

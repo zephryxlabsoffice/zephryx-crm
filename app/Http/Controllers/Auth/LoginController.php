@@ -10,6 +10,7 @@ use App\Support\Auth\EmailVerification;
 use App\Support\Auth\LoginThrottle;
 use App\Support\Auth\OneTimeCode;
 use App\Support\Auth\RememberMe;
+use App\Support\Auth\SecurityLock;
 use App\Support\Auth\TrustedDevices;
 use App\Support\Realm;
 use App\Support\StaffEmails;
@@ -194,6 +195,12 @@ class LoginController extends Controller
                 request: $request,
             );
 
+            // Held for security, not closed: a page of its own, with a way to
+            // reach an admin (owner, 2026-10-28).
+            if ($user->status === SecurityLock::STATUS) {
+                return redirect()->route('account.on-hold');
+            }
+
             $request->session()->flash(
                 AccountStatusController::SESSION_KEY,
                 $user->account_type === Realm::CLIENT ? Realm::CLIENT : Realm::STAFF,
@@ -354,6 +361,7 @@ class LoginController extends Controller
             code: $code,
             name: $user->name,
             ip: $request->ip(),
+            notMeUrl: SecurityLock::url($user, (string) $user->email, SecurityLock::SIGN_IN),
         ));
 
         $this->audit->record(

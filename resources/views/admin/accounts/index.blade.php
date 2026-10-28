@@ -15,7 +15,7 @@
         </div>
 
         <div class="hd-actions">
-            <a class="btn btn-primary" href="{{ route('admin.accounts.create') }}">Add account</a>
+            <a class="btn btn-primary" href="{{ route($ar.'create') }}">Add account</a>
         </div>
     </div>
 
@@ -75,7 +75,7 @@
                         @php $status = EP::status($account['status']); @endphp
                         <tr>
                             <td>
-                                <a class="row-link person-row" href="{{ route('admin.accounts.show', $account['user_id']) }}">
+                                <a class="row-link person-row" href="{{ route($ar.'show', $account['user_id']) }}">
                                     <span class="avatar {{ Avatar::tint($account['name']) }}" aria-hidden="true">
                                         {{ Avatar::initials($account['name']) }}
                                     </span>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AccountController as AdminAccountController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ClientController;
@@ -1038,3 +1039,41 @@ Route::get('/reports', [ModulePlaceholderController::class, 'missing'])->name('r
  * decides whether the sidebar link shows.
  */
 Route::get('/support', SupportController::class)->name('support.show');
+
+/*
+|--------------------------------------------------------------------------
+| Accounts, for a System Administrator (2026-10-28)
+|--------------------------------------------------------------------------
+|
+| The same pages and controller as Admin Panel → Accounts, so the System
+| Administrator can deal with a locked account, a forgotten password or a
+| lost device without the owner. Behind `accounts.manage`; the controller
+| adds the rules for acting on a person (not yourself, not anybody who does
+| not rank below you in `system`) and keeps the CEO and System Administrator
+| roles for the owner to hand out.
+*/
+Route::prefix('accounts')
+    ->name('staff-accounts.')
+    ->middleware('permission:accounts.manage')
+    ->group(function () {
+        $account = '[A-Za-z0-9-]{1,32}';
+
+        Route::get('/', [AdminAccountController::class, 'index'])->name('index');
+        Route::get('/new', [AdminAccountController::class, 'create'])->name('create');
+        Route::post('/', [AdminAccountController::class, 'store'])->name('store');
+        Route::get('/{account}', [AdminAccountController::class, 'show'])->where('account', $account)->name('show');
+
+        foreach ([
+            'status' => 'status',
+            'roles' => 'roles',
+            'delete' => 'destroy',
+            'company' => 'company',
+            'force-password-reset' => 'forcePasswordReset',
+            'sign-out' => 'signOutEverywhere',
+            'untrust-devices' => 'untrustDevices',
+        ] as $path => $action) {
+            Route::post('/{account}/'.$path, [AdminAccountController::class, $action])
+                ->where('account', $account)
+                ->name($path);
+        }
+    });

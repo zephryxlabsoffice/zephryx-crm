@@ -12,6 +12,7 @@ use App\Support\Audit\AuditLog;
 use App\Support\Auth\EmailChanges;
 use App\Support\Auth\PasswordResets;
 use App\Support\Auth\RememberMe;
+use App\Support\Auth\SecurityLock;
 use App\Support\Auth\TrustedDevices;
 use App\Support\Documents\DocumentStore;
 use App\Support\Images\PhotoIntake;
@@ -516,6 +517,7 @@ class ProfileController extends Controller
             fromEmail: $user->email,
             toEmail: $data['new_email'],
             ip: $request->ip(),
+            notMeUrl: SecurityLock::url($user, (string) $user->email, SecurityLock::EMAIL),
         ));
 
         Mail::to($data['new_email'])->send(new EmailChangeMail(
@@ -525,6 +527,7 @@ class ProfileController extends Controller
             fromEmail: $user->email,
             toEmail: $data['new_email'],
             ip: $request->ip(),
+            notMeUrl: SecurityLock::url($user, $data['new_email'], SecurityLock::EMAIL),
         ));
 
         $this->audit->record(

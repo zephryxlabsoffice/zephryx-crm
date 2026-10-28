@@ -198,12 +198,12 @@ class EmailVerificationTest extends TestCase
         });
 
         // Opening the link changes nothing - mail scanners open links.
-        $this->get($notMe)->assertOk()->assertSee('lock the account');
+        $this->get($notMe)->assertOk()->assertSee('put the account on hold');
         $this->assertSame('active', $user->fresh()->status);
 
-        $this->post($notMe)->assertOk()->assertSee('The account is locked');
+        $this->post($notMe)->assertOk()->assertSee('The account is on hold');
 
-        $this->assertSame('suspended', $user->fresh()->status);
+        $this->assertSame('on_hold', $user->fresh()->status);
         $this->assertSame(0, DB::table('sessions')->where('user_id', $user->id)->count());
         $this->assertSame(1, DB::table('audit_log')->where('action', AuditLog::SECURITY_LOCKED)->count());
 
@@ -212,7 +212,7 @@ class EmailVerificationTest extends TestCase
         $this->assertSame(1, DB::table('notifications')->where('user_id', $sysadmin->id)->where('kind', 'security')->count());
 
         // And the owner's Overview says so until it is unlocked.
-        $this->actingAs($owner)->get('/admin/dashboard')->assertSee('account is locked');
+        $this->actingAs($owner)->get('/admin/dashboard')->assertSee('account is on hold');
     }
 
     public function test_a_tampered_red_button_is_refused(): void

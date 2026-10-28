@@ -267,6 +267,7 @@ class RealmGuardTest extends TestCase
             // The "This wasn't me" page and its press; signed (2026-10-28).
             'account.not-me',
             'account.not-me.lock',
+            'account.on-hold',
             // Following an emailed verification link works signed out; the
             // signature is the gate (2026-10-28).
             'email.verify',

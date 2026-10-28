@@ -56,6 +56,7 @@ class EmailVerificationController extends Controller
         return response()->view('account.not-me', [
             'name' => (string) $user->name,
             'address' => (string) $request->query('address'),
+            'reason' => (string) $request->query('reason', SecurityLock::EMAIL),
             'action' => $request->fullUrl(),
             'locked' => false,
         ]);
@@ -66,11 +67,12 @@ class EmailVerificationController extends Controller
      */
     public function lock(Request $request, User $user): Response
     {
-        SecurityLock::lock($user, (string) $request->query('address'), $request);
+        SecurityLock::lock($user, (string) $request->query('address'), (string) $request->query('reason', SecurityLock::EMAIL), $request);
 
         return response()->view('account.not-me', [
             'name' => (string) $user->name,
             'address' => (string) $request->query('address'),
+            'reason' => (string) $request->query('reason', SecurityLock::EMAIL),
             'action' => $request->fullUrl(),
             'locked' => true,
         ]);

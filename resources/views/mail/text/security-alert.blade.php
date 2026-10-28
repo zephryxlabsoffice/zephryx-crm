@@ -1,8 +1,8 @@
 Hello,
 
-Somebody using {!! $address !!} pressed "This wasn't me" on an email about a change to {!! $name !!}'s ({!! $staffId !!}) email address. The account has been locked: it is suspended, and it was signed out everywhere.
+Somebody using {!! $address !!} pressed "This wasn't me" on {!! $what !!} email for {!! $name !!} ({!! $staffId !!}). The account is on hold for security: nobody can sign in, and it was signed out everywhere.
 
-Check with {!! $name !!} in person. If the change was genuine, correct the email if needed and set the account back to Active from the Admin Panel. If it was not, find out who made the change before unlocking it.
+Check with {!! $name !!} in person. When it is safe, open the account and press Restore: they will be emailed a link to choose a new password.
 
 {!! $url !!}
 

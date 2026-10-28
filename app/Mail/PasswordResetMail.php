@@ -20,6 +20,8 @@ class PasswordResetMail extends Mailable
         public string $url,
         public string $name,
         public ?string $ip = null,
+        // The red "This wasn't me" link; empty for a reset an admin sent.
+        public string $notMeUrl = '',
     ) {
     }
 
@@ -39,6 +41,7 @@ class PasswordResetMail extends Mailable
                 'url' => $this->url,
                 'name' => $this->name,
                 'ip' => $this->ip,
+                'notMeUrl' => $this->notMeUrl,
                 'minutes' => PasswordResets::EXPIRY_MINUTES,
             ],
         );

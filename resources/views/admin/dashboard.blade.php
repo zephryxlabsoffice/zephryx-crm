@@ -13,21 +13,18 @@
         <p>Whether this system is set up the way you meant it to be.</p>
     </div>
 
-    {{-- Accounts locked from a "This wasn't me" link and still locked. --}}
+    {{-- Accounts on hold from a "This wasn't me" button, until restored. --}}
     @php
         $securityLocked = \App\Models\User::query()
-            ->where('status', 'suspended')
-            ->whereIn('user_id', \Illuminate\Support\Facades\DB::table('audit_log')
-                ->where('action', \App\Support\Audit\AuditLog::SECURITY_LOCKED)
-                ->select('entity_id'))
+            ->where('status', \App\Support\Auth\SecurityLock::STATUS)
             ->orderBy('name')
             ->get(['name', 'user_id']);
     @endphp
     @foreach ($securityLocked as $lockedAccount)
         @include('partials.notice', [
             'tone' => 'danger',
-            'title' => 'Security: '.$lockedAccount->name.'\'s account is locked',
-            'message' => 'Somebody pressed "This wasn\'t me" on an email-change message. Check with them in person, then set the account back to Active from Accounts → '.$lockedAccount->user_id.'.',
+            'title' => 'Security: '.$lockedAccount->name.'\'s account is on hold',
+            'message' => 'Somebody pressed "This wasn\'t me" on an email for it. Check with them in person, then open Accounts → '.$lockedAccount->user_id.' and press Restore; they will be emailed a password link.',
         ])
     @endforeach
 

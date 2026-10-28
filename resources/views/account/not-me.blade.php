@@ -1,10 +1,12 @@
 @extends('layouts.standalone')
 
+@php use App\Support\Auth\SecurityLock; @endphp
+
 @section('title', 'This wasn\'t me')
 
 @section('content')
-    {{-- Reached from the red button in an address-change email. A page with
-         a second press, not a lock on the first GET, because mail scanners
+    {{-- Reached from the red button in an account email. A page with a
+         second press, not a lock on the first GET, because mail scanners
          open links in emails on their own. See App\Support\Auth\SecurityLock. --}}
     <section class="standalone-card">
         <div class="standalone-mark" aria-hidden="true">
@@ -15,31 +17,31 @@
         </div>
 
         @if ($locked)
-            <h1 class="standalone-title">The account is locked</h1>
+            <h1 class="standalone-title">The account is on hold</h1>
 
             <p class="standalone-message">
                 Nobody can sign in to it, and it has been signed out everywhere. The
-                administrators have been told and will contact the account holder
-                before unlocking it.
+                administrators have been told. Once they have checked with you, they will
+                send you a link to choose a new password.
             </p>
         @else
-            <h1 class="standalone-title">Did not ask for this change?</h1>
+            <h1 class="standalone-title">Did not ask for this?</h1>
 
             <p class="standalone-message">
-                An email address on {{ $name }}'s {{ config('zephryx.brand.name') }}
-                account was changed, and this email was sent to {{ $address }}.
+                {{ ucfirst(SecurityLock::describe($reason)) }} for {{ $name }}'s
+                {{ config('zephryx.brand.name') }} account was sent to {{ $address }}.
             </p>
 
             <p class="standalone-message">
-                If you did not ask for it, lock the account. It will be signed out
-                everywhere, nobody will be able to sign in, and the administrators will
-                be told straight away.
+                If you did not ask for it, put the account on hold. It will be signed out
+                everywhere, nobody will be able to sign in, and the administrators will be
+                told straight away.
             </p>
 
             <div class="standalone-actions">
                 <form method="POST" action="{{ $action }}">
                     @csrf
-                    <button class="btn btn-alarm" type="submit">This wasn't me, lock the account</button>
+                    <button class="btn btn-alarm" type="submit">This wasn't me, put the account on hold</button>
                 </form>
             </div>
         @endif
