@@ -440,6 +440,9 @@ class RbacSeeder extends Seeder
                 'permissions' => [
                     ...$staffReading, 'employees.view', 'clients.view', 'leave.approve',
                     'meetings.schedule',
+                    // A new client ticket goes to Support and the project
+                    // manager first, and either may assign it (review round).
+                    'tickets.triage',
                     // The client relationship is the manager's, so the client
                     // record is too — including who at the client gets a login.
                     'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
@@ -499,7 +502,12 @@ class RbacSeeder extends Seeder
             'system_admin' => [
                 'name' => 'System Administrator',
                 'description' => 'Engineer maintaining the system. Not a business administrator (§2.3).',
-                'permissions' => [...$staffReading, 'employees.view'],
+                'permissions' => [
+                    ...$staffReading, 'employees.view',
+                    // "Only a project manager or the system admin creates" a
+                    // meeting (decided 2026-08-28).
+                    'meetings.schedule',
+                ],
                 // Outranks HR in system and is outranked by them everywhere
                 // else — the row that makes rank per-domain rather than a
                 // single ladder.

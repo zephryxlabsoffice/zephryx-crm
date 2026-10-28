@@ -358,4 +358,27 @@ class RbacTest extends TestCase
 
         $this->assertSame($before->all(), $after->all());
     }
+
+    public function test_the_decided_grants_reach_a_live_site_through_the_update(): void
+    {
+        /*
+         * A live site's roles were seeded once and are only ever migrated
+         * after that, so a grant added to RbacSeeder alone never reaches it.
+         * The 2026-10-28 migration carries the two that were decided and
+         * missing: System Administrator schedules meetings, Manager triages.
+         */
+        $grants = ['system_admin' => 'meetings.schedule', 'manager' => 'tickets.triage'];
+
+        foreach ($grants as $role => $key) {
+            Role::where('role_key', $role)->first()->permissions()
+                ->detach(Permission::where('permission_key', $key)->value('id'));
+        }
+
+        (require database_path('migrations/2026_10_28_000001_grant_decided_role_permissions.php'))->up();
+        (require database_path('migrations/2026_10_28_000001_grant_decided_role_permissions.php'))->up();
+
+        foreach ($grants as $role => $key) {
+            $this->assertSame(1, Role::where('role_key', $role)->first()->permissions()->where('permission_key', $key)->count(), $role.' lacks '.$key);
+        }
+    }
 }
