@@ -121,6 +121,12 @@ Do these in order, every time.
    uploading (B5) open **Admin → Updates** and press **Back up and apply**.
    The Admin Overview also warns while a change is waiting.
 
+## B1b. Close the site (optional, recommended)
+
+Admin → **Maintenance** → **Start maintenance now** (everybody is emailed),
+or **Schedule** it ahead of time. Turn it off after B5; everybody is emailed
+that the site is back.
+
 ## B2. Back up first
 
 - After the Backups feature is live: Admin → Backups → **Back up now**, then

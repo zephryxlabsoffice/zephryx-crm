@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\BlockDuringMaintenance;
 use App\Http\Middleware\EnforceSessionLifetime;
 use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsureRealm;
@@ -58,6 +59,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             RestoreRememberedSession::class,
             EnforceSessionLifetime::class,
+            BlockDuringMaintenance::class,
         ]);
 
         // The theme cookie carries a display preference, not a secret, and is

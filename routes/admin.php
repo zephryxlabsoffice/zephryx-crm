@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AuditController as AdminAuditController;
 use App\Http\Controllers\Admin\BackupsController as AdminBackupsController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\IntegrationsController as AdminIntegrationsController;
+use App\Http\Controllers\Admin\MaintenanceController as AdminMaintenanceController;
 use App\Http\Controllers\Admin\MasterDataController as AdminMasterDataController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\UpdatesController as AdminUpdatesController;
@@ -198,6 +199,15 @@ Route::get('/backups/{file}', [AdminBackupsController::class, 'download'])
  */
 Route::get('/updates', [AdminUpdatesController::class, 'index'])->name('updates');
 Route::post('/updates', [AdminUpdatesController::class, 'store'])->name('updates.store');
+
+/*
+ * Maintenance mode (2026-10-28): closes the site to everybody but this panel.
+ * See App\Support\Maintenance.
+ */
+Route::get('/maintenance', [AdminMaintenanceController::class, 'index'])->name('maintenance');
+Route::post('/maintenance/now', [AdminMaintenanceController::class, 'start'])->name('maintenance.start');
+Route::post('/maintenance/schedule', [AdminMaintenanceController::class, 'schedule'])->name('maintenance.schedule');
+Route::post('/maintenance/end', [AdminMaintenanceController::class, 'end'])->name('maintenance.end');
 
 /*
  * The audit log. GET only, in both senses - nothing writes to it through

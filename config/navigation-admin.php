@@ -43,6 +43,7 @@ return [
     ['key' => 'integrations', 'label' => 'Integrations',  'icon' => 'integrations',  'route' => 'admin.integrations', 'permission' => 'admin.integrations.view'],
     ['key' => 'backups',     'label' => 'Backups',        'icon' => 'reports',       'route' => 'admin.backups',      'permission' => 'admin.integrations.view'],
     ['key' => 'updates',     'label' => 'Updates',        'icon' => 'settings',      'route' => 'admin.updates',      'permission' => 'admin.integrations.view'],
+    ['key' => 'maintenance', 'label' => 'Maintenance',    'icon' => 'settings',      'route' => 'admin.maintenance',  'permission' => 'admin.integrations.view'],
     ['key' => 'audit',     'label' => 'Audit Log',      'icon' => 'announcements', 'route' => 'admin.audit.index',  'permission' => 'admin.audit.view'],
 
 ];

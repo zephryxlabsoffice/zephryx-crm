@@ -60,6 +60,26 @@
                     ])
                 @endif
 
+                {{-- Maintenance on the way, on every page until it starts; and,
+                     for the Admin Panel, a reminder while it is on. --}}
+                @php $maintenanceSoon = \App\Support\Maintenance::upcoming(); @endphp
+                @if ($maintenanceSoon)
+                    @include('partials.notice', [
+                        'tone' => 'warning',
+                        'title' => 'Planned maintenance',
+                        'message' => 'The site will be closed from '
+                            .\Illuminate\Support\Carbon::parse($maintenanceSoon['from'])->format('D j M, g:i A')
+                            .' to '.\Illuminate\Support\Carbon::parse($maintenanceSoon['to'])->format('D j M, g:i A')
+                            .'. Please save your work before then.',
+                    ])
+                @elseif (\App\Support\Maintenance::isActive() && ($activeNav ?? null) !== 'maintenance')
+                    @include('partials.notice', [
+                        'tone' => 'warning',
+                        'title' => 'Maintenance is on',
+                        'message' => 'Only the Admin Panel can be used. Turn it off from Admin → Maintenance.',
+                    ])
+                @endif
+
                 @yield('content')
             </main>
         </div>

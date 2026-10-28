@@ -468,6 +468,13 @@ class AuditLog
 
     public const UPDATE_FAILED = 'admin.update_failed';
 
+    // Maintenance mode from Admin → Maintenance (2026-10-28).
+    public const MAINTENANCE_STARTED = 'admin.maintenance_started';
+
+    public const MAINTENANCE_SCHEDULED = 'admin.maintenance_scheduled';
+
+    public const MAINTENANCE_ENDED = 'admin.maintenance_ended';
+
     /**
      * Write one entry.
      *
