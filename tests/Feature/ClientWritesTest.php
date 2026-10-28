@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Mail\AccountInviteMail;
+use App\Mail\ClientWelcomeMail;
 use App\Models\Client;
 use App\Models\Permission;
 use App\Models\Role;
@@ -326,10 +326,21 @@ class ClientWritesTest extends TestCase
             'email' => 'their.person@example.test',
         ]);
 
-        Mail::assertSent(AccountInviteMail::class, function (AccountInviteMail $mail) {
+        Mail::assertSent(ClientWelcomeMail::class, function (ClientWelcomeMail $mail) use ($client) {
             return $mail->hasTo('their.person@example.test')
-                && str_contains($mail->url, '/reset-password/');
+                && str_contains($mail->url, '/reset-password/')
+                && $mail->company === $client->name;
         });
+    }
+
+    public function test_the_client_welcome_talks_about_the_portal_not_staff_records(): void
+    {
+        $html = (new ClientWelcomeMail('https://x', 'Their Person', 'DGL School', 'ZEPH5001', 'Rahul'))->render();
+
+        $this->assertStringContainsString('Your client ID', $html);
+        $this->assertStringContainsString('client portal', $html);
+        $this->assertStringContainsString('invoices', $html);
+        $this->assertStringNotContainsString('staff ID', $html);
     }
 
     public function test_an_email_already_in_use_is_refused(): void

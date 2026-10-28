@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\AccountInviteMail;
+use App\Mail\ClientWelcomeMail;
 use App\Models\Client;
 use App\Models\User;
 use App\Support\Audit\AuditLog;
@@ -258,10 +258,11 @@ class ClientController extends Controller
 
         $token = app(PasswordResets::class)->issue($account, $request);
 
-        Mail::to($account->email)->send(new AccountInviteMail(
+        Mail::to($account->email)->send(new ClientWelcomeMail(
             url: route('password.reset.form', ['token' => $token]),
             name: $account->name,
-            staffId: $account->user_id,
+            company: $record->name,
+            clientId: $account->user_id,
             addedBy: $request->user()->name,
         ));
 
