@@ -31,17 +31,6 @@ return new class extends Migration
             $table->timestamp('created_at')->useCurrent()->index();
         });
 
-        // The company's registration IDs - type, number, optional document -
-        // shown on every verify page. See App\Models\CompanyRegistration.
-        Schema::create('company_registrations', function (Blueprint $table) {
-            $table->id();
-            $table->string('type', 32);
-            $table->string('number', 100);
-            $table->string('document_path')->nullable();
-            $table->unsignedInteger('sort_order')->default(0);
-            $table->timestamps();
-        });
-
         $closed = DB::table('employees')
             ->join('users', 'users.id', '=', 'employees.user_id')
             ->where('users.status', 'inactive')
@@ -61,7 +50,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('company_registrations');
         Schema::dropIfExists('verify_scans');
 
         Schema::table('employees', function (Blueprint $table) {
