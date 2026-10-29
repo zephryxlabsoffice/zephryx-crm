@@ -83,6 +83,17 @@ class Rbac
     public const NO_EMPLOYEE_BASE_ROLE = 'mentor';
 
     /**
+     * What a company account (HR Desk) reaches by being one (v1.2.2): the
+     * dashboard. It has no Employee base, and no management role carries
+     * `dashboard.view`, so an HR Desk had no Dashboard link at all.
+     *
+     * @var list<string>
+     */
+    public const COMPANY_BASE = [
+        'dashboard.view',
+    ];
+
+    /**
      * What a client account can reach, by virtue of being one.
      *
      * Implicit for the same reason as the Employee base: these are not a
@@ -192,7 +203,11 @@ class Rbac
         $base = match ($user->account_type) {
             Realm::CLIENT => self::CLIENT_BASE,
             Realm::ADMIN => self::ADMIN_BASE,
-            default => $user->hasEmployeeBase() ? self::EMPLOYEE_BASE : [],
+            default => match (true) {
+                $user->hasEmployeeBase() => self::EMPLOYEE_BASE,
+                $user->isCompanyAccount() => self::COMPANY_BASE,
+                default => [],
+            },
         };
 
         $granted = DB::table('user_roles')

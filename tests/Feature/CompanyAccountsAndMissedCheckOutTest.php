@@ -64,6 +64,14 @@ class CompanyAccountsAndMissedCheckOutTest extends TestCase
         $this->get('/leave')->assertOk()->assertDontSee('My Leave');
     }
 
+    public function test_a_company_account_has_the_dashboard(): void
+    {
+        $this->signInAsCompanyAccount(['hr']);
+
+        $this->get('/dashboard')->assertOk();
+        $this->get('/employees')->assertOk()->assertSee('href="'.route('dashboard').'"', false);
+    }
+
     public function test_an_employee_still_sees_them(): void
     {
         $this->signInAsStaff(['employee', 'hr']);
