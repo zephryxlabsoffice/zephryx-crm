@@ -59,7 +59,17 @@
             'message' => 'The day was opened at '.P::time($record['date'], $record['check_in'])
                 .' and never closed. After '.(int) $policy['window'].' hours there is no honest way to say how long it ran, so it does not count'
                 .($own ? '.' : ' towards '.$record['employee_record']['name'].'’s month.')
-                .' Nobody can type the missing time in - a recorded time is never edited, and this one cannot be restored.',
+                .' Nobody can type the missing time in - a recorded time is never edited.'
+                .($own ? ' If you worked the day, ask HR to mark it present.' : ''),
+        ])
+    @elseif ($record['marked_present'])
+        @include('partials.notice', [
+            'tone' => 'warning',
+            'title' => 'Counted as present, with a warning'
+                .($record['marked_present_by'] ? ' - marked by '.$record['marked_present_by'] : '')
+                .' on '.P::date($record['marked_present_at']),
+            'message' => 'Checked in at '.P::time($record['date'], $record['check_in'])
+                .' and never checked out, so the day has no hours. '.$record['marked_present_reason'],
         ])
     @elseif ($record['open'])
         @include('partials.notice', [
@@ -82,6 +92,10 @@
     <section class="att-detail-grid">
         <div class="att-main">
             @include('attendance.partials.record-card')
+
+            @if ($canMarkPresent)
+                @include('attendance.partials.mark-present')
+            @endif
 
             @if ($canReject || $canRestore)
                 @include('attendance.partials.reject')

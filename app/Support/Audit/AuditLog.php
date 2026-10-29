@@ -213,6 +213,9 @@ class AuditLog
 
     public const ATTENDANCE_RESTORED = 'attendance.restored';
 
+    // A never-closed day HR marked present, with a reason (v1.2.1).
+    public const ATTENDANCE_MARKED_PRESENT = 'attendance.marked_present';
+
     /*
      * A past day HR filled in for somebody who could not check in themselves
      * (decided 2026-10-27). The record row looks like any other, so this entry

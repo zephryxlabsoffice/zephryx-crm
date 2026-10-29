@@ -71,7 +71,7 @@ class LeaveDirectory
         $search = ($filters['search'] ?? '') !== '' ? $filters['search'] : null;
 
         return LeaveRequest::query()
-            ->with(['employee.user', 'employee.department', 'decider.user'])
+            ->with(['employee.user', 'employee.department', 'decider.user', 'deciderAccount'])
             ->when($status, fn (Builder $q, string $value) => $q->where('status', $value))
             ->when($search, fn (Builder $q, string $term) => $q->where(function (Builder $q) use ($term) {
                 $like = '%'.str_replace(['%', '_'], ['\%', '\_'], $term).'%';
@@ -97,7 +97,12 @@ class LeaveDirectory
     {
         return $request->toRecordArray() + [
             'employee_record' => $request->employee ? EmployeeDirectory::row($request->employee) : null,
-            'decider_record' => $request->decider ? EmployeeDirectory::row($request->decider) : null,
+            'decider_record' => match (true) {
+                $request->decider !== null => EmployeeDirectory::row($request->decider),
+                // A company account has no employment record (v1.2.1).
+                $request->deciderAccount !== null => ['name' => $request->deciderAccount->name],
+                default => null,
+            },
         ];
     }
 
@@ -113,7 +118,7 @@ class LeaveDirectory
         }
 
         return LeaveRequest::query()
-            ->with(['employee.user', 'decider.user'])
+            ->with(['employee.user', 'decider.user', 'deciderAccount'])
             ->where('employee_id', $employee->id)
             ->orderByDesc('applied_at')
             ->get()
@@ -126,7 +131,7 @@ class LeaveDirectory
     public static function find(string $reference): ?array
     {
         $record = LeaveRequest::query()
-            ->with(['employee.user', 'employee.department', 'employee.designation', 'decider.user'])
+            ->with(['employee.user', 'employee.department', 'employee.designation', 'decider.user', 'deciderAccount'])
             ->where('reference', $reference)
             ->first();
 
@@ -147,7 +152,7 @@ class LeaveDirectory
     public static function clashesWith(array $request): Collection
     {
         return LeaveRequest::query()
-            ->with(['employee.user', 'decider.user'])
+            ->with(['employee.user', 'decider.user', 'deciderAccount'])
             ->where('reference', '!=', $request['id'])
             ->whereIn('status', [LeavePresenter::APPROVED, LeavePresenter::PENDING])
             ->overlapping($request['from'], $request['to'])
@@ -164,7 +169,7 @@ class LeaveDirectory
     public static function upcomingAbsences(int $days = 14): Collection
     {
         return LeaveRequest::query()
-            ->with(['employee.user', 'decider.user'])
+            ->with(['employee.user', 'decider.user', 'deciderAccount'])
             ->approved()
             ->overlapping(Carbon::today()->toDateString(), Carbon::today()->addDays($days)->toDateString())
             ->orderBy('from_date')

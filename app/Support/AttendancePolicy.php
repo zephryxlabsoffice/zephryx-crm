@@ -286,12 +286,20 @@ class AttendancePolicy
         $holiday = self::holidayOn($day);
         $workingDay = self::isWorkingDay($day);
 
-        $worked = self::workedMinutes($dateString, $checkIn, $checkOut);
-        $open = $checkIn !== null && $checkOut === null;
+        $markedPresent = $record !== null && self::markedPresent($record);
+        // A marked day has no hours: the clock never stopped, and is not run to now.
+        $worked = $markedPresent ? null : self::workedMinutes($dateString, $checkIn, $checkOut);
+        $open = $checkIn !== null && $checkOut === null && ! $markedPresent;
         $autoRejected = $record !== null && self::autoRejected($record);
 
+        $state = self::state($day, $checkIn, $worked, $open, $rejectedByPerson || $autoRejected, $onLeave, $workingDay, $holiday, $rostered);
+
+        if ($markedPresent && $state === AttendancePresenter::PRESENT) {
+            $state = AttendancePresenter::WARNING;
+        }
+
         return [
-            'state' => self::state($day, $checkIn, $worked, $open, $rejectedByPerson || $autoRejected, $onLeave, $workingDay, $holiday, $rostered),
+            'state' => $state,
             'worked_minutes' => $worked,
             'open' => $open,
             'open_minutes' => self::openMinutes($dateString, $checkIn, $checkOut),
@@ -300,6 +308,7 @@ class AttendancePolicy
             // able to tell them apart: one was a person's judgement and can be
             // undone, the other is a missing timestamp and cannot.
             'auto_rejected' => $autoRejected,
+            'marked_present' => $markedPresent,
             'working_day' => $workingDay,
             'holiday' => $holiday,
         ];
@@ -407,6 +416,11 @@ class AttendancePolicy
      */
     public static function autoRejected(array $record): bool
     {
+        // HR marked it present (v1.2.1): it counts, with a warning, not hours.
+        if (self::markedPresent($record)) {
+            return false;
+        }
+
         $open = self::openMinutes($record['date'], $record['check_in'] ?? null, $record['check_out'] ?? null);
 
         return $open !== null && $open >= self::autoRejectAfterHours() * 60;
@@ -436,6 +450,23 @@ class AttendancePolicy
     public static function missingCheckOut(array $record): bool
     {
         return self::autoRejected($record);
+    }
+
+    /**
+     * A never-closed day HR marked present (v1.2.1).
+     *
+     * The check-out is still missing and nobody types one in, so the day has
+     * no hours. It counts as attended and reads "Present (warning)", which is
+     * the honest version of "they were here, the clock does not say for how
+     * long". A person's rejection still beats it.
+     *
+     * @param  array<string, mixed>  $record
+     */
+    public static function markedPresent(array $record): bool
+    {
+        return ($record['marked_present_at'] ?? null) !== null
+            && ($record['check_in'] ?? null) !== null
+            && ($record['check_out'] ?? null) === null;
     }
 
     /* ══════════════════════════════════════════════════════════════════════
@@ -505,7 +536,8 @@ class AttendancePolicy
             // shown separately in its own tile, rather than being rounded to
             // half a day in a figure captioned "days" - which is the sort of
             // arithmetic nobody can reproduce from their own calendar.
-            'attended' => $counts[AttendancePresenter::PRESENT] + $counts[AttendancePresenter::HALF_DAY],
+            'attended' => $counts[AttendancePresenter::PRESENT] + $counts[AttendancePresenter::WARNING]
+                + $counts[AttendancePresenter::HALF_DAY],
             // Every day the month was walked over, which is what the donut's
             // shares are out of.
             'days_counted' => array_sum($counts),

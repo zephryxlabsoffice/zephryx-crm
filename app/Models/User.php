@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\Auth\EmailVerification;
+use App\Support\Rbac\Rbac;
 use App\Support\Realm;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -143,6 +144,22 @@ class User extends Authenticatable
     public function hasEmployeeBase(): bool
     {
         return $this->account_type === Realm::STAFF && $this->staff_kind === 'employee';
+    }
+
+    /**
+     * A company account (v1.2.1): staff with roles and no employment - HR
+     * Desk, say. Not a Mentor, who is also staff without employment but is a
+     * person, not the company.
+     *
+     * The owner's rule (2026-10-30): these are the company's own desks and
+     * outrank every employee - with only one HR, HR Desk is who approves
+     * their leave and edits their record. See Rbac::outranks.
+     */
+    public function isCompanyAccount(): bool
+    {
+        return $this->account_type === Realm::STAFF
+            && $this->staff_kind === null
+            && ! $this->roles->contains('role_key', Rbac::NO_EMPLOYEE_BASE_ROLE);
     }
 
     public function isActive(): bool

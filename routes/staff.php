@@ -881,6 +881,12 @@ Route::post('/attendance/{record}/restore', [AttendanceController::class, 'resto
     ->where('record', 'ATT-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Za-z0-9-]{1,16}')
     ->middleware('permission:attendance.reject')
     ->name('attendance.restore');
+// A day nobody checked out of, marked present by HR with a reason (v1.2.1).
+// The times are not touched; see AttendancePolicy::markedPresent.
+Route::post('/attendance/{record}/mark-present', [AttendanceController::class, 'markPresent'])
+    ->where('record', 'ATT-[0-9]{4}-[0-9]{2}-[0-9]{2}-[A-Za-z0-9-]{1,16}')
+    ->middleware('permission:attendance.reject')
+    ->name('attendance.mark-present');
 
 /*
  * The Sunday/holiday roster (decided 2026-09-11). No approval step - a row

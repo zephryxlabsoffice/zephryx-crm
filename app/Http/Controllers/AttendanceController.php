@@ -689,6 +689,63 @@ class AttendanceController extends Controller
             ->with('status_tone', 'success');
     }
 
+    /**
+     * POST /attendance/{record}/mark-present - a day somebody forgot to check
+     * out of, counted as present (v1.2.1).
+     *
+     * Only a day the auto-reject window closed on, never your own, and with a
+     * reason. The check-out stays missing - nobody types a time in - so the day
+     * reads "Present (warning)" and carries no hours.
+     */
+    public function markPresent(Request $request, string $record): RedirectResponse
+    {
+        $found = $this->findRecord($record);
+        $model = $found['model'];
+
+        $actor = $this->employeeFor($request);
+
+        if ($actor !== null && $model->employee_id === $actor->id) {
+            throw ValidationException::withMessages([
+                'present_reason' => 'You cannot mark your own attendance record.',
+            ]);
+        }
+
+        if (! $found['auto_rejected'] || $model->rejected_at !== null) {
+            return redirect()
+                ->route('attendance.show', ['record' => $record])
+                ->with('status', 'Only a day that was never checked out of can be marked present.')
+                ->with('status_tone', 'info');
+        }
+
+        $data = $request->validate([
+            'present_reason' => ['required', 'string', 'min:10', 'max:1000'],
+        ], [
+            'present_reason.required' => 'Say why this day counts.',
+            'present_reason.min' => 'Say a little more - at least 10 characters.',
+        ]);
+
+        $model->update([
+            'marked_present_at' => Carbon::now(),
+            'marked_present_by' => $request->user()->id,
+            'marked_present_reason' => $data['present_reason'],
+        ]);
+
+        $this->audit->record(
+            action: AuditLog::ATTENDANCE_MARKED_PRESENT,
+            actor: $request->user(),
+            entityType: 'attendance',
+            entityId: $record,
+            before: 'Rejected: never checked out',
+            after: 'Present (warning): '.$data['present_reason'],
+            request: $request,
+        );
+
+        return redirect()
+            ->route('attendance.show', ['record' => $record])
+            ->with('status', 'Marked present, with a warning.')
+            ->with('status_tone', 'success');
+    }
+
     /* ══════════════════════════════════════════════════════════════════════
        A MISSED PAST DAY, ENTERED BY HR
        ══════════════════════════════════════════════════════════════════════ */
@@ -877,6 +934,12 @@ class AttendanceController extends Controller
                 && ! $own
                 && $found['rejected_at'] !== null
                 && ! $found['auto_rejected'],
+            // Except by marking it present (v1.2.1): the day counts, with a
+            // warning, and the missing check-out stays missing.
+            'canMarkPresent' => $this->rbac->can($request->user(), 'attendance.reject')
+                && ! $own
+                && $found['auto_rejected']
+                && $found['rejected_at'] === null,
             // A day HR typed in looks like any other row; the log is what says
             // so, and the page has to say it too.
             'entered' => $this->audit->entriesFor('attendance', $record)

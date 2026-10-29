@@ -18,6 +18,9 @@ class AttendancePresenter
      * hours. See App\Support\AttendancePolicy.
      */
     public const PRESENT = 'present';
+
+    // Never checked out, and HR marked it present (v1.2.1). Counts as attended.
+    public const WARNING = 'warning';
     public const HALF_DAY = 'half_day';
     public const ABSENT = 'absent';
     public const LEAVE = 'leave';
@@ -48,6 +51,7 @@ class AttendancePresenter
      */
     protected const STATES = [
         self::PRESENT => ['pill-green', 'Present', 'att-dot-present', 'A full day’s hours'],
+        self::WARNING => ['pill-amber', 'Present (warning)', 'att-dot-half', 'Never checked out - HR marked it present, with no hours'],
         self::HALF_DAY => ['pill-amber', 'Half day', 'att-dot-half', 'Under the half-day threshold'],
         self::ABSENT => ['pill-red', 'Absent', 'att-dot-absent', 'A working day with no check-in'],
         self::LEAVE => ['pill-purple', 'On leave', 'att-dot-leave', 'Approved leave - not an absence'],
@@ -82,7 +86,7 @@ class AttendancePresenter
      */
     public static function filterableStates(): array
     {
-        return [self::PRESENT, self::HALF_DAY, self::ABSENT, self::LEAVE, self::REJECTED];
+        return [self::PRESENT, self::WARNING, self::HALF_DAY, self::ABSENT, self::LEAVE, self::REJECTED];
     }
 
     /**

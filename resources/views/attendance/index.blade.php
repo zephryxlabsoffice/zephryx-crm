@@ -29,12 +29,14 @@
                     Sunday roster
                 </a>
             @endif
-            <a class="btn btn-outline" href="{{ route('attendance.mine') }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                </svg>
-                My attendance
-            </a>
+            @if (auth()->user()->hasEmployeeBase())
+                <a class="btn btn-outline" href="{{ route('attendance.mine') }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    My attendance
+                </a>
+            @endif
         </div>
     </div>
 

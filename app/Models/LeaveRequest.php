@@ -14,7 +14,7 @@ class LeaveRequest extends Model
 {
     protected $fillable = [
         'reference', 'employee_id', 'type', 'from_date', 'to_date', 'days',
-        'reason', 'contact_number', 'status', 'decided_by', 'decided_at',
+        'reason', 'contact_number', 'status', 'decided_by', 'decided_by_user', 'decided_at',
         'decision_note', 'applied_at',
     ];
 
@@ -43,6 +43,17 @@ class LeaveRequest extends Model
     public function decider(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'decided_by');
+    }
+
+    /**
+     * The account that decided (v1.2.1) - set even when it has no employment
+     * record, as a company account (HR Desk) has none.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function deciderAccount(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'decided_by_user');
     }
 
     public function getRouteKeyName(): string

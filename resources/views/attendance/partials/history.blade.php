@@ -65,7 +65,7 @@
                         <td role="cell" class="cell-tight" data-label="Check-out">
                             <span class="att-time">
                                 <strong>{{ P::time($record['date'], $record['check_out']) }}</strong>
-                                @if ($evaluated['auto_rejected'])
+                                @if ($evaluated['auto_rejected'] || ($evaluated['marked_present'] ?? false))
                                     <span class="is-warn">Never checked out</span>
                                 @elseif ($evaluated['open'])
                                     <span>{{ P::openFor($evaluated['open_minutes']) }}</span>

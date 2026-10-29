@@ -184,7 +184,7 @@ class DashboardData
 
         return self::tile(
             label: 'In today',
-            value: $roll[AttendancePresenter::PRESENT] + $roll[AttendancePresenter::HALF_DAY],
+            value: $roll[AttendancePresenter::PRESENT] + $roll[AttendancePresenter::WARNING] + $roll[AttendancePresenter::HALF_DAY],
             // Out of headcount, stated, because "9" alone means nothing without
             // knowing whether the company is ten people or ninety.
             sub: 'Of '.$roll['headcount'].' on the roll',

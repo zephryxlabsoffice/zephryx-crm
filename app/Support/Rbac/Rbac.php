@@ -232,6 +232,13 @@ class Rbac
             return false;
         }
 
+        // A company account outranks every employee, whatever their roles
+        // (owner, 2026-10-30). Its own permissions still decide what it may
+        // do; two company accounts compare by rank as usual.
+        if ($actor->isCompanyAccount() && $target->hasEmployeeBase()) {
+            return true;
+        }
+
         return $this->rankOf($actor, $domain) > $this->rankOf($target, $domain);
     }
 

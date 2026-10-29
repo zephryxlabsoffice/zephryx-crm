@@ -139,7 +139,7 @@ class AttendanceDirectory
         [$date, $staffId] = $parsed;
 
         $record = AttendanceRecord::query()
-            ->with(['employee.user', 'employee.department', 'employee.designation', 'rejecter.user'])
+            ->with(['employee.user', 'employee.department', 'employee.designation', 'rejecter.user', 'markedPresentBy'])
             ->whereDate('date', $date)
             ->whereHas('employee.user', fn ($q) => $q->where('user_id', $staffId))
             ->first();

@@ -19,6 +19,7 @@ class AttendanceRecord extends Model
     protected $fillable = [
         'employee_id', 'date', 'check_in', 'check_out',
         'rejected_at', 'rejected_by', 'rejection_reason',
+        'marked_present_at', 'marked_present_by', 'marked_present_reason',
     ];
 
     protected function casts(): array
@@ -26,6 +27,7 @@ class AttendanceRecord extends Model
         return [
             'date' => 'date',
             'rejected_at' => 'datetime',
+            'marked_present_at' => 'datetime',
         ];
     }
 
@@ -43,6 +45,17 @@ class AttendanceRecord extends Model
     public function rejecter(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'rejected_by');
+    }
+
+    /**
+     * Who marked a never-closed day present (v1.2.1) - a user, so a company
+     * account with no employment record can be named too.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function markedPresentBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'marked_present_by');
     }
 
     /**
@@ -92,6 +105,9 @@ class AttendanceRecord extends Model
             'rejected_at' => $this->rejected_at,
             'rejected_by' => $this->rejecter?->user?->user_id,
             'rejection_reason' => $this->rejection_reason,
+            'marked_present_at' => $this->marked_present_at,
+            'marked_present_by' => $this->markedPresentBy?->name,
+            'marked_present_reason' => $this->marked_present_reason,
         ];
     }
 

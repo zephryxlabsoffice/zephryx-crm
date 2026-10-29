@@ -24,7 +24,7 @@
         </div>
         <div class="kpi-body">
             <div class="kpi-lbl">Present</div>
-            <div class="kpi-val">{{ $stats[P::PRESENT] }}</div>
+            <div class="kpi-val">{{ $stats[P::PRESENT] + ($stats[P::WARNING] ?? 0) }}</div>
             <span class="kpi-sub">Of {{ $stats['headcount'] }} on the roll</span>
         </div>
     </div>

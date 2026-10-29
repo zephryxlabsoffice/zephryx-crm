@@ -367,7 +367,7 @@ class LeaveController extends Controller
          * both be able to decide it, and a check made before the transaction is
          * a race whose symptom is one decision silently overwriting another.
          */
-        $decided = DB::transaction(function () use ($model, $decision, $data, $decider) {
+        $decided = DB::transaction(function () use ($model, $decision, $data, $decider, $request) {
             $fresh = LeaveRequest::whereKey($model->id)->lockForUpdate()->first();
 
             if ($fresh === null || $fresh->status !== LeavePresenter::PENDING) {
@@ -377,6 +377,7 @@ class LeaveController extends Controller
             $fresh->update([
                 'status' => $decision,
                 'decided_by' => $decider?->id,
+                'decided_by_user' => $request->user()->id,
                 'decided_at' => now(),
                 'decision_note' => $data['note'] ?? null,
             ]);
