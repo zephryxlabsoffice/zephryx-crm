@@ -23,6 +23,7 @@ use App\Support\IdProof;
 use App\Support\Images\PhotoIntake;
 use App\Support\Money;
 use App\Support\ProfileDirectory;
+use App\Support\ProfilePolicy;
 use App\Support\Rbac\Rbac;
 use App\Support\Realm;
 use App\Support\SalaryDirectory;
@@ -274,7 +275,9 @@ class EmployeeController extends Controller
             'documents' => $this->rbac->can($request->user(), 'employees.identifiers')
                 ? ProfileDirectory::documents($record)
                 : collect(),
-            'mayEdit' => $this->rbac->can($request->user(), 'employees.edit'),
+            // Never on your own record (v1.2.3). See refuseOwnRecord().
+            'mayEdit' => $this->rbac->can($request->user(), 'employees.edit')
+                && $record->user_id !== $request->user()->id,
             /*
              * The two ends of a conversion, so either record can find the
              * other. Loaded here rather than reached for in the template: the
@@ -321,6 +324,7 @@ class EmployeeController extends Controller
              */
             'salaryFields' => [],
             'maySetSalary' => $this->rbac->can($request->user(), 'salary.manage'),
+            'personal' => null,
         ] + $this->peopleOptions($request, null) + $this->formOptions());
     }
 
@@ -410,6 +414,7 @@ class EmployeeController extends Controller
             $this->writeSalary($employee, $data, $request);
             $this->writeRoles($employee->load('user'), $data, $request);
             $this->writePhoto($employee, $request);
+            $this->writePersonal($employee, $data, $request);
 
             return $employee;
         });
@@ -432,9 +437,35 @@ class EmployeeController extends Controller
             ->with('status_tone', 'success');
     }
 
+    /**
+     * GET /employees/{employee}/photo - the record's photo, for whoever may
+     * read the record. Initials are drawn when there is none, so a 404 here is
+     * never something a page asked for.
+     */
+    public function photo(string $employee): StreamedResponse
+    {
+        $path = $this->find($employee)->profile?->photo_path;
+
+        abort_if($path === null || ! $this->documents->exists($path), 404);
+
+        return $this->documents->stream($path);
+    }
+
+    /**
+     * Nobody edits their own employment record (owner, v1.2.3) - the same rule
+     * as nobody approving their own leave or their own profile request (§2.6).
+     * HR's record is kept by another HR or the CEO. Rank is deliberately NOT
+     * checked on edit: the CEO is an Employee, and HR keeps the CEO's record.
+     */
+    protected function refuseOwnRecord(Employee $record, Request $request): void
+    {
+        abort_if($record->user_id === $request->user()->id, 403, 'You cannot edit your own employee record. Another HR or the CEO keeps it.');
+    }
+
     public function edit(Request $request, string $employee): Response
     {
         $record = $this->find($employee);
+        $this->refuseOwnRecord($record, $request);
 
         return response()->view('employees.form', [
             'activeNav' => 'employees',
@@ -457,12 +488,14 @@ class EmployeeController extends Controller
             'addresses' => $this->addresses($request, $record),
             'salaryFields' => $this->salaryFields($request, $record),
             'maySetSalary' => $this->rbac->can($request->user(), 'salary.manage'),
+            'personal' => $record->profile?->toRecordArray(),
         ] + $this->peopleOptions($request, $record) + $this->formOptions());
     }
 
     public function update(Request $request, string $employee): RedirectResponse
     {
         $record = $this->find($employee);
+        $this->refuseOwnRecord($record, $request);
         $data = $this->validated($request, $record);
 
         $before = $this->describe($record);
@@ -478,6 +511,7 @@ class EmployeeController extends Controller
             $this->writeSalary($record, $data, $request);
             $this->writeRoles($record, $data, $request);
             $this->writePhoto($record, $request);
+            $this->writePersonal($record, $data, $request);
 
             $record->update([
                 'reports_to' => $data['reports_to'] ?? null,
@@ -862,6 +896,17 @@ class EmployeeController extends Controller
                 'max:'.(int) (PhotoIntake::MAX_BYTES / 1024),
                 'mimes:'.implode(',', PhotoIntake::ALLOWED),
             ],
+
+            // The personal details My Profile shows (v1.2.3). The same rules
+            // ProfileController::detailRules() gives the person's own request.
+            'gender' => ['nullable', Rule::in(ProfilePolicy::options()['gender'])],
+            'marital_status' => ['nullable', Rule::in(ProfilePolicy::options()['marital_status'])],
+            'nationality' => ['nullable', 'string', 'max:60'],
+            'languages' => ['nullable', 'string', 'max:300'],
+            'skills' => ['nullable', 'string', 'max:500'],
+            'emergency_name' => ['nullable', 'string', 'max:120'],
+            'emergency_relationship' => ['nullable', 'string', 'max:60'],
+            'emergency_phone' => ['nullable', 'string', 'max:32'],
         ];
 
         /*
@@ -1762,7 +1807,42 @@ class EmployeeController extends Controller
             // digit, who the clock applies to, which fields are required - and
             // a fourth one somebody typed into a list would satisfy none of them.
             'employmentTypes' => EmployeePresenter::employmentTypeOptions(),
+            'personalOptions' => ProfilePolicy::options(),
         ];
+    }
+
+    /**
+     * The personal details My Profile shows, written by HR (v1.2.3).
+     *
+     * Unlike the addresses, these are prefilled on the form, so an empty box
+     * means "clear it" rather than "keep it". Only when the section was on the
+     * form at all: a post without it changes nothing here.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function writePersonal(Employee $employee, array $data, Request $request): void
+    {
+        if (! $request->has('personal_present')) {
+            return;
+        }
+
+        $list = fn (?string $typed): array => collect(explode(',', (string) $typed))
+            ->map(fn (string $item) => trim($item))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $fields = [];
+
+        foreach (['gender', 'marital_status', 'nationality', 'emergency_name', 'emergency_relationship', 'emergency_phone'] as $field) {
+            $fields[$field] = trim((string) ($data[$field] ?? '')) ?: null;
+        }
+
+        $fields['languages'] = $list($data['languages'] ?? null);
+        $fields['skills'] = $list($data['skills'] ?? null);
+
+        EmployeeProfile::updateOrCreate(['employee_id' => $employee->id], $fields);
     }
 
     /**

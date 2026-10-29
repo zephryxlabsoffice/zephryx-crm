@@ -28,7 +28,13 @@
         @include('partials.theme-toggle')
 
         <div class="tb-user">
-            <div class="tb-avatar" aria-hidden="true">{{ $userInitials }}</div>
+            <div class="tb-avatar" aria-hidden="true">
+                @if ($userPhoto ?? false)
+                    <img src="{{ route('profile.photo.show') }}" alt="" width="40" height="40">
+                @else
+                    {{ $userInitials }}
+                @endif
+            </div>
             <div class="tb-user-info">
                 <strong>{{ $userName }}</strong>
                 <span>{{ $userRole }}</span>

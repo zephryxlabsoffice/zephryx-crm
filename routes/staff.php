@@ -195,6 +195,16 @@ Route::get('/employees/{employee}', [EmployeeController::class, 'show'])
     ->middleware('permission:employees.view')
     ->name('employees.show');
 
+/*
+ * Somebody else's photo, for the record page and the list (v1.2.3). Behind
+ * `employees.view`, the same key that shows the rest of the record: a photo
+ * HR saved and nobody could see was the bug.
+ */
+Route::get('/employees/{employee}/photo', [EmployeeController::class, 'photo'])
+    ->where('employee', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:employees.view')
+    ->name('employees.photo');
+
 Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])
     ->where('employee', '[A-Za-z0-9-]{1,32}')
     ->middleware('permission:employees.edit')

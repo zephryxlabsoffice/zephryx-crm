@@ -51,7 +51,7 @@ class EmployeeDirectory
     public static function query(?string $search = null, ?string $status = null, ?string $department = null): Builder
     {
         return Employee::query()
-            ->with(['user', 'department', 'designation'])
+            ->with(['user', 'department', 'designation', 'profile'])
             ->join('users', 'users.id', '=', 'employees.user_id')
             ->select('employees.*')
             ->when($search, fn (Builder $q, string $term) => $q->where(function (Builder $q) use ($term) {
@@ -105,6 +105,9 @@ class EmployeeDirectory
             'joined' => $employee->joined_on?->toDateString(),
             'dob' => $employee->date_of_birth?->toDateString(),
             'announce_milestones' => $employee->announce_milestones,
+            // Whether there is a photo to draw. The file itself is served by
+            // employees.photo, behind employees.view, never from a public path.
+            'has_photo' => $employee->profile?->photo_path !== null,
         ];
     }
 

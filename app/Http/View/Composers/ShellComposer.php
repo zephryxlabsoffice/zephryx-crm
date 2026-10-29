@@ -5,6 +5,7 @@ namespace App\Http\View\Composers;
 use App\Models\User;
 use App\Support\Navigation\Navigation;
 use App\Support\NotificationDirectory;
+use App\Support\ProfileDirectory;
 use App\Support\Realm;
 use App\Support\Shell;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -47,6 +48,9 @@ class ShellComposer
             'notifications' => $this->notifications($realm, $user),
             'userName' => $identity['name'],
             'userInitials' => Shell::initials($identity['name']),
+            // The signed-in person's own photo, staff side only (v1.2.3).
+            'userPhoto' => $realm === Realm::STAFF
+                && ProfileDirectory::employeeFor($user)?->profile?->photo_path !== null,
             'userRole' => $identity['role'],
         ]);
     }

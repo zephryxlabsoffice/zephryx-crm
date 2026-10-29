@@ -62,10 +62,18 @@
  * shape it was taken at and the circle has to do the framing. Centre-weighted,
  * which is where a face is in almost every photo anybody uploads of themselves.
  */
-.pf-photo {
+.pf-photo,
+img.avatar,
+.tb-avatar img {
   object-fit: cover;
   object-position: center;
   background: var(--avatar-bg);
+}
+
+.tb-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
 }
 
 .pf-photo-form .form-field { margin-bottom: 14px; }

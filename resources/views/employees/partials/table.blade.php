@@ -63,7 +63,11 @@
                     <tr role="row">
                         <td role="cell" class="cell-lead" data-label="Employee">
                             <a class="row-link emp-name" href="{{ route('employees.show', ['employee' => $employee['user_id']]) }}">
-                                <span class="avatar {{ Avatar::tint($employee['name']) }}" aria-hidden="true">{{ Avatar::initials($employee['name']) }}</span>
+                                @if ($employee['has_photo'])
+                                    <img class="avatar" src="{{ route('employees.photo', ['employee' => $employee['user_id']]) }}" alt="" width="34" height="34" loading="lazy">
+                                @else
+                                    <span class="avatar {{ Avatar::tint($employee['name']) }}" aria-hidden="true">{{ Avatar::initials($employee['name']) }}</span>
+                                @endif
                                 <span class="emp-name-text">
                                     <strong>{{ $employee['name'] }}</strong>
                                     <span>{{ $employee['user_id'] }}</span>
@@ -92,7 +96,7 @@
                                 Absent for somebody who cannot edit - the row is
                                 still a link to the record, which they can read.
                             --}}
-                            @if ($mayEdit)
+                            @if ($mayEdit && $employee['user_id'] !== auth()->user()?->user_id)
                                 <a class="row-menu" href="{{ route('employees.edit', ['employee' => $employee['user_id']]) }}">
                                     <span class="sr-only">Edit {{ $employee['name'] }}</span>
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

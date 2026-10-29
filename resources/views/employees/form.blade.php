@@ -294,6 +294,95 @@
                     </div>
                 </div>
 
+                {{-- The rest of what My Profile shows (v1.2.3). Prefilled, so
+                     what is in a box is what is saved: emptying one clears it. --}}
+                <div class="card">
+                    <div class="section-hd">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/>
+                        </svg>
+                        Personal details <span class="an-optional">(optional)</span>
+                    </div>
+
+                    <input type="hidden" name="personal_present" value="1">
+
+                    <div class="form-grid">
+                        @foreach (['gender' => 'Gender', 'marital_status' => 'Marital status'] as $field => $label)
+                            <div class="form-field">
+                                <label class="form-field-lbl" for="emp-{{ $field }}">{{ $label }}</label>
+                                <select id="emp-{{ $field }}" name="{{ $field }}">
+                                    <option value="">Not stated</option>
+                                    @foreach ($personalOptions[$field] as $choice)
+                                        <option value="{{ $choice }}" @selected(old($field, $personal[$field] ?? null) === $choice)>{{ $choice }}</option>
+                                    @endforeach
+                                </select>
+                                @error($field)
+                                    <span class="field-error">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        @endforeach
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-nationality">Nationality</label>
+                            <input id="emp-nationality" name="nationality" type="text" maxlength="60"
+                                   value="{{ old('nationality', $personal['nationality'] ?? '') }}">
+                            @error('nationality')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-languages">Languages known</label>
+                            <input id="emp-languages" name="languages" type="text" maxlength="300"
+                                   placeholder="English, Hindi, Bengali"
+                                   value="{{ old('languages', implode(', ', $personal['languages'] ?? [])) }}">
+                            <span class="pay-hint">Separate them with commas.</span>
+                            @error('languages')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field an-form-wide">
+                            <label class="form-field-lbl" for="emp-skills">Skills</label>
+                            <input id="emp-skills" name="skills" type="text" maxlength="500"
+                                   placeholder="Laravel, Figma, Sales"
+                                   value="{{ old('skills', implode(', ', $personal['skills'] ?? [])) }}">
+                            <span class="pay-hint">Separate them with commas.</span>
+                            @error('skills')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-emergency-name">Emergency contact name</label>
+                            <input id="emp-emergency-name" name="emergency_name" type="text" maxlength="120"
+                                   value="{{ old('emergency_name', $personal['emergency_name'] ?? '') }}">
+                            @error('emergency_name')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-emergency-relationship">Relationship</label>
+                            <input id="emp-emergency-relationship" name="emergency_relationship" type="text" maxlength="60"
+                                   value="{{ old('emergency_relationship', $personal['emergency_relationship'] ?? '') }}">
+                            @error('emergency_relationship')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="emp-emergency-phone">Emergency contact number</label>
+                            <input id="emp-emergency-phone" name="emergency_phone" type="tel" maxlength="32"
+                                   placeholder="+91 …"
+                                   value="{{ old('emergency_phone', $personal['emergency_phone'] ?? '') }}">
+                            @error('emergency_phone')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="section-hd">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

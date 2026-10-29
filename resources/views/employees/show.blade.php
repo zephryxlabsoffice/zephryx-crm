@@ -66,7 +66,11 @@
             <div class="card">
                 <div class="att-record-hd">
                     <div class="person-row">
-                        <span class="avatar {{ Avatar::tint($employee['name']) }}" aria-hidden="true">{{ Avatar::initials($employee['name']) }}</span>
+                        @if ($employee['has_photo'])
+                            <img class="avatar" src="{{ route('employees.photo', ['employee' => $employee['user_id']]) }}" alt="" width="34" height="34">
+                        @else
+                            <span class="avatar {{ Avatar::tint($employee['name']) }}" aria-hidden="true">{{ Avatar::initials($employee['name']) }}</span>
+                        @endif
                         <span class="person-body">
                             <strong>{{ $employee['name'] }}</strong>
                             <span>{{ $employee['designation'] ?: 'No designation set' }}</span>
