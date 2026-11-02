@@ -3,7 +3,10 @@
 namespace App\Support\Auth;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Locale;
+use Throwable;
 
 /**
  * Turns a request into the words shown on My Devices and in the new-device email.
@@ -14,16 +17,16 @@ use Locale;
  * No website can read a computer's own name, so "Chrome on Windows" is as far
  * as this goes. Android phones are the exception, some still send their model.
  *
- * THE LOCATION COMES FROM CLOUDFLARE, NOT A LOOKUP SERVICE
+ * THE LOCATION IS CLOUDFLARE'S IF IT SENT ONE, OTHERWISE AN IP LOOKUP
  *
- * The site sits behind Cloudflare, which already knows where each visitor is.
- * That means no employee's address goes to a third party and sign-in does not
- * wait on anybody else's API. Country is always sent; city and region need
- * "Add visitor location headers" on under Rules > Settings > Managed Transforms.
+ * Cloudflare's headers cost nothing, but count only from a proxy named in
+ * TRUSTED_PROXIES, as anybody can send them directly. Failing that, the address
+ * is sent to db-ip.com (owner, 2026-11-02): free, no account, 1,000 lookups a
+ * day. Each address is looked up once and remembered, so this code runs on every
+ * page without slowing them, and a failed lookup just reads "Location unknown".
  *
- * The headers count only from a proxy named in TRUSTED_PROXIES, as anybody can
- * send them directly. It is an estimate from the IP address, and a mobile
- * network can place somebody in another city.
+ * Either way it is an estimate from the IP address, and a mobile network can
+ * place somebody in another city.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 class DeviceDescription
@@ -32,6 +35,13 @@ class DeviceDescription
 
     /** Cloudflare's codes for "no country": unknown, and Tor. */
     protected const NOT_A_COUNTRY = ['XX', 'T1'];
+
+    protected const LOOKUP_URL = 'https://api.db-ip.com/v2/free/';
+
+    /** An address rarely moves; a failure is worth trying again soon. */
+    protected const LOOKUP_REMEMBER_DAYS = 30;
+
+    protected const LOOKUP_RETRY_HOURS = 1;
 
     public static function name(?string $userAgent): string
     {
@@ -69,17 +79,71 @@ class DeviceDescription
 
     public static function location(Request $request): ?string
     {
+        return self::fromCloudflare($request) ?? self::lookUp($request->ip());
+    }
+
+    protected static function lookUp(?string $ip): ?string
+    {
+        // Private and reserved addresses are on no map, and include this PC's.
+        if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            return null;
+        }
+
+        $key = 'device-location:'.$ip;
+        $remembered = Cache::get($key);
+
+        if ($remembered !== null) {
+            return $remembered === '' ? null : $remembered;
+        }
+
+        $location = self::askLookupService($ip);
+
+        Cache::put(
+            $key,
+            $location ?? '',
+            $location === null ? now()->addHours(self::LOOKUP_RETRY_HOURS) : now()->addDays(self::LOOKUP_REMEMBER_DAYS),
+        );
+
+        return $location;
+    }
+
+    /** Null on any failure. A location is never worth breaking a page for. */
+    protected static function askLookupService(string $ip): ?string
+    {
+        try {
+            $found = Http::connectTimeout(2)->timeout(3)->acceptJson()->get(self::LOOKUP_URL.$ip)->json();
+        } catch (Throwable) {
+            return null;
+        }
+
+        return self::joinPlace([
+            (string) ($found['city'] ?? ''),
+            (string) ($found['stateProv'] ?? ''),
+            (string) ($found['countryName'] ?? ''),
+        ]);
+    }
+
+    protected static function fromCloudflare(Request $request): ?string
+    {
         if (! $request->isFromTrustedProxy()) {
             return null;
         }
 
         $country = strtoupper(self::header($request, 'CF-IPCountry'));
 
-        $parts = array_filter([
+        return self::joinPlace([
             self::header($request, 'CF-IPCity'),
             self::header($request, 'CF-Region'),
             in_array($country, self::NOT_A_COUNTRY, true) ? '' : self::countryName($country),
-        ], fn (string $part) => $part !== '');
+        ]);
+    }
+
+    /**
+     * @param  list<string>  $parts
+     */
+    protected static function joinPlace(array $parts): ?string
+    {
+        $parts = array_filter($parts, fn (string $part) => $part !== '');
 
         return $parts === [] ? null : mb_substr(implode(', ', array_unique($parts)), 0, 190);
     }

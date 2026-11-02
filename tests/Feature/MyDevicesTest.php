@@ -16,6 +16,7 @@ use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -399,6 +400,43 @@ class MyDevicesTest extends TestCase
         Request::setTrustedProxies(['198.51.100.7'], Request::HEADER_X_FORWARDED_FOR);
 
         $this->assertSame('Kolkata, India', DeviceDescription::location($request));
+    }
+
+    public function test_without_cloudflare_headers_the_address_is_looked_up_once(): void
+    {
+        Http::fake(['api.db-ip.com/*' => Http::response([
+            'city' => 'Kolkata', 'stateProv' => 'West Bengal', 'countryName' => 'India',
+        ])]);
+
+        $request = Request::create('/', 'GET', server: ['REMOTE_ADDR' => '8.8.8.8']);
+
+        $this->assertSame('Kolkata, West Bengal, India', DeviceDescription::location($request));
+        $this->assertSame('Kolkata, West Bengal, India', DeviceDescription::location($request));
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_a_failed_lookup_reads_unknown_and_is_not_retried_on_every_page(): void
+    {
+        Http::fake(['api.db-ip.com/*' => Http::failedConnection()]);
+
+        $request = Request::create('/', 'GET', server: ['REMOTE_ADDR' => '8.8.8.8']);
+
+        $this->assertNull(DeviceDescription::location($request));
+        $this->assertNull(DeviceDescription::location($request));
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_a_private_address_is_never_sent_to_the_lookup(): void
+    {
+        Http::fake();
+
+        $request = Request::create('/', 'GET', server: ['REMOTE_ADDR' => '192.168.1.20']);
+
+        $this->assertNull(DeviceDescription::location($request));
+
+        Http::assertNothingSent();
     }
 
     public function test_the_new_device_email_renders(): void
