@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Announcement;
 use App\Models\Employee;
 use App\Models\MasterDataItem;
+use App\Models\Permission;
 use App\Models\Ticket;
 use App\Support\Admin\MasterDataDirectory;
 use App\Support\Audit\AuditLog;
+use App\Support\Rbac\DesignationAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -56,6 +58,7 @@ class MasterDataController extends Controller
             'inUse' => MasterDataDirectory::totalInUse($list),
             'placing' => $list === MasterDataItem::DESIGNATIONS && MasterDataDirectory::canPlaceDesignations(),
             'mergeable' => MasterDataDirectory::canMerge($list),
+            'accessible' => $list === MasterDataItem::DESIGNATIONS && DesignationAccess::ready(),
             'departments' => MasterDataItem::query()->inList(MasterDataItem::DEPARTMENTS)->active()->get(),
         ]);
     }
@@ -295,6 +298,7 @@ class MasterDataController extends Controller
     public function confirmMerge(Request $request, string $list): Response
     {
         $item = MasterDataItem::where('list', $list)->findOrFail((int) $request->query('item'));
+        $targets = MasterDataItem::query()->inList($list)->active()->whereNot('id', $item->id)->get();
 
         return response()->view('admin.master.merge', [
             'activeNav' => 'master-data',
@@ -302,7 +306,9 @@ class MasterDataController extends Controller
             'meta' => MasterDataDirectory::lists()[$list],
             'item' => $item,
             'people' => $this->peopleOn($item)->pluck('user.name')->all(),
-            'targets' => MasterDataItem::query()->inList($list)->active()->whereNot('id', $item->id)->get(),
+            'targets' => $targets,
+            'accessChanges' => $this->accessChanges($item, $targets),
+            'labels' => Permission::pluck('permission_name', 'permission_key'),
         ]);
     }
 
@@ -362,6 +368,36 @@ class MasterDataController extends Controller
             ->with('status', $item->name.' is merged into '.$into->name.' and retired. '
                 .count($names).' '.(count($names) === 1 ? 'person' : 'people').' moved.')
             ->with('status_tone', 'success');
+    }
+
+    /**
+     * Who would gain or lose access, per row this designation could merge into.
+     * A designation carries access, so a merge can change what somebody may do.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection<int, MasterDataItem>  $targets
+     * @return array<string, list<array<string, mixed>>>
+     */
+    protected function accessChanges(MasterDataItem $item, $targets): array
+    {
+        if ($item->list !== MasterDataItem::DESIGNATIONS || ! DesignationAccess::ready()) {
+            return [];
+        }
+
+        $people = Employee::with('user.roles')->where('designation_id', $item->id)->get();
+        $changes = [];
+
+        foreach ($targets as $target) {
+            $moved = array_filter(
+                DesignationAccess::changesForPeople($people, DesignationAccess::settingsOf($target->id)),
+                fn (array $person) => $person['gains'] !== [] || $person['loses'] !== [],
+            );
+
+            if ($moved !== []) {
+                $changes[$target->name] = array_values($moved);
+            }
+        }
+
+        return $changes;
     }
 
     /**

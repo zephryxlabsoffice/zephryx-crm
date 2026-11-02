@@ -36,6 +36,13 @@
                         narrower of them (§2.4).
                     </p>
 
+                    @if ($designationRoles !== [])
+                        <p class="ad-group-note">
+                            Also through their designation: {{ implode(', ', $designationRoles) }}. Those are
+                            set on the designation, not here, so you do not need to tick them below.
+                        </p>
+                    @endif
+
                     <form method="POST" action="{{ route($ar.'roles', $account['user_id']) }}">
                         @csrf
 

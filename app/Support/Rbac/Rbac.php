@@ -223,7 +223,20 @@ class Rbac
      */
     public function grantedFor(User $user, ?string $ignoringRole = null): array
     {
-        $direct = DB::table('user_roles')
+        return array_values(array_unique(array_merge(
+            $this->directlyGrantedFor($user, $ignoringRole),
+            DesignationAccess::grantedTo($user, $ignoringRole),
+        )));
+    }
+
+    /**
+     * What an account holds through roles given to the person.
+     *
+     * @return list<string>
+     */
+    public function directlyGrantedFor(User $user, ?string $ignoringRole = null): array
+    {
+        return DB::table('user_roles')
             ->join('roles', 'roles.id', '=', 'user_roles.role_id')
             ->join('role_permissions', 'role_permissions.role_id', '=', 'roles.id')
             ->join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
@@ -233,9 +246,9 @@ class Rbac
             ->where('roles.is_active', true)
             ->when($ignoringRole, fn ($query, string $role) => $query->where('roles.role_key', '!=', $role))
             ->pluck('permissions.permission_key')
+            ->unique()
+            ->values()
             ->all();
-
-        return array_values(array_unique(array_merge($direct, DesignationAccess::grantedTo($user, $ignoringRole))));
     }
 
 

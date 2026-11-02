@@ -460,6 +460,7 @@ class AccountController extends Controller
             'employee' => $employee,
             // Empty when the account may be deleted (made by mistake, unused).
             'deleteBlockers' => app(AccountRemoval::class)->blockers($user),
+            'designationRoles' => ($designation = DesignationAccess::designationOf($user)) === null ? [] : DesignationAccess::roleNamesOf($designation),
             'departments' => MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->active()->get(),
             'designationGroups' => MasterDataDirectory::designationGroups(),
             'managers' => $employee === null ? collect() : Employee::query()
