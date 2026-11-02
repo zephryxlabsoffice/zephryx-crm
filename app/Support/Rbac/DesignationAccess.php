@@ -2,6 +2,7 @@
 
 namespace App\Support\Rbac;
 
+use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
@@ -70,19 +71,130 @@ class DesignationAccess
      */
     public static function grantedBy(int $designationId, ?string $ignoringRole = null): array
     {
-        $inherited = DB::table('designation_roles')
-            ->join('roles', 'roles.id', '=', 'designation_roles.role_id')
+        $settings = self::settingsOf($designationId);
+
+        return self::grantsOf(
+            array_values(array_diff($settings['roles'], [$ignoringRole])),
+            $settings['exceptions'],
+        );
+    }
+
+    /**
+     * What these settings would grant, whether saved or only proposed.
+     *
+     * @param  list<string>  $roleKeys
+     * @param  array<string, string>  $exceptions
+     * @return list<string>
+     */
+    public static function grantsOf(array $roleKeys, array $exceptions): array
+    {
+        $inherited = DB::table('roles')
             ->join('role_permissions', 'role_permissions.role_id', '=', 'roles.id')
             ->join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
-            ->where('designation_roles.designation_id', $designationId)
+            ->whereIn('roles.role_key', $roleKeys)
             ->where('roles.is_active', true)
-            ->when($ignoringRole, fn (Builder $query, string $role) => $query->where('roles.role_key', '!=', $role))
             ->pluck('permissions.permission_key');
 
-        $allowed = self::exceptionKeys($designationId, self::ALLOW);
-        $never = self::exceptionKeys($designationId, self::NEVER);
+        $effects = collect($exceptions);
 
-        return $inherited->merge($allowed)->unique()->diff($never)->values()->all();
+        return $inherited
+            ->merge($effects->filter(fn (string $effect) => $effect === self::ALLOW)->keys())
+            ->unique()
+            ->diff($effects->filter(fn (string $effect) => $effect === self::NEVER)->keys())
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array{roles: list<string>, exceptions: array<string, string>}
+     */
+    public static function settingsOf(int $designationId): array
+    {
+        return [
+            'roles' => DB::table('designation_roles')
+                ->join('roles', 'roles.id', '=', 'designation_roles.role_id')
+                ->where('designation_roles.designation_id', $designationId)
+                ->pluck('roles.role_key')
+                ->all(),
+            'exceptions' => DB::table('designation_permissions')
+                ->join('permissions', 'permissions.id', '=', 'designation_permissions.permission_id')
+                ->where('designation_permissions.designation_id', $designationId)
+                ->pluck('designation_permissions.effect', 'permissions.permission_key')
+                ->all(),
+        ];
+    }
+
+    /**
+     * Who holding this designation would gain or lose what, under these settings.
+     *
+     * A permission held through a role given directly never moves, and the Employee
+     * base is out of it, so each list is what would really change for that person.
+     *
+     * @param  array{roles: list<string>, exceptions: array<string, string>}  $settings
+     * @return list<array{name: string, gains: list<string>, loses: list<string>, still_held: list<string>, redundant_roles: list<string>}>
+     */
+    public static function changesFor(int $designationId, array $settings): array
+    {
+        return self::changesForPeople(
+            Employee::with('user.roles')->where('designation_id', $designationId)->get(),
+            $settings,
+        );
+    }
+
+    /**
+     * @param  iterable<Employee>  $employees
+     * @param  array{roles: list<string>, exceptions: array<string, string>}  $settings
+     * @return list<array{name: string, gains: list<string>, loses: list<string>, still_held: list<string>, redundant_roles: list<string>}>
+     */
+    public static function changesForPeople(iterable $employees, array $settings): array
+    {
+        $rbac = app(Rbac::class);
+        $proposed = self::grantsOf($settings['roles'], $settings['exceptions']);
+        $never = array_keys(array_filter($settings['exceptions'], fn (string $effect) => $effect === self::NEVER));
+        $changes = [];
+
+        foreach ($employees as $employee) {
+            $user = $employee->user;
+
+            if ($user === null || ! $user->hasEmployeeBase() || ! $user->isActive()) {
+                continue;
+            }
+
+            $direct = $rbac->directlyGrantedFor($user);
+            $now = array_diff($rbac->grantedFor($user), Rbac::EMPLOYEE_BASE);
+            $then = array_diff(array_merge($direct, $proposed), Rbac::EMPLOYEE_BASE);
+
+            $changes[] = [
+                'name' => (string) $user->name,
+                'gains' => array_values(array_unique(array_diff($then, $now))),
+                'loses' => array_values(array_unique(array_diff($now, $then))),
+                'still_held' => array_values(array_intersect($never, $direct)),
+                'redundant_roles' => array_values(array_intersect(
+                    array_diff($settings['roles'], ['employee']),
+                    $user->roles->pluck('role_key')->all(),
+                )),
+            ];
+        }
+
+        return $changes;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function roleNamesOf(int $designationId): array
+    {
+        return DB::table('designation_roles')
+            ->join('roles', 'roles.id', '=', 'designation_roles.role_id')
+            ->where('designation_roles.designation_id', $designationId)
+            ->orderBy('roles.role_name')
+            ->pluck('roles.role_name')
+            ->all();
+    }
+
+    public static function holdersCount(int $designationId): int
+    {
+        return Employee::where('designation_id', $designationId)->count();
     }
 
     /**

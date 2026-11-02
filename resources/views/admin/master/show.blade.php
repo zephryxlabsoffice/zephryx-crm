@@ -45,7 +45,12 @@
                             <tbody>
                                 @foreach ($rows as $row)
                                     <tr>
-                                        <td><strong>{{ $row['name'] }}</strong></td>
+                                        <td>
+                                            <strong>{{ $row['name'] }}</strong>
+                                            @if ($row['carries'] !== [])
+                                                <br><span class="dash-quiet-meta">Carries {{ implode(', ', $row['carries']) }}</span>
+                                            @endif
+                                        </td>
                                         <td class="cell-tight"><code>{{ $row['code'] }}</code></td>
                                         @if ($placing)
                                             <td class="cell-tight">
@@ -103,6 +108,9 @@
                                                          row. --}}
                                                     <button class="btn btn-outline btn-sm" type="submit">Retire</button>
                                                 </form>
+                                            @endif
+                                            @if ($accessible)
+                                                <a class="btn btn-outline btn-sm" href="{{ route('admin.master.access', $row['id']) }}">Access</a>
                                             @endif
                                             @if ($mergeable)
                                                 <a class="btn btn-outline btn-sm" href="{{ route('admin.master.merge.confirm', ['list' => $list, 'item' => $row['id']]) }}">Merge</a>

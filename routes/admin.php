@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\BackupsController as AdminBackupsController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\IntegrationsController as AdminIntegrationsController;
 use App\Http\Controllers\Admin\MaintenanceController as AdminMaintenanceController;
+use App\Http\Controllers\Admin\DesignationAccessController as AdminDesignationAccessController;
 use App\Http\Controllers\Admin\MasterDataController as AdminMasterDataController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\UpdatesController as AdminUpdatesController;
@@ -162,6 +163,21 @@ Route::post('/master-data/{list}/deactivate', [AdminMasterDataController::class,
     ->name('master.deactivate');
 Route::post('/master-data/designations/place', [AdminMasterDataController::class, 'place'])
     ->name('master.place');
+
+/*
+ * What a designation grants. Two steps, like a setting: the POST to `preview`
+ * writes nothing and names who gains and loses what. See the controller.
+ */
+Route::get('/master-data/designations/{designation}/access', [AdminDesignationAccessController::class, 'show'])
+    ->whereNumber('designation')
+    ->name('master.access');
+Route::post('/master-data/designations/{designation}/access/preview', [AdminDesignationAccessController::class, 'preview'])
+    ->whereNumber('designation')
+    ->name('master.access.preview');
+Route::post('/master-data/designations/{designation}/access', [AdminDesignationAccessController::class, 'update'])
+    ->whereNumber('designation')
+    ->name('master.access.update');
+
 Route::get('/master-data/{list}/merge', [AdminMasterDataController::class, 'confirmMerge'])
     ->where('list', 'departments|designations')
     ->name('master.merge.confirm');

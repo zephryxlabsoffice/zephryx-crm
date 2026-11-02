@@ -28,6 +28,17 @@
                 <p class="dash-note">{{ implode(', ', $people) }}</p>
             @endif
 
+            @foreach ($accessChanges as $target => $people)
+                <p class="dash-note"><strong>Merging into {{ $target }} changes access:</strong></p>
+                @foreach ($people as $person)
+                    <p class="dash-note">
+                        {{ $person['name'] }}
+                        @if ($person['gains'] !== []) gains {{ collect($person['gains'])->map(fn ($key) => $labels[$key] ?? $key)->join(', ') }}. @endif
+                        @if ($person['loses'] !== []) loses {{ collect($person['loses'])->map(fn ($key) => $labels[$key] ?? $key)->join(', ') }}. @endif
+                    </p>
+                @endforeach
+            @endforeach
+
             <p class="dash-note">There is no undo button. The audit log keeps these names, so it can be put back by hand.</p>
 
             <form method="POST" action="{{ route('admin.master.merge', $list) }}">

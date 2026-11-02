@@ -3,6 +3,7 @@
 namespace App\Support\Admin;
 
 use App\Models\MasterDataItem;
+use App\Support\Rbac\DesignationAccess;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
@@ -106,6 +107,9 @@ class MasterDataDirectory
                 'code' => $item->code,
                 'department_id' => $item->department_id,
                 'department' => $item->department?->name,
+                'carries' => $list === MasterDataItem::DESIGNATIONS && DesignationAccess::ready()
+                    ? DesignationAccess::roleNamesOf($item->id)
+                    : [],
                 'active' => $item->is_active,
                 'in_use' => $item->inUse(),
             ])
