@@ -14,8 +14,10 @@ use App\Support\Auth\UserDevices;
 use App\Support\Realm;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -71,6 +73,40 @@ class MyDevicesTest extends TestCase
             'signed_in_at' => now()->subHour(),
             'last_seen_at' => now()->subHour(),
         ]);
+    }
+
+    /**
+     * After an upload and before Admin -> Updates, the code is new and the
+     * database is old. Signing in and reaching that page must still work, or
+     * the update that would fix everything can never be applied.
+     */
+    public function test_an_admin_can_reach_updates_before_the_migration_is_applied(): void
+    {
+        Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true]);
+        $this->assertFalse(Schema::hasTable('user_devices'));
+
+        $admin = User::factory()->create(['account_type' => Realm::ADMIN]);
+
+        $this->signInWithCode($admin)->assertRedirect();
+        $this->assertAuthenticatedAs($admin);
+
+        $this->get('/admin/updates')->assertOk()->assertSee('Create user devices');
+        $this->get('/admin/mydevices')->assertOk();
+
+        $this->post('/admin/updates')->assertRedirect('/admin/updates');
+        $this->assertTrue(Schema::hasTable('user_devices'));
+
+        $this->get('/admin/mydevices')->assertOk()->assertSee('This device');
+    }
+
+    public function test_signing_out_works_before_the_migration_is_applied(): void
+    {
+        Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true]);
+
+        $this->actingAs(User::factory()->create())->get('/dashboard')->assertOk();
+
+        $this->post('/logout')->assertRedirect(route('login'));
+        $this->assertGuest();
     }
 
     public function test_the_first_device_on_an_account_sends_no_email(): void

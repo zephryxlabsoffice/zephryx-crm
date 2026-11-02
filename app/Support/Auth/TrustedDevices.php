@@ -77,9 +77,10 @@ class TrustedDevices
     {
         $token = Str::random(64);
 
-        DB::table('trusted_devices')->insert([
+        // No id means the My Devices migration may not have run: the column is
+        // left out rather than named. See UserDevices::isReady.
+        DB::table('trusted_devices')->insert(array_filter(['user_device_id' => $userDeviceId]) + [
             'user_id' => $user->id,
-            'user_device_id' => $userDeviceId,
             'token_hash' => $this->hash($token),
             'user_agent' => mb_substr((string) $request->userAgent(), 0, 512),
             'ip_address' => $request->ip(),

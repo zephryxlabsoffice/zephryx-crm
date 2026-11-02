@@ -407,7 +407,9 @@ class LoginController extends Controller
         $response = redirect()->intended(Realm::dashboardFor($user));
 
         // My Devices. verify.zephryxlabs.in is not a place to manage devices.
-        $sighting = VerifyHost::is($request) ? null : $this->userDevices->signIn($user, $request);
+        $sighting = VerifyHost::is($request) || ! $this->userDevices->isReady()
+            ? null
+            : $this->userDevices->signIn($user, $request);
 
         if ($sighting !== null) {
             $response->withCookie($sighting['cookie']);

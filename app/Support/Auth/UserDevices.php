@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Cookie;
 use Throwable;
@@ -48,6 +49,19 @@ class UserDevices
     protected const TOUCH_SECONDS = 60;
 
     public function __construct(private AuditLog $audit) {}
+
+    /**
+     * Whether the My Devices migration has been applied.
+     *
+     * After an upload the new code runs on the old database until somebody signs
+     * in and presses Admin > Updates. This code runs at sign-in and on every page,
+     * so it must step aside until then, or that page can never be reached. The
+     * column is added last, so it standing means the table does too.
+     */
+    public function isReady(): bool
+    {
+        return Schema::hasColumn('trusted_devices', 'user_device_id');
+    }
 
     /**
      * Record a sign-in on this browser and tie the session to it.
@@ -136,6 +150,10 @@ class UserDevices
      */
     public function signedIn(User $user, Request $request): Collection
     {
+        if (! $this->isReady()) {
+            return new Collection;
+        }
+
         $current = $this->sessionToken($user, $request);
 
         return UserDevice::where('user_id', $user->id)
@@ -167,6 +185,10 @@ class UserDevices
     /** This browser only, for the ordinary Log out button. */
     public function signOutCurrent(User $user, Request $request): void
     {
+        if (! $this->isReady()) {
+            return;
+        }
+
         $this->forSession($user, $request)?->forceFill(['sign_in_token' => null])->save();
     }
 
@@ -177,6 +199,10 @@ class UserDevices
      */
     public function signOutAll(User $user, ?Request $except = null): void
     {
+        if (! $this->isReady()) {
+            return;
+        }
+
         UserDevice::where('user_id', $user->id)
             ->whereNotNull('sign_in_token')
             ->when($except !== null, fn ($query) => $query->where(

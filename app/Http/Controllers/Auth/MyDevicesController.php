@@ -57,6 +57,8 @@ class MyDevicesController extends Controller
     {
         $user = $request->user();
 
+        abort_unless($this->devices->isReady(), 404);
+
         $record = UserDevice::where('user_id', $user->id)
             ->whereNotNull('sign_in_token')
             ->findOrFail($device);

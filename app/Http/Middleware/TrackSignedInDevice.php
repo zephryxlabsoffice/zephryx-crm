@@ -33,7 +33,7 @@ class TrackSignedInDevice
     {
         $user = $request->user();
 
-        if (! $user instanceof User || VerifyHost::is($request)) {
+        if (! $user instanceof User || VerifyHost::is($request) || ! $this->devices->isReady()) {
             return $next($request);
         }
 
