@@ -25,6 +25,7 @@ use App\Support\Images\PhotoIntake;
 use App\Support\Money;
 use App\Support\ProfileDirectory;
 use App\Support\ProfilePolicy;
+use App\Support\Rbac\DesignationAccess;
 use App\Support\Rbac\Rbac;
 use App\Support\Realm;
 use App\Support\SalaryDirectory;
@@ -376,6 +377,7 @@ class EmployeeController extends Controller
     {
         $data = $this->validated($request);
         $data['department_id'] = $this->departmentForJob($data);
+        $this->guardDesignation($data, $request);
 
         $employee = DB::transaction(function () use ($data, $request) {
             $user = User::create([
@@ -500,6 +502,7 @@ class EmployeeController extends Controller
         $this->refuseOwnRecord($record, $request);
         $data = $this->validated($request, $record);
         $data['department_id'] = $this->departmentForJob($data, $record);
+        $this->guardDesignation($data, $request, $record);
 
         $before = $this->describe($record);
 
@@ -1802,6 +1805,32 @@ class EmployeeController extends Controller
         }
 
         return $fields;
+    }
+
+    /**
+     * A designation can carry access, so changing somebody's must not reach past
+     * what this person could give by hand, in either direction: giving a job
+     * they could not grant, or taking one away they could not have given.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function guardDesignation(array $data, Request $request, ?Employee $existing = null): void
+    {
+        $wanted = isset($data['designation_id']) ? (int) $data['designation_id'] : null;
+
+        if ($wanted === $existing?->designation_id) {
+            return;
+        }
+
+        $mayGive = $this->assignableRoles($request)->keys();
+
+        foreach (array_filter([$wanted, $existing?->designation_id]) as $designation) {
+            if (! DesignationAccess::fitsWithin($designation, $mayGive)) {
+                throw ValidationException::withMessages([
+                    'designation_id' => MasterDataItem::find($designation)?->name.' carries more access than you may give or take away. Ask the owner to change it.',
+                ]);
+            }
+        }
     }
 
     /**

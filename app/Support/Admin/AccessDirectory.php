@@ -6,6 +6,8 @@ use App\Models\Domain;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Rbac\DesignationAccess;
+use App\Support\Rbac\Rbac;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -168,7 +170,7 @@ class AccessDirectory
     public static function holdersOf(string $role): Collection
     {
         return self::accountQuery()
-            ->whereHas('roles', fn ($q) => $q->where('role_key', $role))
+            ->holdingRole($role)
             ->get()
             ->map(fn (User $user) => AccountDirectory::row($user))
             ->values();
@@ -210,19 +212,15 @@ class AccessDirectory
      */
     public static function whoWouldHold(string $permission, string $role): Collection
     {
-        $throughOthers = DB::table('user_roles')
-            ->join('roles', 'roles.id', '=', 'user_roles.role_id')
-            ->join('role_permissions', 'role_permissions.role_id', '=', 'roles.id')
-            ->join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
-            ->where('permissions.permission_key', $permission)
-            ->where('roles.role_key', '!=', $role)
-            ->where('roles.is_active', true)
-            ->pluck('user_roles.user_id');
+        $rbac = app(Rbac::class);
 
         return self::accountQuery()
-            ->whereHas('roles', fn ($q) => $q->where('role_key', $role))
-            ->whereNotIn('users.id', $throughOthers)
+            ->holdingRole($role)
             ->get()
+            // Not somebody who holds it anyway, nor somebody who has this role
+            // only through a designation that says never to this permission.
+            ->reject(fn (User $user) => in_array($permission, $rbac->grantedFor($user, $role), true)
+                || (! $user->roles->contains('role_key', $role) && DesignationAccess::blocks($user, $permission)))
             ->map(fn (User $user) => AccountDirectory::row($user))
             ->values();
     }
@@ -234,10 +232,11 @@ class AccessDirectory
      */
     public static function whoHolds(string $permission): Collection
     {
+        $rbac = app(Rbac::class);
+
         return self::accountQuery()
-            ->whereHas('roles', fn ($q) => $q->where('roles.is_active', true)
-                ->whereHas('permissions', fn ($p) => $p->where('permission_key', $permission)))
             ->get()
+            ->filter(fn (User $user) => in_array($permission, $rbac->grantedFor($user), true))
             ->map(fn (User $user) => AccountDirectory::row($user))
             ->values();
     }

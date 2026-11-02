@@ -53,8 +53,8 @@ class MasterDataDirectory
             ],
             MasterDataItem::DESIGNATIONS => [
                 'label' => 'Designations',
-                'note' => 'Job titles, each under one department. A display label - designations '
-                    .'carry no rank and grant nothing (§2.3).',
+                'note' => 'Job titles, each under one department. A designation grants nothing '
+                    .'until roles are attached to it.',
                 'unit' => 'employee',
             ],
             MasterDataItem::LEAVE_TYPES => [

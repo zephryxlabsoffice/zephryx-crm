@@ -70,6 +70,13 @@ it is a display label, never a permission.
 
 **Client** is an account type outside the hierarchy entirely (see 3).
 
+**Designations (decided 2026-11-02, replacing "a designation is only a label").**
+A person has one designation, which belongs to one department. A designation may
+carry roles, whose permissions and rank reach everybody holding it, and any
+permission on it may be set to "always allow" or "never". Roles given to the
+person directly stay, for the hats somebody wears beyond their job. Deciding who
+may hand a designation out follows who may give its roles by hand.
+
 ### 2.4 Role stacking — additive, not overriding
 
 A person may hold several roles. Roles are **capability packs layered on top of
@@ -78,7 +85,9 @@ the Employee base**, and stacking is a **union**:
 - Employee + HR → full Employee self-service **plus** HR powers
 - Manager + HR → projects and teams **plus** payroll
 
-Nothing is ever lost by gaining a role. Where two roles grant overlapping
+Nothing is ever lost by gaining a role. A designation's "never" trims only what
+that designation grants, never the Employee base nor a role given to the person
+directly. Where two roles grant overlapping
 access, the **more permissive outcome wins** — this is the only sense in which
 anything "overrides".
 

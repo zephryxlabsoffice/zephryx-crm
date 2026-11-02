@@ -175,8 +175,8 @@ class Rbac
     }
 
     /**
-     * Every permission an account holds - the union across its roles, plus the
-     * Employee base if it has one (§2.4).
+     * Every permission an account holds - the union across its roles and its
+     * designation, plus the Employee base if it has one (§2.4).
      *
      * @return list<string>
      */
@@ -210,7 +210,20 @@ class Rbac
             },
         };
 
-        $granted = DB::table('user_roles')
+        return $this->cache[$user->id] = array_values(array_unique(array_merge($base, $this->grantedFor($user))));
+    }
+
+    /**
+     * What an account holds through roles and its designation, without the base.
+     *
+     * `$ignoringRole` answers "would they hold this anyway?", which is how the
+     * Access Control screen avoids overstating who a change would reach.
+     *
+     * @return list<string>
+     */
+    public function grantedFor(User $user, ?string $ignoringRole = null): array
+    {
+        $direct = DB::table('user_roles')
             ->join('roles', 'roles.id', '=', 'user_roles.role_id')
             ->join('role_permissions', 'role_permissions.role_id', '=', 'roles.id')
             ->join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
@@ -218,11 +231,13 @@ class Rbac
             // A deactivated role grants nothing while it is off, without having
             // to be unassigned from everybody first.
             ->where('roles.is_active', true)
+            ->when($ignoringRole, fn ($query, string $role) => $query->where('roles.role_key', '!=', $role))
             ->pluck('permissions.permission_key')
             ->all();
 
-        return $this->cache[$user->id] = array_values(array_unique(array_merge($base, $granted)));
+        return array_values(array_unique(array_merge($direct, DesignationAccess::grantedTo($user, $ignoringRole))));
     }
+
 
     /**
      * May the actor act on the target, in this domain? (§2.5)
@@ -258,7 +273,8 @@ class Rbac
     }
 
     /**
-     * An account's highest rank in one domain, across all its roles.
+     * An account's highest rank in one domain, across all its roles, whether
+     * given to the person or carried by their designation.
      *
      * Highest rather than summed: holding two roles makes somebody more
      * capable, not more senior. Rank is a position, and positions do not add.
@@ -266,11 +282,16 @@ class Rbac
     public function rankOf(User $user, string $domain): int
     {
         if (! isset($this->ranks[$user->id])) {
-            $this->ranks[$user->id] = DB::table('user_roles')
-                ->join('role_domain_rank', 'role_domain_rank.role_id', '=', 'user_roles.role_id')
+            $roleIds = DB::table('user_roles')
+                ->where('user_id', $user->id)
+                ->pluck('role_id')
+                ->merge(DesignationAccess::roleIdsOf($user))
+                ->unique();
+
+            $this->ranks[$user->id] = DB::table('role_domain_rank')
                 ->join('domains', 'domains.id', '=', 'role_domain_rank.domain_id')
-                ->join('roles', 'roles.id', '=', 'user_roles.role_id')
-                ->where('user_roles.user_id', $user->id)
+                ->join('roles', 'roles.id', '=', 'role_domain_rank.role_id')
+                ->whereIn('role_domain_rank.role_id', $roleIds)
                 ->where('roles.is_active', true)
                 ->groupBy('domains.domain_key')
                 ->selectRaw('domains.domain_key, MAX(role_domain_rank.rank) as rank')
