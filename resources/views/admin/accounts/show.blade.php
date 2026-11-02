@@ -93,9 +93,7 @@
                                     <label class="form-field-lbl" for="co-desig">Designation</label>
                                     <select id="co-desig" name="designation_id">
                                         <option value="">None</option>
-                                        @foreach ($designations as $item)
-                                            <option value="{{ $item->id }}" @selected((int) old('designation_id', $employee->designation_id) === $item->id)>{{ $item->name }}</option>
-                                        @endforeach
+                                        @include('partials.designation-options', ['selected' => old('designation_id', $employee->designation_id)])
                                     </select>
                                     @error('designation_id') <span class="field-error">{{ $message }}</span> @enderror
                                 </div>

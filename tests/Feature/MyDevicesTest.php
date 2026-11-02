@@ -83,7 +83,7 @@ class MyDevicesTest extends TestCase
      */
     public function test_an_admin_can_reach_updates_before_the_migration_is_applied(): void
     {
-        Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true]);
+        Artisan::call('migrate:rollback', ['--path' => 'database/migrations/2026_11_02_000001_create_user_devices.php', '--force' => true]);
         $this->assertFalse(Schema::hasTable('user_devices'));
 
         $admin = User::factory()->create(['account_type' => Realm::ADMIN]);
@@ -102,7 +102,7 @@ class MyDevicesTest extends TestCase
 
     public function test_signing_out_works_before_the_migration_is_applied(): void
     {
-        Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true]);
+        Artisan::call('migrate:rollback', ['--path' => 'database/migrations/2026_11_02_000001_create_user_devices.php', '--force' => true]);
 
         $this->actingAs(User::factory()->create())->get('/dashboard')->assertOk();
 

@@ -160,6 +160,14 @@ Route::post('/master-data/{list}', [AdminMasterDataController::class, 'store'])
 Route::post('/master-data/{list}/deactivate', [AdminMasterDataController::class, 'deactivate'])
     ->where('list', '[a-z-]{1,32}')
     ->name('master.deactivate');
+Route::post('/master-data/designations/place', [AdminMasterDataController::class, 'place'])
+    ->name('master.place');
+Route::get('/master-data/{list}/merge', [AdminMasterDataController::class, 'confirmMerge'])
+    ->where('list', 'departments|designations')
+    ->name('master.merge.confirm');
+Route::post('/master-data/{list}/merge', [AdminMasterDataController::class, 'merge'])
+    ->where('list', 'departments|designations')
+    ->name('master.merge');
 
 Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings');
 

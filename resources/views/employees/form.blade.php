@@ -177,14 +177,9 @@
                             <label class="form-field-lbl" for="emp-designation">Designation</label>
                             <select id="emp-designation" name="designation_id">
                                 <option value="">Not set</option>
-                                @foreach ($designations as $designation)
-                                    <option value="{{ $designation->id }}"
-                                        @selected((int) old('designation_id', $employee?->designation_id) === $designation->id)>
-                                        {{ $designation->name }}
-                                    </option>
-                                @endforeach
+                                @include('partials.designation-options', ['selected' => old('designation_id', $employee?->designation_id)])
                             </select>
-                            <span class="pay-hint">A label. Designations carry no rank and grant nothing (§2.3).</span>
+                            <span class="pay-hint">Grouped by department. If the department above is left empty, it is filled in from this.</span>
                             @error('designation_id')
                                 <span class="field-error">{{ $message }}</span>
                             @enderror

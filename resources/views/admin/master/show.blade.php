@@ -34,6 +34,9 @@
                                 <tr>
                                     <th scope="col">Name</th>
                                     <th scope="col">Code</th>
+                                    @if ($placing)
+                                        <th scope="col">Department</th>
+                                    @endif
                                     <th scope="col">In use</th>
                                     <th scope="col">Status</th>
                                     <th scope="col"><span class="sr-only">Retire</span></th>
@@ -44,6 +47,22 @@
                                     <tr>
                                         <td><strong>{{ $row['name'] }}</strong></td>
                                         <td class="cell-tight"><code>{{ $row['code'] }}</code></td>
+                                        @if ($placing)
+                                            <td class="cell-tight">
+                                                <form method="POST" action="{{ route('admin.master.place') }}">
+                                                    @csrf
+                                                    <input type="hidden" name="item" value="{{ $row['id'] }}">
+                                                    <label class="sr-only" for="md-place-{{ $row['id'] }}">Department of {{ $row['name'] }}</label>
+                                                    <select id="md-place-{{ $row['id'] }}" name="department_id">
+                                                        <option value="">Not placed</option>
+                                                        @foreach ($departments as $department)
+                                                            <option value="{{ $department->id }}" @selected($row['department_id'] === $department->id)>{{ $department->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <button class="btn btn-outline btn-sm" type="submit">Save</button>
+                                                </form>
+                                            </td>
+                                        @endif
                                         <td class="cell-tight">
                                             {{--
                                                 Counted from the records
@@ -85,6 +104,9 @@
                                                     <button class="btn btn-outline btn-sm" type="submit">Retire</button>
                                                 </form>
                                             @endif
+                                            @if ($mergeable)
+                                                <a class="btn btn-outline btn-sm" href="{{ route('admin.master.merge.confirm', ['list' => $list, 'item' => $row['id']]) }}">Merge</a>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach
@@ -109,6 +131,18 @@
                                 <input id="md-name" name="name" type="text" maxlength="120" required
                                        value="{{ old('name') }}">
                             </div>
+
+                            @if ($placing)
+                                <div class="form-field">
+                                    <label class="form-field-lbl" for="md-department">Department</label>
+                                    <select id="md-department" name="department_id">
+                                        <option value="">Not placed</option>
+                                        @foreach ($departments as $department)
+                                            <option value="{{ $department->id }}" @selected((int) old('department_id') === $department->id)>{{ $department->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
 
                             <div class="form-field">
                                 <label class="form-field-lbl" for="md-code">Code</label>
