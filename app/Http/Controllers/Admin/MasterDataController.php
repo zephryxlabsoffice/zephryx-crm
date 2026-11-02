@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Announcement;
+use App\Models\Employee;
 use App\Models\MasterDataItem;
+use App\Models\Ticket;
 use App\Support\Admin\MasterDataDirectory;
 use App\Support\Audit\AuditLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -49,6 +54,9 @@ class MasterDataController extends Controller
             'meta' => MasterDataDirectory::lists()[$list],
             'rows' => MasterDataDirectory::rows($list),
             'inUse' => MasterDataDirectory::totalInUse($list),
+            'placing' => $list === MasterDataItem::DESIGNATIONS && MasterDataDirectory::canPlaceDesignations(),
+            'mergeable' => MasterDataDirectory::canMerge($list),
+            'departments' => MasterDataItem::query()->inList(MasterDataItem::DEPARTMENTS)->active()->get(),
         ]);
     }
 
@@ -108,6 +116,7 @@ class MasterDataController extends Controller
         ]);
 
         $code = mb_strtoupper($data['code']);
+        $place = $this->requestedPlacement($request, $list);
 
         /*
          * The reactivation case, and the reason the unique rules above are
@@ -120,7 +129,7 @@ class MasterDataController extends Controller
             ->first();
 
         if ($retired !== null) {
-            $retired->update(['is_active' => true, 'name' => $data['name']]);
+            $retired->update(['is_active' => true, 'name' => $data['name']] + $place);
 
             $this->audit->record(
                 action: AuditLog::MASTER_DATA_CHANGED,
@@ -138,7 +147,7 @@ class MasterDataController extends Controller
                 ->with('status_tone', 'success');
         }
 
-        $item = MasterDataItem::create([
+        $item = MasterDataItem::create($place + [
             'list' => $list,
             'name' => $data['name'],
             'code' => $code,
@@ -229,5 +238,158 @@ class MasterDataController extends Controller
             ->with('status', $item->name.' is retired. It is no longer offered, and everything '
                 .'that already uses it still reads correctly.')
             ->with('status_tone', 'info');
+    }
+
+    /**
+     * POST /admin/master-data/designations/place
+     *
+     * Moves the designation on the list and nobody off their record. People who
+     * hold it keep their department until it is edited, and the status says how
+     * many that leaves elsewhere.
+     */
+    public function place(Request $request): RedirectResponse
+    {
+        abort_unless(MasterDataDirectory::canPlaceDesignations(), 404);
+
+        $data = $request->validate([
+            'item' => ['required', Rule::exists('master_data_items', 'id')->where('list', MasterDataItem::DESIGNATIONS)],
+            'department_id' => ['nullable', Rule::exists('master_data_items', 'id')
+                ->where('list', MasterDataItem::DEPARTMENTS)->where('is_active', true)],
+        ]);
+
+        $item = MasterDataItem::with('department')->findOrFail($data['item']);
+        $before = $item->department?->name ?? 'not placed';
+
+        $item->update(['department_id' => $data['department_id'] ?? null]);
+
+        $after = $item->fresh('department')->department?->name;
+
+        $this->audit->record(
+            action: AuditLog::MASTER_DATA_CHANGED,
+            actor: $request->user(),
+            entityType: 'master_data',
+            entityId: MasterDataItem::DESIGNATIONS.'/'.$item->code,
+            before: $before,
+            after: $item->name.' placed under '.($after ?? 'no department'),
+            request: $request,
+        );
+
+        $elsewhere = $after === null ? 0 : Employee::where('designation_id', $item->id)
+            ->where(fn ($query) => $query->whereNull('department_id')->orWhere('department_id', '!=', $item->department_id))
+            ->count();
+
+        return redirect()
+            ->route('admin.master.show', ['list' => MasterDataItem::DESIGNATIONS])
+            ->with('status', $item->name.' is now under '.($after ?? 'no department').'.'
+                .($elsewhere > 0 ? ' '.$elsewhere.' '.($elsewhere === 1 ? 'person holding it sits' : 'people holding it sit')
+                    .' in another department. Their records were not changed.' : ''))
+            ->with('status_tone', $elsewhere > 0 ? 'info' : 'success');
+    }
+
+    /**
+     * GET /admin/master-data/{list}/merge?item=
+     *
+     * Names everybody who would move before anything does, because a merge cannot
+     * be undone by a button: afterwards they look like any other holder of the row.
+     */
+    public function confirmMerge(Request $request, string $list): Response
+    {
+        $item = MasterDataItem::where('list', $list)->findOrFail((int) $request->query('item'));
+
+        return response()->view('admin.master.merge', [
+            'activeNav' => 'master-data',
+            'list' => $list,
+            'meta' => MasterDataDirectory::lists()[$list],
+            'item' => $item,
+            'people' => $this->peopleOn($item)->pluck('user.name')->all(),
+            'targets' => MasterDataItem::query()->inList($list)->active()->whereNot('id', $item->id)->get(),
+        ]);
+    }
+
+    /**
+     * POST /admin/master-data/{list}/merge
+     *
+     * Everything that points at the row moves to the other one, then the row is
+     * retired. Nothing is deleted, and the audit entry names who moved. People
+     * merged into a placed designation also take its department, so a merge
+     * does not leave them somewhere their job says they are not.
+     */
+    public function merge(Request $request, string $list): RedirectResponse
+    {
+        $data = $request->validate([
+            'item' => ['required', Rule::exists('master_data_items', 'id')->where('list', $list)],
+            'into' => ['required', 'different:item', Rule::exists('master_data_items', 'id')
+                ->where('list', $list)->where('is_active', true)],
+        ], [
+            'into.required' => 'Choose what to merge this into.',
+            'into.different' => 'A row cannot be merged into itself.',
+        ]);
+
+        $item = MasterDataItem::findOrFail($data['item']);
+        $into = MasterDataItem::with('department')->findOrFail($data['into']);
+        $names = $this->peopleOn($item)->pluck('user.name')->all();
+
+        DB::transaction(function () use ($list, $item, $into) {
+            if ($list === MasterDataItem::DEPARTMENTS) {
+                Employee::where('department_id', $item->id)->update(['department_id' => $into->id]);
+                Announcement::where('audience_department_id', $item->id)->update(['audience_department_id' => $into->id]);
+                Ticket::where('department', $item->name)->update(['department' => $into->name]);
+
+                if (MasterDataDirectory::canPlaceDesignations()) {
+                    MasterDataItem::where('department_id', $item->id)->update(['department_id' => $into->id]);
+                }
+            } else {
+                $home = $into->department?->is_active ? ['department_id' => $into->department_id] : [];
+
+                Employee::where('designation_id', $item->id)->update(['designation_id' => $into->id] + $home);
+            }
+
+            $item->update(['is_active' => false]);
+        });
+
+        $this->audit->record(
+            action: AuditLog::MASTER_DATA_CHANGED,
+            actor: $request->user(),
+            entityType: 'master_data',
+            entityId: $list.'/'.$item->code,
+            before: $item->name,
+            after: 'merged into '.$into->name.' and retired; moved: '.($names === [] ? 'nobody' : implode(', ', $names)),
+            request: $request,
+        );
+
+        return redirect()
+            ->route('admin.master.show', ['list' => $list])
+            ->with('status', $item->name.' is merged into '.$into->name.' and retired. '
+                .count($names).' '.(count($names) === 1 ? 'person' : 'people').' moved.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * A department chosen while adding a designation. Empty for any other list.
+     *
+     * @return array{department_id?: ?int}
+     */
+    protected function requestedPlacement(Request $request, string $list): array
+    {
+        if ($list !== MasterDataItem::DESIGNATIONS || ! MasterDataDirectory::canPlaceDesignations()) {
+            return [];
+        }
+
+        $data = $request->validate([
+            'department_id' => ['nullable', Rule::exists('master_data_items', 'id')
+                ->where('list', MasterDataItem::DEPARTMENTS)->where('is_active', true)],
+        ]);
+
+        return ['department_id' => isset($data['department_id']) ? (int) $data['department_id'] : null];
+    }
+
+    /**
+     * @return Collection<int, Employee>
+     */
+    protected function peopleOn(MasterDataItem $item): Collection
+    {
+        $column = $item->list === MasterDataItem::DEPARTMENTS ? 'department_id' : 'designation_id';
+
+        return Employee::with('user')->where($column, $item->id)->get()->toBase();
     }
 }

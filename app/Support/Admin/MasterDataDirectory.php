@@ -4,6 +4,7 @@ namespace App\Support\Admin;
 
 use App\Models\MasterDataItem;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * The lookup lists, read from `master_data_items`.
@@ -46,14 +47,14 @@ class MasterDataDirectory
         return [
             MasterDataItem::DEPARTMENTS => [
                 'label' => 'Departments',
-                'note' => 'Every employee belongs to one. Referenced by the directory, the '
-                    .'attendance roll and the announcements audience.',
+                'note' => 'Every employee belongs to one, and every designation sits under one. '
+                    .'Referenced by the directory, the attendance roll and the announcements audience.',
                 'unit' => 'employee',
             ],
             MasterDataItem::DESIGNATIONS => [
                 'label' => 'Designations',
-                'note' => 'Job titles. A display label - designations carry no rank and grant '
-                    .'nothing (§2.3).',
+                'note' => 'Job titles, each under one department. A display label - designations '
+                    .'carry no rank and grant nothing (§2.3).',
                 'unit' => 'employee',
             ],
             MasterDataItem::LEAVE_TYPES => [
@@ -96,17 +97,67 @@ class MasterDataDirectory
     public static function rows(string $list): Collection
     {
         return MasterDataItem::query()
+            ->with('department')
             ->inList($list)
             ->get()
             ->map(fn (MasterDataItem $item) => [
                 'id' => $item->id,
                 'name' => $item->name,
                 'code' => $item->code,
+                'department_id' => $item->department_id,
+                'department' => $item->department?->name,
                 'active' => $item->is_active,
                 'in_use' => $item->inUse(),
             ])
             ->sortByDesc('active')
             ->values();
+    }
+
+    /** The two lists that people sit on, so the two that may be merged. */
+    public static function canMerge(string $list): bool
+    {
+        return in_array($list, [MasterDataItem::DEPARTMENTS, MasterDataItem::DESIGNATIONS], true);
+    }
+
+    /** False between uploading this version and applying its migration. */
+    public static function canPlaceDesignations(): bool
+    {
+        return Schema::hasColumn('master_data_items', 'department_id');
+    }
+
+    /**
+     * Active designations under their active departments, for a dropdown. Plain
+     * optgroups, so the form needs no script. A designation with no active
+     * department goes last, with no label until any has been placed.
+     *
+     * @return list<array{label: ?string, items: Collection<int, MasterDataItem>}>
+     */
+    public static function designationGroups(): array
+    {
+        $designations = MasterDataItem::query()
+            ->with('department')
+            ->inList(MasterDataItem::DESIGNATIONS)
+            ->active()
+            ->get();
+
+        $placed = fn (MasterDataItem $item) => $item->department?->is_active === true;
+        $groups = [];
+
+        foreach (MasterDataItem::query()->inList(MasterDataItem::DEPARTMENTS)->active()->get() as $department) {
+            $items = $designations->filter(fn (MasterDataItem $item) => $placed($item) && $item->department_id === $department->id)->values();
+
+            if ($items->isNotEmpty()) {
+                $groups[] = ['label' => $department->name, 'items' => $items];
+            }
+        }
+
+        $unplaced = $designations->reject($placed)->values();
+
+        if ($unplaced->isNotEmpty()) {
+            $groups[] = ['label' => $groups === [] ? null : 'Not placed yet', 'items' => $unplaced];
+        }
+
+        return $groups;
     }
 
     /**

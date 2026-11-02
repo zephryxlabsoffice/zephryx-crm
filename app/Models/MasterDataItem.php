@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Validation\ValidationException;
 
 /**
  * One row of one master data list - a department, a designation, a leave
@@ -33,7 +35,7 @@ class MasterDataItem extends Model
     public const TICKET_CATEGORIES = 'ticket-categories';
     public const ANNOUNCEMENT_CATEGORIES = 'announcement-categories';
 
-    protected $fillable = ['list', 'name', 'code', 'is_active', 'sort_order'];
+    protected $fillable = ['list', 'name', 'code', 'department_id', 'is_active', 'sort_order'];
 
     protected function casts(): array
     {
@@ -72,6 +74,46 @@ class MasterDataItem extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * The department a designation belongs to. Null on every other list.
+     *
+     * @return BelongsTo<MasterDataItem, $this>
+     */
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'department_id');
+    }
+
+    /**
+     * The department to save for somebody, given the designation chosen for them.
+     *
+     * An empty department takes the designation's. A different one is refused,
+     * unless the pair is what the record already says: an old mismatch should not
+     * stop somebody correcting a phone number. A designation not placed yet, or
+     * placed in a retired department, asks nothing of the choice.
+     */
+    public static function departmentForJob(?int $designationId, ?int $departmentId, ?Employee $existing = null): ?int
+    {
+        $designation = $designationId === null ? null : self::with('department')->find($designationId);
+        $home = $designation?->department;
+
+        if ($home === null || ! $home->is_active || $departmentId === $home->id) {
+            return $departmentId;
+        }
+
+        if ($departmentId === null) {
+            return $home->id;
+        }
+
+        if ($existing !== null && $existing->designation_id === $designationId && $existing->department_id === $departmentId) {
+            return $departmentId;
+        }
+
+        throw ValidationException::withMessages([
+            'department_id' => $designation->name.' belongs to '.$home->name.'. Choose that department, or move the designation in Admin > Master data.',
+        ]);
     }
 
     /**

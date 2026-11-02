@@ -7,6 +7,7 @@ use App\Mail\PasswordResetMail;
 use App\Models\Employee;
 use App\Models\EmployeeProfile;
 use App\Models\MasterDataItem;
+use App\Support\Admin\MasterDataDirectory;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Admin\AccessDirectory;
@@ -312,7 +313,11 @@ class AccountController extends Controller
         $before = $this->companyLine($employee);
 
         $employee->update([
-            'department_id' => $data['department_id'] ?? null,
+            'department_id' => MasterDataItem::departmentForJob(
+                isset($data['designation_id']) ? (int) $data['designation_id'] : null,
+                isset($data['department_id']) ? (int) $data['department_id'] : null,
+                $employee,
+            ),
             'designation_id' => $data['designation_id'] ?? null,
             'reports_to' => $data['reports_to'] ?? null,
             'joined_on' => $data['joined_on'],
@@ -452,7 +457,7 @@ class AccountController extends Controller
             // Empty when the account may be deleted (made by mistake, unused).
             'deleteBlockers' => app(AccountRemoval::class)->blockers($user),
             'departments' => MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->active()->get(),
-            'designations' => MasterDataItem::inList(MasterDataItem::DESIGNATIONS)->active()->get(),
+            'designationGroups' => MasterDataDirectory::designationGroups(),
             'managers' => $employee === null ? collect() : Employee::query()
                 ->with('user')
                 ->active()

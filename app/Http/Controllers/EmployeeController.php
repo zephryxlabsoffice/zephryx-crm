@@ -9,6 +9,7 @@ use App\Models\EmployeeDocument;
 use App\Models\EmployeeProfile;
 use App\Models\EmployeeSalaryStructure as SalaryStructureModel;
 use App\Models\MasterDataItem;
+use App\Support\Admin\MasterDataDirectory;
 use App\Models\ProfileChangeRequest;
 use App\Models\Role;
 use App\Models\User;
@@ -374,6 +375,7 @@ class EmployeeController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validated($request);
+        $data['department_id'] = $this->departmentForJob($data);
 
         $employee = DB::transaction(function () use ($data, $request) {
             $user = User::create([
@@ -497,6 +499,7 @@ class EmployeeController extends Controller
         $record = $this->find($employee);
         $this->refuseOwnRecord($record, $request);
         $data = $this->validated($request, $record);
+        $data['department_id'] = $this->departmentForJob($data, $record);
 
         $before = $this->describe($record);
 
@@ -1802,6 +1805,18 @@ class EmployeeController extends Controller
     }
 
     /**
+     * @param  array<string, mixed>  $data
+     */
+    protected function departmentForJob(array $data, ?Employee $existing = null): ?int
+    {
+        return MasterDataItem::departmentForJob(
+            isset($data['designation_id']) ? (int) $data['designation_id'] : null,
+            isset($data['department_id']) ? (int) $data['department_id'] : null,
+            $existing,
+        );
+    }
+
+    /**
      * The dropdowns.
      *
      * Only ACTIVE master data: a deactivated department keeps the people
@@ -1814,7 +1829,7 @@ class EmployeeController extends Controller
     {
         return [
             'departments' => MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->active()->get(),
-            'designations' => MasterDataItem::inList(MasterDataItem::DESIGNATIONS)->active()->get(),
+            'designationGroups' => MasterDataDirectory::designationGroups(),
             // Not master data: the three types are rules in code - the staff ID
             // digit, who the clock applies to, which fields are required - and
             // a fourth one somebody typed into a list would satisfy none of them.
