@@ -37,6 +37,9 @@
         @isset($title)
             <strong>{{ $title }}</strong>
         @endisset
+        @foreach ($items ?? [] as $item)
+            <p>{{ $item }}</p>
+        @endforeach
         <p>{{ $message }}</p>
     </div>
 </div>

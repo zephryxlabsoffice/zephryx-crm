@@ -36,8 +36,8 @@
                  sentence the obvious reading is that the CRM will calculate a
                  payslip from these, and it never will. --}}
             The standing agreement, kept so whoever prepares the payslip has the figures to
-            start from. <strong>Nothing here is calculated or shown on the Salary page</strong> -
-            the payslip HR uploads is what somebody was actually paid, and a breakdown printed
+            start from. <strong>Only the CTC is calculated, and nothing here is shown on the Salary
+            page</strong> - the payslip HR uploads is what somebody was actually paid, and a breakdown printed
             beside it would argue with it in any month carrying a deduction.
         </p>
         @if ($editing)
@@ -106,15 +106,26 @@
 
     <div class="form-grid">
         <div class="form-field">
-            <label class="form-field-lbl" for="emp-pay-ctc">CTC per year <span class="an-optional">(optional)</span></label>
-            {{-- Typed, never worked out from the boxes above: this application
-                 does not calculate pay. --}}
+            <label class="form-field-lbl" for="emp-pay-ctc">CTC <span class="an-optional">(optional)</span></label>
             <input id="emp-pay-ctc" name="ctc" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"
                    placeholder="0.00" value="{{ old('ctc', $salaryFields['ctc'] ?? '') }}"
                    @if ($errors->has('ctc')) aria-invalid="true" aria-describedby="emp-pay-ctc-error" @endif>
-            <span class="pay-hint">As agreed with them. Typed here, not calculated.</span>
+            <span class="pay-hint">Leave empty to calculate it on saving: the monthly pay above, without deductions, times 12. A freelance rate cannot be calculated.</span>
             @error('ctc')
                 <span class="field-error" id="emp-pay-ctc-error">{{ $message }}</span>
+            @enderror
+        </div>
+
+        <div class="form-field">
+            <label class="form-field-lbl" for="emp-pay-ctc-period">The CTC amount is</label>
+            <select id="emp-pay-ctc-period" name="ctc_period"
+                    @if ($errors->has('ctc_period')) aria-invalid="true" @endif>
+                @foreach (SalaryStructure::ctcPeriods() as $value => $label)
+                    <option value="{{ $value }}" @selected(old('ctc_period', SalaryStructure::CTC_YEARLY) === $value)>{{ $label }}</option>
+                @endforeach
+            </select>
+            @error('ctc_period')
+                <span class="field-error">{{ $message }}</span>
             @enderror
         </div>
     </div>

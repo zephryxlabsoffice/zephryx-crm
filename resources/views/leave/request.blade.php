@@ -47,7 +47,7 @@
                             <label class="form-field-lbl" for="leave-type-field">Leave type</label>
                             <select id="leave-type-field" name="type" required>
                                 @foreach ($types as $key => $meta)
-                                    <option value="{{ $key }}">
+                                    <option value="{{ $key }}" @selected(old('type') === (string) $key)>
                                         {{ $meta['label'] }}@if ($meta['days'] !== null) - {{ collect($balance['types'])->firstWhere('key', $key)['remaining'] ?? $meta['days'] }} days left @endif
                                     </option>
                                 @endforeach

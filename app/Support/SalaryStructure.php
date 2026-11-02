@@ -27,6 +27,10 @@ use App\Models\EmployeeSalaryStructure as Structure;
  */
 class SalaryStructure
 {
+    public const CTC_YEARLY = 'yearly';
+
+    public const CTC_MONTHLY = 'monthly';
+
     /**
      * What the engagement's agreement is shaped like.
      */
@@ -37,6 +41,16 @@ class SalaryStructure
             Employee::FREELANCE => Structure::RATE,
             default => Structure::BREAKDOWN,
         };
+    }
+
+    /**
+     * How a typed CTC was stated. It is always stored per year.
+     *
+     * @return array<string, string>
+     */
+    public static function ctcPeriods(): array
+    {
+        return [self::CTC_YEARLY => 'Yearly', self::CTC_MONTHLY => 'Monthly'];
     }
 
     /**
@@ -76,6 +90,28 @@ class SalaryStructure
                 'tds_minor' => 'TDS',
             ]
             : [];
+    }
+
+    /**
+     * CTC worked out from the agreement: the monthly earnings times twelve.
+     *
+     * Only when nobody has typed one (owner, 2026-11-02), and worked out on
+     * reading rather than stored, so it cannot go stale when the pay changes.
+     * Null for a freelance rate, which is not a monthly figure, and when no
+     * earnings are stated.
+     */
+    public static function calculatedCtcMinor(Structure $structure): ?int
+    {
+        if ($structure->kind === Structure::RATE) {
+            return null;
+        }
+
+        $stated = array_filter(
+            array_map(fn (string $column) => $structure->{$column}, array_keys(self::earnings($structure->kind))),
+            fn ($minor) => $minor !== null,
+        );
+
+        return $stated === [] ? null : (int) array_sum($stated) * 12;
     }
 
     /**
@@ -138,6 +174,7 @@ class SalaryStructure
         }
 
         $currency = $structure->currency ?: Money::DEFAULT_CURRENCY;
+        $ctc = $structure->ctc_minor === null ? self::calculatedCtcMinor($structure) : (int) $structure->ctc_minor;
 
         $rows = function (array $labels) use ($structure, $currency): array {
             $out = [];
@@ -166,10 +203,9 @@ class SalaryStructure
                 ? (self::basisOptions()[$structure->rate_basis] ?? $structure->rate_basis)
                 : null,
             'currency' => $currency,
-            // Typed by HR, never derived from the rows above (2026-10-27).
-            'ctc' => $structure->ctc_minor === null
-                ? null
-                : Money::of((int) $structure->ctc_minor, $currency)->format(),
+            'ctc' => $ctc === null ? null : Money::of($ctc, $currency)->format(),
+            'ctc_monthly' => $ctc === null ? null : Money::of((int) round($ctc / 12), $currency)->format(),
+            'ctc_calculated' => $ctc !== null && $structure->ctc_minor === null,
         ];
     }
 }

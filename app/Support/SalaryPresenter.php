@@ -16,6 +16,8 @@ use Illuminate\Support\Carbon;
  * money has gone.
  *
  * So there is no basic/HRA split here, no deductions engine and no derived CTC.
+ * (The CTC on an employee's agreement is worked out, in SalaryStructure, since
+ * 2026-11-02. It is a statement of the agreement and never reaches these pages.)
  * Holding our own version of a calculation somebody else owns would give the
  * company two sources of truth for what it pays people, and they would
  * eventually disagree - in front of the employee.

@@ -933,7 +933,11 @@ class EmployeeController extends Controller
                 + $this->identityRules($request, $existing)
                 + $this->addressRules($request, $existing)
                 + $this->salaryRules($request, $existing),
-            $this->identityMessages($request),
+            $this->identityMessages($request) + [
+                // Says what somebody who typed letters into an amount has to do.
+                'decimal' => 'The :attribute must be a number, like 25000 or 25000.50.',
+            ],
+            ['ctc' => 'CTC', 'hra' => 'HRA', 'pf' => 'PF', 'pt' => 'professional tax', 'tds' => 'TDS'],
         );
 
         /*
@@ -1609,8 +1613,10 @@ class EmployeeController extends Controller
             $rules['rate_basis'] = ['nullable', 'required_with:rate', Rule::in(SalaryStructureModel::BASES)];
         }
 
-        // Annual CTC, typed, optional, any engagement (2026-10-27).
+        // CTC, optional, any engagement. Typed yearly or monthly; left empty
+        // it is worked out from the pay (see SalaryStructure::calculatedCtcMinor).
         $rules['ctc'] = ['nullable', 'decimal:0,2', 'min:0', 'max:9999999999'];
+        $rules['ctc_period'] = ['nullable', Rule::in(array_keys(SalaryStructure::ctcPeriods()))];
 
         return $rules;
     }
@@ -1672,15 +1678,21 @@ class EmployeeController extends Controller
             $supplied['rate_basis'] = $data['rate_basis'];
         }
 
+        $existing = SalaryStructureModel::where('employee_id', $employee->id)->first();
+
         if (($data['ctc'] ?? '') !== '' && $data['ctc'] !== null) {
-            $supplied['ctc_minor'] = Money::fromMajor($data['ctc'], $currency)->minor;
+            $minor = Money::fromMajor($data['ctc'], $currency)->minor;
+
+            $supplied['ctc_minor'] = ($data['ctc_period'] ?? null) === SalaryStructure::CTC_MONTHLY ? $minor * 12 : $minor;
+        } elseif (array_key_exists('ctc', $data) && $existing?->ctc_minor !== null) {
+            // Unlike the boxes above, an emptied CTC is not "keep what is on
+            // file": it hands the figure back to the calculation.
+            $supplied['ctc_minor'] = null;
         }
 
         if ($supplied === []) {
             return;
         }
-
-        $existing = SalaryStructureModel::where('employee_id', $employee->id)->first();
 
         $changed = [];
 

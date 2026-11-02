@@ -52,7 +52,7 @@
                                  AnnouncementPresenter::authorableCategories(). --}}
                             <select id="an-cat" name="category" required>
                                 @foreach ($categories as $key => $meta)
-                                    <option value="{{ $key }}">{{ $meta['label'] }}</option>
+                                    <option value="{{ $key }}" @selected(old('category') === (string) $key)>{{ $meta['label'] }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -61,7 +61,7 @@
                             <label class="form-field-lbl" for="an-audience">Who sees it</label>
                             <select id="an-audience" name="audience" required>
                                 @foreach ($audiences as $key => $label)
-                                    <option value="{{ $key }}">{{ $label }}</option>
+                                    <option value="{{ $key }}" @selected(old('audience') === (string) $key)>{{ $label }}</option>
                                 @endforeach
                             </select>
                             <span class="pay-hint">Anything narrower than everyone is enforced when it is fetched, not hidden in the page.</span>

@@ -12,6 +12,7 @@ use App\Support\AttendancePolicy;
 use App\Support\AttendancePresenter;
 use App\Support\Audit\AuditLog;
 use App\Support\LeaveDirectory;
+use App\Support\LeavePolicy;
 use App\Support\LeavePresenter as P;
 use App\Support\Rbac\Rbac;
 use Illuminate\Support\Carbon;
@@ -375,6 +376,20 @@ class LeaveWritesTest extends TestCase
     /**
      * @param  list<string>  $roles
      */
+    public function test_a_failed_request_warns_at_the_top_and_keeps_the_leave_type(): void
+    {
+        $this->signInAsEmployee();
+
+        $type = array_key_last(LeavePolicy::types());
+
+        $this->from('/leave/request')->post('/leave', ['type' => $type]);
+
+        $this->get('/leave/request')
+            ->assertOk()
+            ->assertSee('That was not saved.')
+            ->assertSee('value="'.$type.'" selected', false);
+    }
+
     protected function signInAsEmployee(array $roles = ['employee'], string $staffId = 'EMP850'): Employee
     {
         $user = User::factory()->create([

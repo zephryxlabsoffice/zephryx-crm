@@ -83,7 +83,7 @@
                         <select id="roster-employee" name="employee_id" required>
                             <option value="">Choose a person</option>
                             @foreach ($employeeChoices as $employee)
-                                <option value="{{ $employee->id }}">
+                                <option value="{{ $employee->id }}" @selected(old('employee_id') === (string) $employee->id)>
                                     {{ $employee->user?->name }} ({{ $employee->user?->user_id }})
                                 </option>
                             @endforeach
@@ -98,7 +98,7 @@
                         <select id="roster-date" name="date" required>
                             <option value="">Choose a date</option>
                             @foreach ($upcoming as $day)
-                                <option value="{{ $day['date'] }}">{{ $day['label'] }}</option>
+                                <option value="{{ $day['date'] }}" @selected(old('date') === (string) $day['date'])>{{ $day['label'] }}</option>
                             @endforeach
                         </select>
                         <span class="pay-hint">Sundays and announced holidays from the last 7 days and the coming weeks. Rostering a past day someone already worked in full adds their comp-off straight away.</span>

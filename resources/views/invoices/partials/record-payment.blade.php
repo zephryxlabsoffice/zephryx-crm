@@ -42,7 +42,7 @@
                 <label class="form-field-lbl" for="pay-method">Method</label>
                 <select id="pay-method" name="method" required>
                     @foreach ($paymentMethods as $method)
-                        <option value="{{ $method }}">{{ $method }}</option>
+                        <option value="{{ $method }}" @selected(old('method') === (string) $method)>{{ $method }}</option>
                     @endforeach
                 </select>
             </div>

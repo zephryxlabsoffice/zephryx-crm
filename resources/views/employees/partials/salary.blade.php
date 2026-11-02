@@ -62,8 +62,20 @@
 
             <div class="lv-field">
                 <dt class="lv-field-lbl">CTC per year</dt>
-                <dd>{{ $card['ctc'] ?? 'Not stated' }}</dd>
+                <dd>
+                    {{ $card['ctc'] ?? 'Not stated' }}
+                    @if ($card['ctc_calculated'])
+                        <span class="an-optional">(calculated)</span>
+                    @endif
+                </dd>
             </div>
+
+            @if ($card['ctc_monthly'])
+                <div class="lv-field">
+                    <dt class="lv-field-lbl">CTC per month</dt>
+                    <dd>{{ $card['ctc_monthly'] }}</dd>
+                </div>
+            @endif
         </dl>
 
         <div class="prose prose-quiet">

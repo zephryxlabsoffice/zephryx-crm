@@ -60,6 +60,19 @@
                     ])
                 @endif
 
+                {{-- A form that failed validation says so here (owner, 2026-11-02).
+                     The messages beside each field can be far down a long form,
+                     which read as the page simply reloading. `isset` because an
+                     error page can draw this layout without the shared bag. --}}
+                @if (isset($errors) && $errors->any())
+                    @include('partials.notice', [
+                        'tone' => 'warning',
+                        'title' => 'That was not saved. Please fix the following and submit again.',
+                        'message' => 'What you typed is still in the form. Only attached files need choosing again.',
+                        'items' => $errors->unique(),
+                    ])
+                @endif
+
                 {{-- Maintenance on the way, on every page until it starts; and,
                      for the Admin Panel, a reminder while it is on. --}}
                 @php $maintenanceSoon = \App\Support\Maintenance::upcoming(); @endphp
