@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Middleware\EnforceSessionLifetime;
+use App\Http\Middleware\VerifyHost;
 use App\Mail\OneTimeCodeMail;
 use App\Models\User;
 use App\Support\Audit\AuditLog;
@@ -12,6 +13,7 @@ use App\Support\Auth\OneTimeCode;
 use App\Support\Auth\RememberMe;
 use App\Support\Auth\SecurityLock;
 use App\Support\Auth\TrustedDevices;
+use App\Support\Auth\UserDevices;
 use App\Support\Realm;
 use App\Support\StaffEmails;
 use App\Support\SupportContact;
@@ -72,6 +74,7 @@ class LoginController extends Controller
         private LoginThrottle $throttle,
         private OneTimeCode $codes,
         private TrustedDevices $devices,
+        private UserDevices $userDevices,
         private RememberMe $remember,
         private AuditLog $audit,
     ) {
@@ -403,8 +406,21 @@ class LoginController extends Controller
 
         $response = redirect()->intended(Realm::dashboardFor($user));
 
+        // My Devices. verify.zephryxlabs.in is not a place to manage devices.
+        $sighting = VerifyHost::is($request) ? null : $this->userDevices->signIn($user, $request);
+
+        if ($sighting !== null) {
+            $response->withCookie($sighting['cookie']);
+
+            // Only after a code: a browser already trusted is not new, it just
+            // predates My Devices.
+            if ($sighting['isNew'] && $trustDevice) {
+                $this->userDevices->announce($user, $sighting['device'], $request);
+            }
+        }
+
         if ($trustDevice) {
-            $response->withCookie($this->devices->trust($user, $request));
+            $response->withCookie($this->devices->trust($user, $request, $sighting['device']->id ?? null));
 
             $this->audit->record(
                 action: AuditLog::DEVICE_TRUSTED,

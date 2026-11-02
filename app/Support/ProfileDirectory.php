@@ -59,6 +59,7 @@ class ProfileDirectory
     public const ACTIVITY_KINDS = [
         Audit\AuditLog::SIGNED_IN => 'sign_in',
         Audit\AuditLog::SIGNED_OUT => 'sign_out',
+        Audit\AuditLog::DEVICE_SIGNED_OUT => 'sign_out',
         Audit\AuditLog::PASSWORD_RESET => 'password_changed',
         Audit\AuditLog::PROFILE_PASSWORD_CHANGED => 'password_changed',
         Audit\AuditLog::PROFILE_UPDATED => 'profile_updated',

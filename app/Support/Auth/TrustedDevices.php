@@ -73,12 +73,13 @@ class TrustedDevices
      * that the stored value cannot be reversed, and a fast hash gives that.
      * ─────────────────────────────────────────────────────────────────────────
      */
-    public function trust(User $user, Request $request): Cookie
+    public function trust(User $user, Request $request, ?int $userDeviceId = null): Cookie
     {
         $token = Str::random(64);
 
         DB::table('trusted_devices')->insert([
             'user_id' => $user->id,
+            'user_device_id' => $userDeviceId,
             'token_hash' => $this->hash($token),
             'user_agent' => mb_substr((string) $request->userAgent(), 0, 512),
             'ip_address' => $request->ip(),
@@ -95,6 +96,25 @@ class TrustedDevices
             httpOnly: true,
             sameSite: 'lax',
         );
+    }
+
+    /**
+     * Tie this browser's existing trust to its My Devices row, so signing that
+     * device out takes the trust with it. Trust issued before My Devices has no
+     * row until its browser is next seen.
+     */
+    public function linkCurrent(User $user, Request $request, int $userDeviceId): void
+    {
+        $token = $request->cookie(self::COOKIE);
+
+        if (! is_string($token) || $token === '') {
+            return;
+        }
+
+        DB::table('trusted_devices')
+            ->where('user_id', $user->id)
+            ->where('token_hash', $this->hash($token))
+            ->update(['user_device_id' => $userDeviceId]);
     }
 
     /**

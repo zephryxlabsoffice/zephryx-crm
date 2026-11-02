@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\MaintenanceController as AdminMaintenanceControll
 use App\Http\Controllers\Admin\MasterDataController as AdminMasterDataController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\UpdatesController as AdminUpdatesController;
+use App\Http\Controllers\Auth\MyDevicesController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -87,6 +88,15 @@ Route::post('/accounts/{account}/delete', [AdminAccountController::class, 'destr
 Route::post('/accounts/{account}/company', [AdminAccountController::class, 'company'])
     ->where('account', '[A-Za-z0-9-]{1,32}')
     ->name('accounts.company');
+
+// The panel account's own devices, resolved from the session. See MyDevicesController.
+Route::get('/mydevices', [MyDevicesController::class, 'index'])->name('mydevices.index');
+Route::post('/mydevices/reset-password', [MyDevicesController::class, 'resetPassword'])
+    ->middleware('throttle:5,1')
+    ->name('mydevices.reset-password');
+Route::post('/mydevices/{device}/sign-out', [MyDevicesController::class, 'signOut'])
+    ->whereNumber('device')
+    ->name('mydevices.sign-out');
 
 /*
  * Three distinct account-security acts, decided 2026-09-21 (review round

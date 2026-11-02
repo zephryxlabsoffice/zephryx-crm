@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AccountController as AdminAccountController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\Auth\MyDevicesController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompOffController;
 use App\Http\Controllers\DashboardController;
@@ -967,6 +968,15 @@ Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show')
 Route::get('/profile/preferences', [ProfileController::class, 'preferences'])->name('profile.preferences');
 Route::get('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
 Route::get('/profile/activity', [ProfileController::class, 'activity'])->name('profile.activity');
+
+// Your own devices, resolved from the session like the profile above.
+Route::get('/mydevices', [MyDevicesController::class, 'index'])->name('mydevices.index');
+Route::post('/mydevices/reset-password', [MyDevicesController::class, 'resetPassword'])
+    ->middleware('throttle:5,1')
+    ->name('mydevices.reset-password');
+Route::post('/mydevices/{device}/sign-out', [MyDevicesController::class, 'signOut'])
+    ->whereNumber('device')
+    ->name('mydevices.sign-out');
 
 /*
  * The writes the backend phase implements - see App\Http\Controllers\

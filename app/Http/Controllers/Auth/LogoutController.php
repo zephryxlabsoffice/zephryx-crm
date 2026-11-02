@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Support\Audit\AuditLog;
 use App\Support\Auth\RememberMe;
 use App\Support\Auth\TrustedDevices;
+use App\Support\Auth\UserDevices;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -37,6 +38,7 @@ class LogoutController extends Controller
     public function __construct(
         private RememberMe $remember,
         private TrustedDevices $devices,
+        private UserDevices $userDevices,
         private AuditLog $audit,
     ) {
     }
@@ -48,6 +50,7 @@ class LogoutController extends Controller
         if ($user instanceof User) {
             $this->remember->revokeAll($user);
             $this->devices->revokeCurrent($user, $request);
+            $this->userDevices->signOutCurrent($user, $request);
 
             $this->audit->record(
                 action: AuditLog::SIGNED_OUT,

@@ -17,6 +17,7 @@ use App\Support\Auth\PasswordResets;
 use App\Support\Auth\RememberMe;
 use App\Support\Auth\SecurityLock;
 use App\Support\Auth\TrustedDevices;
+use App\Support\Auth\UserDevices;
 use App\Support\Rbac\Rbac;
 use App\Support\Realm;
 use App\Support\StaffEmails;
@@ -76,6 +77,7 @@ class AccountController extends Controller
         protected Rbac $rbac,
         protected RememberMe $remember,
         protected TrustedDevices $devices,
+        protected UserDevices $userDevices,
         protected PasswordResets $resets,
     ) {
     }
@@ -834,6 +836,8 @@ class AccountController extends Controller
      */
     protected function killSessions(User $user): void
     {
+        $this->userDevices->signOutAll($user);
+
         if (config('session.driver') !== 'database') {
             /*
              * On `file` or `cookie` there is no way to reach another session,

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\MyDevicesController;
 use App\Http\Controllers\Client\AnnouncementController as ClientAnnouncementController;
 use App\Http\Controllers\Client\ContactController as ClientContactController;
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
@@ -132,6 +133,15 @@ Route::get('/announcements/{announcement}', [ClientAnnouncementController::class
     ->name('announcements.show');
 
 Route::get('/profile', [ClientProfileController::class, 'show'])->name('profile.show');
+
+// Your own devices, resolved from the session. See MyDevicesController.
+Route::get('/mydevices', [MyDevicesController::class, 'index'])->name('mydevices.index');
+Route::post('/mydevices/reset-password', [MyDevicesController::class, 'resetPassword'])
+    ->middleware('throttle:5,1')
+    ->name('mydevices.reset-password');
+Route::post('/mydevices/{device}/sign-out', [MyDevicesController::class, 'signOut'])
+    ->whereNumber('device')
+    ->name('mydevices.sign-out');
 
 /*
  * What a client may change about their own record is a short list: how to

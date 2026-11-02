@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsureRealm;
 use App\Http\Middleware\RestoreRememberedSession;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\TrackSignedInDevice;
 use App\Http\Middleware\VerifyHost;
 use App\Support\Shell;
 use App\Support\Theme;
@@ -64,6 +65,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             RestoreRememberedSession::class,
             EnforceSessionLifetime::class,
+            TrackSignedInDevice::class,
             BlockDuringMaintenance::class,
         ]);
 

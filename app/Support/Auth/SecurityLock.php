@@ -41,6 +41,8 @@ class SecurityLock
 
     public const EMAIL = 'email';
 
+    public const NEW_DEVICE = 'new-device';
+
     /** The red button's link. */
     public static function url(User $user, string $address, string $reason): string
     {
@@ -57,6 +59,7 @@ class SecurityLock
         return match ($reason) {
             self::SIGN_IN => 'a sign-in code',
             self::RESET => 'a password reset link',
+            self::NEW_DEVICE => 'a new device sign-in notice',
             default => 'an email change',
         };
     }
@@ -73,6 +76,7 @@ class SecurityLock
 
         app(RememberMe::class)->revokeAll($user);
         app(TrustedDevices::class)->revokeAll($user);
+        app(UserDevices::class)->signOutAll($user);
         DB::table(config('session.table', 'sessions'))->where('user_id', $user->id)->delete();
 
         app(AuditLog::class)->record(

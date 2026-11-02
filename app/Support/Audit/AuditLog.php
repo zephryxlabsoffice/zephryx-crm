@@ -55,6 +55,10 @@ class AuditLog
 
     public const DEVICE_TRUSTED = 'auth.device_trusted';
 
+    public const NEW_DEVICE = 'auth.new_device';
+
+    public const DEVICE_SIGNED_OUT = 'auth.device_signed_out';
+
     public const REMEMBER_THEFT = 'auth.remember_theft_detected';
 
     public const PASSWORD_RESET_REQUESTED = 'auth.password_reset_requested';

@@ -11,6 +11,7 @@ use App\Support\Auth\PasswordResets;
 use App\Support\Auth\RememberMe;
 use App\Support\Auth\SecurityLock;
 use App\Support\Auth\TrustedDevices;
+use App\Support\Auth\UserDevices;
 use App\Support\Realm;
 use App\Support\StaffEmails;
 use Illuminate\Http\RedirectResponse;
@@ -54,6 +55,7 @@ class PasswordResetController extends Controller
         private PasswordResets $resets,
         private RememberMe $remember,
         private TrustedDevices $devices,
+        private UserDevices $userDevices,
         private AuditLog $audit,
     ) {
     }
@@ -201,6 +203,7 @@ class PasswordResetController extends Controller
         $this->remember->revokeAll($user);
         $this->devices->revokeAll($user);
         $this->resets->invalidateAll($user);
+        $this->userDevices->signOutAll($user);
 
         /*
          * ─────────────────────────────────────────────────────────────────────

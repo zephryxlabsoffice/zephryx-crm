@@ -29,6 +29,18 @@
     </nav>
 
     <div class="sb-foot">
+        @php $devicesRoutes = \App\Support\Auth\UserDevices::routeNames(\App\Support\Realm::forRequest(request())); @endphp
+        <a @class(['sb-link', 'active' => request()->routeIs($devicesRoutes.'*')]) href="{{ route($devicesRoutes.'index') }}">
+            <span class="sb-ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="13" rx="2"/>
+                    <path d="M8 21h8"/>
+                    <path d="M12 17v4"/>
+                </svg>
+            </span>
+            <span class="sb-label">My Devices</span>
+        </a>
+
         {{-- Sign-out changes state, so it is a POST with a CSRF token. As a GET
              link any <img src="/logout"> on any page could sign people out. --}}
         <form method="POST" action="{{ route('logout') }}">

@@ -14,6 +14,7 @@ use App\Support\Auth\PasswordResets;
 use App\Support\Auth\RememberMe;
 use App\Support\Auth\SecurityLock;
 use App\Support\Auth\TrustedDevices;
+use App\Support\Auth\UserDevices;
 use App\Support\Documents\DocumentStore;
 use App\Support\Images\PhotoIntake;
 use App\Support\Profile\ProfileChanges;
@@ -113,6 +114,7 @@ class ProfileController extends Controller
         protected PhotoIntake $photos,
         protected RememberMe $remember,
         protected TrustedDevices $devices,
+        protected UserDevices $userDevices,
         protected PasswordResets $resets,
         protected ProfileChanges $changes,
     ) {}
@@ -973,6 +975,7 @@ class ProfileController extends Controller
         $this->remember->revokeAll($user);
         $this->devices->revokeAll($user);
         $this->resets->invalidateAll($user);
+        $this->userDevices->signOutAll($user, except: $request);
 
         if (config('session.driver') !== 'database') {
             /*
