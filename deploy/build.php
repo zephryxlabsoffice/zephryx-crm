@@ -123,7 +123,8 @@ foreach (['tests', 'docs', 'deploy', '.github', 'node_modules', 'refference', 'c
     rrmdir($app.'/'.$d);
 }
 foreach (['phpunit.xml', '.phpunit.result.cache', 'package.json', 'package-lock.json', 'vite.config.js',
-    '.editorconfig', '.gitattributes', '.gitignore', '.npmrc', '.env', '.env.example', 'CLAUDE.md', 'AGENTS.md'] as $f) {
+    '.editorconfig', '.gitattributes', '.gitignore', '.npmrc', '.env', '.env.example', 'CLAUDE.md', 'AGENTS.md',
+    '.mcp.json', 'boost.json'] as $f) {
     @unlink($app.'/'.$f);
 }
 foreach (['storage/app/private', 'storage/app/public', 'storage/framework/cache/data',
