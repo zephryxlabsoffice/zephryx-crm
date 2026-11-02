@@ -19,6 +19,7 @@ use App\Support\Auth\RememberMe;
 use App\Support\Auth\SecurityLock;
 use App\Support\Auth\TrustedDevices;
 use App\Support\Auth\UserDevices;
+use App\Support\Rbac\DesignationAccess;
 use App\Support\Rbac\Rbac;
 use App\Support\Realm;
 use App\Support\StaffEmails;
@@ -289,7 +290,8 @@ class AccountController extends Controller
      * reporting line and joining date (2026-10-27).
      *
      * The same four facts HR edits in Employees, reachable from the panel too.
-     * They describe who works where and decide no access at all - roles do.
+     * A designation can carry access, so a System Administrator cannot use this
+     * to hand out the top of the ladder: see guardTopDesignation.
      * Everything else on the record (documents, bank, salary) stays HR's.
      */
     public function company(Request $request, string $account): RedirectResponse
@@ -309,6 +311,8 @@ class AccountController extends Controller
         ], [
             'reports_to.not_in' => 'Somebody cannot report to themselves.',
         ]);
+
+        $this->guardTopDesignation($employee, $data['designation_id'] ?? null);
 
         $before = $this->companyLine($employee);
 
@@ -818,6 +822,29 @@ class AccountController extends Controller
             throw ValidationException::withMessages([
                 'roles' => 'Only the owner can give or take away the CEO and System Administrator roles.',
             ]);
+        }
+    }
+
+    /**
+     * guardTopRoles, for a designation carrying those roles: on either side of
+     * the change, so that it can be neither given nor taken away.
+     */
+    protected function guardTopDesignation(Employee $employee, int|string|null $wanted): void
+    {
+        $wanted = $wanted === null ? null : (int) $wanted;
+
+        if (request()->user()?->account_type !== Realm::STAFF || $wanted === $employee->designation_id) {
+            return;
+        }
+
+        $mayGive = Role::whereNotIn('role_key', ['system_admin', 'ceo'])->pluck('role_key');
+
+        foreach (array_filter([$wanted, $employee->designation_id]) as $designation) {
+            if (! DesignationAccess::fitsWithin($designation, $mayGive)) {
+                throw ValidationException::withMessages([
+                    'designation_id' => 'Only the owner can give or take away a designation carrying the CEO or System Administrator roles.',
+                ]);
+            }
         }
     }
 

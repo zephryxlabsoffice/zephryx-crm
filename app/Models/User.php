@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Support\Auth\EmailVerification;
+use App\Support\Rbac\DesignationAccess;
 use App\Support\Rbac\Rbac;
 use App\Support\Realm;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -141,6 +143,23 @@ class User extends Authenticatable
      * Staff of kind `employee` only. A Mentor is staff and has none of it
      * (§2.1); clients and the admin account are not staff at all.
      */
+    /**
+     * Accounts holding a role, given to them directly or through their designation.
+     *
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopeHoldingRole(Builder $query, string $roleKey): Builder
+    {
+        return $query->where(function (Builder $query) use ($roleKey) {
+            $query->whereHas('roles', fn (Builder $roles) => $roles->where('role_key', $roleKey));
+
+            if (DesignationAccess::ready()) {
+                $query->orWhereIn('users.id', DesignationAccess::holdersOf($roleKey));
+            }
+        });
+    }
+
     public function hasEmployeeBase(): bool
     {
         return $this->account_type === Realm::STAFF && $this->staff_kind === 'employee';

@@ -104,7 +104,7 @@ class SecurityLock
             ->whereKeyNot($user->id)
             ->where(fn ($q) => $q
                 ->where('account_type', Realm::ADMIN)
-                ->orWhereHas('roles', fn ($r) => $r->where('role_key', 'system_admin')))
+                ->orWhere(fn ($q) => $q->holdingRole('system_admin')))
             ->get();
 
         foreach ($admins as $admin) {

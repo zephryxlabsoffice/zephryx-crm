@@ -508,6 +508,23 @@ class RbacSeeder extends Seeder
                 'ranks' => ['people' => 10, 'work' => 20, 'support' => 70, 'system' => 20],
             ],
 
+            'client_relations' => [
+                'name' => 'Client Relations',
+                'description' => 'Clients and nothing about employees.',
+                'permissions' => [
+                    ...$staffReading,
+                    'clients.view', 'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
+                ],
+                'ranks' => ['people' => 10, 'work' => 10, 'support' => 10, 'system' => 10],
+            ],
+
+            'accounts' => [
+                'name' => 'Accounts',
+                'description' => 'Invoices. Salary stays with HR.',
+                'permissions' => [...$staffReading, 'invoices.view', 'invoices.manage'],
+                'ranks' => ['people' => 10, 'work' => 10, 'support' => 10, 'system' => 10],
+            ],
+
             'system_admin' => [
                 'name' => 'System Administrator',
                 'description' => 'Engineer maintaining the system. Not a business administrator (§2.3).',

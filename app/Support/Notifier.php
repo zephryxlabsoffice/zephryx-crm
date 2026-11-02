@@ -200,7 +200,7 @@ class Notifier
         }
 
         $readers = Employee::query()
-            ->whereHas('user.roles', fn ($q) => $q->where('role_key', 'support'))
+            ->whereHas('user', fn ($q) => $q->holdingRole('support'))
             ->with('user')
             ->get()
             ->map(fn (Employee $e) => $e->user)
