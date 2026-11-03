@@ -80,17 +80,17 @@ class DesignationAccessScreenTest extends TestCase
 
         $this->post("/admin/master-data/designations/{$job->id}/access", [
             'roles' => ['manager'],
-            'exceptions' => ['clients.invite' => 'never', 'tasks.view' => 'inherit'],
+            'exceptions' => ['projects.publish' => 'never', 'tasks.view' => 'inherit'],
         ])->assertRedirect("/admin/master-data/designations/{$job->id}/access");
 
         $this->assertTrue($this->holds($holder, 'projects.create'));
-        $this->assertFalse($this->holds($holder, 'clients.invite'));
+        $this->assertFalse($this->holds($holder, 'projects.publish'));
         $this->assertSame(1, DB::table('designation_permissions')->count());
 
         $entry = DB::table('audit_log')->where('action', AuditLog::PERMISSION_CHANGED)->latest('id')->first();
 
         $this->assertSame('designation', $entry->entity_type);
-        $this->assertStringContainsString('never clients.invite', $entry->after_json);
+        $this->assertStringContainsString('never projects.publish', $entry->after_json);
         $this->assertStringContainsString('Asha Roy', $entry->after_json);
         $this->assertStringContainsString('no roles', $entry->before_json);
     }
@@ -123,7 +123,7 @@ class DesignationAccessScreenTest extends TestCase
 
         $response = $this->post("/admin/master-data/designations/{$job->id}/access/preview", [
             'roles' => ['manager'],
-            'exceptions' => ['clients.invite' => 'never'],
+            'exceptions' => ['projects.publish' => 'never'],
         ])->assertOk();
 
         $response->assertSee('Never does not apply to them');

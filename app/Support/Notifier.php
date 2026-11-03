@@ -199,11 +199,17 @@ class Notifier
             return;
         }
 
-        $readers = Employee::query()
-            ->whereHas('user', fn ($q) => $q->holdingRole('support'))
-            ->with('user')
-            ->get()
-            ->map(fn (Employee $e) => $e->user)
+        // A ticket that arrived already assigned skipped triage, so Support has
+        // nothing to do on it: it goes to its assignee instead.
+        $firstResponders = $ticket->assignee_id !== null
+            ? collect([$ticket->assignee?->user])
+            : Employee::query()
+                ->whereHas('user', fn ($q) => $q->holdingRole('support'))
+                ->with('user')
+                ->get()
+                ->map(fn (Employee $e) => $e->user);
+
+        $readers = $firstResponders
             ->push($ticket->project?->manager?->user)
             ->filter()
             ->unique('id');

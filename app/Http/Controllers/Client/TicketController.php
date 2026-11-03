@@ -47,9 +47,7 @@ class TicketController extends PortalController
 {
     protected const PER_PAGE = 10;
 
-    public function __construct(protected AuditLog $audit, protected Notifier $notify)
-    {
-    }
+    public function __construct(protected AuditLog $audit, protected Notifier $notify) {}
 
     public function index(Request $request): Response
     {
@@ -149,7 +147,16 @@ class TicketController extends PortalController
             'subject' => ['required', 'string', 'max:200'],
             'description' => ['required', 'string', 'max:5000'],
             'project' => ['nullable', 'string', 'max:32'],
+            'issue_type' => ['nullable', Rule::in(['general', 'technical'])],
         ]);
+
+        /*
+         * The client already knows it is technical, so it skips triage and goes
+         * straight to whoever holds the technical designation (owner, 2026-11-03).
+         */
+        $technicalAgent = ($data['issue_type'] ?? null) === 'technical'
+            ? TicketDirectory::technicalAgent()
+            : null;
 
         $project = ($data['project'] ?? null) === null
             ? null
@@ -175,7 +182,9 @@ class TicketController extends PortalController
                 ? null
                 : Project::where('reference', $project['id'])->value('id'),
             'raised_by' => null,
-            'status' => 'unassigned',
+            'status' => $technicalAgent === null ? 'unassigned' : 'open',
+            'assignee_id' => $technicalAgent?->id,
+            'department' => $technicalAgent?->department?->name,
         ]);
 
         $this->audit->record(
@@ -183,18 +192,21 @@ class TicketController extends PortalController
             actor: $request->user(),
             entityType: 'ticket',
             entityId: $ticket->reference,
-            after: $client->name.' raised: '.$ticket->subject,
+            after: $client->name.' raised: '.$ticket->subject
+                .($technicalAgent === null ? '' : ' (technical, sent to '.$technicalAgent->user?->name.')'),
             request: $request,
         );
 
         // Support and the project manager first - see Notifier::ticketRaised.
         // No actor: the client is not a staff account and has no bell to be
         // excluded from, the same reasoning as the comment route below.
-        $this->notify->ticketRaised($ticket->load('project.manager.user'), null);
+        $this->notify->ticketRaised($ticket->load(['project.manager.user', 'assignee.user']), null);
 
         return redirect()
             ->route('client.tickets.show', ['ticket' => $ticket->reference])
-            ->with('status', 'Raised. Somebody will pick it up and you will see their reply here.')
+            ->with('status', $technicalAgent === null
+                ? 'Raised. Somebody will pick it up and you will see their reply here.'
+                : 'Raised and sent to our technical team. You will see their reply here.')
             ->with('status_tone', 'success');
     }
 

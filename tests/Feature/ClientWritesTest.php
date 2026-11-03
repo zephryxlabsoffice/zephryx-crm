@@ -73,7 +73,7 @@ class ClientWritesTest extends TestCase
     public function test_a_manager_may_do_all_four(): void
     {
         $client = $this->aClient();
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->get('/clients/create')->assertOk();
         $this->get('/clients/'.$client->reference)->assertOk();
@@ -98,7 +98,7 @@ class ClientWritesTest extends TestCase
 
     public function test_adding_a_client_records_it_and_gives_it_a_reference(): void
     {
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->post('/clients', $this->validPayload())->assertRedirect();
 
@@ -117,7 +117,7 @@ class ClientWritesTest extends TestCase
          * somebody could read a company's invoices without anybody deciding
          * they should.
          */
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $before = User::count();
         $this->post('/clients', $this->validPayload());
@@ -132,7 +132,7 @@ class ClientWritesTest extends TestCase
         // reference the moment anything is removed, and a reference two clients
         // have held makes an invoice trail ambiguous.
         $this->seedDemoWorkforce();
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->post('/clients', $this->validPayload());
 
@@ -144,7 +144,7 @@ class ClientWritesTest extends TestCase
         // Two identical rows on a list cannot be told apart by whoever has to
         // pick one.
         $existing = $this->aClient();
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->post('/clients', $this->validPayload(['name' => $existing->name]))
             ->assertSessionHasErrors('name');
@@ -154,7 +154,7 @@ class ClientWritesTest extends TestCase
 
     public function test_a_status_outside_the_list_is_refused(): void
     {
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->post('/clients', $this->validPayload(['status' => 'archived']))
             ->assertSessionHasErrors('status');
@@ -172,7 +172,7 @@ class ClientWritesTest extends TestCase
             'staff_kind' => 'employee', 'status' => 'inactive',
         ]);
 
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->post('/clients', $this->validPayload(['account_manager_id' => $closed->id]))
             ->assertSessionHasErrors('account_manager_id');
@@ -180,7 +180,7 @@ class ClientWritesTest extends TestCase
 
     public function test_adding_is_audited(): void
     {
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->post('/clients', $this->validPayload());
 
@@ -201,7 +201,7 @@ class ClientWritesTest extends TestCase
         // "What changed" is the question somebody asks of an audit log, and an
         // entry with only the new value cannot answer it.
         $client = $this->aClient();
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->post('/clients/'.$client->reference, $this->validPayload([
             'name' => 'Renamed Client',
@@ -225,7 +225,7 @@ class ClientWritesTest extends TestCase
         $client = $this->aClient();
         $account = $this->anAccountFor($client);
 
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->post('/clients/'.$client->reference, $this->validPayload(['name' => 'Renamed Client']));
 
@@ -240,7 +240,7 @@ class ClientWritesTest extends TestCase
     public function test_moving_the_engagement_is_audited(): void
     {
         $client = $this->aClient();
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->post('/clients/'.$client->reference.'/status', ['status' => 'inactive'])
             ->assertRedirect();
@@ -259,7 +259,7 @@ class ClientWritesTest extends TestCase
         // A double-submitted form must not make it look as though somebody
         // changed the same value twice.
         $client = $this->aClient();
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->post('/clients/'.$client->reference.'/status', ['status' => 'active'])
             ->assertRedirect();
@@ -277,7 +277,7 @@ class ClientWritesTest extends TestCase
         $client = $this->aClient();
         $account = $this->anAccountFor($client);
 
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->post('/clients/'.$client->reference.'/status', ['status' => 'inactive']);
 
@@ -287,7 +287,7 @@ class ClientWritesTest extends TestCase
     public function test_there_is_no_delete_route(): void
     {
         $client = $this->aClient();
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->delete('/clients/'.$client->reference)->assertStatus(405);
     }
@@ -299,7 +299,7 @@ class ClientWritesTest extends TestCase
     public function test_inviting_creates_a_client_account_scoped_by_the_reference(): void
     {
         $client = $this->aClient();
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->post('/clients/'.$client->reference.'/invite', [
             'name' => 'Their Person',
@@ -319,7 +319,7 @@ class ClientWritesTest extends TestCase
     public function test_nobody_types_the_clients_password(): void
     {
         $client = $this->aClient();
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->post('/clients/'.$client->reference.'/invite', [
             'name' => 'Their Person',
@@ -350,7 +350,7 @@ class ClientWritesTest extends TestCase
         $client = $this->aClient();
         $existing = User::factory()->create(['user_id' => 'EMP902', 'email' => 'taken@example.test']);
 
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->post('/clients/'.$client->reference.'/invite', [
             'name' => 'Their Person',
@@ -363,7 +363,7 @@ class ClientWritesTest extends TestCase
         // "Who could see this client's invoices, and since when" is a question
         // an update entry cannot answer.
         $client = $this->aClient();
-        $this->signInAsStaff(['employee', 'manager']);
+        $this->signInAsStaff(['employee', 'client_relations']);
 
         $this->post('/clients/'.$client->reference.'/invite', [
             'name' => 'Their Person',

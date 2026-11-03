@@ -59,6 +59,23 @@ class Team extends Model
             ->orderBy('team_members.id');
     }
 
+    /**
+     * The teams this person leads or belongs to. All a Team Lead sees without
+     * `teams.view.all` (owner, 2026-11-03).
+     *
+     * @param  Builder<Team>  $query
+     * @return Builder<Team>
+     */
+    public function scopeLinkedTo(Builder $query, ?Employee $employee): Builder
+    {
+        $employeeId = $employee?->id ?? 0;
+
+        return $query->where(function (Builder $query) use ($employeeId) {
+            $query->where('lead_id', $employeeId)
+                ->orWhereHas('members', fn (Builder $members) => $members->where('employees.id', $employeeId));
+        });
+    }
+
     public function getRouteKeyName(): string
     {
         return 'reference';

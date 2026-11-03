@@ -130,12 +130,12 @@ class DesignationAccessTest extends TestCase
     {
         $job = $this->designation();
         $this->attach($job, 'manager');
-        $this->except($job, 'clients.invite', DesignationAccess::NEVER);
+        $this->except($job, 'projects.publish', DesignationAccess::NEVER);
 
         $holder = $this->person($job);
         $rbac = $this->rbac();
 
-        $this->assertFalse($rbac->can($holder, 'clients.invite'));
+        $this->assertFalse($rbac->can($holder, 'projects.publish'));
         $this->assertTrue($rbac->can($holder, 'clients.view'));
     }
 
@@ -144,13 +144,13 @@ class DesignationAccessTest extends TestCase
         $job = $this->designation();
         $this->attach($job, 'manager');
         $this->except($job, 'salary.self', DesignationAccess::NEVER);
-        $this->except($job, 'clients.invite', DesignationAccess::NEVER);
+        $this->except($job, 'announcements.post', DesignationAccess::NEVER);
 
         $holder = $this->person($job, ['employee', 'hr']);
         $rbac = $this->rbac();
 
         $this->assertTrue($rbac->can($holder, 'salary.self'));
-        $this->assertTrue($rbac->can($holder, 'clients.invite'));
+        $this->assertTrue($rbac->can($holder, 'announcements.post'));
     }
 
     public function test_always_allow_adds_one_permission_without_a_role(): void

@@ -2,6 +2,7 @@
 
 namespace App\Support\Dashboard;
 
+use App\Models\Client;
 use App\Models\Employee;
 use App\Models\Invoice;
 use App\Models\LeaveRequest;
@@ -25,6 +26,7 @@ use App\Support\LeavePresenter;
 use App\Support\MeetingDirectory;
 use App\Support\Milestones;
 use App\Support\ProjectDirectory;
+use App\Support\Rbac\Rbac;
 use App\Support\SalaryDirectory;
 use App\Support\SalaryPresenter;
 use App\Support\TaskDirectory;
@@ -74,7 +76,7 @@ class DashboardData
     {
         return match ($key) {
             'my-open-work' => self::openWorkTile($viewer),
-            'clients' => self::clientsTile(),
+            'clients' => self::clientsTile($viewer),
             'projects' => self::projectsTile(),
             'headcount' => self::headcountTile(),
             'leave-pending' => self::leaveTile(),
@@ -108,9 +110,11 @@ class DashboardData
     /**
      * @return array<string, mixed>
      */
-    protected static function clientsTile(): array
+    protected static function clientsTile(?Employee $viewer): array
     {
-        $clients = ClientDirectory::stats();
+        $limited = $viewer?->user !== null && ! app(Rbac::class)->can($viewer->user, 'clients.view.all');
+
+        $clients = ClientDirectory::stats($limited ? Client::query()->linkedTo($viewer->user) : null);
 
         return self::tile(
             label: 'Clients',

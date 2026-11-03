@@ -119,13 +119,16 @@ class ClientDirectory
      * carrying the handover's ₹1,85,000 into an application where nobody can
      * say where the figure came from.
      *
+     * @param  Builder<Client>|null  $scope  count within one list rather than all
      * @return array<string, int>
      */
-    public static function stats(): array
+    public static function stats(?Builder $scope = null): array
     {
+        $base = fn () => clone ($scope ?? Client::query());
+
         return [
-            'total' => Client::count(),
-            'active' => Client::active()->count(),
+            'total' => $base()->count(),
+            'active' => $base()->active()->count(),
             'receivable' => 0,
             'overdue' => 0,
             'tickets' => 0,

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AccountController as AdminAccountController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\MyDevicesController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompOffController;
@@ -74,10 +75,11 @@ Route::get('/dashboard', DashboardController::class)->name('dashboard');
  * `clients.view` IS ON THE LIST NOW, AND IT WAS NOT BEFORE
  *
  * The page had no permission on it at all while it was reading demo rows, which
- * was survivable when there was nothing behind it and is not now. Three roles
- * hold the key - Manager, Support and the CEO - and the sidebar entry has always
- * been gated on it, so nothing about who sees the module changes; what changes
- * is that typing the URL is no longer a way around the sidebar.
+ * was survivable when there was nothing behind it and is not now. The sidebar
+ * entry has always been gated on it, so typing the URL is no way around the
+ * sidebar. A Manager holds this key but not `clients.view.all`, so the controller
+ * narrows them to their own clients. Adding and editing belongs to Client
+ * Relations, the CEO and the System Administrator (owner, 2026-11-03).
  *
  * Four write permissions, because they are four different sizes of act:
  * recording that a company exists, correcting its details, moving it between
@@ -1003,7 +1005,7 @@ Route::post('/profile/preferences', [ProfileController::class, 'updatePreference
 Route::post('/profile/password', [ProfileController::class, 'updatePassword'])
     ->name('profile.password.update');
 Route::post('/profile/email', [ProfileController::class, 'changeEmail'])->name('profile.email.change');
-Route::post('/profile/email/verify', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'send'])
+Route::post('/profile/email/verify', [EmailVerificationController::class, 'send'])
     ->middleware('throttle:5,1')
     ->name('profile.email.verify');
 
