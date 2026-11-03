@@ -22,11 +22,12 @@ use Illuminate\Validation\ValidationException;
 /**
  * The lookup lists the rest of the application reads.
  *
- * Nothing here deletes. These rows are referenced by records that already
- * exist, and removing one does not remove that history - it orphans it, leaving
- * an employee whose department is a blank cell that nobody can ever resolve.
- * The destructive act available is deactivation, and the row keeps answering
- * for the past. See the head of App\Support\Admin\MasterDataDirectory.
+ * These rows are referenced by records that already exist, and removing one that
+ * is still pointed at does not remove that history - it orphans it, leaving an
+ * employee whose department is a blank cell that nobody can ever resolve. So
+ * retiring keeps the row answering for the past, and the one delete is a merge,
+ * which moves everything off the row first. See the head of
+ * App\Support\Admin\MasterDataDirectory.
  *
  * `in_use` is counted from the records themselves rather than stored, so the
  * number the screen states before you retire something cannot disagree with the
@@ -34,9 +35,7 @@ use Illuminate\Validation\ValidationException;
  */
 class MasterDataController extends Controller
 {
-    public function __construct(protected AuditLog $audit)
-    {
-    }
+    public function __construct(protected AuditLog $audit) {}
 
     public function index(Request $request): Response
     {
@@ -179,10 +178,10 @@ class MasterDataController extends Controller
      * POST /admin/master-data/{list}/deactivate
      *
      * ─────────────────────────────────────────────────────────────────────────
-     * THE ONLY DESTRUCTIVE ACT, AND IT DESTROYS NOTHING
+     * RETIRING DESTROYS NOTHING
      *
      * The row stops being offered for new records and keeps answering for old
-     * ones. There is no delete route, no soft-delete column and no cascade -
+     * ones. Removing a row is what a merge does, once nothing points at it -
      * see the head of MasterDataDirectory.
      *
      * A list cannot be emptied of active rows this way. An employee form with
@@ -316,9 +315,11 @@ class MasterDataController extends Controller
      * POST /admin/master-data/{list}/merge
      *
      * Everything that points at the row moves to the other one, then the row is
-     * retired. Nothing is deleted, and the audit entry names who moved. People
-     * merged into a placed designation also take its department, so a merge
-     * does not leave them somewhere their job says they are not.
+     * deleted (owner, 2026-11-03), so a duplicate does not stay on the list as
+     * retired. The audit entry keeps what it would take to put it back by hand:
+     * its name and code, who moved, and what a designation carried. People merged
+     * into a placed designation also take its department, so a merge does not
+     * leave them somewhere their job says they are not.
      */
     public function merge(Request $request, string $list): RedirectResponse
     {
@@ -334,6 +335,7 @@ class MasterDataController extends Controller
         $item = MasterDataItem::findOrFail($data['item']);
         $into = MasterDataItem::with('department')->findOrFail($data['into']);
         $names = $this->peopleOn($item)->pluck('user.name')->all();
+        $carried = $this->carriedBy($item);
 
         DB::transaction(function () use ($list, $item, $into) {
             if ($list === MasterDataItem::DEPARTMENTS) {
@@ -350,7 +352,7 @@ class MasterDataController extends Controller
                 Employee::where('designation_id', $item->id)->update(['designation_id' => $into->id] + $home);
             }
 
-            $item->update(['is_active' => false]);
+            $item->delete();
         });
 
         $this->audit->record(
@@ -359,15 +361,39 @@ class MasterDataController extends Controller
             entityType: 'master_data',
             entityId: $list.'/'.$item->code,
             before: $item->name,
-            after: 'merged into '.$into->name.' and retired; moved: '.($names === [] ? 'nobody' : implode(', ', $names)),
+            after: 'merged into '.$into->name.' and deleted; moved: '.($names === [] ? 'nobody' : implode(', ', $names)).$carried,
             request: $request,
         );
 
         return redirect()
             ->route('admin.master.show', ['list' => $list])
-            ->with('status', $item->name.' is merged into '.$into->name.' and retired. '
+            ->with('status', $item->name.' is merged into '.$into->name.' and deleted. '
                 .count($names).' '.(count($names) === 1 ? 'person' : 'people').' moved.')
             ->with('status_tone', 'success');
+    }
+
+    /**
+     * What a designation grants, for the audit entry. Deleting it takes these rows
+     * with it, so afterwards this is the only record of them.
+     */
+    protected function carriedBy(MasterDataItem $item): string
+    {
+        if ($item->list !== MasterDataItem::DESIGNATIONS || ! DesignationAccess::ready()) {
+            return '';
+        }
+
+        $settings = DesignationAccess::settingsOf($item->id);
+        $parts = [];
+
+        if ($settings['roles'] !== []) {
+            $parts[] = 'roles: '.implode(', ', $settings['roles']);
+        }
+
+        foreach ($settings['exceptions'] as $permission => $effect) {
+            $parts[] = $effect.' '.$permission;
+        }
+
+        return $parts === [] ? '' : '; it carried '.implode('; ', $parts);
     }
 
     /**

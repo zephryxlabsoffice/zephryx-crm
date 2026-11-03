@@ -151,9 +151,9 @@ Route::get('/master-data/{list}', [AdminMasterDataController::class, 'show'])
 
 /*
  * Note what is missing: DELETE. These lists are referenced by records that
- * already exist, so the destructive act available is deactivation - the row
- * stops being offered and keeps answering for history. See the head of
- * App\Support\Admin\MasterDataDirectory.
+ * already exist, so retiring only deactivates - the row stops being offered and
+ * keeps answering for history. A row is deleted only by a merge, which moves
+ * those records first. See the head of App\Support\Admin\MasterDataDirectory.
  */
 Route::post('/master-data/{list}', [AdminMasterDataController::class, 'store'])
     ->where('list', '[a-z-]{1,32}')

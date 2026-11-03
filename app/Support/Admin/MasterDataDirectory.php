@@ -11,17 +11,20 @@ use Illuminate\Support\Facades\Schema;
  * The lookup lists, read from `master_data_items`.
  *
  * ═════════════════════════════════════════════════════════════════════════════
- * NOTHING HERE IS DELETED. THINGS ARE DEACTIVATED.
+ * THINGS ARE DEACTIVATED. ONLY A MERGE DELETES.
  *
  * These lists are referenced by records that already exist. Every employee
  * points at a department and a designation; every leave request names a type.
  *
  * Deleting a row does not remove that history - it orphans it. An employee
  * whose department no longer exists renders a blank cell forever, and nobody
- * reading that record later can find out what it used to say. So the only
- * destructive act is deactivation: the row stops being offered for new records
- * and keeps answering for old ones. The same argument as an invoice number
- * never leaving the sequence, and a rejected attendance record staying legible.
+ * reading that record later can find out what it used to say. So retiring is
+ * deactivation: the row stops being offered for new records and keeps answering
+ * for old ones. The same argument as an invoice number never leaving the
+ * sequence, and a rejected attendance record staying legible.
+ *
+ * A merge is the exception (owner, 2026-11-03). It moves every record off the row
+ * first, so nothing is orphaned, and then the duplicate is deleted.
  *
  * `in_use` is what makes that rule enforceable rather than advisory - the
  * screen states the count before you retire something.

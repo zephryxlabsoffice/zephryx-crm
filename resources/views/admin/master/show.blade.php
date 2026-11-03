@@ -103,9 +103,8 @@
                                                     @csrf
                                                     <input type="hidden" name="item" value="{{ $row['id'] }}">
                                                     {{-- "Retire", not "Delete".
-                                                         The word is the rule:
-                                                         nothing here removes a
-                                                         row. --}}
+                                                         The row stays. Only a
+                                                         merge removes one. --}}
                                                     <button class="btn btn-outline btn-sm" type="submit">Retire</button>
                                                 </form>
                                             @endif
