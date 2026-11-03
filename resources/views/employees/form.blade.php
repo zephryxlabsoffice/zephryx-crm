@@ -175,11 +175,11 @@
 
                         <div class="form-field">
                             <label class="form-field-lbl" for="emp-designation">Designation</label>
-                            <select id="emp-designation" name="designation_id">
+                            <select id="emp-designation" name="designation_id" data-filtered-by="emp-department">
                                 <option value="">Not set</option>
                                 @include('partials.designation-options', ['selected' => old('designation_id', $employee?->designation_id)])
                             </select>
-                            <span class="pay-hint">Grouped by department. If the department above is left empty, it is filled in from this.</span>
+                            <span class="pay-hint">Shows the designations of the department above. If that is left empty, all are shown and the department is filled in from this.</span>
                             @error('designation_id')
                                 <span class="field-error">{{ $message }}</span>
                             @enderror

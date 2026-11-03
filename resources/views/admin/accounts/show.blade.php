@@ -98,7 +98,7 @@
 
                                 <div class="form-field">
                                     <label class="form-field-lbl" for="co-desig">Designation</label>
-                                    <select id="co-desig" name="designation_id">
+                                    <select id="co-desig" name="designation_id" data-filtered-by="co-dept">
                                         <option value="">None</option>
                                         @include('partials.designation-options', ['selected' => old('designation_id', $employee->designation_id)])
                                     </select>
