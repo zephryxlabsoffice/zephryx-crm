@@ -5,11 +5,14 @@ namespace Tests\Feature;
 use App\Models\Announcement;
 use App\Models\Employee;
 use App\Models\MasterDataItem;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Support\Admin\MasterDataDirectory;
 use App\Support\Audit\AuditLog;
 use App\Support\IdProof;
+use App\Support\Rbac\DesignationAccess;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -201,7 +204,7 @@ class DepartmentsAndDesignationsTest extends TestCase
         $this->assertSame($old->id, $employee->fresh()->department_id);
     }
 
-    public function test_merging_a_department_moves_everything_pointing_at_it_and_retires_it(): void
+    public function test_merging_a_department_moves_everything_pointing_at_it_and_deletes_it(): void
     {
         $this->signInAsAdmin();
 
@@ -229,11 +232,11 @@ class DepartmentsAndDesignationsTest extends TestCase
         $this->assertSame($new->id, $job->fresh()->department_id);
         $this->assertSame($new->id, Announcement::find($announcementId)->audience_department_id);
         $this->assertSame('New', $ticket->fresh()->department);
-        $this->assertFalse($old->fresh()->is_active);
+        $this->assertModelMissing($old);
 
         $entry = DB::table('audit_log')->where('action', AuditLog::MASTER_DATA_CHANGED)->latest('id')->first();
 
-        $this->assertStringContainsString('merged into New and retired; moved: Asha Roy', $entry->after_json);
+        $this->assertStringContainsString('merged into New and deleted; moved: Asha Roy', $entry->after_json);
     }
 
     public function test_merging_into_a_placed_designation_takes_its_department(): void
@@ -253,6 +256,65 @@ class DepartmentsAndDesignationsTest extends TestCase
 
         $this->assertSame($new->id, $employee->designation_id);
         $this->assertSame($it->id, $employee->department_id);
+    }
+
+    public function test_merging_a_designation_deletes_it_and_the_audit_keeps_what_it_carried(): void
+    {
+        $this->signInAsAdmin();
+
+        $old = $this->row(MasterDataItem::DESIGNATIONS, 'Tech Assoc');
+        $new = $this->row(MasterDataItem::DESIGNATIONS, 'Technical Associate');
+        $employee = $this->employeeOn(null, $old);
+
+        DB::table('designation_roles')->insert([
+            'designation_id' => $old->id,
+            'role_id' => Role::where('role_key', 'hr')->value('id'),
+        ]);
+        DB::table('designation_permissions')->insert([
+            'designation_id' => $old->id,
+            'permission_id' => Permission::where('permission_key', 'tickets.triage')->value('id'),
+            'effect' => DesignationAccess::NEVER,
+        ]);
+
+        $this->post('/admin/master-data/designations/merge', ['item' => $old->id, 'into' => $new->id])
+            ->assertSessionHasNoErrors();
+
+        $this->assertModelMissing($old);
+        $this->assertSame($new->id, $employee->fresh()->designation_id);
+        $this->assertDatabaseMissing('designation_roles', ['designation_id' => $old->id]);
+        $this->assertDatabaseMissing('designation_permissions', ['designation_id' => $old->id]);
+
+        $entry = DB::table('audit_log')->where('action', AuditLog::MASTER_DATA_CHANGED)->latest('id')->first();
+
+        $this->assertStringContainsString('it carried roles: hr; never tickets.triage', $entry->after_json);
+    }
+
+    public function test_a_retired_row_left_by_an_earlier_merge_can_be_merged_away(): void
+    {
+        $this->signInAsAdmin();
+
+        $retired = $this->row(MasterDataItem::DEPARTMENTS, 'Old', active: false);
+        $new = $this->row(MasterDataItem::DEPARTMENTS, 'New');
+
+        $this->post('/admin/master-data/departments/merge', ['item' => $retired->id, 'into' => $new->id])
+            ->assertSessionHasNoErrors();
+
+        $this->assertModelMissing($retired);
+    }
+
+    public function test_retiring_keeps_the_row_and_the_people_on_it(): void
+    {
+        $this->signInAsAdmin();
+
+        $old = $this->row(MasterDataItem::DEPARTMENTS, 'Old');
+        $this->row(MasterDataItem::DEPARTMENTS, 'New');
+        $employee = $this->employeeOn($old, null);
+
+        $this->post('/admin/master-data/departments/deactivate', ['item' => $old->id])
+            ->assertSessionHasNoErrors();
+
+        $this->assertFalse($old->fresh()->is_active);
+        $this->assertSame($old->id, $employee->fresh()->department_id);
     }
 
     public function test_a_merge_refuses_itself_another_list_and_a_retired_target(): void

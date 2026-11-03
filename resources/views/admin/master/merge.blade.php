@@ -12,7 +12,7 @@
                 {{ $meta['label'] }}
             </a>
             <h1>Merge {{ $item->name }}</h1>
-            <p>Everything using {{ $item->name }} moves to the row you choose, then {{ $item->name }} is retired.</p>
+            <p>Everything using {{ $item->name }} moves to the row you choose, then {{ $item->name }} is deleted.</p>
         </div>
     </div>
 
@@ -39,7 +39,7 @@
                 @endforeach
             @endforeach
 
-            <p class="dash-note">There is no undo button. The audit log keeps these names, so it can be put back by hand.</p>
+            <p class="dash-note">{{ $item->name }} is deleted for good and there is no undo button. The audit log keeps its name, its code and who moved, so it can be put back by hand.</p>
 
             <form method="POST" action="{{ route('admin.master.merge', $list) }}">
                 @csrf
@@ -59,7 +59,7 @@
                 </div>
 
                 <div class="form-actions">
-                    <button class="btn btn-primary" type="submit">Merge and retire {{ $item->name }}</button>
+                    <button class="btn btn-primary" type="submit">Merge and delete {{ $item->name }}</button>
                 </div>
             </form>
         </div>
