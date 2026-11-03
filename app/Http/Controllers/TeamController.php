@@ -45,9 +45,7 @@ class TeamController extends Controller
 
     protected const DONUT_RADIUS = 57;
 
-    public function __construct(protected Rbac $rbac, protected AuditLog $audit)
-    {
-    }
+    public function __construct(protected Rbac $rbac, protected AuditLog $audit) {}
 
     /**
      * GET /teams - every team in the company.
@@ -64,7 +62,11 @@ class TeamController extends Controller
         $status = $filters['status'] ?? null;
         $lead = $filters['lead'] ?? null;
 
-        $query = TeamDirectory::query($search !== '' ? $search : null, $status, $lead);
+        $seesAll = $this->seesAllTeams($request);
+        $employee = $this->employeeFor($request);
+
+        $query = TeamDirectory::query($search !== '' ? $search : null, $status, $lead)
+            ->when(! $seesAll, fn ($query) => $query->linkedTo($employee));
 
         return response()->view('teams.index', [
             'activeNav' => 'teams',
@@ -73,9 +75,10 @@ class TeamController extends Controller
             'status' => $status,
             'lead' => $lead,
             'filtered' => $search !== '' || $status !== null || $lead !== null,
-            'leads' => TeamDirectory::leadOptions(),
-            'stats' => TeamDirectory::stats(),
-            'activity' => TeamDirectory::activity(),
+            // These three are company-wide, so only for somebody who sees every team.
+            'leads' => $seesAll ? TeamDirectory::leadOptions() : [],
+            'stats' => TeamDirectory::stats($seesAll ? null : Team::query()->linkedTo($employee)),
+            'activity' => $seesAll ? TeamDirectory::activity() : [],
             'mayCreate' => $this->rbac->can($request->user(), 'teams.create'),
         ]);
     }
@@ -114,6 +117,12 @@ class TeamController extends Controller
     public function show(Request $request, string $team): Response
     {
         $record = $this->find($team);
+
+        abort_unless(
+            $this->seesAllTeams($request)
+                || Team::query()->linkedTo($this->employeeFor($request))->whereKey($record->id)->exists(),
+            403,
+        );
 
         $validated = $request->validate([
             'tab' => ['nullable', Rule::in(['all', 'by_department', 'on_leave', 'inactive'])],
@@ -388,6 +397,11 @@ class TeamController extends Controller
      * rather than an assumption - "my teams" for somebody with no employment is
      * an empty list, not an error.
      */
+    protected function seesAllTeams(Request $request): bool
+    {
+        return $this->rbac->can($request->user(), 'teams.view.all');
+    }
+
     protected function employeeFor(Request $request): ?Employee
     {
         return Employee::where('user_id', $request->user()?->id)->first();

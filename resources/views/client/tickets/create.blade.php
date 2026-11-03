@@ -43,6 +43,15 @@
                             </div>
 
                             <div class="form-field">
+                                <label class="form-field-lbl" for="tk-issue-type">Type of issue</label>
+                                <select id="tk-issue-type" name="issue_type">
+                                    <option value="general" @selected(old('issue_type') !== 'technical')>General or project question</option>
+                                    <option value="technical" @selected(old('issue_type') === 'technical')>Technical issue</option>
+                                </select>
+                                <span class="pay-hint">A technical issue goes straight to our technical team.</span>
+                            </div>
+
+                            <div class="form-field">
                                 <label class="form-field-lbl" for="tk-project">Project</label>
                                 {{--
                                     Only this client's projects, and the store

@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Employee;
+use App\Models\MasterDataItem;
 use App\Models\Ticket;
 use App\Models\TicketComment;
 use Illuminate\Database\Eloquent\Builder;
@@ -169,6 +170,20 @@ class TicketDirectory
     /**
      * The next reference - year-scoped, from the highest existing one.
      */
+    public static function technicalAgent(): ?Employee
+    {
+        return Employee::query()
+            ->with(['user', 'department'])
+            ->active()
+            ->whereHas('designation', fn (Builder $designation) => $designation
+                ->where('list', MasterDataItem::DESIGNATIONS)
+                ->where('code', config('tickets.technical_designation_code')))
+            ->orderBy('id')
+            ->get()
+            ->sortBy(fn (Employee $employee) => Ticket::query()->open()->where('assignee_id', $employee->id)->count())
+            ->first();
+    }
+
     public static function nextReference(): string
     {
         $prefix = 'TKT-'.Carbon::today()->year.'-';

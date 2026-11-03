@@ -244,6 +244,60 @@ function initSelectAll() {
     });
 }
 
+/* ── designations follow the department ──────────────────────────────────── */
+
+/**
+ * `<select data-filtered-by="department-select-id">` offers only the designations
+ * of the chosen department, plus any not placed in one. The server still refuses a
+ * mismatch, so this is what stops somebody choosing one, not what enforces it.
+ *
+ * On load the saved choice stays on offer even if it does not match: an old
+ * mismatch must not be silently blanked by saving an unrelated edit. Changing the
+ * department is a decision, so that clears a choice which no longer fits.
+ */
+function initDesignationFilter() {
+    document.querySelectorAll('[data-filtered-by]').forEach((select) => {
+        const department = document.getElementById(select.dataset.filteredBy);
+
+        if (!department) {
+            return;
+        }
+
+        const allOptions = [...select.children].map((node) => node.cloneNode(true));
+
+        const narrow = (keepCurrent) => {
+            const wanted = department.value;
+            const current = select.value;
+
+            const fits = (option) => !option.dataset.department
+                || wanted === ''
+                || option.dataset.department === wanted
+                || (keepCurrent && option.value === current);
+
+            select.replaceChildren(...allOptions.map((node) => node.cloneNode(true)));
+
+            select.querySelectorAll('option').forEach((option) => {
+                if (!fits(option)) {
+                    option.remove();
+                }
+            });
+
+            select.querySelectorAll('optgroup').forEach((group) => {
+                if (group.children.length === 0) {
+                    group.remove();
+                }
+            });
+
+            const stillOffered = [...select.options].some((option) => option.value === current);
+
+            select.value = stillOffered ? current : '';
+        };
+
+        department.addEventListener('change', () => narrow(false));
+        narrow(true);
+    });
+}
+
 /* ── boot ────────────────────────────────────────────────────────────────── */
 
 function init() {
@@ -252,6 +306,7 @@ function init() {
     initAutoSubmit();
     initCopyButtons();
     initSelectAll();
+    initDesignationFilter();
 }
 
 if (document.readyState === 'loading') {

@@ -59,6 +59,25 @@ class Client extends Model
     }
 
     /**
+     * The clients this person is responsible for: named as the account manager,
+     * or managing one of the client's projects. All a Manager sees without
+     * `clients.view.all` (owner, 2026-11-03).
+     *
+     * @param  Builder<Client>  $query
+     * @return Builder<Client>
+     */
+    public function scopeLinkedTo(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $query) use ($user) {
+            $query->where('account_manager_id', $user->id)
+                ->orWhereIn('id', Project::query()
+                    ->whereNotNull('client_id')
+                    ->whereIn('manager_id', Employee::query()->where('user_id', $user->id)->select('id'))
+                    ->select('client_id'));
+        });
+    }
+
+    /**
      * The portal accounts belonging to this client.
      *
      * Keyed on `reference`, not on the primary key, because that is the column

@@ -253,6 +253,11 @@ class RbacSeeder extends Seeder
      * @var list<string>
      */
     public const MODULE_READS = [
+        // Without these a Manager sees only their own clients, and an Employee or
+        // Team Lead only their own teams (owner, 2026-11-03). See scopeLinkedTo on
+        // Client and Team.
+        'clients.view.all',
+        'teams.view.all',
         'employees.identifiers',
     ];
 
@@ -403,15 +408,19 @@ class RbacSeeder extends Seeder
          * entry would say nothing.
          */
         $staffReading = [
-            'tasks.view', 'teams.view', 'projects.view', 'meetings.view',
+            'tasks.view', 'teams.view', 'teams.view.all', 'projects.view', 'meetings.view',
             'tickets.view', 'leave.view', 'announcements.view', 'calendar.view',
         ];
+
+        // Employee and Team Lead see only the teams they lead or belong to (owner,
+        // 2026-11-03). Every Team Lead also holds Employee, so both have to go.
+        $ownTeamsOnly = array_values(array_diff($staffReading, ['teams.view.all']));
 
         return [
             'employee' => [
                 'name' => 'Employee',
                 'description' => 'The Employee base and nothing on top of it.',
-                'permissions' => $staffReading,
+                'permissions' => $ownTeamsOnly,
                 'ranks' => ['people' => 10, 'work' => 10, 'support' => 10, 'system' => 10],
             ],
 
@@ -419,7 +428,7 @@ class RbacSeeder extends Seeder
                 'name' => 'Team Lead',
                 'description' => 'Authority over teams.',
                 'permissions' => [
-                    ...$staffReading, 'employees.view',
+                    ...$ownTeamsOnly, 'employees.view',
                     // Their own team's membership and their own team's queue,
                     // and nothing wider. The key opens the route; Team::isLedBy
                     // decides which team (§2.6).
@@ -447,9 +456,9 @@ class RbacSeeder extends Seeder
                     // A new client ticket goes to Support and the project
                     // manager first, and either may assign it (review round).
                     'tickets.triage',
-                    // The client relationship is the manager's, so the client
-                    // record is too - including who at the client gets a login.
-                    'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
+                    // Read-only, and only clients linked to them. Adding and
+                    // editing is Client Relations, the CEO and the System
+                    // Administrator (owner, 2026-11-03).
                     // Teams are the work domain, where a Manager outranks a
                     // Team Lead - so the whole module, not just membership.
                     'teams.create', 'teams.edit', 'teams.members',
@@ -494,9 +503,9 @@ class RbacSeeder extends Seeder
                     'salary.manage',
                     // Invoices are managed by the CEO and HR (owner, 2026-10-28).
                     'invoices.view', 'invoices.manage',
-                    // And the clients those invoices belong to, in full (owner,
-                    // 2026-10-28).
-                    'clients.view', 'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
+                    // And reading the clients those invoices belong to. Editing
+                    // them was taken away by the owner on 2026-11-03.
+                    'clients.view', 'clients.view.all',
                 ],
                 'ranks' => ['people' => 80, 'finance' => 70, 'work' => 30, 'support' => 20, 'system' => 10],
             ],
@@ -504,7 +513,7 @@ class RbacSeeder extends Seeder
             'support' => [
                 'name' => 'Support Associate',
                 'description' => 'The ticket queue, and the clients behind it.',
-                'permissions' => [...$staffReading, 'clients.view', 'tickets.triage'],
+                'permissions' => [...$staffReading, 'clients.view', 'clients.view.all', 'tickets.triage'],
                 'ranks' => ['people' => 10, 'work' => 20, 'support' => 70, 'system' => 20],
             ],
 
@@ -513,7 +522,7 @@ class RbacSeeder extends Seeder
                 'description' => 'Clients and nothing about employees.',
                 'permissions' => [
                     ...$staffReading,
-                    'clients.view', 'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
+                    'clients.view', 'clients.view.all', 'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
                 ],
                 'ranks' => ['people' => 10, 'work' => 10, 'support' => 10, 'system' => 10],
             ],
@@ -536,6 +545,9 @@ class RbacSeeder extends Seeder
                     // The Accounts pages, to sort out sign-in problems without
                     // the owner (owner, 2026-10-28).
                     'accounts.manage',
+                    // One of the three who may add and edit clients (owner,
+                    // 2026-11-03).
+                    'clients.view', 'clients.view.all', 'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
                 ],
                 // Outranks HR in system and is outranked by them everywhere
                 // else - the row that makes rank per-domain rather than a
@@ -547,7 +559,7 @@ class RbacSeeder extends Seeder
                 'name' => 'CEO',
                 'description' => 'Top of the human hierarchy - and still an Employee, with their own leave and attendance.',
                 'permissions' => [
-                    ...$staffReading, 'clients.view', 'employees.view', 'attendance.view',
+                    ...$staffReading, 'clients.view', 'clients.view.all', 'employees.view', 'attendance.view',
                     'attendance.view.all', 'attendance.reject', 'leave.approve', 'salary.view',
                     'invoices.view', 'tickets.triage', 'meetings.schedule', 'announcements.post',
                     'announcements.holiday', 'reports.view',
@@ -573,7 +585,7 @@ class RbacSeeder extends Seeder
                 'name' => 'Mentor',
                 'description' => 'Read-only, and no Employee base - so no personal records at all (§2.1).',
                 'permissions' => [
-                    'clients.view', 'employees.view', 'teams.view', 'projects.view', 'tasks.view',
+                    'clients.view', 'clients.view.all', 'employees.view', 'teams.view', 'teams.view.all', 'projects.view', 'tasks.view',
                     'tickets.view', 'invoices.view', 'meetings.view', 'announcements.view',
                     'reports.view', 'dashboard.view', 'support.view',
                 ],

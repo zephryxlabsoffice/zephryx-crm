@@ -45,9 +45,7 @@ class ClientController extends Controller
 {
     protected const PER_PAGE = 7;
 
-    public function __construct(protected Rbac $rbac, protected AuditLog $audit)
-    {
-    }
+    public function __construct(protected Rbac $rbac, protected AuditLog $audit) {}
 
     public function index(Request $request): Response
     {
@@ -59,7 +57,10 @@ class ClientController extends Controller
         $search = trim($filters['q'] ?? '');
         $status = $filters['status'] ?? null;
 
-        $query = ClientDirectory::query($search !== '' ? $search : null, $status);
+        $seesAll = $this->seesAllClients($request);
+
+        $query = ClientDirectory::query($search !== '' ? $search : null, $status)
+            ->when(! $seesAll, fn ($query) => $query->linkedTo($request->user()));
 
         return response()->view('clients.index', [
             'activeNav' => 'clients',
@@ -67,8 +68,9 @@ class ClientController extends Controller
             'search' => $search,
             'status' => $status,
             'filtered' => $search !== '' || $status !== null,
-            'stats' => ClientDirectory::stats(),
-            'activity' => ClientDirectory::activity(),
+            'stats' => ClientDirectory::stats($seesAll ? null : Client::query()->linkedTo($request->user())),
+            // Company-wide, and it names clients, so only for somebody who sees them all.
+            'activity' => $seesAll ? ClientDirectory::activity() : [],
             // Answered by the Meetings module. An empty rail states that
             // nothing is scheduled, which is true, rather than inventing three.
             'meetings' => [],
@@ -83,6 +85,12 @@ class ClientController extends Controller
     public function show(Request $request, string $client): Response
     {
         $record = $this->find($client);
+
+        abort_unless(
+            $this->seesAllClients($request)
+                || Client::query()->linkedTo($request->user())->whereKey($record->id)->exists(),
+            403,
+        );
 
         return response()->view('clients.show', [
             'activeNav' => 'clients',
@@ -284,6 +292,11 @@ class ClientController extends Controller
     /* ══════════════════════════════════════════════════════════════════════
        THE PIECES
        ══════════════════════════════════════════════════════════════════════ */
+
+    protected function seesAllClients(Request $request): bool
+    {
+        return $this->rbac->can($request->user(), 'clients.view.all');
+    }
 
     protected function find(string $reference): Client
     {

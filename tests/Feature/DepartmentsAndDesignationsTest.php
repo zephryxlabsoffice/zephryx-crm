@@ -258,6 +258,33 @@ class DepartmentsAndDesignationsTest extends TestCase
         $this->assertSame($it->id, $employee->department_id);
     }
 
+    public function test_each_designation_option_names_its_active_department_for_the_form_to_narrow_by(): void
+    {
+        $it = $this->row(MasterDataItem::DEPARTMENTS, 'IT');
+        $retired = $this->row(MasterDataItem::DEPARTMENTS, 'Old', active: false);
+        $placed = $this->row(MasterDataItem::DESIGNATIONS, 'Technical Associate', $it->id);
+        $unplaced = $this->row(MasterDataItem::DESIGNATIONS, 'Editor');
+        $stranded = $this->row(MasterDataItem::DESIGNATIONS, 'Writer', $retired->id);
+
+        $options = view('partials.designation-options', [
+            'designationGroups' => MasterDataDirectory::designationGroups(),
+            'selected' => null,
+        ])->render();
+
+        $this->assertStringContainsString('value="'.$placed->id.'" data-department="'.$it->id.'"', $options);
+        $this->assertStringContainsString('value="'.$unplaced->id.'" data-department=""', $options);
+        $this->assertStringContainsString('value="'.$stranded->id.'" data-department=""', $options);
+    }
+
+    public function test_the_employee_form_ties_its_designation_list_to_its_department(): void
+    {
+        $this->signInAsStaff(['employee', 'hr']);
+
+        $this->get('/employees/create')
+            ->assertOk()
+            ->assertSee('data-filtered-by="emp-department"', false);
+    }
+
     public function test_merging_a_designation_deletes_it_and_the_audit_keeps_what_it_carried(): void
     {
         $this->signInAsAdmin();

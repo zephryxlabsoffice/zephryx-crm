@@ -14,4 +14,13 @@
 |
 */
 
-return [];
+return [
+
+    /*
+    | The designation a client's "technical issue" goes straight to, by its
+    | code in Admin > Master data. If nobody active holds it, the ticket joins
+    | the normal queue instead, so it can never be lost.
+    */
+    'technical_designation_code' => 'TECHASST',
+
+];
