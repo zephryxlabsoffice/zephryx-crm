@@ -310,13 +310,6 @@
   resize: vertical;
 }
 .an-form textarea[disabled] { opacity: 0.75; cursor: not-allowed; }
-.an-form-wide input[type="checkbox"] {
-  width: 15px;
-  height: 15px;
-  margin-right: 7px;
-  accent-color: var(--green);
-  vertical-align: -2px;
-}
 .an-submit {
   display: flex;
   flex-direction: column;
@@ -353,7 +346,7 @@
   border: 0;
 }
 .an-kind { position: relative; cursor: pointer; }
-.an-kind input { position: absolute; opacity: 0; }
+.an-kind input { position: absolute; top: 12px; right: 12px; }
 .an-kind-box {
   display: flex;
   align-items: flex-start;
@@ -364,15 +357,15 @@
   border-radius: 10px;
 }
 .an-kind input:checked + .an-kind-box { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); }
-.an-kind input:focus-visible + .an-kind-box { outline: 2px solid var(--green); outline-offset: 2px; }
-.an-kind-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.an-kind input:checked + .an-kind-box { background: var(--green-softer); }
+.an-kind:hover .an-kind-box { border-color: var(--green); }
+.an-kind-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-right: 22px; font-size: 12px; line-height: 1.45; color: var(--muted); }
 .an-kind-text strong { font-size: 13.5px; color: var(--ink); }
 .an-kinds-hint, .an-kinds-error { display: block; margin: 0; padding: 0 22px 18px; }
 .an-subgrid { display: grid; grid-template-columns: inherit; gap: inherit; min-width: 0; }
-.an-choice { display: flex; flex-wrap: wrap; gap: 8px 22px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.an-choice { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; margin: 0; padding: 0; border: 0; }
 .an-choice legend { margin-bottom: 8px; padding: 0; }
-.an-choice label { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink); cursor: pointer; }
-.an-choice input { width: 15px; height: 15px; accent-color: var(--green); }
+.an-choice .check-row { flex: 1 1 200px; margin: 0; }
 .an-subgrid .an-closure-warn { margin: 0; }
 .an-summary { display: flex; flex-direction: column; gap: 9px; margin: 0; padding: 4px 20px 16px 36px; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
 

@@ -247,13 +247,7 @@ img.avatar,
   cursor: pointer;
 }
 .pf-toggle:last-child { border-bottom: 0; }
-.pf-toggle input {
-  width: 17px;
-  height: 17px;
-  margin-top: 2px;
-  flex-shrink: 0;
-  accent-color: var(--green);
-}
+.pf-toggle input { margin-top: 1px; }
 .pf-toggle-body { min-width: 0; }
 .pf-toggle-body strong {
   display: block;

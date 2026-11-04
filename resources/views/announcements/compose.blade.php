@@ -83,8 +83,8 @@
                                          nobody is marked absent. A draft closes nothing. --}}
                                     <fieldset class="form-field an-form-wide an-choice">
                                         <legend class="form-field-lbl">Is the office closed?</legend>
-                                        <label><input type="radio" name="closes_office" value="1" @checked((string) $value('closes_office', '1') === '1')> Yes, the office is closed</label>
-                                        <label><input type="radio" name="closes_office" value="0" @checked((string) $value('closes_office', '1') === '0')> No, this is only a reminder</label>
+                                        <label class="check-row"><input type="radio" name="closes_office" value="1" @checked((string) $value('closes_office', '1') === '1')> <span>Yes, the office is closed</span></label>
+                                        <label class="check-row"><input type="radio" name="closes_office" value="0" @checked((string) $value('closes_office', '1') === '0')> <span>No, this is only a reminder</span></label>
                                     </fieldset>
 
                                     <div class="an-form-wide an-subgrid" data-an="closure">
@@ -178,9 +178,9 @@
                             </div>
 
                             <div class="form-field an-form-wide">
-                                <label class="form-field-lbl" for="an-for-clients">
+                                <label class="check-row" for="an-for-clients">
                                     <input id="an-for-clients" data-an="for-clients" name="for_clients" type="checkbox" value="1" @checked($isTicked('for_clients'))>
-                                    Also show it to clients on their portal
+                                    <span>Also show it to clients on their portal</span>
                                 </label>
                             </div>
                         </div>
@@ -197,8 +197,8 @@
                             <div class="an-form-wide an-subgrid" data-an="window">
                             <fieldset class="form-field an-form-wide an-choice">
                                 <legend class="sr-only">When it goes on the board</legend>
-                                <label><input type="radio" name="an_when" value="now" @checked(! $isScheduling)> Straight away</label>
-                                <label><input type="radio" name="an_when" value="later" @checked($isScheduling)> On a later date</label>
+                                <label class="check-row"><input type="radio" name="an_when" value="now" @checked(! $isScheduling)> <span>Straight away</span></label>
+                                <label class="check-row"><input type="radio" name="an_when" value="later" @checked($isScheduling)> <span>On a later date</span></label>
                             </fieldset>
 
                             <div class="form-field" data-an="starts-on-field">
@@ -218,9 +218,9 @@
                             </div>
 
                             <div class="form-field an-form-wide">
-                                <label class="form-field-lbl" for="an-pinned">
+                                <label class="check-row" for="an-pinned">
                                     <input id="an-pinned" name="pinned" type="checkbox" value="1" @checked($isTicked('pinned'))>
-                                    Keep it at the top of the board
+                                    <span>Keep it at the top of the board</span>
                                 </label>
                             </div>
                         </div>
