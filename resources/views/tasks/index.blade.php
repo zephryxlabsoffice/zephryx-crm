@@ -22,7 +22,7 @@
             </a>
             @endif
 
-            @if (auth()->user()->hasEmployeeBase())
+            @if (auth()->user()->hasEmployeeBase() && \App\Support\EodPolicy::isLive())
                 <a class="btn btn-outline" href="{{ route('tasks.eod') }}">Fill End of Day</a>
             @endif
         </div>

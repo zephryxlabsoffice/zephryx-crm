@@ -2,6 +2,7 @@
 
 use App\Support\AnnouncementDelivery;
 use App\Support\Backups\Backups;
+use App\Support\EodReminders;
 use App\Support\Launch;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -9,6 +10,13 @@ use Illuminate\Support\Facades\Artisan;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+/*
+ * The evening End of Day reminder, run by its own cPanel Cron Job. See docs/DEPLOY.md.
+ */
+Artisan::command('eod:remind', function (EodReminders $reminders) {
+    $this->info('End of Day: reminded '.$reminders->send().' people.');
+})->purpose('Remind anybody who has not filed their End of Day report today');
 
 /*
  * The daily database backup (2026-10-27). Run by a cPanel Cron Job once a

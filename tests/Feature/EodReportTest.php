@@ -12,10 +12,15 @@ use App\Models\Role;
 use App\Models\Task;
 use App\Models\Team;
 use App\Models\User;
+use App\Support\Admin\CompanySettings;
 use App\Support\Audit\AuditLog;
+use App\Support\EodPolicy;
+use App\Support\EodReminders;
+use App\Support\LeavePresenter;
 use App\Support\Rbac\Rbac;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
@@ -23,6 +28,204 @@ use Tests\TestCase;
  */
 class EodReportTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Running, unless a test below says otherwise. The shipped date passes by itself.
+        config(['tasks.eod_starts_on' => null]);
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
+
+    /* ── before it starts ─────────────────────────────────────────────────── */
+
+    public function test_before_its_start_date_the_form_is_closed_and_tasks_finish_as_before(): void
+    {
+        config(['tasks.eod_starts_on' => Carbon::today()->addMonth()->toDateString()]);
+
+        $me = $this->person(['employee'], 'EMP930');
+        $task = $this->taskFor($me);
+
+        $this->actingAs($me->user);
+
+        $this->get('/tasks/eod')->assertOk()->assertSee('End of Day starts on')->assertDontSee('data-eod-form', false);
+
+        $this->post('/tasks/eod', [
+            'report_date' => Carbon::today()->toDateString(),
+            'assigned' => [$task->id => ['checked' => 1, 'status' => 'completed']],
+        ])->assertForbidden();
+
+        $this->assertSame('pending', $task->fresh()->status);
+
+        $this->get('/tasks/'.$task->reference)->assertOk()->assertSee('Mark Completed')->assertDontSee('Report in End of Day');
+        $this->get('/tasks/mine')->assertOk()->assertDontSee(route('tasks.eod'), false);
+    }
+
+    public function test_it_opens_by_itself_on_its_start_date(): void
+    {
+        config(['tasks.eod_starts_on' => '2026-12-01']);
+        Carbon::setTestNow('2026-12-01 09:00:00');
+
+        $me = $this->person(['employee'], 'EMP931');
+
+        $this->actingAs($me->user);
+
+        $this->get('/tasks/eod')->assertOk()->assertSee('data-eod-form', false);
+    }
+
+    public function test_a_day_before_the_start_date_cannot_be_filed(): void
+    {
+        config(['tasks.eod_starts_on' => '2026-12-01']);
+        Carbon::setTestNow('2026-12-03 09:00:00');
+
+        $me = $this->person(['employee'], 'EMP932');
+
+        $this->actingAs($me->user);
+
+        $this->post('/tasks/eod', [
+            'report_date' => '2026-11-30',
+            'extra' => [['project' => 'none', 'title' => 'Too early', 'status' => 'completed']],
+        ])->assertSessionHasErrors('report_date');
+    }
+
+    public function test_the_start_date_is_an_admin_setting(): void
+    {
+        $this->signInAsAdmin();
+
+        $this->get('/admin/settings')->assertOk()->assertSee('End of Day starts on');
+
+        $this->post('/admin/settings', ['key' => 'tasks.eod_starts_on', 'value' => '2027-01-04', 'reason' => 'Moved'])
+            ->assertRedirect();
+
+        CompanySettings::apply();
+
+        $this->assertSame('2027-01-04', EodPolicy::startsOn()->toDateString());
+    }
+
+    /* ── not filed yet ────────────────────────────────────────────────────── */
+
+    public function test_a_manager_sees_who_has_not_filed_among_those_they_are_waiting_on(): void
+    {
+        Carbon::setTestNow('2026-11-04 17:00:00');
+
+        $boss = $this->person(['employee', 'manager'], 'EMP933');
+
+        $filed = $this->person(['employee'], 'EMP934');
+        $filed->update(['reports_to' => $boss->id]);
+
+        $missing = $this->person(['employee'], 'EMP935');
+        $missing->update(['reports_to' => $boss->id]);
+
+        $inMyTeam = $this->person(['employee'], 'EMP936');
+        Team::create(['reference' => 'TEAM-NF', 'name' => 'Waiting', 'lead_id' => $boss->id, 'status' => 'active', 'formed_on' => now()])
+            ->members()->attach($inMyTeam->id);
+
+        $onLeave = $this->person(['employee'], 'EMP937');
+        $onLeave->update(['reports_to' => $boss->id]);
+        $this->approvedLeave($onLeave, '2026-11-03', '2026-11-05');
+
+        $joinedLater = $this->person(['employee'], 'EMP938');
+        $joinedLater->update(['reports_to' => $boss->id, 'joined_on' => '2026-11-20']);
+
+        $somebodyElses = $this->person(['employee'], 'EMP939');
+
+        $this->actingAs($filed->user);
+        $this->post('/tasks/eod', [
+            'report_date' => '2026-11-04',
+            'extra' => [['project' => 'none', 'title' => 'Line', 'status' => 'completed']],
+        ]);
+
+        $this->actingAs($boss->user);
+
+        $names = $this->get('/tasks/eod/team?date=2026-11-04')->assertOk()->viewData('notFiled')->pluck('id')->all();
+
+        $this->assertEqualsCanonicalizing([$missing->id, $inMyTeam->id], $names);
+        $this->assertNotContains($somebodyElses->id, $names);
+    }
+
+    public function test_the_ceo_is_waiting_on_everybody(): void
+    {
+        Carbon::setTestNow('2026-11-04 17:00:00');
+
+        $anyone = $this->person(['employee'], 'EMP941');
+
+        $this->actingAs($this->person(['ceo'], 'EMP942')->user);
+
+        $this->assertContains(
+            $anyone->id,
+            $this->get('/tasks/eod/team?date=2026-11-04')->viewData('notFiled')->pluck('id')->all(),
+        );
+    }
+
+    public function test_nobody_owes_a_report_for_a_week_off(): void
+    {
+        Carbon::setTestNow('2026-11-09 17:00:00');
+        config(['attendance.week_off' => [0]]);
+
+        $boss = $this->person(['employee', 'manager'], 'EMP943');
+        $this->person(['employee'], 'EMP944')->update(['reports_to' => $boss->id]);
+
+        $this->actingAs($boss->user);
+
+        // 8 November 2026 is a Sunday.
+        $this->get('/tasks/eod/team?date=2026-11-08')
+            ->assertOk()
+            ->assertSee('not a working day');
+    }
+
+    /* ── the reminder ─────────────────────────────────────────────────────── */
+
+    public function test_the_reminder_reaches_only_those_who_have_not_filed_and_only_once(): void
+    {
+        Carbon::setTestNow('2026-11-04 18:00:00');
+        Http::fake(['*' => Http::response('', 201)]);
+
+        $filed = $this->person(['employee'], 'EMP945');
+        $missing = $this->person(['employee'], 'EMP946');
+        $onLeave = $this->person(['employee'], 'EMP947');
+        $this->approvedLeave($onLeave, '2026-11-04', '2026-11-04');
+
+        $this->actingAs($filed->user);
+        $this->post('/tasks/eod', [
+            'report_date' => '2026-11-04',
+            'extra' => [['project' => 'none', 'title' => 'Line', 'status' => 'completed']],
+        ]);
+
+        $this->actingAs($missing->user);
+        $this->post('/push/subscribe', ['endpoint' => 'https://fcm.googleapis.com/fcm/send/missing']);
+
+        $this->artisan('eod:remind')->assertSuccessful();
+        $this->artisan('eod:remind')->assertSuccessful();
+
+        $reminded = Notification::where('kind', EodReminders::KIND)->pluck('user_id')->all();
+
+        $this->assertSame([$missing->user_id], $reminded);
+        Http::assertSentCount(1);
+
+        $this->getJson('/push/latest')->assertJsonPath('title', 'Your End of Day is not filed yet');
+    }
+
+    public function test_the_reminder_stays_quiet_before_the_start_date_and_on_a_week_off(): void
+    {
+        $this->person(['employee'], 'EMP948');
+
+        config(['tasks.eod_starts_on' => '2026-12-01']);
+        Carbon::setTestNow('2026-11-04 18:00:00');
+        $this->artisan('eod:remind')->assertSuccessful();
+
+        config(['tasks.eod_starts_on' => null, 'attendance.week_off' => [0]]);
+        Carbon::setTestNow('2026-11-08 18:00:00');
+        $this->artisan('eod:remind')->assertSuccessful();
+
+        $this->assertSame(0, Notification::where('kind', EodReminders::KIND)->count());
+    }
+
     /* ── filing ───────────────────────────────────────────────────────────── */
 
     public function test_ticking_an_assigned_task_completes_it_with_no_other_step(): void
@@ -408,6 +611,23 @@ class EodReportTest extends TestCase
         app(Rbac::class)->forget($user);
 
         return Employee::create(['user_id' => $user->id, 'joined_on' => Carbon::now()->subYear()]);
+    }
+
+    protected function approvedLeave(Employee $employee, string $from, string $to): void
+    {
+        DB::table('leave_requests')->insert([
+            'reference' => 'LV-'.fake()->unique()->numberBetween(1000, 9999),
+            'employee_id' => $employee->id,
+            'type' => 'casual',
+            'from_date' => $from,
+            'to_date' => $to,
+            'days' => 1,
+            'reason' => 'Away',
+            'status' => LeavePresenter::APPROVED,
+            'applied_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     /**

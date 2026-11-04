@@ -28,7 +28,7 @@
 
         <form class="hd-actions eod-date" method="GET" action="{{ route('tasks.eod') }}">
             <label class="form-field-lbl" for="eod-date">Report for</label>
-            <input id="eod-date" type="date" name="date" value="{{ $date }}" max="{{ now()->toDateString() }}" data-auto-submit>
+            <input id="eod-date" type="date" name="date" value="{{ $date }}" min="{{ $earliestDate }}" max="{{ now()->toDateString() }}" data-auto-submit>
             <noscript><button class="btn btn-outline btn-sm" type="submit">Open</button></noscript>
         </form>
     </div>

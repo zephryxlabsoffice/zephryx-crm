@@ -7,7 +7,9 @@ use App\Models\EodItem;
 use App\Models\EodReport;
 use App\Models\Project;
 use App\Models\Task;
+use App\Support\AttendancePolicy;
 use App\Support\Audit\AuditLog;
+use App\Support\EodPolicy;
 use App\Support\Notifier;
 use App\Support\Rbac\Rbac;
 use Illuminate\Database\Eloquent\Builder;
@@ -66,8 +68,12 @@ class EodController extends Controller
     {
         $employee = $this->employeeOrRefuse($request);
 
+        if (! EodPolicy::isLive()) {
+            return $this->notLiveYet();
+        }
+
         $date = $request->validate([
-            'date' => ['nullable', 'date', 'before_or_equal:today'],
+            'date' => $this->dateRules(nullable: true),
         ])['date'] ?? now()->toDateString();
         $date = Carbon::parse($date)->toDateString();
 
@@ -80,6 +86,7 @@ class EodController extends Controller
         return response()->view('tasks.eod.form', [
             'activeNav' => 'tasks',
             'date' => $date,
+            'earliestDate' => EodPolicy::startsOn()?->toDateString(),
             'report' => $report,
             'assignedTasks' => $this->assignedTasks($employee, $date, $report),
             'extraItems' => $report?->items->whereNull('task_id')->values() ?? collect(),
@@ -101,6 +108,9 @@ class EodController extends Controller
     public function save(Request $request): RedirectResponse
     {
         $employee = $this->employeeOrRefuse($request);
+
+        abort_unless(EodPolicy::isLive(), 403);
+
         $data = $this->validated($request);
         $date = Carbon::parse($data['report_date'])->toDateString();
 
@@ -191,8 +201,12 @@ class EodController extends Controller
      */
     public function team(Request $request): Response
     {
+        if (! EodPolicy::isLive()) {
+            return $this->notLiveYet();
+        }
+
         $date = $request->validate([
-            'date' => ['nullable', 'date', 'before_or_equal:today'],
+            'date' => $this->dateRules(nullable: true),
         ])['date'] ?? now()->toDateString();
         $date = Carbon::parse($date)->toDateString();
 
@@ -208,7 +222,60 @@ class EodController extends Controller
                 ->get()
                 ->sortBy(fn (EodReport $report) => $report->employee->user?->name)
                 ->values(),
+            'notFiled' => $this->notFiledFor($request, $date),
+            'isWorkingDay' => AttendancePolicy::isWorkingDay($date),
+            'earliestDate' => EodPolicy::startsOn()?->toDateString(),
         ]);
+    }
+
+    /**
+     * Who the viewer is waiting on: those who report to them and the members of teams
+     * they lead, or everybody for a holder of the permission. A project manager is not
+     * included, because a project does not say who should be working on it on a given day.
+     *
+     * @return Collection<int, Employee>
+     */
+    protected function notFiledFor(Request $request, string $date): Collection
+    {
+        $viewerId = $this->employeeFor($request)?->id;
+
+        return EodPolicy::notFiledOn($date)
+            ->with(['user', 'department'])
+            ->when($viewerId !== null, fn (Builder $q) => $q->whereKeyNot($viewerId))
+            ->when(
+                ! $this->rbac->can($request->user(), EodReport::VIEW_ALL_PERMISSION),
+                fn (Builder $q) => $q->where(fn (Builder $mine) => $mine
+                    ->where('reports_to', $viewerId ?? 0)
+                    ->orWhereHas('teams', fn (Builder $team) => $team->where('lead_id', $viewerId ?? 0))),
+            )
+            ->get()
+            ->sortBy(fn (Employee $employee) => $employee->user?->name)
+            ->values();
+    }
+
+    protected function notLiveYet(): Response
+    {
+        return response()->view('tasks.eod.not-live', [
+            'activeNav' => 'tasks',
+            'startsOn' => EodPolicy::startsOn(),
+        ]);
+    }
+
+    /**
+     * Not in the future, and not before End of Day began.
+     *
+     * @return list<string>
+     */
+    protected function dateRules(bool $nullable = false): array
+    {
+        $start = EodPolicy::startsOn();
+
+        return array_values(array_filter([
+            $nullable ? 'nullable' : 'required',
+            'date',
+            'before_or_equal:today',
+            $start === null ? null : 'after_or_equal:'.$start->toDateString(),
+        ]));
     }
 
     /**
@@ -347,7 +414,7 @@ class EodController extends Controller
     protected function validated(Request $request): array
     {
         return $request->validate([
-            'report_date' => ['required', 'date', 'before_or_equal:today'],
+            'report_date' => $this->dateRules(),
             'assigned' => ['nullable', 'array'],
             'assigned.*.checked' => ['nullable', 'boolean'],
             'assigned.*.status' => ['required_with:assigned.*.checked', Rule::in(self::STATUSES)],

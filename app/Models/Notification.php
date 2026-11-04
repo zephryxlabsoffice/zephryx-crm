@@ -34,6 +34,7 @@ class Notification extends Model
         'leave' => 'leave',
         'announcement' => 'announcements',
         'eod' => 'tasks',
+        'eod_reminder' => 'tasks',
     ];
 
     protected $fillable = [

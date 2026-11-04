@@ -243,6 +243,14 @@ The nightly run is a cPanel Cron Job (cPanel → **Cron Jobs**; no Terminal need
 4. Next day, open Admin → Backups and check last night's file is listed and
    the page shows no warning.
 
+**End of Day reminder:** a second Cron Job, once a day at `0 18 * * *`, with the
+command below. It does nothing before "End of Day starts on" or on a day off, and
+reminds nobody twice, so it can be set up before that date.
+
+```
+/usr/bin/php <site folder>/zephryx-crm/artisan eod:remind >> <site folder>/zephryx-crm/storage/logs/cron.log 2>&1
+```
+
 **Restoring:** phpMyAdmin → the CRM database → Import → the `.sql.gz` file.
 It only works with the same `APP_KEY`, so keep that copy of `.env` safe.
 

@@ -181,3 +181,15 @@
   .eod-row-fields, .eod-extra { grid-template-columns: minmax(0, 1fr); }
   .eod-row-fields { padding-left: 12px; }
 }
+
+.eod-not-filed { margin-bottom: var(--density-gap); }
+.eod-not-filed-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 12px 22px 20px;
+  list-style: none;
+}
+.eod-not-filed-list li { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 12px; color: var(--muted); }
+.eod-not-filed-list strong { font-size: 13px; font-weight: 600; color: var(--ink); }

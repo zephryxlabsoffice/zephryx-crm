@@ -168,6 +168,20 @@ class Notifier
     }
 
     /**
+     * The evening reminder for somebody who has not filed today.
+     */
+    public function eodReminder(?User $reader): void
+    {
+        $this->send(
+            reader: $reader,
+            kind: EodReminders::KIND,
+            title: 'Your End of Day is not filed yet',
+            body: 'Tick what you worked on today. It only takes a moment.',
+            route: 'tasks.eod',
+        );
+    }
+
+    /**
      * An announcement went up, for the staff it is addressed to.
      *
      * @param  iterable<User>  $readers
