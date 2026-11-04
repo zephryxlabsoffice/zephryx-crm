@@ -24,8 +24,7 @@ class ShellComposer
     public function __construct(
         private Request $request,
         private Navigation $navigation,
-    ) {
-    }
+    ) {}
 
     public function compose(View $view): void
     {
@@ -123,24 +122,30 @@ class ShellComposer
     protected function notifications(string $realm, ?Authenticatable $user): array
     {
         /*
-         * The bell is empty in the client portal, and that is a decision rather
-         * than an omission.
+         * The client bell carries announcements marked for clients and nothing
+         * else (owner, 2026-11-04).
          *
-         * Every row Notifier writes is addressed to a staff account and worded
+         * Other rows Notifier writes are addressed to a staff account and worded
          * for one - "Rahul assigned you a task", "your leave was approved".
-         * Handing a client the staff bell would leak the lot. There is no
-         * client-addressed notification stream yet, and inventing one here
-         * would mean deciding what a client gets told about their own
-         * projects, which is a product question this module has not been asked.
-         *
-         * So it renders its own empty state until that stream exists.
+         * Handing a client the staff bell would leak the lot, so this is its own
+         * narrow read rather than the staff one with a filter added. What else a
+         * client gets told about their own projects is a product question this
+         * module has not been asked.
          *
          * The account type is checked as well as the realm, and that is not
          * belt-and-braces: `$realm` is read from the PATH (see
          * Realm::forRequest) and is a drawing decision, never an authorisation
          * one. What decides whose bell this is has to come from the account.
          */
-        if ($realm !== Realm::STAFF || ! $user instanceof User || $user->account_type !== Realm::STAFF) {
+        if (! $user instanceof User || $user->account_type !== $realm) {
+            return [];
+        }
+
+        if ($realm === Realm::CLIENT) {
+            return NotificationDirectory::clientBellFor($user);
+        }
+
+        if ($realm !== Realm::STAFF) {
             return [];
         }
 

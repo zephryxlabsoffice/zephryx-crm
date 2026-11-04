@@ -1170,7 +1170,7 @@
   margin-bottom: 7px;
 }
 .form-field select,
-.form-field input,
+.form-field input:where(:not([type="checkbox"], [type="radio"])),
 .form-field textarea,
 .triage-field select {
   appearance: none;
@@ -1196,6 +1196,95 @@
 .triage-field select[disabled] { opacity: 0.75; cursor: not-allowed; }
 .form-field input::placeholder,
 .form-field textarea::placeholder { color: var(--muted); }
+
+/* ─────────────────────────  checkboxes and radios  ─────────────────────────
+
+   One look everywhere: a square with a tick for "any of these", a circle with a
+   dot for "one of these". Drawn here rather than left to the browser so the
+   unticked edge can be seen in both themes. `:where` keeps this easy to override
+   for the few controls that hide the input and draw their own.              */
+
+input:where([type="checkbox"], [type="radio"]) {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  padding: 0;
+  border: 1.5px solid var(--muted);
+  background: var(--surface);
+  cursor: pointer;
+  transition: background var(--dur-fast), border-color var(--dur-fast);
+}
+input:where([type="checkbox"]) { border-radius: 5px; }
+input:where([type="radio"]) { border-radius: 50%; }
+
+input:where([type="checkbox"], [type="radio"]):hover { border-color: var(--green); }
+input:where([type="checkbox"], [type="radio"]):focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+input:where([type="checkbox"], [type="radio"]):disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input:where([type="checkbox"]):checked,
+input:where([type="checkbox"]):indeterminate {
+  border-color: var(--green);
+  background: var(--green);
+}
+input:where([type="checkbox"]):checked::before {
+  content: "";
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: translateY(-1px) rotate(-45deg);
+}
+/* Some rows are ticked, not all: the salary "select all" box. */
+input:where([type="checkbox"]):indeterminate::before {
+  content: "";
+  width: 9px;
+  height: 2px;
+  border: 0;
+  background: #fff;
+  transform: none;
+}
+
+input:where([type="radio"]):checked { border-color: var(--green); }
+input:where([type="radio"]):checked::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+/* A choice with its label: the whole row is the target, and it shows when chosen. */
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-btn);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background var(--dur-fast), border-color var(--dur-fast);
+}
+.check-row + .check-row { margin-top: 8px; }
+.check-row:hover { border-color: var(--green); }
+.check-row:has(input:checked) {
+  border-color: var(--green);
+  background: var(--green-softer);
+}
 
 /* ── an avatar beside a name, inside a table cell (was .tkt-person) ── */
 .name-cell,

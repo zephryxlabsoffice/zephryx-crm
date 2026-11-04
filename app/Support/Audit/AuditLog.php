@@ -367,6 +367,14 @@ class AuditLog
 
     public const ANNOUNCEMENT_EXPIRED = 'announcement.expired';
 
+    public const ANNOUNCEMENT_EDITED = 'announcement.edited';
+
+    public const ANNOUNCEMENT_CANCELLED = 'announcement.cancelled';
+
+    public const ANNOUNCEMENT_DELETED = 'announcement.deleted';
+
+    public const ANNOUNCEMENT_DELIVERED = 'announcement.delivered';
+
     /*
      * My Profile.
      *

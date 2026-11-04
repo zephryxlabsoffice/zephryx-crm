@@ -310,13 +310,6 @@
   resize: vertical;
 }
 .an-form textarea[disabled] { opacity: 0.75; cursor: not-allowed; }
-.an-form-wide input[type="checkbox"] {
-  width: 15px;
-  height: 15px;
-  margin-right: 7px;
-  accent-color: var(--green);
-  vertical-align: -2px;
-}
 .an-submit {
   display: flex;
   flex-direction: column;
@@ -324,6 +317,96 @@
   padding: 4px 20px 18px;
 }
 .an-submit .btn { width: 100%; justify-content: center; }
+
+/* ─────────────────────────  the chain  ─────────────────────────
+
+   Each answer decides the next question, so what is hidden has to stay hidden
+   even inside a grid or flex parent.                                         */
+
+.an-form [hidden] { display: none !important; }
+.an-steps { display: contents; }
+.an-step-no {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.an-kinds {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px 22px 18px;
+  border: 0;
+}
+.an-kind { position: relative; cursor: pointer; }
+.an-kind input { position: absolute; top: 12px; right: 12px; }
+.an-kind-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  height: 100%;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.an-kind input:checked + .an-kind-box { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); }
+.an-kind input:checked + .an-kind-box { background: var(--green-softer); }
+.an-kind:hover .an-kind-box { border-color: var(--green); }
+.an-kind-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-right: 22px; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.an-kind-text strong { font-size: 13.5px; color: var(--ink); }
+.an-kinds-hint, .an-kinds-error { display: block; margin: 0; padding: 0 22px 18px; }
+.an-subgrid { display: grid; grid-template-columns: inherit; gap: inherit; min-width: 0; }
+.an-choice { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.an-choice legend { margin-bottom: 8px; padding: 0; }
+.an-choice .check-row { flex: 1 1 200px; margin: 0; }
+.an-subgrid .an-closure-warn { margin: 0; }
+.an-summary { display: flex; flex-direction: column; gap: 9px; margin: 0; padding: 4px 20px 16px 36px; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
+
+.an-delete { padding: 14px 20px; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
+.an-delete summary { cursor: pointer; font-weight: 600; color: var(--muted); }
+.an-delete p { margin: 10px 0 0; }
+.an-delete-warn strong { color: var(--ink); }
+.an-delete form { margin-top: 12px; }
+.an-delete .btn { width: 100%; justify-content: center; }
+
+/* Composed notices carry their date and venue on lines of their own. */
+.an-card-body, .an-full-body p, .an-client-body { white-space: pre-line; }
+
+.an-status-key {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 18px;
+  margin: 0;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.an-status-key div { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; }
+.an-status-key dd { margin: 0; font-size: 12px; line-height: 1.45; color: var(--muted); }
+
+@media (max-width: 760px) {
+  .an-kinds { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ─────────────────────────  push on this device  ───────────────────────── */
+
+.push-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+}
+.push-panel-text { display: flex; flex-direction: column; gap: 3px; flex: 1 1 180px; min-width: 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.push-panel-text strong { font-size: 13px; color: var(--ink); }
+.push-panel-status { font-weight: 600; color: var(--ink-2); }
 
 /* ─────────────────────────  notifications  ───────────────────────── */
 

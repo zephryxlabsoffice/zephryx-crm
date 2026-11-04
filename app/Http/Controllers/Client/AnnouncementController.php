@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Support\AnnouncementDirectory;
+use App\Support\NotificationDirectory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -32,6 +33,9 @@ class AnnouncementController extends PortalController
     {
         $client = $this->requireActiveClient($request);
 
+        // Every row in a client's bell is an announcement, and this page lists them all.
+        NotificationDirectory::query($request->user())->unread()->where('kind', 'announcement')->update(['read_at' => now()]);
+
         return response()->view('client.announcements.index', $this->shell($request, 'announcements') + [
             'announcements' => AnnouncementDirectory::forClients(),
         ]);
@@ -44,6 +48,8 @@ class AnnouncementController extends PortalController
         $record = AnnouncementDirectory::findForClients($announcement);
 
         abort_if($record === null, 404);
+
+        NotificationDirectory::markAnnouncementRead($request->user(), $announcement);
 
         return response()->view('client.announcements.show', $this->shell($request, 'announcements') + [
             'announcement' => $record,

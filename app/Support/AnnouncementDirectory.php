@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Announcement;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -88,15 +89,17 @@ class AnnouncementDirectory
     }
 
     /**
-     * The board: what is live, plus today's milestones, newest first.
+     * One person's board: what is live and addressed to them, plus today's
+     * milestones, newest first.
      *
      * @return Collection<int, array<string, mixed>>
      */
-    public static function board(): Collection
+    public static function board(?User $viewer): Collection
     {
         $live = Announcement::query()
             ->with(['author.user', 'author.designation', 'audienceDepartment'])
             ->live()
+            ->visibleTo($viewer)
             ->orderByDesc('pinned')
             ->orderByDesc('starts_on')
             ->get()
@@ -179,6 +182,22 @@ class AnnouncementDirectory
     }
 
     /**
+     * One announcement, if this person may read it.
+     *
+     * @return array<string, mixed>|null
+     */
+    public static function findFor(string $reference, ?User $viewer): ?array
+    {
+        $announcement = Announcement::query()
+            ->with(['author.user', 'author.designation', 'audienceDepartment'])
+            ->visibleTo($viewer)
+            ->where('reference', $reference)
+            ->first();
+
+        return $announcement?->toRecordArray();
+    }
+
+    /**
      * @param  Collection<int, array<string, mixed>>  $announcements
      * @return array<string, int>
      */
@@ -202,11 +221,11 @@ class AnnouncementDirectory
      * list beneath it. A category with nothing in it is left out rather than
      * shown as a zero - an empty filter is a control that does nothing.
      *
+     * @param  Collection<int, array<string, mixed>>  $board
      * @return list<array{key: string, label: string, tone: string, icon: string, count: int}>
      */
-    public static function categoryCounts(): array
+    public static function categoryCounts(Collection $board): array
     {
-        $board = self::board();
         $counts = [];
 
         foreach (AnnouncementPresenter::categories() as $key => $meta) {

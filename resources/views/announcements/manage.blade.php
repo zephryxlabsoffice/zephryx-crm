@@ -31,7 +31,7 @@
 
     <div class="card table-card">
         <nav class="tabs" aria-label="Announcement states">
-            @foreach (['all' => 'All', 'active' => 'Active', 'scheduled' => 'Scheduled', 'draft' => 'Drafts', 'expired' => 'Expired'] as $key => $label)
+            @foreach (['all' => 'All', 'active' => 'On the board', 'scheduled' => 'Scheduled', 'draft' => 'Drafts', 'expired' => 'Expired'] as $key => $label)
                 <a class="tab @if ($tab === $key) active @endif"
                    href="{{ route('announcements.manage', ['tab' => $key]) }}"
                    @if ($tab === $key) aria-current="page" @endif>
@@ -40,6 +40,16 @@
                 </a>
             @endforeach
         </nav>
+
+        <dl class="an-status-key">
+            @foreach ([P::DRAFT, P::SCHEDULED, P::ACTIVE, P::EXPIRED] as $statusKey)
+                @php $statusInfo = P::status($statusKey); @endphp
+                <div>
+                    <dt><span class="pill {{ $statusInfo['tone'] }}">{{ $statusInfo['label'] }}</span></dt>
+                    <dd>{{ $statusInfo['meaning'] }}</dd>
+                </div>
+            @endforeach
+        </dl>
 
         <div class="card-hd">
             <span class="card-title">Written announcements</span>

@@ -106,7 +106,7 @@
                 <p>
                     {{-- Honest about the ones that cannot be switched off, rather
                          than offering a control that quietly ignores them. --}}
-                    What reaches the bell. Announcements to everyone, decisions on
+                    What reaches the bell. Announcements addressed to you, decisions on
                     your leave and meeting invites always arrive - those are how
                     work reaches you, and a decision nobody receives is not a
                     decision.
@@ -133,15 +133,7 @@
                 </label>
             </div>
 
-            {{--
-                The handover's third toggle - "also send these by email" - is
-                gone rather than disabled.
-
-                Nothing in this application emails a notification. A switch that
-                turns on a thing that does not exist is a promise, and the
-                person who sets it stops watching the bell. It comes back the
-                day there is something behind it.
-            --}}
+            @include('partials.push-panel')
         </div>
 
         <div class="form-actions form-actions-padded">

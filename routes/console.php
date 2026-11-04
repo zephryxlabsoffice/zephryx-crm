@@ -1,5 +1,8 @@
 <?php
 
+use App\Support\AnnouncementDelivery;
+use App\Support\Backups\Backups;
+use App\Support\Launch;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
@@ -12,7 +15,11 @@ Artisan::command('inspire', function () {
  * day - see docs/DEPLOY.md. Also available as Admin → Backups → Back up now.
  * Exit code 1 on failure so cPanel's cron email reports it.
  */
-Artisan::command('backup:database', function (App\Support\Backups\Backups $backups) {
+Artisan::command('backup:database', function (Backups $backups) {
+    // Also the only timer for scheduled announcements. First, and on its own, so a
+    // failed backup does not also stop people being told. See AnnouncementDelivery.
+    AnnouncementDelivery::deliverDueQuietly();
+
     try {
         $status = $backups->run();
     } catch (Throwable $e) {
@@ -26,7 +33,7 @@ Artisan::command('backup:database', function (App\Support\Backups\Backups $backu
 
     // The only job on a timer, so it also sends the launch-day welcome at
     // 2 AM on the day (once). See App\Support\Launch.
-    if (($welcomed = App\Support\Launch::sendWelcomeIfDue()) > 0) {
+    if (($welcomed = Launch::sendWelcomeIfDue()) > 0) {
         $this->info('Launch day: welcome emailed to '.$welcomed.' people.');
     }
 

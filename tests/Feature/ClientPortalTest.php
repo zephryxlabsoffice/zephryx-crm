@@ -413,12 +413,47 @@ class ClientPortalTest extends TestCase
         }
     }
 
+    public function test_a_client_bell_shows_an_announcement_and_opening_the_board_clears_it(): void
+    {
+        $client = auth()->user();
+
+        Notification::create([
+            'user_id' => $client->id,
+            'kind' => 'announcement',
+            'title' => 'New announcement: Office closed',
+            'body' => 'Closed on Friday.',
+            'link_route' => 'client.announcements.show',
+            'link_params' => ['announcement' => 'ANN-2026-001'],
+        ]);
+
+        $this->get('/client/dashboard')
+            ->assertSee('New announcement: Office closed')
+            ->assertSee(route('client.announcements.index'), false)
+            ->assertDontSee(route('notifications.index'), false);
+
+        $this->get('/client/announcements')->assertOk();
+
+        $this->assertNotNull(Notification::where('user_id', $client->id)->where('kind', 'announcement')->sole()->read_at);
+    }
+
+    public function test_a_staff_worded_row_never_reaches_a_client_bell_even_if_addressed_to_them(): void
+    {
+        Notification::create([
+            'user_id' => auth()->id(),
+            'kind' => 'task',
+            'title' => 'Somebody assigned you a task',
+            'body' => 'Something internal.',
+        ]);
+
+        $this->assertStringNotContainsString('Something internal.', $this->get('/client/dashboard')->getContent());
+    }
+
     public function test_the_notification_bell_is_empty_in_the_client_realm(): void
     {
         /*
-         * Every row Notifier writes is addressed to a staff account and worded
-         * for one. Handing a client the staff bell would leak the lot, so the
-         * client realm gets none until a client-addressed stream exists.
+         * Staff rows are addressed to a staff account and worded for one. Handing
+         * a client the staff bell would leak the lot, so the client realm reads
+         * only announcements marked for clients, and here there are none.
          */
         $this->assertStringNotContainsString('notif-item', $this->get('/client/dashboard')->getContent());
 

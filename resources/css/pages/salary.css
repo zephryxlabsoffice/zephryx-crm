@@ -48,12 +48,6 @@
 
 /* ── row selection ── */
 .col-check { width: 1%; white-space: nowrap; }
-.sl-table input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--green);
-  cursor: pointer;
-}
 
 /* ── the bulk action bar ──
    Sits under the table rather than floating over it: the button is the end of

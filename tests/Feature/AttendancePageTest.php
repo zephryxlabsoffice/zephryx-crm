@@ -904,8 +904,8 @@ class AttendancePageTest extends TestCase
 
         $html = $this->get('/announcements/compose')->getContent();
 
-        $this->assertStringContainsString('Closing the office', $html);
-        $this->assertStringContainsString('How long it runs', $html);
+        $this->assertStringContainsString('First day closed', $html);
+        $this->assertStringContainsString('When does it go on the board?', $html);
         /*
          * Still two distinct pairs of date inputs, not one reused for both.
          *

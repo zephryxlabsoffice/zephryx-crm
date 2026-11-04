@@ -15,6 +15,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="manifest" href="/manifest.webmanifest">
     <meta name="robots" content="noindex, nofollow">
 
     <title>@yield('title', 'Dashboard') · {{ config('zephryx.brand.name') }} {{ config('zephryx.brand.suffix') }}</title>
@@ -99,6 +100,7 @@
                      once per person. See App\Support\Launch. --}}
                 @if (($realm ?? null) === \App\Support\Realm::STAFF)
                     @php \App\Support\Launch::sendWelcomeIfDue(); @endphp
+                    @php \App\Support\AnnouncementDelivery::deliverDueQuietly(); @endphp
                     @if (\App\Support\Launch::popupFor(auth()->user()))
                         @include('partials.launch-welcome')
                     @endif

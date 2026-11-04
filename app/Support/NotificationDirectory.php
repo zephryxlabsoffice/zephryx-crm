@@ -84,6 +84,35 @@ class NotificationDirectory
     }
 
     /**
+     * The reader has opened this announcement, so its bell row has been seen.
+     */
+    public static function markAnnouncementRead(User $reader, string $reference): void
+    {
+        self::query($reader)
+            ->unread()
+            ->where('kind', 'announcement')
+            ->where('link_params->announcement', $reference)
+            ->update(['read_at' => now()]);
+    }
+
+    /**
+     * The client bell: announcements, and nothing else that could ever be
+     * addressed to the account. See ShellComposer::notifications().
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function clientBellFor(User $reader, int $limit = self::BELL): array
+    {
+        return self::query($reader)
+            ->where('kind', 'announcement')
+            ->where('link_route', 'client.announcements.show')
+            ->limit($limit)
+            ->get()
+            ->map(fn (Notification $n) => $n->toRecordArray())
+            ->all();
+    }
+
+    /**
      * Mark the reader's unread rows read, and report how many moved.
      *
      * ─────────────────────────────────────────────────────────────────────────
