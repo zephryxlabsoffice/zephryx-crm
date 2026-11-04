@@ -18,7 +18,7 @@ use Illuminate\Support\Carbon;
 class Announcement extends Model
 {
     protected $fillable = [
-        'reference', 'title', 'body', 'category', 'author_id',
+        'reference', 'title', 'body', 'details', 'category', 'author_id',
         'audience', 'audience_department_id', 'for_clients',
         'starts_on', 'ends_on', 'observed_from', 'observed_to',
         'published_at', 'pinned',
@@ -27,6 +27,7 @@ class Announcement extends Model
     protected function casts(): array
     {
         return [
+            'details' => 'array',
             'starts_on' => 'date',
             'ends_on' => 'date',
             'observed_from' => 'date',

@@ -154,10 +154,28 @@ class AnnouncementController extends Controller
      */
     public function create(Request $request): Response
     {
+        return $this->composeView($request, null);
+    }
+
+    /**
+     * GET /announcements/{announcement}/edit - the same form, filled in.
+     */
+    public function edit(Request $request, string $announcement): Response
+    {
+        $model = $this->find($announcement)['model'];
+
+        $this->authorizeChange($request, $model);
+
+        return $this->composeView($request, $model);
+    }
+
+    protected function composeView(Request $request, ?Announcement $announcement): Response
+    {
         return response()->view('announcements.compose', [
             'activeNav' => 'announcements',
-            'announcement' => null,
-            'reference' => AnnouncementDirectory::nextReference(),
+            'announcement' => $announcement,
+            'values' => $announcement === null ? [] : AnnouncementForm::valuesFrom($announcement),
+            'status' => $announcement?->toRecordArray()['status'],
             // Milestones are excluded: a hand-written one would sit in the feed
             // looking identical to a computed one and be wrong next year.
             'categories' => AnnouncementPresenter::authorableCategories(),
@@ -207,6 +225,7 @@ class AnnouncementController extends Controller
             'reference' => AnnouncementDirectory::nextReference(),
             'title' => $data['title'],
             'body' => AnnouncementForm::body($data['category'], $data),
+            'details' => AnnouncementForm::details($data),
             'category' => $data['category'],
             'author_id' => $author->id,
             'audience' => $data['audience'],
@@ -240,6 +259,147 @@ class AnnouncementController extends Controller
                     ? 'Scheduled. It goes on the board on '.AnnouncementPresenter::date($announcement->starts_on).'.'
                     : 'Posted to the board.'))
             ->with('status_tone', 'success');
+    }
+
+    /**
+     * Change a post, whatever state it is in.
+     *
+     * An expired post keeps its board dates, so correcting it does not put it
+     * back up. A closure can be corrected after the fact, which changes who was
+     * absent, so the audit entry carries the dates before and after.
+     */
+    public function update(Request $request, string $announcement): RedirectResponse
+    {
+        $model = $this->find($announcement)['model'];
+
+        $this->authorizeChange($request, $model);
+
+        $isExpired = $model->toRecordArray()['status'] === AnnouncementPresenter::EXPIRED;
+        $wasDraft = $model->isDraft();
+        $before = $this->describe($model);
+
+        $mayCloseTheOffice = $this->rbac->can($request->user(), AnnouncementPresenter::holidayPermission());
+        $data = $this->validated($request, $mayCloseTheOffice, $isExpired);
+
+        $model->update([
+            'title' => $data['title'],
+            'body' => AnnouncementForm::body($data['category'], $data),
+            'details' => AnnouncementForm::details($data),
+            'category' => $data['category'],
+            'audience' => $data['audience'],
+            'audience_department_id' => $data['audience'] === 'department'
+                ? $data['audience_department_id']
+                : null,
+            'for_clients' => $data['for_clients'] ?? false,
+            'starts_on' => $isExpired ? $model->starts_on : $data['starts_on'],
+            'ends_on' => $isExpired ? $model->ends_on : AnnouncementForm::endsOn($data['category'], $data),
+            'observed_from' => $data['observed_from'],
+            'observed_to' => $data['observed_to'],
+            // Only a draft can go up from here. Nothing posted falls back to one.
+            'published_at' => $model->published_at ?? (($data['publish'] ?? false) ? now() : null),
+            'pinned' => $data['pinned'] ?? false,
+        ]);
+
+        $this->audit->record(
+            action: $wasDraft && ! $model->isDraft() ? AuditLog::ANNOUNCEMENT_POSTED : AuditLog::ANNOUNCEMENT_EDITED,
+            actor: $request->user(),
+            entityType: 'announcement',
+            entityId: $model->reference,
+            before: $before,
+            after: $this->describe($model),
+            request: $request,
+        );
+
+        return redirect()
+            ->route('announcements.show', ['announcement' => $model->reference])
+            ->with('status', 'Your changes are saved.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * Stop a scheduled post before it goes up, keeping it as a draft.
+     *
+     * Back to a draft rather than gone, so it can be corrected and posted again.
+     * A draft closes nothing, so this also reopens any days it would have closed.
+     */
+    public function cancel(Request $request, string $announcement): RedirectResponse
+    {
+        $record = $this->find($announcement);
+        $model = $record['model'];
+
+        $this->authorizeChange($request, $model);
+
+        if ($record['status'] !== AnnouncementPresenter::SCHEDULED) {
+            return redirect()
+                ->route('announcements.show', ['announcement' => $model->reference])
+                ->with('status', 'Only a scheduled announcement can be cancelled.')
+                ->with('status_tone', 'info');
+        }
+
+        $model->update(['published_at' => null]);
+
+        $this->audit->record(
+            action: AuditLog::ANNOUNCEMENT_CANCELLED,
+            actor: $request->user(),
+            entityType: 'announcement',
+            entityId: $model->reference,
+            before: 'scheduled',
+            after: 'draft · '.$this->describe($model),
+            request: $request,
+        );
+
+        return redirect()
+            ->route('announcements.show', ['announcement' => $model->reference])
+            ->with('status', 'Cancelled. It is a draft now and will not go on the board.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * Delete a post for good.
+     *
+     * The row goes, so the audit entry keeps the whole text. Deleting a closure
+     * reopens its days, which can retroactively mark people absent, and the page
+     * says so before the button is reachable.
+     */
+    public function destroy(Request $request, string $announcement): RedirectResponse
+    {
+        $model = $this->find($announcement)['model'];
+
+        $this->authorizeChange($request, $model);
+
+        $closedTheOffice = $model->observed_from !== null && ! $model->isDraft();
+
+        $this->audit->record(
+            action: AuditLog::ANNOUNCEMENT_DELETED,
+            actor: $request->user(),
+            entityType: 'announcement',
+            entityId: $model->reference,
+            before: $this->describe($model).' · '.$model->body,
+            request: $request,
+        );
+
+        $model->delete();
+
+        return redirect()
+            ->route('announcements.manage')
+            ->with('status', $closedTheOffice
+                ? 'Deleted. The days it closed are working days again.'
+                : 'Deleted.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * Whoever may post may change a post, except one that closes the office.
+     * Changing that changes attendance, so it takes the same permission as
+     * declaring it did.
+     */
+    protected function authorizeChange(Request $request, Announcement $announcement): void
+    {
+        abort_if(
+            $announcement->observed_from !== null
+                && ! $this->rbac->can($request->user(), AnnouncementPresenter::holidayPermission()),
+            403,
+        );
     }
 
     /**
@@ -341,6 +501,8 @@ class AnnouncementController extends Controller
             'activeNav' => 'announcements',
             'announcement' => $record,
             'canPost' => $this->rbac->can($request->user(), config('announcements.post_permission')),
+            'canChange' => $record['observed_from'] === null
+                || $this->rbac->can($request->user(), AnnouncementPresenter::holidayPermission()),
         ]);
     }
 
@@ -364,7 +526,7 @@ class AnnouncementController extends Controller
     /**
      * @return array<string, mixed>
      */
-    protected function validated(Request $request, bool $mayCloseTheOffice): array
+    protected function validated(Request $request, bool $mayCloseTheOffice, bool $keepsBoardDates = false): array
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:200'],
@@ -379,9 +541,9 @@ class AnnouncementController extends Controller
                     ->where('list', MasterDataItem::DEPARTMENTS)
                     ->where('is_active', true),
             ],
-            'starts_on' => ['required', 'date'],
+            'starts_on' => [$keepsBoardDates ? 'nullable' : 'required', 'date'],
             // The notice window. Nullable means it never comes down on its own.
-            'ends_on' => ['nullable', 'date', 'after_or_equal:starts_on'],
+            'ends_on' => $keepsBoardDates ? ['nullable', 'date'] : ['nullable', 'date', 'after_or_equal:starts_on'],
             /*
              * The days the office is SHUT - a different range from the two
              * above, and the reason this form is an attendance write. Bounded

@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Announcement;
 use Illuminate\Support\Carbon;
 
 /**
@@ -96,6 +97,61 @@ class AnnouncementForm
         }
 
         return max(Carbon::parse($lastDay)->toDateString(), Carbon::parse($data['starts_on'])->toDateString());
+    }
+
+    /**
+     * The answers to keep, so the post can be opened for editing later.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{event_date: string|null, event_time: string|null, event_place: string|null, message: string}
+     */
+    public static function details(array $data): array
+    {
+        return [
+            'event_date' => $data['event_date'] ?? null,
+            'event_time' => $data['event_time'] ?? null,
+            'event_place' => $data['event_place'] ?? null,
+            'message' => trim((string) ($data['body'] ?? '')),
+        ];
+    }
+
+    /**
+     * What the form shows when a post is opened for editing.
+     *
+     * A post from before `details` existed has only its finished text, so that is
+     * the message, less the closure sentence the form writes again from the dates.
+     *
+     * @return array<string, mixed>
+     */
+    public static function valuesFrom(Announcement $announcement): array
+    {
+        $from = $announcement->observed_from?->toDateString();
+        $to = $announcement->observed_to?->toDateString();
+        $details = $announcement->details;
+
+        $message = $details['message'] ?? $announcement->body;
+
+        if ($details === null && $from !== null) {
+            $message = trim(str_replace('The office is closed '.self::closureText($from, $to).'.', '', $message));
+        }
+
+        return [
+            'title' => $announcement->title,
+            'category' => $announcement->category,
+            'body' => $message,
+            'event_date' => $details['event_date'] ?? null,
+            'event_time' => $details['event_time'] ?? null,
+            'event_place' => $details['event_place'] ?? null,
+            'audience' => $announcement->audience,
+            'audience_department_id' => $announcement->audience_department_id,
+            'for_clients' => $announcement->for_clients,
+            'starts_on' => $announcement->starts_on->toDateString(),
+            'ends_on' => $announcement->ends_on?->toDateString(),
+            'closes_office' => $from !== null ? '1' : '0',
+            'observed_from' => $from,
+            'observed_to' => $to,
+            'pinned' => $announcement->pinned,
+        ];
     }
 
     protected static function closureText(string $from, ?string $to): string

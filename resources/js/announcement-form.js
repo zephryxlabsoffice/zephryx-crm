@@ -16,6 +16,10 @@ function initAnnouncementForm() {
     const forms = JSON.parse(form.dataset.anForms);
     const canClose = form.dataset.anCanClose === '1';
     const today = form.dataset.anToday;
+    const startDefault = form.dataset.anStartDefault;
+    const alreadyUp = form.dataset.anAlreadyUp === '1';
+    const offBoard = form.dataset.anOffBoard === '1';
+    const saveOnly = form.dataset.anSaveOnly === '1';
 
     const one = (name) => form.querySelector(`[data-an="${name}"]`);
     const picked = (name) => form.querySelector(`input[name="${name}"]:checked`)?.value ?? '';
@@ -73,10 +77,19 @@ function initAnnouncementForm() {
 
         lines.push(`Who sees it: ${readers}${one('for-clients').checked ? ', and clients' : ''}.`);
 
+        if (offBoard) {
+            lines.push('It stays off the board.');
+
+            return lines;
+        }
+
         const startsOn = one('starts-on').value;
-        lines.push(picked('an_when') === 'later' && startsOn > today
-            ? `Goes on the board on ${longDate(startsOn)}.`
-            : 'Goes on the board straight away.');
+
+        if (picked('an_when') === 'later' && startsOn > today) {
+            lines.push(`Goes on the board on ${longDate(startsOn)}.`);
+        } else {
+            lines.push(alreadyUp ? 'Stays on the board.' : 'Goes on the board straight away.');
+        }
 
         const endsOn = autoEndDate || one('ends-on').value;
         lines.push(endsOn
@@ -140,7 +153,7 @@ function initAnnouncementForm() {
         one('starts-on-field').hidden = !later;
 
         if (!later) {
-            one('starts-on').value = today;
+            one('starts-on').value = startDefault;
         }
 
         let autoEndDate = '';
@@ -155,6 +168,11 @@ function initAnnouncementForm() {
         show(one('ends-on-field'), !endsByItself);
         one('ends-auto').hidden = !endsByItself;
 
+        // Off the board stays off: correcting it must not move its dates.
+        if (offBoard) {
+            show(one('window'), false);
+        }
+
         one('summary').replaceChildren(...summaryLines(category, config, closes, autoEndDate).map((text) => {
             const item = document.createElement('li');
             item.textContent = text;
@@ -162,7 +180,9 @@ function initAnnouncementForm() {
             return item;
         }));
 
-        one('post-button').textContent = later && one('starts-on').value > today ? 'Schedule it' : 'Post now';
+        if (!saveOnly) {
+            one('post-button').textContent = later && one('starts-on').value > today ? 'Schedule it' : 'Post now';
+        }
     };
 
     form.addEventListener('change', update);

@@ -61,9 +61,9 @@ use Illuminate\Support\Carbon;
  *    see AttendancePresenter::holidayLooksWrong. It needs nothing maintained,
  *    which is the whole reason it is a detector and not a second list.
  *
- * TODO (backend phase): editing or removing observed dates on a PAST holiday
- * retroactively changes whether people were absent, and needs an audit entry
- * naming who and when (§6).
+ * Editing or removing observed dates on a PAST holiday retroactively changes
+ * whether people were absent, so both need `announcements.holiday` and leave an
+ * audit entry naming who, when and the dates before and after (§6).
  * ─────────────────────────────────────────────────────────────────────────────
  */
 class Holidays

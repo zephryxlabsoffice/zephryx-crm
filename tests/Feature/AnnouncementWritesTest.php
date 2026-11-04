@@ -485,6 +485,222 @@ class AnnouncementWritesTest extends TestCase
     }
 
     /* ══════════════════════════════════════════════════════════════════════
+       EDITING, CANCELLING, DELETING
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_correcting_a_closure_date_moves_the_closure_and_rewrites_the_text(): void
+    {
+        $this->signInAsHr();
+
+        $typed = Carbon::today()->addDays(4);
+        $meant = Carbon::today()->addDays(14);
+        $announcement = $this->postedHoliday($typed);
+
+        $this->post('/announcements/'.$announcement->reference.'/update', [
+            'title' => 'Diwali',
+            'category' => 'holiday',
+            'closes_office' => 1,
+            'observed_from' => $meant->toDateString(),
+            'audience' => 'everyone',
+            'starts_on' => Carbon::today()->toDateString(),
+        ])->assertSessionHasNoErrors()->assertRedirect();
+
+        $announcement->refresh();
+
+        $this->assertNull(Holidays::on($typed));
+        $this->assertSame('Diwali', Holidays::on($meant));
+        $this->assertSame('The office is closed on '.$meant->format('l j F Y').'.', $announcement->body);
+        $this->assertSame($meant->toDateString(), $announcement->ends_on->toDateString());
+        $this->assertNotNull($announcement->published_at);
+
+        $entry = DB::table('audit_log')->where('action', AuditLog::ANNOUNCEMENT_EDITED)->sole();
+
+        $this->assertStringContainsString($typed->format('d M Y'), json_encode($entry));
+        $this->assertStringContainsString($meant->format('d M Y'), json_encode($entry));
+    }
+
+    public function test_the_edit_form_opens_with_the_answers_not_the_written_text(): void
+    {
+        $this->signInAsHr();
+
+        $this->post('/announcements', $this->validPayload([
+            'title' => 'Annual day',
+            'category' => 'event',
+            'body' => 'Bring a friend.',
+            'event_date' => Carbon::today()->addDays(10)->toDateString(),
+            'event_place' => 'Main hall',
+        ]));
+
+        $this->get('/announcements/'.Announcement::firstOrFail()->reference.'/edit')
+            ->assertOk()
+            ->assertSee('>Bring a friend.</textarea>', false)
+            ->assertSee('value="Main hall"', false)
+            ->assertSee('value="event" required checked', false);
+    }
+
+    public function test_a_post_from_before_details_were_kept_can_still_be_corrected(): void
+    {
+        $this->signInAsHr();
+
+        $closure = Carbon::today()->addDays(4);
+        $announcement = $this->postedHoliday($closure);
+        $sentence = 'The office is closed on '.$closure->format('l j F Y').'.';
+        $announcement->update(['details' => null, 'body' => $sentence."\n\nCalls moved."]);
+
+        $this->get('/announcements/'.$announcement->reference.'/edit')
+            ->assertSee('>Calls moved.</textarea>', false);
+    }
+
+    public function test_a_draft_can_go_up_from_the_edit_form_and_a_posted_one_stays_up(): void
+    {
+        $this->signInAsHr();
+        $this->post('/announcements', $this->validPayload(['publish' => 0]));
+
+        $announcement = Announcement::firstOrFail();
+        $page = '/announcements/'.$announcement->reference.'/update';
+
+        $this->post($page, $this->validPayload(['publish' => 0]))->assertRedirect();
+        $this->assertNull($announcement->fresh()->published_at);
+
+        $this->post($page, $this->validPayload(['publish' => 1]))->assertRedirect();
+        $this->assertNotNull($announcement->fresh()->published_at);
+        $this->assertSame(1, DB::table('audit_log')->where('action', AuditLog::ANNOUNCEMENT_POSTED)->count());
+
+        $this->post($page, $this->validPayload(['publish' => 0]))->assertRedirect();
+        $this->assertNotNull($announcement->fresh()->published_at);
+    }
+
+    public function test_correcting_an_expired_post_does_not_put_it_back_on_the_board(): void
+    {
+        $this->signInAsHr();
+        $this->post('/announcements', $this->validPayload());
+
+        $announcement = Announcement::firstOrFail();
+        $this->post('/announcements/'.$announcement->reference.'/expire');
+
+        $this->post('/announcements/'.$announcement->reference.'/update', [
+            'title' => 'Corrected',
+            'body' => 'Corrected text.',
+            'category' => 'policy',
+            'audience' => 'everyone',
+        ])->assertSessionHasNoErrors();
+
+        $fresh = $announcement->fresh();
+
+        $this->assertSame('Corrected', $fresh->title);
+        $this->assertSame(AnnouncementPresenter::EXPIRED, $fresh->toRecordArray()['status']);
+    }
+
+    public function test_an_edit_is_held_to_the_same_rules_as_a_new_post(): void
+    {
+        $this->signInAsHr();
+        $this->post('/announcements', $this->validPayload());
+
+        $this->post('/announcements/'.Announcement::firstOrFail()->reference.'/update', $this->validPayload(['body' => '']))
+            ->assertSessionHasErrors('body');
+    }
+
+    public function test_only_the_holiday_permission_may_change_a_post_that_closes_the_office(): void
+    {
+        $this->signInAsHr();
+
+        $closure = Carbon::today()->addDays(5);
+        $announcement = $this->postedHoliday($closure);
+        $page = '/announcements/'.$announcement->reference;
+
+        $this->signInAsPoster();
+
+        $this->get($page.'/edit')->assertForbidden();
+        $this->post($page.'/update', $this->validPayload())->assertForbidden();
+        $this->post($page.'/delete')->assertForbidden();
+        $this->get($page)->assertOk()->assertDontSee($page.'/edit', false)->assertDontSee($page.'/delete', false);
+
+        $this->assertSame('Diwali', Holidays::on($closure));
+    }
+
+    public function test_somebody_who_may_only_read_cannot_change_anything(): void
+    {
+        $this->signInAsHr();
+        $this->post('/announcements', $this->validPayload());
+
+        $page = '/announcements/'.Announcement::firstOrFail()->reference;
+
+        $this->signInAsEmployee();
+
+        $this->get($page.'/edit')->assertForbidden();
+        $this->post($page.'/update', $this->validPayload())->assertForbidden();
+        $this->post($page.'/cancel')->assertForbidden();
+        $this->post($page.'/delete')->assertForbidden();
+        $this->assertSame(1, Announcement::count());
+    }
+
+    public function test_cancelling_a_scheduled_post_makes_it_a_draft_that_closes_nothing(): void
+    {
+        $this->signInAsHr();
+
+        $closure = Carbon::today()->addDays(9);
+
+        $this->post('/announcements', $this->validPayload([
+            'category' => 'holiday',
+            'observed_from' => $closure->toDateString(),
+            'starts_on' => Carbon::today()->addDays(3)->toDateString(),
+        ]));
+
+        $announcement = Announcement::firstOrFail();
+        $this->assertNotNull(Holidays::on($closure));
+
+        $this->post('/announcements/'.$announcement->reference.'/cancel')->assertRedirect();
+
+        $this->assertSame(AnnouncementPresenter::DRAFT, $announcement->fresh()->toRecordArray()['status']);
+        $this->assertNull(Holidays::on($closure));
+        $this->assertSame(1, DB::table('audit_log')->where('action', AuditLog::ANNOUNCEMENT_CANCELLED)->count());
+    }
+
+    public function test_only_a_scheduled_post_can_be_cancelled(): void
+    {
+        $this->signInAsHr();
+        $this->post('/announcements', $this->validPayload());
+
+        $announcement = Announcement::firstOrFail();
+
+        $this->post('/announcements/'.$announcement->reference.'/cancel')->assertRedirect();
+
+        $this->assertNotNull($announcement->fresh()->published_at);
+    }
+
+    public function test_deleting_removes_the_post_and_the_audit_log_keeps_its_text(): void
+    {
+        $this->signInAsHr();
+        $this->post('/announcements', $this->validPayload(['body' => 'Words worth keeping.']));
+
+        $reference = Announcement::firstOrFail()->reference;
+
+        $this->post('/announcements/'.$reference.'/delete')->assertRedirect(route('announcements.manage'));
+
+        $this->assertSame(0, Announcement::count());
+        $this->get('/announcements/'.$reference)->assertNotFound();
+        $this->assertStringContainsString(
+            'Words worth keeping.',
+            json_encode(DB::table('audit_log')->where('action', AuditLog::ANNOUNCEMENT_DELETED)->sole()),
+        );
+    }
+
+    public function test_deleting_a_closure_reopens_its_days_and_warns_first(): void
+    {
+        $this->signInAsHr();
+
+        $closure = Carbon::today()->addDays(5);
+        $announcement = $this->postedHoliday($closure);
+        $page = '/announcements/'.$announcement->reference;
+
+        $this->get($page)->assertSee('The office is no longer closed on');
+
+        $this->post($page.'/delete')->assertRedirect();
+
+        $this->assertNull(Holidays::on($closure));
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
        WHAT IS NEVER A ROW
        ══════════════════════════════════════════════════════════════════════ */
 
@@ -521,6 +737,21 @@ class AnnouncementWritesTest extends TestCase
             'starts_on' => Carbon::today()->toDateString(),
             'publish' => 1,
         ];
+    }
+
+    protected function postedHoliday(Carbon $closure): Announcement
+    {
+        $this->post('/announcements', [
+            'title' => 'Diwali',
+            'category' => 'holiday',
+            'closes_office' => 1,
+            'observed_from' => $closure->toDateString(),
+            'audience' => 'everyone',
+            'starts_on' => Carbon::today()->toDateString(),
+            'publish' => 1,
+        ])->assertSessionHasNoErrors();
+
+        return Announcement::latest('id')->firstOrFail();
     }
 
     protected function signInAsEmployee(): Employee

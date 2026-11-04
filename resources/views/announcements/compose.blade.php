@@ -1,31 +1,41 @@
 @extends('layouts.app')
 
-@section('title', 'Post an announcement')
+@section('title', $announcement ? 'Edit announcement' : 'Post an announcement')
 
 @section('content')
     @php
         $defaultForm = (array) config('announcements.default_form');
-        $isScheduling = old('starts_on') !== null && old('starts_on') > now()->toDateString();
+        $today = now()->toDateString();
+        $value = fn (string $field, mixed $default = null) => old($field, $values[$field] ?? $default);
+        $isTicked = fn (string $field) => session()->hasOldInput() ? (bool) old($field) : (bool) ($values[$field] ?? false);
+        $isScheduling = $value('starts_on') !== null && $value('starts_on') > $today;
+        $isPosted = $announcement !== null && ! $announcement->isDraft();
+        $isOffTheBoard = $status === \App\Support\AnnouncementPresenter::EXPIRED;
+        $savedStart = $values['starts_on'] ?? $today;
     @endphp
 
     <div class="page-hd-row">
         <div class="page-hd">
-            <a class="back-link" href="{{ route('announcements.manage') }}">
+            <a class="back-link" href="{{ $announcement ? route('announcements.show', ['announcement' => $announcement->reference]) : route('announcements.manage') }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polyline points="15 18 9 12 15 6"/>
                 </svg>
-                Manage
+                {{ $announcement ? 'Back to the announcement' : 'Manage' }}
             </a>
-            <h1>Post an announcement</h1>
-            <p>Choose what it is about first. The form then asks only what that kind needs.</p>
+            <h1>{{ $announcement ? 'Edit announcement' : 'Post an announcement' }}</h1>
+            <p>{{ $announcement ? 'Change anything below. The text people read is written again from your answers.' : 'Choose what it is about first. The form then asks only what that kind needs.' }}</p>
         </div>
     </div>
 
-    <form class="an-form" method="POST" action="{{ route('announcements.store') }}"
+    <form class="an-form" method="POST" action="{{ $announcement ? route('announcements.update', ['announcement' => $announcement->reference]) : route('announcements.store') }}"
           data-an-form
           data-an-forms="{{ json_encode($forms) }}"
           data-an-can-close="{{ $canDeclareHoliday ? '1' : '0' }}"
-          data-an-today="{{ now()->toDateString() }}">
+          data-an-today="{{ $today }}"
+          data-an-start-default="{{ $savedStart <= $today ? $savedStart : $today }}"
+          data-an-already-up="{{ $isPosted && $savedStart <= $today ? '1' : '0' }}"
+          data-an-off-board="{{ $isOffTheBoard ? '1' : '0' }}"
+          data-an-save-only="{{ $isPosted ? '1' : '0' }}">
         @csrf
 
         <section class="an-form-grid">
@@ -39,7 +49,7 @@
                              employee records. See AnnouncementPresenter::authorableCategories(). --}}
                         @foreach ($categories as $key => $meta)
                             <label class="an-kind">
-                                <input type="radio" name="category" value="{{ $key }}" required @checked(old('category') === (string) $key)>
+                                <input type="radio" name="category" value="{{ $key }}" required @checked($value('category') === (string) $key)>
                                 <span class="an-kind-box">
                                     <span class="an-card-ic {{ $meta['tone'] }}" aria-hidden="true">
                                         @include('partials.nav-icon', ['icon' => $meta['icon']])
@@ -63,7 +73,7 @@
                         <div class="form-grid">
                             <div class="form-field an-form-wide">
                                 <label class="form-field-lbl" for="an-title" data-an="title-label">{{ $defaultForm['title_label'] }}</label>
-                                <input id="an-title" data-an="title" name="title" type="text" required maxlength="200" placeholder="{{ $defaultForm['title_placeholder'] }}" value="{{ old('title') }}">
+                                <input id="an-title" data-an="title" name="title" type="text" required maxlength="200" placeholder="{{ $defaultForm['title_placeholder'] }}" value="{{ $value('title') }}">
                                 @error('title') <span class="field-error">{{ $message }}</span> @enderror
                             </div>
 
@@ -73,20 +83,20 @@
                                          nobody is marked absent. A draft closes nothing. --}}
                                     <fieldset class="form-field an-form-wide an-choice">
                                         <legend class="form-field-lbl">Is the office closed?</legend>
-                                        <label><input type="radio" name="closes_office" value="1" @checked(old('closes_office', '1') === '1')> Yes, the office is closed</label>
-                                        <label><input type="radio" name="closes_office" value="0" @checked(old('closes_office', '1') === '0')> No, this is only a reminder</label>
+                                        <label><input type="radio" name="closes_office" value="1" @checked((string) $value('closes_office', '1') === '1')> Yes, the office is closed</label>
+                                        <label><input type="radio" name="closes_office" value="0" @checked((string) $value('closes_office', '1') === '0')> No, this is only a reminder</label>
                                     </fieldset>
 
                                     <div class="an-form-wide an-subgrid" data-an="closure">
                                         <div class="form-field">
                                             <label class="form-field-lbl" for="an-closed-from">First day closed</label>
-                                            <input id="an-closed-from" data-an="closed-from" name="observed_from" type="date" value="{{ old('observed_from') }}">
+                                            <input id="an-closed-from" data-an="closed-from" name="observed_from" type="date" value="{{ $value('observed_from') }}">
                                             @error('observed_from') <span class="field-error">{{ $message }}</span> @enderror
                                         </div>
 
                                         <div class="form-field">
                                             <label class="form-field-lbl" for="an-closed-to">Last day closed <span class="an-optional">(same day if blank)</span></label>
-                                            <input id="an-closed-to" data-an="closed-to" name="observed_to" type="date" value="{{ old('observed_to') }}">
+                                            <input id="an-closed-to" data-an="closed-to" name="observed_to" type="date" value="{{ $value('observed_to') }}">
                                             @error('observed_to') <span class="field-error">{{ $message }}</span> @enderror
                                         </div>
 
@@ -112,26 +122,26 @@
                             <div class="an-form-wide an-subgrid" data-an="event">
                                 <div class="form-field" data-an="event-date-field">
                                     <label class="form-field-lbl" for="an-event-date" data-an="event-date-label">Date</label>
-                                    <input id="an-event-date" data-an="event-date" name="event_date" type="date" value="{{ old('event_date') }}">
+                                    <input id="an-event-date" data-an="event-date" name="event_date" type="date" value="{{ $value('event_date') }}">
                                     @error('event_date') <span class="field-error">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div class="form-field" data-an="event-time-field">
                                     <label class="form-field-lbl" for="an-event-time">Time <span class="an-optional">(optional)</span></label>
-                                    <input id="an-event-time" name="event_time" type="time" value="{{ old('event_time') }}">
+                                    <input id="an-event-time" name="event_time" type="time" value="{{ $value('event_time') }}">
                                     @error('event_time') <span class="field-error">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div class="form-field an-form-wide" data-an="event-place-field">
                                     <label class="form-field-lbl" for="an-event-place" data-an="event-place-label">Place</label>
-                                    <input id="an-event-place" name="event_place" type="text" maxlength="200" value="{{ old('event_place') }}">
+                                    <input id="an-event-place" name="event_place" type="text" maxlength="200" value="{{ $value('event_place') }}">
                                     @error('event_place') <span class="field-error">{{ $message }}</span> @enderror
                                 </div>
                             </div>
 
                             <div class="form-field an-form-wide">
                                 <label class="form-field-lbl" for="an-body" data-an="body-label">{{ $defaultForm['body_label'] }}</label>
-                                <textarea id="an-body" data-an="body" name="body" rows="5" maxlength="5000" placeholder="{{ $defaultForm['body_placeholder'] }}">{{ old('body') }}</textarea>
+                                <textarea id="an-body" data-an="body" name="body" rows="5" maxlength="5000" placeholder="{{ $defaultForm['body_placeholder'] }}">{{ $value('body') }}</textarea>
                                 @error('body') <span class="field-error">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -145,7 +155,7 @@
                                 <label class="form-field-lbl" for="an-audience">Staff</label>
                                 <select id="an-audience" data-an="audience" name="audience" required>
                                     @foreach ($audiences as $key => $label)
-                                        <option value="{{ $key }}" @selected(old('audience') === (string) $key)>{{ $label }}</option>
+                                        <option value="{{ $key }}" @selected($value('audience') === (string) $key)>{{ $label }}</option>
                                     @endforeach
                                 </select>
                                 @error('audience') <span class="field-error">{{ $message }}</span> @enderror
@@ -157,7 +167,7 @@
                                     <option value="">Choose</option>
                                     @foreach ($departments as $department)
                                         <option value="{{ $department->id }}"
-                                            @selected((int) old('audience_department_id') === $department->id)>
+                                            @selected((int) $value('audience_department_id') === $department->id)>
                                             {{ $department->name }}
                                         </option>
                                     @endforeach
@@ -169,7 +179,7 @@
 
                             <div class="form-field an-form-wide">
                                 <label class="form-field-lbl" for="an-for-clients">
-                                    <input id="an-for-clients" data-an="for-clients" name="for_clients" type="checkbox" value="1" @checked(old('for_clients'))>
+                                    <input id="an-for-clients" data-an="for-clients" name="for_clients" type="checkbox" value="1" @checked($isTicked('for_clients'))>
                                     Also show it to clients on their portal
                                 </label>
                             </div>
@@ -180,6 +190,11 @@
                         <div class="section-hd"><span class="an-step-no">4</span> When does it go on the board?</div>
 
                         <div class="form-grid">
+                            @if ($isOffTheBoard)
+                                <p class="pay-hint an-form-wide">This has come off the board. Saving a correction does not put it back.</p>
+                            @endif
+
+                            <div class="an-form-wide an-subgrid" data-an="window">
                             <fieldset class="form-field an-form-wide an-choice">
                                 <legend class="sr-only">When it goes on the board</legend>
                                 <label><input type="radio" name="an_when" value="now" @checked(! $isScheduling)> Straight away</label>
@@ -188,22 +203,23 @@
 
                             <div class="form-field" data-an="starts-on-field">
                                 <label class="form-field-lbl" for="an-from">Show from</label>
-                                <input id="an-from" data-an="starts-on" name="starts_on" type="date" required value="{{ old('starts_on', now()->toDateString()) }}">
+                                <input id="an-from" data-an="starts-on" name="starts_on" type="date" required value="{{ $value('starts_on', $today) }}">
                                 @error('starts_on') <span class="field-error">{{ $message }}</span> @enderror
                             </div>
 
                             <div class="form-field" data-an="ends-on-field">
                                 <label class="form-field-lbl" for="an-to">Take off the board on <span class="an-optional">(optional)</span></label>
-                                <input id="an-to" data-an="ends-on" name="ends_on" type="date" value="{{ old('ends_on') }}">
+                                <input id="an-to" data-an="ends-on" name="ends_on" type="date" value="{{ $value('ends_on') }}">
                                 @error('ends_on') <span class="field-error">{{ $message }}</span> @enderror
                                 <span class="pay-hint">Leave blank to keep it until someone takes it down.</span>
                             </div>
 
                             <p class="pay-hint an-form-wide" data-an="ends-auto" hidden>It comes off the board by itself after that date.</p>
+                            </div>
 
                             <div class="form-field an-form-wide">
                                 <label class="form-field-lbl" for="an-pinned">
-                                    <input id="an-pinned" name="pinned" type="checkbox" value="1" @checked(old('pinned'))>
+                                    <input id="an-pinned" name="pinned" type="checkbox" value="1" @checked($isTicked('pinned'))>
                                     Keep it at the top of the board
                                 </label>
                             </div>
@@ -221,13 +237,15 @@
 
                     <div class="an-submit">
                         <button class="btn btn-primary" type="submit" name="publish" value="1" data-an="post-button">
-                            Post now
+                            {{ $isPosted ? 'Save changes' : 'Post now' }}
                         </button>
                         {{-- Save and post are two acts. An announcement sent by
                              accident cannot be unsent. --}}
-                        <button class="btn btn-outline" type="submit" name="publish" value="0">
-                            Save as draft
-                        </button>
+                        @unless ($isPosted)
+                            <button class="btn btn-outline" type="submit" name="publish" value="0">
+                                Save as draft
+                            </button>
+                        @endunless
                     </div>
                 </section>
             </aside>

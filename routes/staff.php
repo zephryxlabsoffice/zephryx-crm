@@ -800,6 +800,22 @@ Route::get('/announcements/{announcement}', [AnnouncementController::class, 'sho
  * stored one would be wrong the following year and would survive somebody
  * opting out of their own being announced.
  */
+Route::get('/announcements/{announcement}/edit', [AnnouncementController::class, 'edit'])
+    ->where('announcement', '[A-Za-z0-9-]{1,40}')
+    ->middleware('permission:announcements.post')
+    ->name('announcements.edit');
+Route::post('/announcements/{announcement}/update', [AnnouncementController::class, 'update'])
+    ->where('announcement', '[A-Za-z0-9-]{1,40}')
+    ->middleware('permission:announcements.post')
+    ->name('announcements.update');
+Route::post('/announcements/{announcement}/cancel', [AnnouncementController::class, 'cancel'])
+    ->where('announcement', '[A-Za-z0-9-]{1,40}')
+    ->middleware('permission:announcements.post')
+    ->name('announcements.cancel');
+Route::post('/announcements/{announcement}/delete', [AnnouncementController::class, 'destroy'])
+    ->where('announcement', '[A-Za-z0-9-]{1,40}')
+    ->middleware('permission:announcements.post')
+    ->name('announcements.destroy');
 Route::post('/announcements', [AnnouncementController::class, 'store'])
     ->middleware('permission:announcements.post')
     ->name('announcements.store');

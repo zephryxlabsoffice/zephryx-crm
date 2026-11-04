@@ -376,6 +376,13 @@
 .an-subgrid .an-closure-warn { margin: 0; }
 .an-summary { display: flex; flex-direction: column; gap: 9px; margin: 0; padding: 4px 20px 16px 36px; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
 
+.an-delete { padding: 14px 20px; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
+.an-delete summary { cursor: pointer; font-weight: 600; color: var(--muted); }
+.an-delete p { margin: 10px 0 0; }
+.an-delete-warn strong { color: var(--ink); }
+.an-delete form { margin-top: 12px; }
+.an-delete .btn { width: 100%; justify-content: center; }
+
 /* Composed notices carry their date and venue on lines of their own. */
 .an-card-body, .an-full-body p, .an-client-body { white-space: pre-line; }
 

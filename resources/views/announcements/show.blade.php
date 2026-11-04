@@ -32,6 +32,19 @@
 
         @if ($canPost && ! $isMilestone)
             <div class="hd-actions">
+                @if ($canChange)
+                    <a class="btn btn-outline" href="{{ route('announcements.edit', ['announcement' => $announcement['id']]) }}">Edit</a>
+                @endif
+
+                @if ($announcement['status'] === P::SCHEDULED && $canChange)
+                    <form method="POST" action="{{ route('announcements.cancel', ['announcement' => $announcement['id']]) }}">
+                        @csrf
+                        <button class="btn btn-outline" type="submit">
+                            Cancel scheduling
+                        </button>
+                    </form>
+                @endif
+
                 @if ($announcement['status'] === P::DRAFT)
                     <form method="POST" action="{{ route('announcements.publish', ['announcement' => $announcement['id']]) }}">
                         @csrf
@@ -150,6 +163,26 @@
                     @endif
                 </div>
             </section>
+
+            @if ($canPost && $canChange && ! $isMilestone)
+                {{-- Two steps, with what it does in between. Deleting cannot be undone. --}}
+                <section class="rail-card">
+                    <details class="an-delete">
+                        <summary>Delete this announcement</summary>
+                        <p>It is removed for good. Only the audit log keeps a copy.</p>
+                        @if (P::closure($announcement) !== null && $announcement['status'] !== P::DRAFT)
+                            <p class="an-delete-warn">
+                                <strong>The office is no longer closed on {{ P::closure($announcement) }}.</strong> Those days become working days again.
+                                Anyone who did not check in on a day already passed is marked absent for it.
+                            </p>
+                        @endif
+                        <form method="POST" action="{{ route('announcements.destroy', ['announcement' => $announcement['id']]) }}">
+                            @csrf
+                            <button class="btn btn-danger" type="submit">Yes, delete it</button>
+                        </form>
+                    </details>
+                </section>
+            @endif
         </aside>
     </section>
 @endsection
