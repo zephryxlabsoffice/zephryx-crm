@@ -33,6 +33,7 @@ class Notification extends Model
         'meeting' => 'meetings',
         'leave' => 'leave',
         'announcement' => 'announcements',
+        'eod' => 'tasks',
     ];
 
     protected $fillable = [

@@ -141,6 +141,9 @@
                             <span class="due-cell">
                                 <strong>{{ P::date($item['due']) }}</strong>
                                 <span class="{{ $due['state'] }}">{{ $due['label'] }}</span>
+                                @if ($item['starts_on'] && $item['starts_on'] > now()->toDateString())
+                                    <span>Starts {{ P::date($item['starts_on']) }}</span>
+                                @endif
                             </span>
                         </td>
 

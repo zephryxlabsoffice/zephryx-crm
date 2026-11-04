@@ -23,23 +23,12 @@
             @endif
 
             @if (auth()->user()->hasEmployeeBase())
-                <a class="btn btn-outline" href="{{ route('tasks.mine') }}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                    </svg>
-                    My Tasks
-                </a>
+                <a class="btn btn-outline" href="{{ route('tasks.eod') }}">Fill End of Day</a>
             @endif
-
-            <a class="btn btn-outline" href="{{ route('tasks.team') }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                </svg>
-                Team Tasks
-            </a>
         </div>
     </div>
+
+    @include('tasks.partials.section-tabs', ['sectionTab' => 'all'])
 
     @include('tasks.partials.kpis')
 

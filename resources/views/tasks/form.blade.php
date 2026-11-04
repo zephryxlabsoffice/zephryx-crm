@@ -178,6 +178,16 @@
                         </div>
 
                         <div class="form-field">
+                            <label class="form-field-lbl" for="task-starts">Starts on <span class="an-optional">(optional)</span></label>
+                            <input id="task-starts" name="starts_on" type="date"
+                                   value="{{ old('starts_on', $task?->starts_on?->toDateString()) }}">
+                            <span class="pay-hint">For work later on. It joins the person's End of Day form on this date.</span>
+                            @error('starts_on')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field">
                             <label class="form-field-lbl" for="task-due">Due</label>
                             <input id="task-due" name="due_on" type="date" required
                                    value="{{ old('due_on', $task?->due_on?->toDateString()) }}">

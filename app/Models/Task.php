@@ -34,12 +34,13 @@ class Task extends Model
 
     protected $fillable = [
         'reference', 'name', 'description', 'project_id', 'team_id',
-        'status', 'priority', 'due_on', 'completed_at',
+        'status', 'priority', 'starts_on', 'due_on', 'completed_at',
     ];
 
     protected function casts(): array
     {
         return [
+            'starts_on' => 'date',
             'due_on' => 'date',
             'completed_at' => 'datetime',
         ];
