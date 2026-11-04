@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use App\Support\AnnouncementPresenter;
+use App\Support\EmployeeDirectory;
+use App\Support\Rbac\Rbac;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * One authored post on the board.
@@ -61,6 +64,23 @@ class Announcement extends Model
     }
 
     /**
+     * When it goes on the board.
+     *
+     * Pressing Post on a future-dated notice stamps `published_at` today, and the
+     * notice still waits for `starts_on`, so the start date wins while it is ahead.
+     * A draft still has a date it would go up on, which is what the managing table
+     * sorts and schedules by.
+     */
+    protected function goesUpAt(): Carbon
+    {
+        if ($this->published_at === null) {
+            return $this->starts_on->copy()->setTime(9, 0);
+        }
+
+        return $this->starts_on->isFuture() ? $this->starts_on->copy()->startOfDay() : $this->published_at;
+    }
+
+    /**
      * The row shape the presenter, the board and Holidays all read.
      *
      * @return array<string, mixed>
@@ -75,17 +95,14 @@ class Announcement extends Model
             'category' => $this->category,
             'author' => $this->author?->user?->user_id,
             'author_record' => $this->author
-                ? \App\Support\EmployeeDirectory::row($this->author)
+                ? EmployeeDirectory::row($this->author)
                 : null,
             'audience' => $this->audience,
             'audience_value' => $this->audienceDepartment?->name,
             'for_clients' => $this->for_clients,
             'draft' => $this->isDraft(),
             'pinned' => $this->pinned,
-            'published_at' => $this->published_at?->toDateTimeString()
-                // A draft still has a date it would go up on, which is what the
-                // managing table sorts and schedules by.
-                ?? $this->starts_on->copy()->setTime(9, 0)->toDateTimeString(),
+            'published_at' => $this->goesUpAt()->toDateTimeString(),
             'expires_at' => $this->ends_on?->toDateString(),
             // The days the office is shut, which is NOT the window the notice is
             // up for. Null on everything that is not a closure.
@@ -123,6 +140,37 @@ class Announcement extends Model
             ->whereDate('starts_on', '<=', now()->toDateString())
             ->where(function (Builder $q) {
                 $q->whereNull('ends_on')->orWhereDate('ends_on', '>=', now()->toDateString());
+            });
+    }
+
+    /**
+     * What one person may read.
+     *
+     * Whoever may post manages the whole board, drafts included. Everyone else
+     * gets what has gone up (expired notices stay readable, because the attendance
+     * calendar links to them) and is addressed to them: everyone, their own
+     * department or, for a manager, managers only.
+     *
+     * @param  Builder<Announcement>  $query
+     * @return Builder<Announcement>
+     */
+    public function scopeVisibleTo(Builder $query, ?User $viewer): Builder
+    {
+        if ($viewer !== null && app(Rbac::class)->can($viewer, config('announcements.post_permission'))) {
+            return $query;
+        }
+
+        $departmentId = $viewer === null ? null : Employee::where('user_id', $viewer->id)->value('department_id');
+        $isManager = $viewer?->roles->contains('role_key', 'manager') ?? false;
+
+        return $query->published()
+            ->whereDate('starts_on', '<=', now()->toDateString())
+            ->where(function (Builder $q) use ($departmentId, $isManager) {
+                $q->where('audience', 'everyone')
+                    ->when($departmentId !== null, fn (Builder $q) => $q->orWhere(fn (Builder $q) => $q
+                        ->where('audience', 'department')
+                        ->where('audience_department_id', $departmentId)))
+                    ->when($isManager, fn (Builder $q) => $q->orWhere('audience', 'managers'));
             });
     }
 

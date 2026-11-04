@@ -11,16 +11,19 @@ use Illuminate\Support\Carbon;
 class AnnouncementPresenter
 {
     public const DRAFT = 'draft';
+
     public const SCHEDULED = 'scheduled';
+
     public const ACTIVE = 'active';
+
     public const EXPIRED = 'expired';
 
     /** @var array<string, array{0: string, 1: string, 2: string}> tone, label, meaning */
     protected const STATUSES = [
-        self::DRAFT => ['pill-gray', 'Draft', 'Written, not published - nobody else can see it'],
-        self::SCHEDULED => ['pill-blue', 'Scheduled', 'Goes up on its publish date'],
-        self::ACTIVE => ['pill-green', 'Active', 'On the board now'],
-        self::EXPIRED => ['pill-gray', 'Expired', 'Past its end date - kept, but off the board'],
+        self::DRAFT => ['pill-gray', 'Draft', 'Saved, not posted - only people who can post see it'],
+        self::SCHEDULED => ['pill-blue', 'Scheduled', 'Posted, and waiting for its start date - staff cannot read it yet'],
+        self::ACTIVE => ['pill-green', 'On the board', 'Live now - people can read it'],
+        self::EXPIRED => ['pill-gray', 'Expired', 'Past its end date or taken down - off the board, kept for the record'],
     ];
 
     /**
@@ -209,6 +212,25 @@ class AnnouncementPresenter
     public static function dateTime(Carbon|string|null $when): string
     {
         return $when === null ? '-' : Carbon::parse($when)->format('d M Y, g:i A');
+    }
+
+    /**
+     * The days a holiday notice closes the office, or null if it closes nothing.
+     *
+     * @param  array<string, mixed>  $announcement
+     */
+    public static function closure(array $announcement): ?string
+    {
+        $from = $announcement['observed_from'] ?? null;
+
+        if ($from === null) {
+            return null;
+        }
+
+        $to = $announcement['observed_to'] ?? $from;
+        $first = Carbon::parse($from)->format('D d M Y');
+
+        return $to === $from ? $first : $first.' to '.Carbon::parse($to)->format('D d M Y');
     }
 
     /**

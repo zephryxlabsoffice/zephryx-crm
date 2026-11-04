@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Announcement;
 use App\Models\Employee;
+use App\Models\MasterDataItem;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\AnnouncementPresenter;
@@ -272,6 +273,215 @@ class AnnouncementWritesTest extends TestCase
 
         $this->post('/announcements', $this->validPayload(['for_clients' => 1]))->assertRedirect();
         $this->assertTrue(Announcement::latest('id')->firstOrFail()->for_clients);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       THE FORM FOLLOWS THE CATEGORY
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_a_holiday_needs_only_its_name_and_dates(): void
+    {
+        $this->signInAsHr();
+
+        $closure = Carbon::today()->addDays(6);
+
+        $this->post('/announcements', [
+            'title' => 'Diwali',
+            'category' => 'holiday',
+            'closes_office' => 1,
+            'observed_from' => $closure->toDateString(),
+            'audience' => 'everyone',
+            'starts_on' => Carbon::today()->toDateString(),
+            'publish' => 1,
+        ])->assertSessionHasNoErrors();
+
+        $announcement = Announcement::firstOrFail();
+
+        $this->assertSame('The office is closed on '.$closure->format('l j F Y').'.', $announcement->body);
+        $this->assertSame($closure->toDateString(), $announcement->observed_to->toDateString());
+        $this->assertSame($closure->toDateString(), $announcement->ends_on->toDateString());
+        $this->assertSame('Diwali', Holidays::on($closure));
+    }
+
+    public function test_saying_the_office_closes_needs_a_date(): void
+    {
+        $this->signInAsHr();
+
+        $this->post('/announcements', $this->validPayload(['category' => 'holiday', 'closes_office' => 1]))
+            ->assertSessionHasErrors('observed_from');
+    }
+
+    public function test_a_holiday_reminder_closes_nothing_and_needs_a_message(): void
+    {
+        $this->signInAsHr();
+
+        $closure = Carbon::today()->addDays(6)->toDateString();
+        $reminder = [
+            'category' => 'holiday',
+            'closes_office' => 0,
+            'observed_from' => $closure,
+        ];
+
+        $this->post('/announcements', $this->validPayload($reminder + ['body' => '']))
+            ->assertSessionHasErrors('body');
+
+        $this->post('/announcements', $this->validPayload($reminder))->assertSessionHasNoErrors();
+
+        $this->assertNull(Announcement::firstOrFail()->observed_from);
+        $this->assertNull(Holidays::on($closure));
+    }
+
+    public function test_closure_dates_on_another_category_are_not_kept(): void
+    {
+        $this->signInAsHr();
+
+        $this->post('/announcements', $this->validPayload([
+            'category' => 'event',
+            'event_date' => Carbon::today()->addDay()->toDateString(),
+            'observed_from' => Carbon::today()->addDay()->toDateString(),
+        ]))->assertSessionHasNoErrors();
+
+        $this->assertNull(Announcement::firstOrFail()->observed_from);
+    }
+
+    public function test_an_event_needs_a_date_and_its_details_reach_the_text(): void
+    {
+        $this->signInAsHr();
+
+        $this->post('/announcements', $this->validPayload(['category' => 'event']))
+            ->assertSessionHasErrors('event_date');
+
+        $eventDay = Carbon::today()->addDays(10);
+
+        $this->post('/announcements', [
+            'title' => 'Annual day',
+            'category' => 'event',
+            'event_date' => $eventDay->toDateString(),
+            'event_time' => '15:30',
+            'event_place' => 'Main hall',
+            'audience' => 'everyone',
+            'starts_on' => Carbon::today()->toDateString(),
+            'publish' => 1,
+        ])->assertSessionHasNoErrors();
+
+        $announcement = Announcement::firstOrFail();
+
+        $this->assertSame(
+            'Event date: '.$eventDay->format('l j F Y')."\nTime: 3:30 PM\nVenue: Main hall",
+            $announcement->body,
+        );
+        $this->assertSame($eventDay->toDateString(), $announcement->ends_on->toDateString());
+    }
+
+    public function test_a_notice_that_needs_a_message_is_refused_without_one(): void
+    {
+        $this->signInAsHr();
+
+        $this->post('/announcements', $this->validPayload(['category' => 'policy', 'body' => '']))
+            ->assertSessionHasErrors('body');
+    }
+
+    public function test_a_late_notice_about_a_past_closure_is_not_born_expired(): void
+    {
+        // A late notice must not be born expired: it comes off no earlier than it goes up.
+        $this->signInAsHr();
+
+        $this->post('/announcements', $this->validPayload([
+            'category' => 'holiday',
+            'observed_from' => Carbon::today()->subDays(2)->toDateString(),
+        ]))->assertSessionHasNoErrors();
+
+        $this->assertSame(Carbon::today()->toDateString(), Announcement::firstOrFail()->ends_on->toDateString());
+    }
+
+    public function test_only_somebody_who_may_close_the_office_is_asked_for_the_dates(): void
+    {
+        $this->signInAsPoster();
+        $this->get('/announcements/compose')->assertOk()->assertDontSee('name="observed_from"', false);
+
+        $this->signInAsHr();
+        $this->get('/announcements/compose')->assertOk()->assertSee('name="observed_from"', false);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       ON THE BOARD, AND WHO READS IT
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_a_future_start_date_is_scheduled_until_the_day_comes(): void
+    {
+        $this->signInAsHr();
+
+        $startsOn = Carbon::today()->addDays(3);
+
+        $this->post('/announcements', $this->validPayload(['starts_on' => $startsOn->toDateString()]))
+            ->assertRedirect();
+
+        $announcement = Announcement::firstOrFail();
+
+        $this->assertSame(AnnouncementPresenter::SCHEDULED, $announcement->toRecordArray()['status']);
+        $this->get('/announcements')->assertDontSee($announcement->title);
+
+        Carbon::setTestNow($startsOn->copy()->setTime(0, 30));
+
+        $this->assertSame(AnnouncementPresenter::ACTIVE, $announcement->fresh()->toRecordArray()['status']);
+        $this->get('/announcements')->assertSee($announcement->title);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_managers_only_does_not_ask_for_a_department(): void
+    {
+        $this->signInAsHr();
+
+        $this->post('/announcements', $this->validPayload(['audience' => 'managers']))
+            ->assertSessionHasNoErrors();
+
+        $this->assertNull(Announcement::firstOrFail()->audience_department_id);
+    }
+
+    public function test_a_narrowed_post_reaches_only_those_it_is_for(): void
+    {
+        $this->signInAsHr();
+        $sales = MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->active()->firstOrFail();
+
+        $this->post('/announcements', $this->validPayload(['title' => 'For managers', 'audience' => 'managers']));
+        $this->post('/announcements', $this->validPayload([
+            'title' => 'For one department',
+            'audience' => 'department',
+            'audience_department_id' => $sales->id,
+        ]));
+
+        $forManagers = Announcement::where('title', 'For managers')->firstOrFail();
+        $forDepartment = Announcement::where('title', 'For one department')->firstOrFail();
+
+        $outsider = $this->signInAsEmployee();
+        $this->get('/announcements')->assertDontSee('For managers')->assertDontSee('For one department');
+        $this->get('/announcements/'.$forManagers->reference)->assertNotFound();
+        $this->get('/announcements/'.$forDepartment->reference)->assertNotFound();
+
+        $outsider->update(['department_id' => $sales->id]);
+        $this->get('/announcements')->assertDontSee('For managers')->assertSee('For one department');
+        $this->get('/announcements/'.$forDepartment->reference)->assertOk();
+
+        $this->signInWith(['employee', 'manager'], 'EMP943');
+        $this->get('/announcements')->assertSee('For managers');
+    }
+
+    public function test_a_draft_or_scheduled_post_cannot_be_opened_by_a_reader(): void
+    {
+        $this->signInAsHr();
+
+        $this->post('/announcements', $this->validPayload(['title' => 'Draft', 'publish' => 0]));
+        $this->post('/announcements', $this->validPayload([
+            'title' => 'Later',
+            'starts_on' => Carbon::today()->addDays(2)->toDateString(),
+        ]));
+
+        $this->signInAsEmployee();
+
+        foreach (Announcement::all() as $announcement) {
+            $this->get('/announcements/'.$announcement->reference)->assertNotFound();
+        }
     }
 
     /* ══════════════════════════════════════════════════════════════════════

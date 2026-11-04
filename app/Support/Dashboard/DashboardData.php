@@ -404,7 +404,7 @@ class DashboardData
      */
     protected static function announcements(): array
     {
-        $board = AnnouncementDirectory::board();
+        $board = AnnouncementDirectory::board(auth()->user());
 
         return [
             'items' => $board->take(3)->values(),

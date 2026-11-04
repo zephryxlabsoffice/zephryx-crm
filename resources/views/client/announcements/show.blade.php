@@ -24,7 +24,7 @@
                 <div class="card-body">
                     @php $cat = P::category($announcement['category']); @endphp
                     <span class="an-chip {{ $cat['tone'] }}">{{ $cat['label'] }}</span>
-                    <p class="cl-ticket-body">{{ $announcement['body'] }}</p>
+                    <p class="cl-ticket-body an-client-body">{{ $announcement['body'] }}</p>
                 </div>
             </section>
         </div>

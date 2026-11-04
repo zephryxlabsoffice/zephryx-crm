@@ -67,6 +67,85 @@ return [
     'holiday_permission' => 'announcements.holiday',
 
     /*
+    | What the compose form asks for each kind of announcement. Keyed by category
+    | (the master data code in lowercase). See App\Support\AnnouncementForm.
+    |
+    | `date_label`, `time` and `place_label` switch on the extra fields, and
+    | `ends_after_date` takes the notice off the board after that date.
+    */
+    'default_form' => [
+        'hint' => 'Anything else the company should know',
+        'title_label' => 'Subject',
+        'title_placeholder' => 'One line people see on the board',
+        'body_label' => 'Message',
+        'body_placeholder' => 'What is happening, and what anyone needs to do about it.',
+        'body_required' => true,
+        'date_label' => null,
+        'date_required' => false,
+        'time' => false,
+        'place_label' => null,
+        'ends_after_date' => false,
+    ],
+
+    'forms' => [
+        'holiday' => [
+            'hint' => 'The office is closed, or a reminder about a holiday',
+            'title_label' => 'Holiday name',
+            'title_placeholder' => 'Diwali',
+            'body_label' => 'Anything to add',
+            'body_placeholder' => 'Client calls on this day have been moved to Monday.',
+            'body_required' => false,
+        ],
+        'event' => [
+            'hint' => 'Something people attend, like a celebration or an outing',
+            'title_label' => 'Event name',
+            'title_placeholder' => 'Annual day',
+            'body_label' => 'Anything to add',
+            'body_placeholder' => 'What to bring, how to sign up.',
+            'body_required' => false,
+            'date_label' => 'Event date',
+            'date_required' => true,
+            'time' => true,
+            'place_label' => 'Venue',
+            'ends_after_date' => true,
+        ],
+        'training' => [
+            'hint' => 'A session people should attend or complete',
+            'title_label' => 'Training name',
+            'title_placeholder' => 'Data security basics',
+            'body_label' => 'Anything to add',
+            'body_placeholder' => 'Who should attend, and what to prepare.',
+            'body_required' => false,
+            'date_label' => 'Training date',
+            'date_required' => true,
+            'time' => true,
+            'place_label' => 'Room or meeting link',
+            'ends_after_date' => true,
+        ],
+        'policy' => [
+            'hint' => 'A company rule is new or has changed',
+            'title_label' => 'Policy name',
+            'title_placeholder' => 'Work from home policy',
+            'body_label' => 'What is changing',
+            'body_placeholder' => 'What the rule is now, and what people need to do.',
+            'date_label' => 'Applies from',
+        ],
+        'hr' => [
+            'hint' => 'News from HR, such as payroll dates or joining news',
+            'title_placeholder' => 'Salary slips are ready',
+        ],
+        'it' => [
+            'hint' => 'System downtime, new tools or a security warning',
+            'title_label' => 'What is affected',
+            'title_placeholder' => 'Email and VPN',
+            'body_label' => 'What people should do',
+            'body_placeholder' => 'Save your work before this time. Access returns by itself.',
+            'date_label' => 'Date',
+            'time' => true,
+        ],
+    ],
+
+    /*
     | Milestones post themselves on the day, and anyone may opt out of their own
     | (decided 2026-08-28). Not everyone wants their birthday on a company
     | board, and finding out you cannot turn it off is a bad way to learn it.

@@ -129,6 +129,12 @@
                             <span class="stat-label">Audience</span>
                             <span class="stat-value">{{ P::audienceLabel($announcement) }}</span>
                         </div>
+                        @if (P::closure($announcement) !== null)
+                            <div class="stat-row">
+                                <span class="stat-label">Office closed</span>
+                                <span class="stat-value">{{ P::closure($announcement) }}</span>
+                            </div>
+                        @endif
                         <div class="stat-row">
                             <span class="stat-label">Published</span>
                             <span class="stat-value">{{ P::date($announcement['published_at']) }}</span>

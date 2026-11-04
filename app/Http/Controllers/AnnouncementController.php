@@ -6,6 +6,7 @@ use App\Models\Announcement;
 use App\Models\Employee;
 use App\Models\MasterDataItem;
 use App\Support\AnnouncementDirectory;
+use App\Support\AnnouncementForm;
 use App\Support\AnnouncementPresenter;
 use App\Support\Audit\AuditLog;
 use App\Support\Milestones;
@@ -15,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -87,9 +89,7 @@ class AnnouncementController extends Controller
 {
     protected const PER_PAGE = 10;
 
-    public function __construct(protected Rbac $rbac, protected AuditLog $audit)
-    {
-    }
+    public function __construct(protected Rbac $rbac, protected AuditLog $audit) {}
 
     /**
      * GET /announcements - the board.
@@ -100,13 +100,13 @@ class AnnouncementController extends Controller
             'category' => ['nullable', Rule::in(array_keys(AnnouncementPresenter::categories()))],
         ])['category'] ?? null;
 
-        $board = AnnouncementDirectory::board();
+        $board = AnnouncementDirectory::board($request->user());
 
         return response()->view('announcements.index', [
             'activeNav' => 'announcements',
             'announcements' => $category ? $board->where('category', $category)->values() : $board,
             'category' => $category,
-            'categories' => AnnouncementDirectory::categoryCounts(),
+            'categories' => AnnouncementDirectory::categoryCounts($board),
             'boardTotal' => $board->count(),
             // Coming up, so the board is useful before the day rather than only
             // on it.
@@ -161,6 +161,7 @@ class AnnouncementController extends Controller
             // Milestones are excluded: a hand-written one would sit in the feed
             // looking identical to a computed one and be wrong next year.
             'categories' => AnnouncementPresenter::authorableCategories(),
+            'forms' => AnnouncementForm::all(),
             'audiences' => AnnouncementPresenter::audiences(),
             'departments' => MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->active()->get(),
             /*
@@ -198,27 +199,25 @@ class AnnouncementController extends Controller
 
         abort_if($author === null, 403);
 
-        $data = $this->validated($request);
-
         $mayCloseTheOffice = $this->rbac->can($request->user(), AnnouncementPresenter::holidayPermission());
+
+        $data = $this->validated($request, $mayCloseTheOffice);
 
         $announcement = Announcement::create([
             'reference' => AnnouncementDirectory::nextReference(),
             'title' => $data['title'],
-            'body' => $data['body'],
+            'body' => AnnouncementForm::body($data['category'], $data),
             'category' => $data['category'],
             'author_id' => $author->id,
             'audience' => $data['audience'],
-            'audience_department_id' => $data['audience'] === 'everyone'
-                ? null
-                : ($data['audience_department_id'] ?? null),
+            'audience_department_id' => $data['audience'] === 'department'
+                ? $data['audience_department_id']
+                : null,
             'for_clients' => $data['for_clients'] ?? false,
             'starts_on' => $data['starts_on'],
-            'ends_on' => $data['ends_on'] ?? null,
-            'observed_from' => $mayCloseTheOffice ? ($data['observed_from'] ?? null) : null,
-            'observed_to' => $mayCloseTheOffice
-                ? ($data['observed_to'] ?? $data['observed_from'] ?? null)
-                : null,
+            'ends_on' => AnnouncementForm::endsOn($data['category'], $data),
+            'observed_from' => $data['observed_from'],
+            'observed_to' => $data['observed_to'],
             // Published now, or left as a draft for somebody to publish.
             'published_at' => ($data['publish'] ?? false) ? now() : null,
             'pinned' => $data['pinned'] ?? false,
@@ -237,7 +236,9 @@ class AnnouncementController extends Controller
             ->route('announcements.show', ['announcement' => $announcement->reference])
             ->with('status', $announcement->isDraft()
                 ? 'Saved as a draft. Nothing is on the board yet.'
-                : 'Posted to the board.')
+                : ($announcement->starts_on->isFuture()
+                    ? 'Scheduled. It goes on the board on '.AnnouncementPresenter::date($announcement->starts_on).'.'
+                    : 'Posted to the board.'))
             ->with('status_tone', 'success');
     }
 
@@ -332,7 +333,9 @@ class AnnouncementController extends Controller
      */
     public function show(Request $request, string $announcement): Response
     {
-        $record = $this->find($announcement);
+        $record = AnnouncementDirectory::findFor($announcement, $request->user());
+
+        abort_if($record === null, 404);
 
         return response()->view('announcements.show', [
             'activeNav' => 'announcements',
@@ -361,16 +364,17 @@ class AnnouncementController extends Controller
     /**
      * @return array<string, mixed>
      */
-    protected function validated(Request $request): array
+    protected function validated(Request $request, bool $mayCloseTheOffice): array
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:200'],
-            'body' => ['required', 'string', 'max:5000'],
+            // Whether it is required depends on the category. See below.
+            'body' => ['nullable', 'string', 'max:5000'],
             'category' => ['required', Rule::in(array_keys(AnnouncementPresenter::authorableCategories()))],
             'audience' => ['required', Rule::in(array_keys(AnnouncementPresenter::audiences()))],
             'audience_department_id' => [
                 'nullable',
-                'required_unless:audience,everyone',
+                'required_if:audience,department',
                 Rule::exists('master_data_items', 'id')
                     ->where('list', MasterDataItem::DEPARTMENTS)
                     ->where('is_active', true),
@@ -387,14 +391,34 @@ class AnnouncementController extends Controller
              */
             'observed_from' => ['nullable', 'date', 'required_with:observed_to'],
             'observed_to' => ['nullable', 'date', 'after_or_equal:observed_from'],
+            'closes_office' => ['nullable', 'boolean'],
+            'event_date' => ['nullable', 'date'],
+            'event_time' => ['nullable', 'date_format:H:i'],
+            'event_place' => ['nullable', 'string', 'max:200'],
             'publish' => ['nullable', 'boolean'],
             'pinned' => ['nullable', 'boolean'],
             'for_clients' => ['nullable', 'boolean'],
         ]);
 
-        if (($data['observed_from'] ?? null) !== null) {
-            $from = \Illuminate\Support\Carbon::parse($data['observed_from']);
-            $to = \Illuminate\Support\Carbon::parse($data['observed_to'] ?? $data['observed_from']);
+        $closesOffice = $data['category'] === AnnouncementPresenter::HOLIDAY
+            && $mayCloseTheOffice
+            && (bool) ($data['closes_office'] ?? ($data['observed_from'] ?? null) !== null);
+
+        /*
+         * Closure dates only ever mean something on a holiday, from somebody who
+         * may close the office. Attendance would skip them anywhere else, so they
+         * are not kept looking as if they did something.
+         */
+        $data['observed_from'] = $closesOffice ? ($data['observed_from'] ?? null) : null;
+        $data['observed_to'] = $data['observed_from'] !== null
+            ? ($data['observed_to'] ?? $data['observed_from'])
+            : null;
+
+        $this->requireWhatTheCategoryNeeds($data, $closesOffice);
+
+        if ($data['observed_from'] !== null) {
+            $from = Carbon::parse($data['observed_from']);
+            $to = Carbon::parse($data['observed_to'] ?? $data['observed_from']);
 
             if ($from->diffInDays($to) > 14) {
                 /*
@@ -410,6 +434,40 @@ class AnnouncementController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * The rules that change with the category, in step with what the form asks.
+     *
+     * @param  array<string, mixed>  $data
+     *
+     * @throws ValidationException
+     */
+    protected function requireWhatTheCategoryNeeds(array $data, bool $closesOffice): void
+    {
+        $form = AnnouncementForm::for($data['category']);
+        $errors = [];
+
+        if ($closesOffice && $data['observed_from'] === null) {
+            $errors['observed_from'] = 'Choose the first day the office is closed.';
+        }
+
+        if ($form['date_required'] && ($data['event_date'] ?? null) === null) {
+            $errors['event_date'] = 'Choose the '.mb_strtolower((string) $form['date_label']).'.';
+        }
+
+        // A holiday that closes the office says everything through its dates. A
+        // reminder about one has only its message to say anything with.
+        $bodyRequired = $form['body_required']
+            || ($data['category'] === AnnouncementPresenter::HOLIDAY && ! $closesOffice);
+
+        if ($bodyRequired && trim((string) ($data['body'] ?? '')) === '') {
+            $errors['body'] = 'Write what people need to know.';
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
     }
 
     protected function describe(Announcement $announcement): string
