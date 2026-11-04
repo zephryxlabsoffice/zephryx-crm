@@ -83,6 +83,10 @@
 
         <aside class="rail">
             <section class="rail-card">
+                @include('partials.push-panel')
+            </section>
+
+            <section class="rail-card">
                 <div class="rail-hd"><strong>Where things appear</strong></div>
 
                 <ul class="an-facts">

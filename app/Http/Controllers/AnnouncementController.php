@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Announcement;
 use App\Models\Employee;
 use App\Models\MasterDataItem;
+use App\Models\Notification;
+use App\Support\AnnouncementDelivery;
 use App\Support\AnnouncementDirectory;
 use App\Support\AnnouncementForm;
 use App\Support\AnnouncementPresenter;
 use App\Support\Audit\AuditLog;
 use App\Support\Milestones;
+use App\Support\NotificationDirectory;
 use App\Support\Rbac\Rbac;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -89,7 +92,7 @@ class AnnouncementController extends Controller
 {
     protected const PER_PAGE = 10;
 
-    public function __construct(protected Rbac $rbac, protected AuditLog $audit) {}
+    public function __construct(protected Rbac $rbac, protected AuditLog $audit, protected AnnouncementDelivery $delivery) {}
 
     /**
      * GET /announcements - the board.
@@ -181,6 +184,7 @@ class AnnouncementController extends Controller
             'categories' => AnnouncementPresenter::authorableCategories(),
             'forms' => AnnouncementForm::all(),
             'audiences' => AnnouncementPresenter::audiences(),
+            'audienceSizes' => $this->delivery->audienceSizes(),
             'departments' => MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->active()->get(),
             /*
              * Closure dates are a write to the attendance record made through
@@ -233,6 +237,8 @@ class AnnouncementController extends Controller
                 ? $data['audience_department_id']
                 : null,
             'for_clients' => $data['for_clients'] ?? false,
+            'notify_email' => $data['notify_email'] ?? false,
+            'delivery_pending' => $data['publish'] ?? false,
             'starts_on' => $data['starts_on'],
             'ends_on' => AnnouncementForm::endsOn($data['category'], $data),
             'observed_from' => $data['observed_from'],
@@ -250,6 +256,8 @@ class AnnouncementController extends Controller
             after: $this->describe($announcement),
             request: $request,
         );
+
+        $this->delivery->deliverIfDue($announcement, $request->user());
 
         return redirect()
             ->route('announcements.show', ['announcement' => $announcement->reference])
@@ -277,6 +285,8 @@ class AnnouncementController extends Controller
         $isExpired = $model->toRecordArray()['status'] === AnnouncementPresenter::EXPIRED;
         $wasDraft = $model->isDraft();
         $before = $this->describe($model);
+        // Once people have been told, the choice of how to tell them is over.
+        $isStillUntold = $wasDraft || $model->delivery_pending;
 
         $mayCloseTheOffice = $this->rbac->can($request->user(), AnnouncementPresenter::holidayPermission());
         $data = $this->validated($request, $mayCloseTheOffice, $isExpired);
@@ -291,6 +301,8 @@ class AnnouncementController extends Controller
                 ? $data['audience_department_id']
                 : null,
             'for_clients' => $data['for_clients'] ?? false,
+            'notify_email' => $isStillUntold ? ($data['notify_email'] ?? false) : $model->notify_email,
+            'delivery_pending' => $model->delivery_pending || ($wasDraft && ($data['publish'] ?? false)),
             'starts_on' => $isExpired ? $model->starts_on : $data['starts_on'],
             'ends_on' => $isExpired ? $model->ends_on : AnnouncementForm::endsOn($data['category'], $data),
             'observed_from' => $data['observed_from'],
@@ -309,6 +321,8 @@ class AnnouncementController extends Controller
             after: $this->describe($model),
             request: $request,
         );
+
+        $this->delivery->deliverIfDue($model, $request->user());
 
         return redirect()
             ->route('announcements.show', ['announcement' => $model->reference])
@@ -336,7 +350,7 @@ class AnnouncementController extends Controller
                 ->with('status_tone', 'info');
         }
 
-        $model->update(['published_at' => null]);
+        $model->update(['published_at' => null, 'delivery_pending' => false]);
 
         $this->audit->record(
             action: AuditLog::ANNOUNCEMENT_CANCELLED,
@@ -377,6 +391,13 @@ class AnnouncementController extends Controller
             before: $this->describe($model).' · '.$model->body,
             request: $request,
         );
+
+        // A bell row pointing at a page that no longer exists is a promise the
+        // application cannot keep.
+        Notification::query()
+            ->where('kind', 'announcement')
+            ->where('link_params->announcement', $model->reference)
+            ->delete();
 
         $model->delete();
 
@@ -432,7 +453,7 @@ class AnnouncementController extends Controller
             abort(403);
         }
 
-        $model->update(['published_at' => now()]);
+        $model->update(['published_at' => now(), 'delivery_pending' => true]);
 
         $this->audit->record(
             action: AuditLog::ANNOUNCEMENT_POSTED,
@@ -443,6 +464,8 @@ class AnnouncementController extends Controller
             after: $this->describe($model),
             request: $request,
         );
+
+        $this->delivery->deliverIfDue($model, $request->user());
 
         return redirect()
             ->route('announcements.show', ['announcement' => $model->reference])
@@ -496,6 +519,8 @@ class AnnouncementController extends Controller
         $record = AnnouncementDirectory::findFor($announcement, $request->user());
 
         abort_if($record === null, 404);
+
+        NotificationDirectory::markAnnouncementRead($request->user(), $announcement);
 
         return response()->view('announcements.show', [
             'activeNav' => 'announcements',
@@ -560,6 +585,7 @@ class AnnouncementController extends Controller
             'publish' => ['nullable', 'boolean'],
             'pinned' => ['nullable', 'boolean'],
             'for_clients' => ['nullable', 'boolean'],
+            'notify_email' => ['nullable', 'boolean'],
         ]);
 
         $closesOffice = $data['category'] === AnnouncementPresenter::HOLIDAY

@@ -19,7 +19,7 @@ class Announcement extends Model
 {
     protected $fillable = [
         'reference', 'title', 'body', 'details', 'category', 'author_id',
-        'audience', 'audience_department_id', 'for_clients',
+        'audience', 'audience_department_id', 'for_clients', 'notify_email', 'delivery_pending',
         'starts_on', 'ends_on', 'observed_from', 'observed_to',
         'published_at', 'pinned',
     ];
@@ -35,6 +35,8 @@ class Announcement extends Model
             'published_at' => 'datetime',
             'pinned' => 'boolean',
             'for_clients' => 'boolean',
+            'notify_email' => 'boolean',
+            'delivery_pending' => 'boolean',
         ];
     }
 
@@ -173,6 +175,19 @@ class Announcement extends Model
                         ->where('audience_department_id', $departmentId)))
                     ->when($isManager, fn (Builder $q) => $q->orWhere('audience', 'managers'));
             });
+    }
+
+    /**
+     * Posted, nobody told yet, and its start date has come.
+     *
+     * @param  Builder<Announcement>  $query
+     * @return Builder<Announcement>
+     */
+    public function scopeDueForDelivery(Builder $query): Builder
+    {
+        return $query->published()
+            ->where('delivery_pending', true)
+            ->whereDate('starts_on', '<=', now()->toDateString());
     }
 
     /**

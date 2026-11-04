@@ -17,6 +17,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileRequestController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\PushController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\ShellPreferenceController;
 use App\Http\Controllers\SupportController;
@@ -827,6 +828,14 @@ Route::post('/announcements/{announcement}/expire', [AnnouncementController::cla
     ->where('announcement', '[A-Za-z0-9-]{1,40}')
     ->middleware('permission:announcements.post')
     ->name('announcements.expire');
+
+/*
+ * Browser push, see App\Support\WebPush. Staff only for now: the client portal
+ * has its bell. Each of these works on the signed-in account and takes no user.
+ */
+Route::post('/push/subscribe', [PushController::class, 'subscribe'])->name('push.subscribe');
+Route::post('/push/unsubscribe', [PushController::class, 'unsubscribe'])->name('push.unsubscribe');
+Route::get('/push/latest', [PushController::class, 'latest'])->name('push.latest');
 
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 /*

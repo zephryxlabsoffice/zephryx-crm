@@ -32,6 +32,7 @@ class Notification extends Model
         'ticket' => 'tickets',
         'meeting' => 'meetings',
         'leave' => 'leave',
+        'announcement' => 'announcements',
     ];
 
     protected $fillable = [

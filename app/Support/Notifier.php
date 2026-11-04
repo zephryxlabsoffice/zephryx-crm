@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Announcement;
 use App\Models\Employee;
 use App\Models\LeaveRequest;
 use App\Models\Meeting;
@@ -144,6 +145,44 @@ class Notifier
     /* ══════════════════════════════════════════════════════════════════════
        THE EVENTS
        ══════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * An announcement went up, for the staff it is addressed to.
+     *
+     * @param  iterable<User>  $readers
+     */
+    public function announcementPosted(Announcement $announcement, iterable $readers): void
+    {
+        foreach ($readers as $reader) {
+            $this->send(
+                reader: $reader,
+                kind: 'announcement',
+                title: 'New announcement: '.Str::limit($announcement->title, 170),
+                body: $announcement->body,
+                route: 'announcements.show',
+                params: ['announcement' => $announcement->reference],
+            );
+        }
+    }
+
+    /**
+     * The same, for clients, linking to the page only they can open.
+     *
+     * @param  iterable<User>  $readers
+     */
+    public function announcementForClients(Announcement $announcement, iterable $readers): void
+    {
+        foreach ($readers as $reader) {
+            $this->send(
+                reader: $reader,
+                kind: 'announcement',
+                title: 'New announcement: '.Str::limit($announcement->title, 170),
+                body: $announcement->body,
+                route: 'client.announcements.show',
+                params: ['announcement' => $announcement->reference],
+            );
+        }
+    }
 
     /**
      * Somebody was put on a task.

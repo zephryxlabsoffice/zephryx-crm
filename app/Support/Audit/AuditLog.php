@@ -373,6 +373,8 @@ class AuditLog
 
     public const ANNOUNCEMENT_DELETED = 'announcement.deleted';
 
+    public const ANNOUNCEMENT_DELIVERED = 'announcement.delivered';
+
     /*
      * My Profile.
      *

@@ -2,18 +2,27 @@
 
 namespace Tests\Feature;
 
+use App\Mail\AnnouncementMail;
 use App\Models\Announcement;
 use App\Models\Employee;
 use App\Models\MasterDataItem;
+use App\Models\Notification;
+use App\Models\PushSubscription;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\AnnouncementDelivery;
 use App\Support\AnnouncementPresenter;
 use App\Support\AttendancePolicy;
 use App\Support\Audit\AuditLog;
 use App\Support\Holidays;
 use App\Support\Rbac\Rbac;
+use App\Support\WebPush;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -698,6 +707,380 @@ class AnnouncementWritesTest extends TestCase
         $this->post($page.'/delete')->assertRedirect();
 
         $this->assertNull(Holidays::on($closure));
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       TELLING PEOPLE
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_posting_rings_the_bell_of_everyone_addressed_but_not_the_poster(): void
+    {
+        $reader = $this->signInWith(['employee'], 'EMP950');
+        $poster = $this->signInAsHr();
+
+        $this->post('/announcements', $this->validPayload());
+
+        $reference = Announcement::firstOrFail()->reference;
+
+        $row = Notification::where('user_id', $reader->user_id)->sole();
+        $this->assertSame('announcement', $row->kind);
+        $this->assertStringContainsString('Office closed on Friday', $row->title);
+        $this->assertSame(route('announcements.show', ['announcement' => $reference]), $row->link());
+
+        $this->assertSame(0, Notification::where('user_id', $poster->user_id)->count());
+    }
+
+    public function test_a_narrowed_post_rings_only_those_it_is_for(): void
+    {
+        $outsider = $this->signInWith(['employee'], 'EMP951');
+        $manager = $this->signInWith(['employee', 'manager'], 'EMP952');
+        $inDepartment = $this->signInWith(['employee'], 'EMP953');
+        $this->signInAsHr();
+
+        $department = MasterDataItem::inList(MasterDataItem::DEPARTMENTS)->active()->firstOrFail();
+        $inDepartment->update(['department_id' => $department->id]);
+
+        $this->post('/announcements', $this->validPayload(['audience' => 'managers']));
+        $this->assertSame([$manager->user_id], Notification::pluck('user_id')->all());
+
+        Notification::query()->delete();
+
+        $this->post('/announcements', $this->validPayload([
+            'audience' => 'department',
+            'audience_department_id' => $department->id,
+        ]));
+        $this->assertSame([$inDepartment->user_id], Notification::pluck('user_id')->all());
+        $this->assertNotNull($outsider);
+    }
+
+    public function test_email_goes_only_when_ticked_and_only_to_those_addressed(): void
+    {
+        Mail::fake();
+
+        $manager = $this->signInWith(['employee', 'manager'], 'EMP954');
+        $this->signInWith(['employee'], 'EMP955');
+        $poster = $this->signInAsHr();
+
+        $this->post('/announcements', $this->validPayload(['audience' => 'managers']));
+        Mail::assertNothingSent();
+
+        $this->post('/announcements', $this->validPayload(['audience' => 'managers', 'notify_email' => 1]));
+
+        Mail::assertSent(AnnouncementMail::class, 1);
+        Mail::assertSent(AnnouncementMail::class, function (AnnouncementMail $mail) use ($manager, $poster) {
+            return $mail->hasBcc($manager->user->email)
+                && ! $mail->hasBcc($poster->user->email)
+                && count($mail->bcc) === 1;
+        });
+    }
+
+    public function test_a_draft_tells_nobody_until_it_is_published_and_then_only_once(): void
+    {
+        Mail::fake();
+
+        $reader = $this->signInWith(['employee'], 'EMP956');
+        $this->signInAsHr();
+
+        $this->post('/announcements', $this->validPayload(['publish' => 0, 'notify_email' => 1]));
+
+        $announcement = Announcement::firstOrFail();
+        $this->assertSame(0, Notification::count());
+        Mail::assertNothingSent();
+
+        $this->post('/announcements/'.$announcement->reference.'/publish');
+        $this->assertSame(1, Notification::where('user_id', $reader->user_id)->count());
+        Mail::assertSent(AnnouncementMail::class, 1);
+
+        // Correcting it afterwards, and the nightly job, tell nobody again.
+        $this->post('/announcements/'.$announcement->reference.'/update', $this->validPayload(['notify_email' => 1]));
+        $this->artisan('backup:database');
+
+        $this->assertSame(1, Notification::where('user_id', $reader->user_id)->count());
+        Mail::assertSent(AnnouncementMail::class, 1);
+    }
+
+    public function test_a_scheduled_post_tells_people_on_its_day_not_before(): void
+    {
+        Mail::fake();
+
+        $reader = $this->signInWith(['employee'], 'EMP957');
+        $this->signInAsHr();
+
+        $startsOn = Carbon::today()->addDays(3);
+
+        $this->post('/announcements', $this->validPayload(['starts_on' => $startsOn->toDateString(), 'notify_email' => 1]));
+
+        $this->get('/dashboard');
+        $this->assertSame(0, Notification::count());
+        Mail::assertNothingSent();
+
+        Carbon::setTestNow($startsOn->copy()->setTime(2, 0));
+
+        app(AnnouncementDelivery::class)->deliverDue();
+
+        $this->assertSame(1, Notification::where('user_id', $reader->user_id)->count());
+        Mail::assertSent(AnnouncementMail::class, 1);
+
+        // The first page opened that day finds nothing left to do.
+        $this->get('/dashboard');
+        $this->assertSame(1, Notification::where('user_id', $reader->user_id)->count());
+
+        Carbon::setTestNow();
+    }
+
+    public function test_the_first_page_of_the_day_delivers_if_the_nightly_job_did_not(): void
+    {
+        $reader = $this->signInWith(['employee'], 'EMP958');
+        $this->signInAsHr();
+
+        $startsOn = Carbon::today()->addDays(2);
+        $this->post('/announcements', $this->validPayload(['starts_on' => $startsOn->toDateString()]));
+
+        Carbon::setTestNow($startsOn->copy()->setTime(9, 0));
+
+        $this->get('/dashboard')->assertOk();
+        $this->assertSame(1, Notification::where('user_id', $reader->user_id)->count());
+
+        Carbon::setTestNow();
+    }
+
+    public function test_a_cancelled_scheduled_post_tells_nobody(): void
+    {
+        $this->signInWith(['employee'], 'EMP959');
+        $this->signInAsHr();
+
+        $startsOn = Carbon::today()->addDays(2);
+        $this->post('/announcements', $this->validPayload(['starts_on' => $startsOn->toDateString()]));
+        $this->post('/announcements/'.Announcement::firstOrFail()->reference.'/cancel');
+
+        Carbon::setTestNow($startsOn->copy()->setTime(9, 0));
+        app(AnnouncementDelivery::class)->deliverDue();
+
+        $this->assertSame(0, Notification::count());
+
+        Carbon::setTestNow();
+    }
+
+    public function test_posts_written_before_this_existed_stay_quiet(): void
+    {
+        $this->signInWith(['employee'], 'EMP960');
+        $author = $this->signInAsHr();
+
+        Announcement::create([
+            'reference' => 'ANN-OLD-001', 'title' => 'Old', 'body' => 'Old.', 'category' => 'policy',
+            'author_id' => $author->id, 'audience' => 'everyone',
+            'starts_on' => Carbon::today()->subMonth(), 'published_at' => now()->subMonth(),
+        ]);
+
+        app(AnnouncementDelivery::class)->deliverDue();
+
+        $this->assertSame(0, Notification::count());
+    }
+
+    public function test_a_client_is_notified_on_the_portal_only_when_marked_and_never_emailed(): void
+    {
+        Mail::fake();
+
+        $client = User::factory()->create(['account_type' => 'client', 'status' => 'active', 'staff_kind' => null]);
+        $this->signInWith(['employee'], 'EMP970');
+        $this->signInAsHr();
+
+        $this->post('/announcements', $this->validPayload(['title' => 'Staff only notice', 'notify_email' => 1]));
+        $this->assertSame(0, Notification::where('user_id', $client->id)->count());
+
+        $this->post('/announcements', $this->validPayload(['title' => 'For clients too', 'for_clients' => 1, 'notify_email' => 1]));
+
+        $row = Notification::where('user_id', $client->id)->sole();
+        $this->assertSame('client.announcements.show', $row->link_route);
+
+        Mail::assertSent(AnnouncementMail::class, fn (AnnouncementMail $mail) => ! $mail->hasBcc($client->email));
+    }
+
+    public function test_opening_an_announcement_clears_its_bell_row(): void
+    {
+        $reader = $this->signInWith(['employee'], 'EMP961');
+        $this->signInAsHr();
+        $this->post('/announcements', $this->validPayload());
+
+        $this->actingAs($reader->user);
+        $this->get('/announcements/'.Announcement::firstOrFail()->reference)->assertOk();
+
+        $this->assertNotNull(Notification::where('user_id', $reader->user_id)->sole()->read_at);
+    }
+
+    public function test_deleting_a_post_clears_it_from_every_bell(): void
+    {
+        $this->signInWith(['employee'], 'EMP962');
+        $this->signInAsHr();
+        $this->post('/announcements', $this->validPayload());
+        $this->assertSame(1, Notification::count());
+
+        $this->post('/announcements/'.Announcement::firstOrFail()->reference.'/delete');
+
+        $this->assertSame(0, Notification::count());
+    }
+
+    public function test_the_compose_form_offers_email_until_people_have_been_told(): void
+    {
+        $this->signInAsHr();
+        $this->get('/announcements/compose')->assertSee('name="notify_email"', false);
+
+        $this->post('/announcements', $this->validPayload());
+
+        $this->get('/announcements/'.Announcement::firstOrFail()->reference.'/edit')
+            ->assertDontSee('name="notify_email"', false);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       PUSH
+       ══════════════════════════════════════════════════════════════════════ */
+
+    public function test_a_post_wakes_the_devices_of_those_addressed_with_nothing_in_the_push(): void
+    {
+        Http::fake(['*' => Http::response('', 201)]);
+
+        $reader = $this->signInWith(['employee'], 'EMP963');
+        $endpoint = 'https://fcm.googleapis.com/fcm/send/reader';
+        $this->post('/push/subscribe', ['endpoint' => $endpoint])->assertOk();
+
+        $this->signInWith(['employee', 'manager'], 'EMP964');
+        $this->post('/push/subscribe', ['endpoint' => 'https://fcm.googleapis.com/fcm/send/manager'])->assertOk();
+
+        $this->signInAsHr();
+        $this->post('/announcements', $this->validPayload(['audience' => 'everyone']));
+
+        Http::assertSentCount(2);
+        Http::assertSent(fn ($request) => $request->url() === $endpoint
+            && $request->body() === ''
+            && str_starts_with($request->header('Authorization')[0], 'vapid t='));
+        $this->assertNotNull($reader);
+
+        $entry = DB::table('audit_log')->where('action', AuditLog::ANNOUNCEMENT_DELIVERED)->sole();
+        $this->assertStringContainsString('push: 2 devices', json_encode($entry));
+    }
+
+    public function test_the_push_token_is_signed_by_the_key_browsers_were_given(): void
+    {
+        $push = app(WebPush::class);
+        [$jwt] = explode(', k=', substr($push->authorizationFor('https://fcm.googleapis.com/fcm/send/x'), strlen('vapid t=')));
+        [$header, $claims, $signature] = explode('.', $jwt);
+
+        $decode = fn (string $part) => base64_decode(strtr($part, '-_', '+/'));
+
+        $this->assertSame('https://fcm.googleapis.com', json_decode($decode($claims), true)['aud']);
+
+        $raw = $decode($signature);
+        $this->assertSame(64, strlen($raw));
+
+        $integer = function (string $bytes): string {
+            $bytes = ltrim($bytes, "\x00");
+
+            return "\x02".chr(strlen($bytes) + (ord($bytes[0]) > 127 ? 1 : 0)).(ord($bytes[0]) > 127 ? "\x00" : '').$bytes;
+        };
+        $sequence = $integer(substr($raw, 0, 32)).$integer(substr($raw, 32));
+        $der = "\x30".chr(strlen($sequence)).$sequence;
+
+        $point = $decode($push->publicKey());
+        $spki = hex2bin('3059301306072a8648ce3d020106082a8648ce3d030107034200').$point;
+        $pem = "-----BEGIN PUBLIC KEY-----\n".chunk_split(base64_encode($spki), 64, "\n")."-----END PUBLIC KEY-----\n";
+
+        $this->assertSame(1, openssl_verify($header.'.'.$claims, $der, $pem, OPENSSL_ALGO_SHA256));
+    }
+
+    public function test_a_device_the_push_service_says_is_gone_is_forgotten(): void
+    {
+        Http::fake(['*' => Http::response('', 410)]);
+
+        $this->signInWith(['employee'], 'EMP965');
+        $this->post('/push/subscribe', ['endpoint' => 'https://fcm.googleapis.com/fcm/send/gone']);
+        $this->assertSame(1, PushSubscription::count());
+
+        $this->signInAsHr();
+        $this->post('/announcements', $this->validPayload());
+
+        $this->assertSame(0, PushSubscription::count());
+    }
+
+    public function test_a_push_failure_does_not_lose_the_post(): void
+    {
+        Http::fake(fn () => throw new ConnectionException('unreachable'));
+
+        $reader = $this->signInWith(['employee'], 'EMP966');
+        $this->post('/push/subscribe', ['endpoint' => 'https://fcm.googleapis.com/fcm/send/down']);
+
+        $this->signInAsHr();
+        $this->post('/announcements', $this->validPayload())->assertRedirect();
+
+        $this->assertSame(1, Notification::where('user_id', $reader->user_id)->count());
+    }
+
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function endpointsThatAreNotPushServices(): array
+    {
+        return [
+            'an internal address' => ['https://127.0.0.1/admin'],
+            'plain http' => ['http://fcm.googleapis.com/fcm/send/x'],
+            'a lookalike host' => ['https://fcm.googleapis.com.evil.example/x'],
+            'somebody elses site' => ['https://example.com/push'],
+            'a custom port' => ['https://fcm.googleapis.com:8443/x'],
+        ];
+    }
+
+    #[DataProvider('endpointsThatAreNotPushServices')]
+    public function test_only_real_push_services_can_be_subscribed(string $endpoint): void
+    {
+        $this->signInAsEmployee();
+
+        $this->postJson('/push/subscribe', ['endpoint' => $endpoint])->assertUnprocessable();
+
+        $this->assertSame(0, PushSubscription::count());
+    }
+
+    public function test_a_browser_follows_whoever_subscribes_it_and_only_its_owner_can_remove_it(): void
+    {
+        $endpoint = 'https://fcm.googleapis.com/fcm/send/shared';
+
+        $first = $this->signInWith(['employee'], 'EMP967');
+        $this->post('/push/subscribe', ['endpoint' => $endpoint]);
+
+        $second = $this->signInWith(['employee'], 'EMP968');
+        $this->post('/push/subscribe', ['endpoint' => $endpoint]);
+
+        $this->assertSame($second->user_id, PushSubscription::sole()->user_id);
+
+        $this->actingAs($first->user);
+        $this->post('/push/unsubscribe', ['endpoint' => $endpoint])->assertOk();
+        $this->assertSame(1, PushSubscription::count());
+
+        $this->actingAs($second->user);
+        $this->post('/push/unsubscribe', ['endpoint' => $endpoint])->assertOk();
+        $this->assertSame(0, PushSubscription::count());
+    }
+
+    public function test_a_push_shows_only_the_readers_own_latest(): void
+    {
+        $reader = $this->signInWith(['employee'], 'EMP969');
+        $this->signInAsHr();
+        $this->post('/announcements', $this->validPayload(['title' => 'For everyone']));
+        $this->post('/announcements', $this->validPayload(['title' => 'Only managers', 'audience' => 'managers']));
+
+        $this->actingAs($reader->user);
+
+        $this->getJson('/push/latest')
+            ->assertOk()
+            ->assertJsonPath('title', 'New announcement: For everyone');
+    }
+
+    public function test_push_is_not_open_to_clients(): void
+    {
+        $this->actingAs(User::factory()->create(['account_type' => 'client', 'status' => 'active', 'staff_kind' => null]));
+
+        $this->get('/push/latest')->assertNotFound();
+        $this->post('/push/subscribe', ['endpoint' => 'https://fcm.googleapis.com/fcm/send/x'])->assertNotFound();
+
+        $this->assertSame(0, PushSubscription::count());
     }
 
     /* ══════════════════════════════════════════════════════════════════════

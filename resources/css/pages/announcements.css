@@ -394,6 +394,20 @@
   .an-kinds { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* ─────────────────────────  push on this device  ───────────────────────── */
+
+.push-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+}
+.push-panel-text { display: flex; flex-direction: column; gap: 3px; flex: 1 1 180px; min-width: 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.push-panel-text strong { font-size: 13px; color: var(--ink); }
+.push-panel-status { font-weight: 600; color: var(--ink-2); }
+
 /* ─────────────────────────  notifications  ───────────────────────── */
 
 .nt-list {

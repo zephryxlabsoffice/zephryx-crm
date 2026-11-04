@@ -20,6 +20,7 @@ function initAnnouncementForm() {
     const alreadyUp = form.dataset.anAlreadyUp === '1';
     const offBoard = form.dataset.anOffBoard === '1';
     const saveOnly = form.dataset.anSaveOnly === '1';
+    const audienceSizes = JSON.parse(form.dataset.anAudienceSizes);
 
     const one = (name) => form.querySelector(`[data-an="${name}"]`);
     const picked = (name) => form.querySelector(`input[name="${name}"]:checked`)?.value ?? '';
@@ -76,6 +77,16 @@ function initAnnouncementForm() {
         }
 
         lines.push(`Who sees it: ${readers}${one('for-clients').checked ? ', and clients' : ''}.`);
+
+        if (one('notify-email')?.checked) {
+            let people = audienceSizes[audience.value] ?? 0;
+
+            if (audience.value === 'department') {
+                people = audienceSizes.departments[department.value] ?? 0;
+            }
+
+            lines.push(`Email goes to about ${people} ${people === 1 ? 'person' : 'people'}, when it goes on the board.`);
+        }
 
         if (offBoard) {
             lines.push('It stays off the board.');

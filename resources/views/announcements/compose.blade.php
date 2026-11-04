@@ -35,7 +35,8 @@
           data-an-start-default="{{ $savedStart <= $today ? $savedStart : $today }}"
           data-an-already-up="{{ $isPosted && $savedStart <= $today ? '1' : '0' }}"
           data-an-off-board="{{ $isOffTheBoard ? '1' : '0' }}"
-          data-an-save-only="{{ $isPosted ? '1' : '0' }}">
+          data-an-save-only="{{ $isPosted ? '1' : '0' }}"
+          data-an-audience-sizes="{{ json_encode($audienceSizes) }}">
         @csrf
 
         <section class="an-form-grid">
@@ -180,9 +181,20 @@
                             <div class="form-field an-form-wide">
                                 <label class="check-row" for="an-for-clients">
                                     <input id="an-for-clients" data-an="for-clients" name="for_clients" type="checkbox" value="1" @checked($isTicked('for_clients'))>
-                                    <span>Also show it to clients on their portal</span>
+                                    <span>Also show it to clients, and notify them on their portal</span>
                                 </label>
                             </div>
+
+                            {{-- Once people have been told, there is nothing left to choose. --}}
+                            @if (! $announcement || $announcement->isDraft() || $announcement->delivery_pending)
+                                <div class="form-field an-form-wide">
+                                    <label class="check-row" for="an-notify-email">
+                                        <input id="an-notify-email" data-an="notify-email" name="notify_email" type="checkbox" value="1" @checked($isTicked('notify_email'))>
+                                        <span>Also email it to staff</span>
+                                    </label>
+                                    <span class="pay-hint">The bell and device alerts always go out. Tick this only when it matters, to save the daily email limit.</span>
+                                </div>
+                            @endif
                         </div>
                     </div>
 

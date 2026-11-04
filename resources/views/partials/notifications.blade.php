@@ -56,7 +56,11 @@
 
         @if ($notifications !== [])
             <div class="notif-foot">
-                <a href="{{ route('notifications.index') }}">View all activity</a>
+                @if (($realm ?? null) === \App\Support\Realm::CLIENT)
+                    <a href="{{ route('client.announcements.index') }}">View all announcements</a>
+                @else
+                    <a href="{{ route('notifications.index') }}">View all activity</a>
+                @endif
             </div>
         @endif
     </div>
