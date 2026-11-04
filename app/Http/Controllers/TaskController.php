@@ -53,8 +53,7 @@ class TaskController extends Controller
         protected AuditLog $audit,
         protected Notifier $notify,
         protected DocumentStore $documents,
-    ) {
-    }
+    ) {}
 
     /**
      * GET /tasks
@@ -141,6 +140,8 @@ class TaskController extends Controller
             'mayEdit' => $this->rbac->can($request->user(), 'tasks.edit'),
             'mayAssign' => $this->canAssign($request, $record),
             'mayComplete' => $this->canComplete($request, $record),
+            // Somebody who is only doing the work reports it in their End of Day.
+            'reportsThroughEod' => $this->reportsThroughEod($request, $record),
             // Loaded only for somebody who may actually assign: a dropdown of
             // every employee is a staff list, and there is no reason to put one
             // in the markup for a reader who cannot use it.
@@ -525,6 +526,19 @@ class TaskController extends Controller
     }
 
     /**
+     * On the task, but neither leading its team nor able to edit tasks.
+     */
+    protected function reportsThroughEod(Request $request, Task $task): bool
+    {
+        $employee = $this->employeeFor($request);
+
+        return $employee !== null
+            && $task->assignees->contains('id', $employee->id)
+            && ! $task->team?->isLedBy($employee)
+            && ! $this->rbac->can($request->user(), 'tasks.edit');
+    }
+
+    /**
      * @return array<string, mixed>
      */
     protected function filters(Request $request): array
@@ -567,7 +581,9 @@ class TaskController extends Controller
             'assignee_ids.*' => [Rule::exists('employees', 'id')],
             'status' => ['required', Rule::in(Task::STATUSES)],
             'priority' => ['required', Rule::in(Task::PRIORITIES)],
-            'due_on' => ['required', 'date'],
+            // For later: it stays out of the assignee's report until this day.
+            'starts_on' => ['nullable', 'date'],
+            'due_on' => ['required', 'date', 'after_or_equal:starts_on'],
         ]);
     }
 

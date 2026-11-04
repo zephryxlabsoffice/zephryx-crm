@@ -9,6 +9,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompOffController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EodController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\MeetingController;
@@ -418,6 +419,15 @@ Route::get('/tasks', [TaskController::class, 'index'])
 
 // Before /tasks/{task}, or these are read as task references.
 Route::get('/tasks/mine', [TaskController::class, 'mine'])->name('tasks.mine');
+// The end of day report. Filing checks for an employee record; reading is scoped in the query.
+Route::get('/tasks/eod', [EodController::class, 'form'])->name('tasks.eod');
+Route::post('/tasks/eod', [EodController::class, 'save'])->name('tasks.eod.save');
+Route::get('/tasks/eod/team', [EodController::class, 'team'])
+    ->middleware('permission:tasks.view')
+    ->name('tasks.eod.team');
+Route::get('/tasks/eod/{eod}', [EodController::class, 'show'])
+    ->whereNumber('eod')
+    ->name('tasks.eod.show');
 Route::get('/tasks/team', [TaskController::class, 'team'])
     ->middleware('permission:tasks.view')
     ->name('tasks.team');

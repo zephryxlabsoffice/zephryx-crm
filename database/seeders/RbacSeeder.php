@@ -199,6 +199,8 @@ class RbacSeeder extends Seeder
         'tasks.create',
         'tasks.edit',
         'tasks.assign',
+        // Reading every End of Day report, not only those sent to you.
+        'tasks.eod.all',
         /*
          * Salary. `salary.view` is the sensitive read - seeing what a colleague
          * earns is itself the harm - and `salary.manage` is the write: adding a
@@ -568,7 +570,7 @@ class RbacSeeder extends Seeder
                     'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
                     'teams.create', 'teams.edit', 'teams.members',
                     'projects.create', 'projects.edit', 'projects.publish',
-                    'tasks.create', 'tasks.edit', 'tasks.assign',
+                    'tasks.create', 'tasks.edit', 'tasks.assign', 'tasks.eod.all',
                     'salary.manage', 'invoices.manage',
                     'attendance.roster',
                 ],

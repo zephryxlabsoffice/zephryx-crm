@@ -47,7 +47,9 @@
             {{-- Real now, and shown to the people §2.6 names: the assignee,
                  the lead of the team holding it, or somebody who may edit
                  tasks outright. A POST, because it changes something. --}}
-            @if ($mayComplete)
+            @if ($reportsThroughEod)
+                <a class="btn btn-primary" href="{{ route('tasks.eod') }}">Report in End of Day</a>
+            @elseif ($mayComplete)
                 <form method="POST" action="{{ route('tasks.complete', ['task' => $task['id']]) }}">
                     @csrf
                     <input type="hidden" name="status" value="{{ $task['status'] === 'completed' ? 'in_progress' : 'completed' }}">

@@ -189,6 +189,10 @@ class AuditLog
 
     public const TASK_COMPLETED = 'task.completed';
 
+    public const EOD_FILED = 'eod.filed';
+
+    public const EOD_UPDATED = 'eod.updated';
+
     public const TASK_REOPENED = 'task.reopened';
 
     public const TASK_COMMENTED = 'task.commented';

@@ -76,6 +76,7 @@ class TaskDirectory
             'assignees' => $task->assignees->map(fn (Employee $e) => $e->user?->user_id)->filter()->values()->all(),
             'status' => $task->status,
             'priority' => $task->priority,
+            'starts_on' => $task->starts_on?->toDateString(),
             'due' => $due,
             'due_in' => (int) Carbon::today()->diffInDays($task->due_on->startOfDay(), false),
             'created_at' => $task->created_at?->toDateString(),

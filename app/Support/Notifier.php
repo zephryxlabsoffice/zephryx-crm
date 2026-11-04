@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Announcement;
 use App\Models\Employee;
+use App\Models\EodReport;
 use App\Models\LeaveRequest;
 use App\Models\Meeting;
 use App\Models\Notification;
@@ -145,6 +146,26 @@ class Notifier
     /* ══════════════════════════════════════════════════════════════════════
        THE EVENTS
        ══════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * Somebody filed their end of day report, or corrected one.
+     *
+     * @param  iterable<Employee>  $recipients
+     */
+    public function eodFiled(EodReport $report, Employee $author, iterable $recipients, bool $isUpdate, ?User $actor = null): void
+    {
+        foreach ($recipients as $recipient) {
+            $this->send(
+                reader: $recipient->user,
+                kind: 'eod',
+                title: ($author->user?->name ?? 'Somebody').($isUpdate ? ' updated their End of Day' : ' sent their End of Day'),
+                body: 'Report for '.$report->report_date->format('D j M').'.',
+                route: 'tasks.eod.show',
+                params: ['eod' => $report->id],
+                actor: $actor,
+            );
+        }
+    }
 
     /**
      * An announcement went up, for the staff it is addressed to.
