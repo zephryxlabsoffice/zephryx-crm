@@ -20,6 +20,11 @@
 | `route`      a named route, resolved at render. Entries whose route does not
 |              exist yet are skipped, so this file can list the whole roadmap
 |              without breaking the shell as modules land one at a time.
+| `opens`      optional list of {permission, route}: the first one the viewer holds
+|              decides where the entry goes, and holding none hides it. One page for
+|              everybody, opening as that person's login allows (owner, 2026-11-05).
+|              `permission` and `route` must stay as they are alongside it, because
+|              RbacSeeder builds the permissions table from `permission`.
 | `deferred`   true for Calendar and Reports, which §12 keeps in the
 |              navigation deliberately so the shape stays stable when they ship
 |              in v2. Their routes exist and return 404; the 404 view recognises
@@ -36,11 +41,11 @@ return [
     ['key' => 'employees',     'label' => 'Employees',      'icon' => 'employees',     'route' => 'employees.index', 'permission' => 'employees.view'],
     ['key' => 'teams',         'label' => 'Teams',          'icon' => 'teams',         'route' => 'teams.index',   'permission' => 'teams.view'],
     ['key' => 'projects',      'label' => 'Projects',       'icon' => 'projects',      'route' => 'projects.index', 'permission' => 'projects.view'],
-    ['key' => 'tasks',         'label' => 'Tasks',          'icon' => 'tasks',         'route' => 'tasks.index',   'permission' => 'tasks.view'],
+    ['key' => 'tasks',         'label' => 'Tasks',          'icon' => 'tasks',         'route' => 'tasks.index',   'permission' => 'tasks.view', 'opens' => [['permission' => 'tasks.self', 'route' => 'tasks.mine'], ['permission' => 'tasks.view', 'route' => 'tasks.index']]],
     ['key' => 'tickets',       'label' => 'Tickets',        'icon' => 'tickets',       'route' => 'tickets.index', 'permission' => 'tickets.view'],
     ['key' => 'invoices',      'label' => 'Invoices',       'icon' => 'invoices',      'route' => 'invoices.index', 'permission' => 'invoices.view'],
     ['key' => 'salary',        'label' => 'Salary',         'icon' => 'salary',        'route' => 'salary.index',  'permission' => 'salary.view'],
-    ['key' => 'attendance',    'label' => 'Attendance',     'icon' => 'attendance',    'route' => 'attendance.index', 'permission' => 'attendance.view'],
+    ['key' => 'attendance',    'label' => 'Attendance',     'icon' => 'attendance',    'route' => 'attendance.index', 'permission' => 'attendance.view', 'opens' => [['permission' => 'attendance.view', 'route' => 'attendance.index'], ['permission' => 'attendance.self', 'route' => 'attendance.mine']]],
     ['key' => 'leave',         'label' => 'Leave Requests', 'icon' => 'leave',         'route' => 'leave.index',   'permission' => 'leave.view'],
     ['key' => 'meetings',      'label' => 'Meetings',       'icon' => 'meetings',      'route' => 'meetings.index', 'permission' => 'meetings.view'],
     ['key' => 'calendar',      'label' => 'Calendar',       'icon' => 'calendar',      'route' => 'calendar.index', 'permission' => 'calendar.view', 'deferred' => true],

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use App\Support\Navigation\Navigation;
 use App\Support\Navigation\NavigationGate;
 use App\Support\Navigation\RbacGate;
@@ -13,7 +14,6 @@ use Tests\TestCase;
  */
 class NavigationTest extends TestCase
 {
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -26,6 +26,7 @@ class NavigationTest extends TestCase
          */
         $this->signInAsStaff();
     }
+
     public function test_it_drops_entries_the_viewer_may_not_see(): void
     {
         $this->app->bind(NavigationGate::class, fn () => new class implements NavigationGate
@@ -91,6 +92,58 @@ class NavigationTest extends TestCase
         // An unauthenticated viewer holds nothing at all, so the shell renders
         // an empty sidebar rather than the whole application.
         $this->assertSame([], $this->app->make(Navigation::class)->for(null));
+    }
+
+    public function test_tasks_opens_my_tasks_whatever_other_roles_are_held(): void
+    {
+        foreach ([['employee'], ['employee', 'hr', 'team_lead', 'system_admin']] as $roles) {
+            $this->assertSame(route('tasks.mine'), $this->sidebarUrl($this->signInAsStaff($roles), 'tasks'));
+        }
+    }
+
+    public function test_tasks_opens_all_tasks_for_somebody_with_no_tasks_of_their_own(): void
+    {
+        $this->assertSame(route('tasks.index'), $this->sidebarUrl($this->signInAsMentor(), 'tasks'));
+    }
+
+    public function test_attendance_opens_as_the_login_allows(): void
+    {
+        $this->assertSame(route('attendance.mine'), $this->sidebarUrl($this->signInAsStaff(['employee']), 'attendance'));
+        $this->assertSame(route('attendance.mine'), $this->sidebarUrl($this->signInAsStaff(['employee', 'manager']), 'attendance'));
+        $this->assertSame(route('attendance.index'), $this->sidebarUrl($this->signInAsStaff(['employee', 'hr']), 'attendance'));
+    }
+
+    public function test_attendance_is_not_offered_to_somebody_with_no_attendance(): void
+    {
+        $this->assertNull($this->sidebarUrl($this->signInAsMentor(), 'attendance'));
+    }
+
+    public function test_the_roll_is_only_for_those_who_may_read_it(): void
+    {
+        $this->signInAsStaff(['employee', 'manager']);
+        $this->get('/attendance')->assertRedirect(route('attendance.mine'));
+
+        $this->signInAsStaff(['employee', 'hr']);
+        $this->get('/attendance')->assertOk()->assertViewIs('attendance.index');
+
+        $this->signInAsMentor();
+        $this->get('/attendance')->assertForbidden();
+    }
+
+    public function test_the_sunday_roster_can_still_be_reached_without_the_roll(): void
+    {
+        $this->signInAsStaff(['employee', 'team_lead']);
+        $this->get('/attendance/mine')->assertSee(route('attendance.roster'), false);
+
+        $this->signInAsStaff(['employee']);
+        $this->get('/attendance/mine')->assertDontSee(route('attendance.roster'), false);
+    }
+
+    protected function sidebarUrl(User $user, string $key): ?string
+    {
+        $items = $this->app->make(Navigation::class)->for($user);
+
+        return collect($items)->firstWhere('key', $key)['url'] ?? null;
     }
 
     public function test_every_navigation_entry_declares_a_permission_key(): void

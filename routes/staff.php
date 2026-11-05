@@ -872,7 +872,10 @@ Route::post('/notifications/read', [NotificationController::class, 'read'])->nam
  * so there is no parameter for anyone to tamper with - the same reason the
  * payslip route takes a period and no employee.
  */
-Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+// The company's roll, or for everybody else their own attendance: see the controller.
+Route::get('/attendance', [AttendanceController::class, 'index'])
+    ->middleware('permission:attendance.view,attendance.self')
+    ->name('attendance.index');
 // Before /attendance/{record}, or "mine" is read as a record reference.
 Route::get('/attendance/mine', [AttendanceController::class, 'mine'])->name('attendance.mine');
 /*

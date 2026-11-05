@@ -47,8 +47,9 @@ class EodPolicy
     /**
      * Everybody who should have filed for this day and has not.
      *
-     * Current staff with an employee record who had joined by then and were not on
-     * approved leave. An empty result on a week-off or holiday: nobody owes a report
+     * Current staff with an employee record, from the newest hire to the Managers and
+     * the CEO, who had joined by then and were not on approved leave. A blank joining
+     * date, which an account made in the Admin Panel can have, does not excuse anybody. An empty result on a week-off or holiday: nobody owes a report
      * for a day the office was closed.
      *
      * @return Builder<Employee>
@@ -66,7 +67,9 @@ class EodPolicy
                 ->where('status', 'active')
                 ->where('account_type', Realm::STAFF)
                 ->where('staff_kind', 'employee'))
-            ->whereDate('joined_on', '<=', $date)
+            ->where(fn (Builder $joined) => $joined
+                ->whereNull('joined_on')
+                ->orWhereDate('joined_on', '<=', $date))
             ->whereNotIn('id', EodReport::query()->whereDate('report_date', $date)->select('employee_id'))
             ->whereNotIn('id', LeaveRequest::query()->approved()->overlapping($date, $date)->select('employee_id'));
     }

@@ -12,6 +12,7 @@ use App\Support\AttendancePolicy;
 use App\Support\AttendancePresenter as P;
 use App\Support\Audit\AuditLog;
 use App\Support\CompOffPolicy;
+use App\Support\EmployeeDirectory;
 use App\Support\Holidays;
 use App\Support\Rbac\Rbac;
 use Illuminate\Http\RedirectResponse;
@@ -100,15 +101,18 @@ class AttendanceController extends Controller
      */
     protected const ROSTER_BACK_DAYS = 7;
 
-    public function __construct(protected Rbac $rbac, protected AuditLog $audit)
-    {
-    }
+    public function __construct(protected Rbac $rbac, protected AuditLog $audit) {}
 
     /**
-     * GET /attendance - one day's roll across the company.
+     * GET /attendance - one day's roll across the company, for those who may read
+     * it. Everybody else opens their own attendance (owner, 2026-11-05).
      */
-    public function index(Request $request): Response
+    public function index(Request $request): Response|RedirectResponse
     {
+        if (! $this->rbac->can($request->user(), 'attendance.view.all')) {
+            return redirect()->route('attendance.mine');
+        }
+
         $filters = $this->filters($request);
         $date = $filters['date'];
 
@@ -123,7 +127,7 @@ class AttendanceController extends Controller
             // Days somebody checked into and never out of. The one thing on
             // this page that is actually actionable.
             'openRecords' => AttendanceDirectory::missingCheckOuts(),
-            'departments' => \App\Support\EmployeeDirectory::departmentsInUse(),
+            'departments' => EmployeeDirectory::departmentsInUse(),
             'isToday' => Carbon::parse($date)->isToday(),
             'workingDay' => AttendancePolicy::isWorkingDay($date),
             'holiday' => AttendancePolicy::holidayOn($date),
@@ -187,6 +191,8 @@ class AttendanceController extends Controller
             // The way back to the roll, for the people who could have come from
             // it. Everybody else has no roll to return to.
             'canTrack' => $this->rbac->can($request->user(), 'attendance.view.all'),
+            // A Manager or Team Lead has no roll, and the Sunday roster button lives on it.
+            'mayRoster' => $this->rbac->can($request->user(), 'attendance.roster'),
             // Somebody with no employment record - a Mentor, the owner - has no
             // attendance of their own at all (§2.1), and the page says so
             // rather than drawing an empty calendar as though they were absent
