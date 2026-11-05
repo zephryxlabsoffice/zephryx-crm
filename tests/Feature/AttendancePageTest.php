@@ -6,17 +6,19 @@ use App\Models\AttendanceRecord;
 use App\Models\Employee;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\AnnouncementPresenter;
 use App\Support\AttendanceDirectory;
 use App\Support\AttendancePolicy;
 use App\Support\AttendancePresenter as P;
 use App\Support\Holidays;
 use App\Support\Rbac\Rbac;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class AttendancePageTest extends TestCase
 {
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -48,6 +50,7 @@ class AttendancePageTest extends TestCase
          */
         Carbon::setTestNow(Carbon::today()->setTime(11, 0));
     }
+
     /** The demo person these pages are read as â€” see withDemoData. */
     protected const VIEWER = 'EMP002';
 
@@ -131,9 +134,9 @@ class AttendancePageTest extends TestCase
     /**
      * Records a PERSON rejected, newest first.
      *
-     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     * @return Collection<int, array<string, mixed>>
      */
-    protected function rejectedRecords(): \Illuminate\Support\Collection
+    protected function rejectedRecords(): Collection
     {
         return AttendanceRecord::query()
             ->with(['employee.user', 'rejecter.user'])
@@ -158,6 +161,50 @@ class AttendancePageTest extends TestCase
         $this->assertNotNull($row, 'nobody else has an open-to-rejection record today');
 
         return $row;
+    }
+
+    public function test_a_days_record_opens_only_for_its_owner_and_those_who_manage_attendance(): void
+    {
+        $this->withDemoData();
+
+        $own = '/attendance/'.$this->viewerRecord()['id'];
+        $someoneElses = '/attendance/'.$this->someoneElsesRecord()['id'];
+
+        $this->get($someoneElses)->assertOk();
+
+        $owner = User::where('user_id', self::VIEWER)->firstOrFail();
+        $owner->roles()->detach(Role::where('role_key', 'hr')->pluck('id'));
+        app(Rbac::class)->forget($owner);
+        $this->actingAs($owner);
+
+        $this->get($own)->assertOk();
+        $this->get($someoneElses)->assertNotFound();
+
+        foreach ([['employee', 'manager'], ['employee', 'team_lead']] as $roles) {
+            $this->signInAsStaff($roles);
+            $this->get($own)->assertNotFound();
+        }
+
+        $this->signInAsMentor();
+        $this->get($own)->assertNotFound();
+
+        $this->signInAsStaff(['ceo']);
+        $this->get($own)->assertOk();
+    }
+
+    public function test_correcting_records_is_enough_to_open_one(): void
+    {
+        $this->withDemoData();
+
+        $someoneElses = '/attendance/'.$this->someoneElsesRecord()['id'];
+
+        DB::table('role_permissions')
+            ->where('role_id', Role::where('role_key', 'hr')->value('id'))
+            ->whereIn('permission_id', DB::table('permissions')->where('permission_key', 'attendance.view.all')->select('id'))
+            ->delete();
+        app(Rbac::class)->forget(User::where('user_id', self::VIEWER)->firstOrFail());
+
+        $this->get($someoneElses)->assertOk();
     }
 
     public function test_the_three_pages_render(): void
@@ -878,9 +925,9 @@ class AttendancePageTest extends TestCase
         // nobody can post to is a board nobody reads. Closing the office is not.
         $this->assertNotSame(
             config('announcements.post_permission'),
-            \App\Support\AnnouncementPresenter::holidayPermission(),
+            AnnouncementPresenter::holidayPermission(),
         );
-        $this->assertSame('announcements.holiday', \App\Support\AnnouncementPresenter::holidayPermission());
+        $this->assertSame('announcements.holiday', AnnouncementPresenter::holidayPermission());
     }
 
     public function test_the_compose_form_says_what_closure_dates_do(): void
@@ -1085,4 +1132,3 @@ class AttendancePageTest extends TestCase
         }
     }
 }
-

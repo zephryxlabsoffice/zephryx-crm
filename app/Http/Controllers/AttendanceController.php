@@ -907,6 +907,10 @@ class AttendanceController extends Controller
 
     /**
      * GET /attendance/{record} - one day, one person, and the rejection on it.
+     *
+     * For the person it belongs to, and those who read or correct everybody's: HR and
+     * the CEO. Anybody else gets a 404, not a confirmation the record exists. The
+     * reference is a date and a staff id, so it can be guessed.
      */
     public function show(Request $request, string $record): Response
     {
@@ -914,6 +918,13 @@ class AttendanceController extends Controller
 
         $viewer = $this->employeeFor($request);
         $own = $viewer !== null && $found['model']->employee_id === $viewer->id;
+
+        abort_unless(
+            $own
+                || $this->rbac->can($request->user(), 'attendance.view.all')
+                || $this->rbac->can($request->user(), 'attendance.reject'),
+            404,
+        );
 
         return response()->view('attendance.show', [
             'activeNav' => 'attendance',
