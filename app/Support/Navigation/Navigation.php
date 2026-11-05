@@ -19,9 +19,7 @@ use Illuminate\Support\Facades\Route;
  */
 class Navigation
 {
-    public function __construct(private NavigationGate $gate)
-    {
-    }
+    public function __construct(private NavigationGate $gate) {}
 
     /**
      * The navigation entry for a path that is deliberately not built yet.
@@ -81,11 +79,9 @@ class Navigation
         $items = [];
 
         foreach ((array) config($this->configFor($realm), []) as $item) {
-            if (! $this->gate->allows($user, $item['permission'])) {
-                continue;
-            }
+            $route = $this->routeFor($user, $item);
 
-            if (! Route::has($item['route'])) {
+            if ($route === null || ! Route::has($route)) {
                 continue;
             }
 
@@ -93,11 +89,27 @@ class Navigation
                 'key' => $item['key'],
                 'label' => $item['label'],
                 'icon' => $item['icon'],
-                'url' => route($item['route']),
+                'url' => route($route),
                 'active' => $activeKey !== null && $activeKey === $item['key'],
             ];
         }
 
         return $items;
+    }
+
+    /**
+     * Where an entry takes this viewer, or null if they may not see it at all.
+     *
+     * @param  array{route: string, permission: string, opens?: list<array{permission: string, route: string}>}  $item
+     */
+    protected function routeFor(?Authenticatable $user, array $item): ?string
+    {
+        foreach ($item['opens'] ?? [$item] as $destination) {
+            if ($this->gate->allows($user, $destination['permission'])) {
+                return $destination['route'];
+            }
+        }
+
+        return null;
     }
 }

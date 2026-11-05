@@ -532,6 +532,28 @@ class EodReportTest extends TestCase
         );
     }
 
+    public function test_managers_and_the_ceo_owe_a_report_like_everybody_else(): void
+    {
+        Carbon::setTestNow('2026-11-04 17:00:00');
+
+        $manager = $this->person(['employee', 'manager'], 'EMP931');
+        $ceo = $this->person(['employee', 'ceo'], 'EMP932');
+        $blankJoiningDate = $this->person(['employee', 'manager'], 'EMP933');
+        $blankJoiningDate->update(['joined_on' => null]);
+        $notJoinedYet = $this->person(['employee'], 'EMP934');
+        $notJoinedYet->update(['joined_on' => '2026-11-05']);
+
+        $owing = EodPolicy::notFiledOn('2026-11-04')->pluck('id')->all();
+
+        $this->assertContains($manager->id, $owing);
+        $this->assertContains($ceo->id, $owing);
+        $this->assertContains($blankJoiningDate->id, $owing);
+        $this->assertNotContains($notJoinedYet->id, $owing);
+
+        $this->actingAs($ceo->user);
+        $this->get('/tasks/eod')->assertOk();
+    }
+
     public function test_nobody_owes_a_report_for_a_week_off(): void
     {
         Carbon::setTestNow('2026-11-09 17:00:00');
