@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\EodUrgentMail;
 use App\Models\Employee;
 use App\Models\EodItem;
 use App\Models\EodReport;
@@ -24,8 +25,10 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * The end of day report: how work is reported done (owner, 2026-11-04).
@@ -306,6 +309,7 @@ class EodController extends Controller
 
         $this->notify->eodUrgent($employee->user, $request->user(), Carbon::parse($date));
         $this->push->sendTo([$employee->user_id]);
+        $this->emailUrgent($employee, $request->user()->name, Carbon::parse($date));
 
         $this->audit->record(
             action: AuditLog::EOD_URGENT,
@@ -322,15 +326,39 @@ class EodController extends Controller
     }
 
     /**
-     * Who the viewer is waiting on: those who report to them and the members of teams
-     * they lead, or everybody for a holder of the permission. A project manager is not
-     * included, because a project does not say who should be working on it on a given day.
+     * A mail server being down must not undo the bell and notice already written.
+     */
+    protected function emailUrgent(Employee $employee, string $requesterName, Carbon $date): void
+    {
+        if (blank($employee->user?->email)) {
+            return;
+        }
+
+        try {
+            Mail::to($employee->user->email)->send(new EodUrgentMail(
+                name: $employee->user->name,
+                requesterName: $requesterName,
+                reportDay: $date->format('D j M'),
+                url: route('tasks.eod', ['date' => $date->toDateString()]),
+            ));
+        } catch (Throwable $e) {
+            report($e);
+        }
+    }
+
+    /**
+     * Who the viewer is waiting on: those who report to them, the members of teams they
+     * lead, and the people on projects they manage while that permission is held; or
+     * everybody for a holder of the view-all permission.
      *
      * @return Collection<int, Employee>
      */
     protected function notFiledFor(Request $request, string $date): Collection
     {
         $viewerId = $this->employeeFor($request)?->id;
+        $onTheirProjects = $viewerId !== null && $this->rbac->can($request->user(), EodUrgent::PROJECT_PERMISSION)
+            ? EodUrgent::peopleOnProjectsManagedBy($viewerId)
+            : [];
 
         return EodPolicy::notFiledOn($date)
             ->with(['user', 'department'])
@@ -339,7 +367,8 @@ class EodController extends Controller
                 ! $this->rbac->can($request->user(), EodReport::VIEW_ALL_PERMISSION),
                 fn (Builder $q) => $q->where(fn (Builder $mine) => $mine
                     ->where('reports_to', $viewerId ?? 0)
-                    ->orWhereHas('teams', fn (Builder $team) => $team->where('lead_id', $viewerId ?? 0))),
+                    ->orWhereHas('teams', fn (Builder $team) => $team->where('lead_id', $viewerId ?? 0))
+                    ->orWhereIn('id', $onTheirProjects)),
             )
             ->get()
             ->sortBy(fn (Employee $employee) => $employee->user?->name)

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\EodUrgentMail;
 use App\Models\Client;
 use App\Models\Employee;
 use App\Models\EodItem;
@@ -23,6 +24,7 @@ use App\Support\Rbac\Rbac;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -155,6 +157,7 @@ class EodReportTest extends TestCase
     public function test_marking_twice_tells_the_person_once(): void
     {
         Http::fake();
+        Mail::fake();
         Carbon::setTestNow('2026-11-04 10:00:00');
 
         $boss = $this->person(['employee', 'manager'], 'EMP958');
@@ -167,6 +170,125 @@ class EodReportTest extends TestCase
             ->assertSessionHas('status_tone', 'info');
 
         $this->assertSame(1, Notification::where('user_id', $late->user_id)->where('kind', EodUrgent::KIND)->count());
+        Mail::assertSent(EodUrgentMail::class, 1);
+    }
+
+    public function test_marking_urgent_emails_the_person_a_link_to_that_day(): void
+    {
+        Http::fake();
+        Mail::fake();
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $boss = $this->person(['employee', 'manager'], 'EMP976');
+        $late = $this->person(['employee'], 'EMP977');
+        $late->update(['reports_to' => $boss->id]);
+
+        $this->actingAs($boss->user);
+        $this->post('/tasks/eod/urgent', ['employee' => $late->id, 'date' => '2026-11-03']);
+
+        Mail::assertSent(EodUrgentMail::class, fn (EodUrgentMail $mail) => $mail->hasTo($late->user->email)
+            && $mail->requesterName === $boss->user->name
+            && str_contains($mail->url, 'date=2026-11-03'));
+    }
+
+    public function test_a_mail_failure_still_leaves_the_bell_and_the_notice(): void
+    {
+        Http::fake();
+        Mail::shouldReceive('to')->andThrow(new \RuntimeException('SMTP is down'));
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $boss = $this->person(['employee', 'manager'], 'EMP978');
+        $late = $this->person(['employee'], 'EMP979');
+        $late->update(['reports_to' => $boss->id]);
+
+        $this->actingAs($boss->user);
+        $this->post('/tasks/eod/urgent', ['employee' => $late->id, 'date' => '2026-11-03'])
+            ->assertSessionHas('status_tone', 'success');
+
+        $this->assertSame(1, Notification::where('user_id', $late->user_id)->where('kind', EodUrgent::KIND)->count());
+    }
+
+    public function test_a_project_manager_can_mark_people_on_their_open_projects_only(): void
+    {
+        Http::fake();
+        Mail::fake();
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $projectManager = $this->person(['employee'], 'EMP980');
+        $project = $this->project($projectManager);
+
+        $inTeam = $this->person(['employee'], 'EMP981');
+        $team = Team::create(['reference' => 'TEAM-PM', 'name' => 'On it', 'status' => 'active', 'formed_on' => now()]);
+        $team->members()->attach($inTeam->id);
+        $project->teams()->attach($team->id);
+
+        $holdsATask = $this->person(['employee'], 'EMP982');
+        $this->taskFor($holdsATask, ['project_id' => $project->id]);
+
+        $finishedThere = $this->person(['employee'], 'EMP983');
+        $this->taskFor($finishedThere, ['project_id' => $project->id, 'status' => 'completed', 'completed_at' => now()]);
+
+        $closedProject = $this->project($projectManager);
+        $closedProject->update(['status' => 'completed']);
+        $onClosed = $this->person(['employee'], 'EMP984');
+        $this->taskFor($onClosed, ['project_id' => $closedProject->id]);
+
+        $elsewhere = $this->person(['employee'], 'EMP985');
+
+        $this->actingAs($projectManager->user);
+
+        $this->assertEqualsCanonicalizing(
+            [$inTeam->id, $holdsATask->id],
+            $this->get('/tasks/eod/team?date=2026-11-03')->assertOk()->assertSee('Mark urgent')->viewData('notFiled')->pluck('id')->all(),
+        );
+
+        $this->post('/tasks/eod/urgent', ['employee' => $inTeam->id, 'date' => '2026-11-03'])->assertSessionHas('status_tone', 'success');
+        $this->post('/tasks/eod/urgent', ['employee' => $elsewhere->id, 'date' => '2026-11-03'])->assertSessionHas('status_tone', 'info');
+
+        $this->assertSame([$inTeam->id], EodUrgentRequest::pluck('employee_id')->all());
+    }
+
+    public function test_switching_the_permission_off_stops_project_managers_but_not_reporting_managers(): void
+    {
+        Http::fake();
+        Mail::fake();
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $projectManager = $this->person(['employee'], 'EMP986');
+        $project = $this->project($projectManager);
+        $onProject = $this->person(['employee'], 'EMP987');
+        $this->taskFor($onProject, ['project_id' => $project->id]);
+        $report = $this->person(['employee'], 'EMP988');
+        $report->update(['reports_to' => $projectManager->id]);
+
+        // The way the owner would: unticking it on the Employee role in Access Controls.
+        $keep = Role::where('role_key', 'employee')->firstOrFail()->permissions->pluck('permission_key')
+            ->reject(fn (string $key) => $key === EodUrgent::PROJECT_PERMISSION)->values()->all();
+
+        $this->signInAsAdmin();
+        $this->withSession(['_token' => 'test-token'])
+            ->post('/admin/access/employee', ['permissions' => $keep, '_token' => 'test-token'])
+            ->assertRedirect();
+        app(Rbac::class)->forget();
+
+        $this->actingAs($projectManager->user);
+
+        $this->post('/tasks/eod/urgent', ['employee' => $onProject->id, 'date' => '2026-11-03'])->assertSessionHas('status_tone', 'info');
+        $this->post('/tasks/eod/urgent', ['employee' => $report->id, 'date' => '2026-11-03'])->assertSessionHas('status_tone', 'success');
+
+        $this->assertSame([$report->id], EodUrgentRequest::pluck('employee_id')->all());
+    }
+
+    public function test_the_permission_is_a_tick_on_the_employee_role_alone(): void
+    {
+        $holders = DB::table('role_permissions')
+            ->join('roles', 'roles.id', '=', 'role_permissions.role_id')
+            ->join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
+            ->where('permission_key', EodUrgent::PROJECT_PERMISSION)
+            ->pluck('role_key')
+            ->all();
+
+        $this->assertSame(['employee'], $holders);
     }
 
     public function test_only_somebody_waiting_on_that_person_can_mark_it(): void
