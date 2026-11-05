@@ -35,6 +35,7 @@ class Notification extends Model
         'announcement' => 'announcements',
         'eod' => 'tasks',
         'eod_reminder' => 'tasks',
+        'eod_urgent' => 'tasks',
     ];
 
     protected $fillable = [

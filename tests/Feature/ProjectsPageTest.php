@@ -13,7 +13,6 @@ use Tests\TestCase;
  */
 class ProjectsPageTest extends TestCase
 {
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -26,6 +25,7 @@ class ProjectsPageTest extends TestCase
          */
         $this->signInAsStaff();
     }
+
     /**
      * The demo projects, as real rows.
      *
@@ -44,7 +44,7 @@ class ProjectsPageTest extends TestCase
 
         $this->get('/projects')->assertOk()->assertSee('Project Management', false);
         $this->get('/projects/mine')->assertOk()->assertSee('My Projects', false);
-        $this->get('/projects/updates')->assertOk()->assertSee('End of Day Updates', false);
+        $this->get('/projects/updates')->assertOk()->assertSee('Project Updates', false);
         $this->get('/projects/WD-2024-001')->assertOk()->assertSee('Website Redesign', false);
     }
 
@@ -52,7 +52,7 @@ class ProjectsPageTest extends TestCase
     {
         // Route order: /projects/{project} would otherwise swallow both.
         $this->get('/projects/mine')->assertSee('My Projects', false);
-        $this->get('/projects/updates')->assertSee('End of Day Updates', false);
+        $this->get('/projects/updates')->assertSee('Project Updates', false);
     }
 
     public function test_empty_states_with_no_data(): void

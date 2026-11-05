@@ -12,6 +12,7 @@ use App\Models\Task;
 use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -178,6 +179,38 @@ class Notifier
             title: 'Your End of Day is not filed yet',
             body: 'Tick what you worked on today. It only takes a moment.',
             route: 'tasks.eod',
+        );
+    }
+
+    /**
+     * A manager or team lead needs a missing report now. It has no switch: see `wants()`.
+     */
+    public function eodUrgent(?User $reader, User $requester, Carbon $date): void
+    {
+        $this->send(
+            reader: $reader,
+            kind: EodUrgent::KIND,
+            title: 'Urgent: your End of Day for '.$date->format('D j M'),
+            body: $requester->name.' needs this report as soon as you can file it.',
+            route: 'tasks.eod',
+            params: ['date' => $date->toDateString()],
+            actor: $requester,
+        );
+    }
+
+    /**
+     * The report somebody asked for urgently has arrived.
+     */
+    public function eodUrgentFiled(EodReport $report, Employee $author, ?User $requester, ?User $actor = null): void
+    {
+        $this->send(
+            reader: $requester,
+            kind: 'eod',
+            title: ($author->user?->name ?? 'Somebody').' sent the End of Day you marked urgent',
+            body: 'Report for '.$report->report_date->format('D j M').'.',
+            route: 'tasks.eod.show',
+            params: ['eod' => $report->id],
+            actor: $actor,
         );
     }
 

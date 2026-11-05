@@ -425,6 +425,9 @@ Route::post('/tasks/eod', [EodController::class, 'save'])->name('tasks.eod.save'
 Route::get('/tasks/eod/team', [EodController::class, 'team'])
     ->middleware('permission:tasks.view')
     ->name('tasks.eod.team');
+Route::post('/tasks/eod/urgent', [EodController::class, 'markUrgent'])
+    ->middleware('permission:tasks.view')
+    ->name('tasks.eod.urgent');
 Route::get('/tasks/eod/{eod}', [EodController::class, 'show'])
     ->whereNumber('eod')
     ->name('tasks.eod.show');

@@ -35,6 +35,14 @@
 
     @include('tasks.partials.section-tabs', ['sectionTab' => 'eod'])
 
+    @if ($urgentRequest && $urgentRequest->fulfilled_at === null)
+        @include('partials.notice', [
+            'tone' => 'warning',
+            'title' => 'Urgent: '.$urgentRequest->requesterName().' needs this report',
+            'message' => 'Send it as soon as you can. This notice clears once it is sent.',
+        ])
+    @endif
+
     @if ($report)
         @include('partials.notice', [
             'tone' => 'info',
@@ -45,7 +53,7 @@
         @include('partials.notice', [
             'tone' => 'info',
             'title' => 'Filing for an earlier day: '.$displayDate->format('l j F Y'),
-            'message' => 'It will show as filed late. A task only changes if no later report mentions it.',
+            'message' => 'It will show as filed late. It can still finish a task, but it will not undo anything that has happened to a task since that day.',
         ])
     @endif
 

@@ -5,7 +5,7 @@
     $actions = [
         ['label' => 'Add Project',   'icon' => 'projects',      'tone' => '',            'route' => 'projects.create', 'when' => $mayCreate ?? false],
         ['label' => 'Create Task',   'icon' => 'tasks',         'tone' => 'tone-accent', 'route' => 'tasks.index'],
-        ['label' => 'Submit EOD',    'icon' => 'announcements', 'tone' => 'tone-warn',   'route' => 'projects.updates'],
+        ['label' => 'Project Update',    'icon' => 'announcements', 'tone' => 'tone-warn',   'route' => 'projects.updates'],
         ['label' => 'Assign Team',   'icon' => 'teams',         'tone' => '',            'route' => 'teams.index'],
         ['label' => 'Project Report','icon' => 'reports',       'tone' => 'tone-alt',    'route' => 'reports.index'],
         ['label' => 'View Meetings', 'icon' => 'meetings',      'tone' => 'tone-danger', 'route' => 'meetings.index'],

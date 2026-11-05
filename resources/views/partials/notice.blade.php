@@ -3,7 +3,8 @@
 
     @include('partials.notice', ['tone' => 'danger', 'title' => '…', 'message' => '…'])
 
-    `tone` is one of danger | warning | info | success. `title` is optional.
+    `tone` is one of danger | warning | info | success. `title` is optional, and so
+    are `actionLabel` and `actionHref`, a link to where the notice can be dealt with.
 --}}
 @php
     $tone = in_array($tone ?? 'danger', ['danger', 'warning', 'info', 'success'], true)
@@ -42,4 +43,8 @@
         @endforeach
         <p>{{ $message }}</p>
     </div>
+
+    @isset($actionHref)
+        <a class="btn btn-outline btn-sm notice-action" href="{{ $actionHref }}">{{ $actionLabel }}</a>
+    @endisset
 </div>

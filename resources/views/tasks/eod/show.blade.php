@@ -22,6 +22,7 @@
             <p>
                 Sent {{ $report->submitted_at->format('d M Y, g:i A') }}
                 @if ($report->wasFiledLate()) · <strong>filed late</strong> @endif
+                @if ($urgentRequest) · marked urgent by {{ $urgentRequest->requesterName() }} @endif
             </p>
         </div>
 

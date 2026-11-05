@@ -193,3 +193,5 @@
 }
 .eod-not-filed-list li { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 12px; color: var(--muted); }
 .eod-not-filed-list strong { font-size: 13px; font-weight: 600; color: var(--ink); }
+.eod-urgent-form { margin-top: 6px; }
+.eod-urgent-pill { align-self: flex-start; margin-top: 6px; white-space: normal; }

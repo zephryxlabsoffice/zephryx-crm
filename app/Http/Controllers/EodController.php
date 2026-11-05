@@ -5,14 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\EodItem;
 use App\Models\EodReport;
+use App\Models\EodUrgentRequest;
 use App\Models\Project;
 use App\Models\Task;
 use App\Support\AttendancePolicy;
 use App\Support\Audit\AuditLog;
 use App\Support\EodPolicy;
+use App\Support\EodUrgent;
 use App\Support\Notifier;
 use App\Support\Rbac\Rbac;
+use App\Support\WebPush;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -36,8 +40,13 @@ use Illuminate\Validation\ValidationException;
  * AN OLDER DAY NEVER OVERWRITES A NEWER ONE
  *
  * Filing Monday on Wednesday must not reopen a task Tuesday's report finished, so
- * a report only moves a task if no later report mentions it. Removing a line does
- * not put a task back either: that is a decision for somebody who can edit it.
+ * a report only moves a task if no later report mentions it. Nor may it undo what
+ * somebody did to the task since that day: an earlier day can still say a task was
+ * finished, but it cannot put one back to In Progress. Removing a line does not put
+ * a task back either: that is a decision for somebody who can edit it.
+ *
+ * A task finished after that day is still offered, or the day it was being worked on
+ * could never be reported.
  *
  * WHO IT GOES TO
  *
@@ -59,6 +68,7 @@ class EodController extends Controller
         protected Rbac $rbac,
         protected AuditLog $audit,
         protected Notifier $notify,
+        protected WebPush $push,
     ) {}
 
     /**
@@ -88,6 +98,7 @@ class EodController extends Controller
             'date' => $date,
             'earliestDate' => EodPolicy::startsOn()?->toDateString(),
             'report' => $report,
+            'urgentRequest' => $report === null ? EodUrgent::forDay($employee->id, $date) : null,
             'assignedTasks' => $this->assignedTasks($employee, $date, $report),
             'extraItems' => $report?->items->whereNull('task_id')->values() ?? collect(),
             'projectChoices' => Project::query()->open()->orderBy('name')->get(['id', 'name', 'reference']),
@@ -139,7 +150,18 @@ class EodController extends Controller
 
         $recipients = $this->recipientsFor($employee, $tasks, $projectIds);
 
-        $report = DB::transaction(function () use ($employee, $date, $existing, $ticked, $tasks, $extras, $recipients) {
+        $urgentRequest = $existing === null ? EodUrgent::forDay($employee->id, $date) : null;
+
+        if ($urgentRequest !== null) {
+            $recipients = $recipients->merge(
+                Employee::query()->active()->with('user')
+                    ->where('user_id', $urgentRequest->requested_by)
+                    ->whereKeyNot($employee->id)
+                    ->get()
+            )->unique('id')->values();
+        }
+
+        $report = DB::transaction(function () use ($employee, $date, $existing, $ticked, $tasks, $extras, $recipients, $urgentRequest) {
             $report = $existing ?? EodReport::create([
                 'employee_id' => $employee->id,
                 'report_date' => $date,
@@ -171,6 +193,8 @@ class EodController extends Controller
 
             $report->recipients()->syncWithoutDetaching($recipients->pluck('id')->all());
 
+            $urgentRequest?->update(['fulfilled_at' => now()]);
+
             return $report;
         });
 
@@ -188,7 +212,17 @@ class EodController extends Controller
             request: $request,
         );
 
-        $this->notify->eodFiled($report, $employee, $report->recipients()->with('user')->get(), $existing !== null, $request->user());
+        $this->notify->eodFiled(
+            $report,
+            $employee,
+            $report->recipients()->with('user')->get()->reject(fn (Employee $person) => $person->user_id === $urgentRequest?->requested_by),
+            $existing !== null,
+            $request->user(),
+        );
+
+        if ($urgentRequest !== null) {
+            $this->notify->eodUrgentFiled($report, $employee, $urgentRequest->requester, $request->user());
+        }
 
         return redirect()
             ->route('tasks.eod.show', ['eod' => $report->id])
@@ -223,9 +257,68 @@ class EodController extends Controller
                 ->sortBy(fn (EodReport $report) => $report->employee->user?->name)
                 ->values(),
             'notFiled' => $this->notFiledFor($request, $date),
+            'urgentRequests' => EodUrgent::onDay($date),
             'isWorkingDay' => AttendancePolicy::isWorkingDay($date),
             'earliestDate' => EodPolicy::startsOn()?->toDateString(),
         ]);
+    }
+
+    /**
+     * POST /tasks/eod/urgent - a manager or team lead needs this report now.
+     *
+     * Only for somebody on the viewer's own Not filed list for that day. Anybody else
+     * gets the same answer as somebody who has just filed, and nothing is written.
+     */
+    public function markUrgent(Request $request): RedirectResponse
+    {
+        abort_unless(EodPolicy::isLive() && EodUrgent::isReady(), 403);
+
+        $data = $request->validate([
+            'employee' => ['required', 'integer'],
+            'date' => $this->dateRules(),
+        ]);
+        $date = Carbon::parse($data['date'])->toDateString();
+        $back = redirect()->route('tasks.eod.team', ['date' => $date]);
+
+        $employee = $this->notFiledFor($request, $date)->firstWhere('id', (int) $data['employee']);
+
+        if ($employee === null) {
+            return $back
+                ->with('status', 'Nothing was marked: there is no report waiting from this person for that day.')
+                ->with('status_tone', 'info');
+        }
+
+        try {
+            $urgentRequest = EodUrgent::forDay($employee->id, $date) ?? EodUrgentRequest::create([
+                'employee_id' => $employee->id,
+                'report_date' => $date,
+                'requested_by' => $request->user()->id,
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            $urgentRequest = EodUrgent::forDay($employee->id, $date);
+        }
+
+        if (! $urgentRequest->wasRecentlyCreated) {
+            return $back
+                ->with('status', $urgentRequest->requesterName().' has already marked this report urgent.')
+                ->with('status_tone', 'info');
+        }
+
+        $this->notify->eodUrgent($employee->user, $request->user(), Carbon::parse($date));
+        $this->push->sendTo([$employee->user_id]);
+
+        $this->audit->record(
+            action: AuditLog::EOD_URGENT,
+            actor: $request->user(),
+            entityType: 'eod',
+            entityId: (string) $urgentRequest->id,
+            after: ($employee->user?->name ?? 'Somebody').' · '.Carbon::parse($date)->format('D d M Y'),
+            request: $request,
+        );
+
+        return $back
+            ->with('status', ($employee->user?->name ?? 'They').' has been told this report is urgent.')
+            ->with('status_tone', 'success');
     }
 
     /**
@@ -294,6 +387,7 @@ class EodController extends Controller
             'activeNav' => 'tasks',
             'report' => $report,
             'isMine' => $report->employee_id === $this->employeeFor($request)?->id,
+            'urgentRequest' => EodUrgent::forDay($report->employee_id, $report->report_date->toDateString()),
         ]);
     }
 
@@ -316,8 +410,8 @@ class EodController extends Controller
     }
 
     /**
-     * Their open tasks that have started by that date, plus anything already in
-     * this report, so a task finished in it stays on the page.
+     * Their tasks that have started by that date and were still open on it, plus
+     * anything already in this report, so a task finished in it stays on the page.
      *
      * @return Collection<int, Task>
      */
@@ -331,7 +425,9 @@ class EodController extends Controller
             ->where(fn (Builder $q) => $q
                 ->whereIn('id', $alreadyReported)
                 ->orWhere(fn (Builder $open) => $open
-                    ->open()
+                    ->where(fn (Builder $stillOpen) => $stillOpen
+                        ->open()
+                        ->orWhere('completed_at', '>=', Carbon::parse($date)->startOfDay()))
                     ->where(fn (Builder $started) => $started
                         ->whereNull('starts_on')
                         ->orWhereDate('starts_on', '<=', $date))))
@@ -384,6 +480,12 @@ class EodController extends Controller
             ->exists();
 
         if ($aLaterReportSpeaksForIt || $task->status === $status) {
+            return;
+        }
+
+        $changedSinceThatDay = $task->updated_at?->gt($report->report_date->copy()->endOfDay()) ?? false;
+
+        if ($status !== 'completed' && $changedSinceThatDay) {
             return;
         }
 

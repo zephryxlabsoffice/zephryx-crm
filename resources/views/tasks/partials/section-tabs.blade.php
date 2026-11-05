@@ -11,6 +11,7 @@
         $rbac->can($sectionUser, 'tasks.assign')
         || $rbac->can($sectionUser, \App\Models\EodReport::VIEW_ALL_PERMISSION)
         || \App\Models\Employee::whereIn('reports_to', \App\Models\Employee::where('user_id', $sectionUser->id)->select('id'))->exists()
+        || \App\Models\Team::whereIn('lead_id', \App\Models\Employee::where('user_id', $sectionUser->id)->select('id'))->exists()
     );
 
     $eodIsLive = \App\Support\EodPolicy::isLive();

@@ -25,9 +25,20 @@
             <div class="section-hd">Not filed yet <span class="tab-count">{{ $notFiled->count() }}</span></div>
             <ul class="eod-not-filed-list">
                 @foreach ($notFiled as $person)
+                    @php $urgent = $urgentRequests->get($person->id); @endphp
                     <li>
                         <strong>{{ $person->user?->name }}</strong>
                         <span>{{ $person->department?->name ?? 'No department' }}</span>
+                        @if ($urgent)
+                            <span class="pill pill-amber eod-urgent-pill">Urgent, marked by {{ $urgent->requesterName() }}</span>
+                        @else
+                            <form method="POST" action="{{ route('tasks.eod.urgent') }}" class="eod-urgent-form">
+                                @csrf
+                                <input type="hidden" name="employee" value="{{ $person->id }}">
+                                <input type="hidden" name="date" value="{{ $date }}">
+                                <button class="btn btn-outline btn-sm" type="submit">Mark urgent</button>
+                            </form>
+                        @endif
                     </li>
                 @endforeach
             </ul>
@@ -57,6 +68,7 @@
                             <td role="cell" data-label="Sent">
                                 {{ $report->submitted_at->format('d M, g:i A') }}
                                 @if ($report->wasFiledLate()) <span class="pill pill-amber">Late</span> @endif
+                                @if ($urgentRequests->has($report->employee_id)) <span class="pill pill-amber">Marked urgent</span> @endif
                             </td>
                             <td role="cell" class="cell-actions" data-label="Open">
                                 <a class="btn btn-outline btn-sm" href="{{ route('tasks.eod.show', ['eod' => $report->id]) }}">Open</a>
