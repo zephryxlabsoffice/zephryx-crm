@@ -193,6 +193,8 @@ class AuditLog
 
     public const EOD_UPDATED = 'eod.updated';
 
+    public const EOD_URGENT = 'eod.urgent';
+
     public const TASK_REOPENED = 'task.reopened';
 
     public const TASK_COMMENTED = 'task.commented';

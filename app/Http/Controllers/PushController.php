@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Notification;
 use App\Models\PushSubscription;
+use App\Support\EodReminders;
+use App\Support\EodUrgent;
 use App\Support\WebPush;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -52,7 +54,7 @@ class PushController extends Controller
     {
         $latest = Notification::query()
             ->where('user_id', $request->user()->id)
-            ->where('kind', 'announcement')
+            ->whereIn('kind', ['announcement', EodReminders::KIND, EodUrgent::KIND])
             ->whereNull('read_at')
             ->orderByDesc('id')
             ->first();

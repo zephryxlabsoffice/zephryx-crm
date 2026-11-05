@@ -4,7 +4,7 @@
     use App\Models\ProjectUpdate;
 @endphp
 
-@section('title', 'Submit EOD · '.$project['name'])
+@section('title', 'Project Update · '.$project['name'])
 
 @section('content')
     <div class="page-hd-row">
@@ -108,7 +108,7 @@
 
                     <div class="prose">
                         <p>
-                            Internal is the default because a useful end-of-day note says what
+                            Internal is the default because a useful project note says what
                             actually happened - what is blocked, what was redone, what is waiting
                             on somebody. All of that is worth recording and most of it is not for
                             the client to read.

@@ -2,7 +2,9 @@
 
 namespace App\Http\View\Composers;
 
+use App\Models\EodUrgentRequest;
 use App\Models\User;
+use App\Support\EodUrgent;
 use App\Support\Navigation\Navigation;
 use App\Support\NotificationDirectory;
 use App\Support\ProfileDirectory;
@@ -10,6 +12,7 @@ use App\Support\Realm;
 use App\Support\Shell;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 /**
@@ -45,6 +48,7 @@ class ShellComposer
             'sidebarState' => Shell::sidebarState($this->request),
             'density' => Shell::density($this->request),
             'notifications' => $this->notifications($realm, $user),
+            'urgentEodReports' => $this->urgentEodReports($realm, $user),
             'userName' => $identity['name'],
             'userInitials' => Shell::initials($identity['name']),
             // The signed-in person's own photo, staff side only (v1.2.3).
@@ -52,6 +56,27 @@ class ShellComposer
                 && ProfileDirectory::employeeFor($user)?->profile?->photo_path !== null,
             'userRole' => $identity['role'],
         ]);
+    }
+
+    /**
+     * The End of Day reports somebody has marked urgent for this person. The form
+     * already open on one of those days says so itself, so it is left out here.
+     *
+     * @return Collection<int, EodUrgentRequest>
+     */
+    protected function urgentEodReports(string $realm, ?Authenticatable $user): Collection
+    {
+        if ($realm !== Realm::STAFF || ! $user instanceof User) {
+            return collect();
+        }
+
+        $openOnForm = $this->request->routeIs('tasks.eod')
+            ? (string) $this->request->query('date', now()->toDateString())
+            : null;
+
+        return EodUrgent::waitingFor($user)
+            ->reject(fn (EodUrgentRequest $urgent) => $urgent->report_date->toDateString() === $openOnForm)
+            ->values();
     }
 
     /**

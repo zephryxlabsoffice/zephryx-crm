@@ -6,11 +6,13 @@
     <div class="page-hd-row">
         <div class="page-hd">
             <h1>My Tasks</h1>
-            <p>Everything assigned to you. Report your progress in End of Day.</p>
+            <p>Everything assigned to you.@if (\App\Support\EodPolicy::isLive()) Report your progress in End of Day.@endif</p>
         </div>
 
         <div class="hd-actions">
-            <a class="btn btn-primary" href="{{ route('tasks.eod') }}">Fill End of Day</a>
+            @if (\App\Support\EodPolicy::isLive())
+                <a class="btn btn-primary" href="{{ route('tasks.eod') }}">Fill End of Day</a>
+            @endif
         </div>
     </div>
 

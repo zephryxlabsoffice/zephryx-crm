@@ -94,6 +94,16 @@
                     ])
                 @endif
 
+                @foreach ($urgentEodReports ?? [] as $urgentEod)
+                    @include('partials.notice', [
+                        'tone' => 'warning',
+                        'title' => 'Urgent: your End of Day for '.$urgentEod->report_date->format('l j F'),
+                        'message' => $urgentEod->requesterName().' needs this report as soon as you can file it.',
+                        'actionLabel' => 'File it now',
+                        'actionHref' => route('tasks.eod', ['date' => $urgentEod->report_date->toDateString()]),
+                    ])
+                @endforeach
+
                 @yield('content')
 
                 {{-- Launch day: the email if it has not gone yet, and the welcome

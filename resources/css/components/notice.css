@@ -29,6 +29,7 @@
 .notice-icon svg { width: 20px; height: 20px; }
 
 .notice-body { min-width: 0; flex: 1; }
+.notice-action { flex-shrink: 0; align-self: center; }
 
 /* A notice that carries its own way out - "nobody is assigned" beside an
    Assign button. The action wraps below on a narrow screen rather than

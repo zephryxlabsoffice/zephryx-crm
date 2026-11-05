@@ -215,7 +215,7 @@
                             <p>
                                 The project is created and appears on the list, and on the
                                 personal page of everybody managing it or in a team assigned to
-                                it. They can post an end-of-day update against it straight away.
+                                it. They can post a project update against it straight away.
                             </p>
                         @endif
                     </div>

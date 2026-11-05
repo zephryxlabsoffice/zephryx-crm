@@ -2,20 +2,30 @@
 
 namespace Tests\Feature;
 
+use App\Mail\EodUrgentMail;
 use App\Models\Client;
 use App\Models\Employee;
 use App\Models\EodItem;
 use App\Models\EodReport;
+use App\Models\EodUrgentRequest;
 use App\Models\Notification;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\Task;
 use App\Models\Team;
 use App\Models\User;
+use App\Support\Admin\CompanySettings;
 use App\Support\Audit\AuditLog;
+use App\Support\EodPolicy;
+use App\Support\EodReminders;
+use App\Support\EodUrgent;
+use App\Support\LeavePresenter;
 use App\Support\Rbac\Rbac;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -23,6 +33,568 @@ use Tests\TestCase;
  */
 class EodReportTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Running, unless a test below says otherwise. The shipped date passes by itself.
+        config(['tasks.eod_starts_on' => null]);
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
+
+    /* ── filing an older day ──────────────────────────────────────────────── */
+
+    public function test_anybody_with_days_can_file_an_older_day_after_checking_out(): void
+    {
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $yesterday = '2026-11-03';
+
+        foreach ([['employee'], ['employee', 'team_lead'], ['employee', 'manager']] as $index => $roles) {
+            $person = $this->person($roles, 'EMP95'.$index);
+            $task = $this->taskFor($person);
+
+            DB::table('attendance_records')->insert([
+                'employee_id' => $person->id,
+                'date' => $yesterday,
+                'check_in' => '09:30:00',
+                'check_out' => '17:00:00',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $this->actingAs($person->user);
+
+            $this->get('/tasks/eod?date='.$yesterday)->assertOk()->assertSee($task->name);
+
+            $this->post('/tasks/eod', [
+                'report_date' => $yesterday,
+                'assigned' => [$task->id => ['checked' => 1, 'status' => 'completed']],
+            ])->assertSessionHasNoErrors();
+
+            $this->assertSame('completed', $task->fresh()->status, implode(', ', $roles));
+            $this->assertTrue(EodReport::where('employee_id', $person->id)->sole()->wasFiledLate());
+        }
+    }
+
+    public function test_a_task_finished_after_that_day_is_still_offered_for_it(): void
+    {
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $me = $this->person(['employee'], 'EMP954');
+        $finishedLater = $this->taskFor($me);
+        $finishedBefore = $this->taskFor($me, [
+            'status' => 'completed',
+            'completed_at' => '2026-11-01 16:00:00',
+        ]);
+
+        $this->actingAs($me->user);
+        $this->post('/tasks/eod', [
+            'report_date' => '2026-11-03',
+            'assigned' => [$finishedLater->id => ['checked' => 1, 'status' => 'completed']],
+        ]);
+
+        $this->get('/tasks/eod?date=2026-11-02')
+            ->assertOk()
+            ->assertSee($finishedLater->name)
+            ->assertDontSee($finishedBefore->name);
+    }
+
+    public function test_an_older_day_cannot_reopen_a_task_changed_since_but_can_finish_one(): void
+    {
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $me = $this->person(['employee'], 'EMP955');
+        $closedByALead = $this->taskFor($me, ['status' => 'completed', 'completed_at' => '2026-11-04 09:00:00']);
+        $stillOpen = $this->taskFor($me);
+
+        $this->actingAs($me->user);
+        $this->post('/tasks/eod', [
+            'report_date' => '2026-11-02',
+            'assigned' => [
+                $closedByALead->id => ['checked' => 1, 'status' => 'in_progress'],
+                $stillOpen->id => ['checked' => 1, 'status' => 'completed'],
+            ],
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('completed', $closedByALead->fresh()->status);
+        $this->assertSame('completed', $stillOpen->fresh()->status);
+    }
+
+    /* ── urgent ───────────────────────────────────────────────────────────── */
+
+    public function test_a_manager_marks_a_missing_report_urgent_and_the_person_is_told_on_every_page(): void
+    {
+        Http::fake();
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $boss = $this->person(['employee', 'manager'], 'EMP956');
+        $late = $this->person(['employee'], 'EMP957');
+        $late->update(['reports_to' => $boss->id]);
+
+        $this->actingAs($boss->user);
+        $this->get('/tasks/eod/team?date=2026-11-03')->assertSee('Mark urgent');
+        $this->post('/tasks/eod/urgent', ['employee' => $late->id, 'date' => '2026-11-03'])
+            ->assertRedirect('/tasks/eod/team?date=2026-11-03')
+            ->assertSessionHas('status_tone', 'success');
+
+        $this->get('/tasks/eod/team?date=2026-11-03')->assertSee('Urgent, marked by')->assertDontSee('Mark urgent');
+
+        $bell = Notification::where('user_id', $late->user_id)->where('kind', EodUrgent::KIND)->sole();
+        $this->assertStringContainsString('date=2026-11-03', $bell->link());
+        $this->assertSame(1, DB::table('audit_log')->where('action', AuditLog::EOD_URGENT)->count());
+
+        $this->actingAs($late->user);
+        $this->get('/tasks/mine')->assertSee('Urgent: your End of Day for Tuesday 3 November')->assertSee('date=2026-11-03', false);
+    }
+
+    public function test_marking_twice_tells_the_person_once(): void
+    {
+        Http::fake();
+        Mail::fake();
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $boss = $this->person(['employee', 'manager'], 'EMP958');
+        $late = $this->person(['employee'], 'EMP959');
+        $late->update(['reports_to' => $boss->id]);
+
+        $this->actingAs($boss->user);
+        $this->post('/tasks/eod/urgent', ['employee' => $late->id, 'date' => '2026-11-03']);
+        $this->post('/tasks/eod/urgent', ['employee' => $late->id, 'date' => '2026-11-03'])
+            ->assertSessionHas('status_tone', 'info');
+
+        $this->assertSame(1, Notification::where('user_id', $late->user_id)->where('kind', EodUrgent::KIND)->count());
+        Mail::assertSent(EodUrgentMail::class, 1);
+    }
+
+    public function test_marking_urgent_emails_the_person_a_link_to_that_day(): void
+    {
+        Http::fake();
+        Mail::fake();
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $boss = $this->person(['employee', 'manager'], 'EMP976');
+        $late = $this->person(['employee'], 'EMP977');
+        $late->update(['reports_to' => $boss->id]);
+
+        $this->actingAs($boss->user);
+        $this->post('/tasks/eod/urgent', ['employee' => $late->id, 'date' => '2026-11-03']);
+
+        Mail::assertSent(EodUrgentMail::class, fn (EodUrgentMail $mail) => $mail->hasTo($late->user->email)
+            && $mail->requesterName === $boss->user->name
+            && str_contains($mail->url, 'date=2026-11-03'));
+    }
+
+    public function test_a_mail_failure_still_leaves_the_bell_and_the_notice(): void
+    {
+        Http::fake();
+        Mail::shouldReceive('to')->andThrow(new \RuntimeException('SMTP is down'));
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $boss = $this->person(['employee', 'manager'], 'EMP978');
+        $late = $this->person(['employee'], 'EMP979');
+        $late->update(['reports_to' => $boss->id]);
+
+        $this->actingAs($boss->user);
+        $this->post('/tasks/eod/urgent', ['employee' => $late->id, 'date' => '2026-11-03'])
+            ->assertSessionHas('status_tone', 'success');
+
+        $this->assertSame(1, Notification::where('user_id', $late->user_id)->where('kind', EodUrgent::KIND)->count());
+    }
+
+    public function test_a_project_manager_can_mark_people_on_their_open_projects_only(): void
+    {
+        Http::fake();
+        Mail::fake();
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $projectManager = $this->person(['employee'], 'EMP980');
+        $project = $this->project($projectManager);
+
+        $inTeam = $this->person(['employee'], 'EMP981');
+        $team = Team::create(['reference' => 'TEAM-PM', 'name' => 'On it', 'status' => 'active', 'formed_on' => now()]);
+        $team->members()->attach($inTeam->id);
+        $project->teams()->attach($team->id);
+
+        $holdsATask = $this->person(['employee'], 'EMP982');
+        $this->taskFor($holdsATask, ['project_id' => $project->id]);
+
+        $finishedThere = $this->person(['employee'], 'EMP983');
+        $this->taskFor($finishedThere, ['project_id' => $project->id, 'status' => 'completed', 'completed_at' => now()]);
+
+        $closedProject = $this->project($projectManager);
+        $closedProject->update(['status' => 'completed']);
+        $onClosed = $this->person(['employee'], 'EMP984');
+        $this->taskFor($onClosed, ['project_id' => $closedProject->id]);
+
+        $elsewhere = $this->person(['employee'], 'EMP985');
+
+        $this->actingAs($projectManager->user);
+
+        $this->assertEqualsCanonicalizing(
+            [$inTeam->id, $holdsATask->id],
+            $this->get('/tasks/eod/team?date=2026-11-03')->assertOk()->assertSee('Mark urgent')->viewData('notFiled')->pluck('id')->all(),
+        );
+
+        $this->post('/tasks/eod/urgent', ['employee' => $inTeam->id, 'date' => '2026-11-03'])->assertSessionHas('status_tone', 'success');
+        $this->post('/tasks/eod/urgent', ['employee' => $elsewhere->id, 'date' => '2026-11-03'])->assertSessionHas('status_tone', 'info');
+
+        $this->assertSame([$inTeam->id], EodUrgentRequest::pluck('employee_id')->all());
+    }
+
+    public function test_switching_the_permission_off_stops_project_managers_but_not_reporting_managers(): void
+    {
+        Http::fake();
+        Mail::fake();
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $projectManager = $this->person(['employee'], 'EMP986');
+        $project = $this->project($projectManager);
+        $onProject = $this->person(['employee'], 'EMP987');
+        $this->taskFor($onProject, ['project_id' => $project->id]);
+        $report = $this->person(['employee'], 'EMP988');
+        $report->update(['reports_to' => $projectManager->id]);
+
+        // The way the owner would: unticking it on the Employee role in Access Controls.
+        $keep = Role::where('role_key', 'employee')->firstOrFail()->permissions->pluck('permission_key')
+            ->reject(fn (string $key) => $key === EodUrgent::PROJECT_PERMISSION)->values()->all();
+
+        $this->signInAsAdmin();
+        $this->withSession(['_token' => 'test-token'])
+            ->post('/admin/access/employee', ['permissions' => $keep, '_token' => 'test-token'])
+            ->assertRedirect();
+        app(Rbac::class)->forget();
+
+        $this->actingAs($projectManager->user);
+
+        $this->post('/tasks/eod/urgent', ['employee' => $onProject->id, 'date' => '2026-11-03'])->assertSessionHas('status_tone', 'info');
+        $this->post('/tasks/eod/urgent', ['employee' => $report->id, 'date' => '2026-11-03'])->assertSessionHas('status_tone', 'success');
+
+        $this->assertSame([$report->id], EodUrgentRequest::pluck('employee_id')->all());
+    }
+
+    public function test_the_permission_is_a_tick_on_the_employee_role_alone(): void
+    {
+        $holders = DB::table('role_permissions')
+            ->join('roles', 'roles.id', '=', 'role_permissions.role_id')
+            ->join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
+            ->where('permission_key', EodUrgent::PROJECT_PERMISSION)
+            ->pluck('role_key')
+            ->all();
+
+        $this->assertSame(['employee'], $holders);
+    }
+
+    public function test_only_somebody_waiting_on_that_person_can_mark_it(): void
+    {
+        Http::fake();
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $otherBoss = $this->person(['employee', 'manager'], 'EMP960');
+        $colleague = $this->person(['employee'], 'EMP961');
+        $late = $this->person(['employee'], 'EMP962');
+
+        foreach ([$otherBoss, $colleague] as $outsider) {
+            $this->actingAs($outsider->user);
+            $this->post('/tasks/eod/urgent', ['employee' => $late->id, 'date' => '2026-11-03'])
+                ->assertSessionHas('status_tone', 'info');
+        }
+
+        $this->assertSame(0, EodUrgentRequest::count());
+        $this->assertSame(0, Notification::where('user_id', $late->user_id)->count());
+    }
+
+    public function test_a_team_lead_can_mark_a_member_and_the_ceo_can_mark_anybody(): void
+    {
+        Http::fake();
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $lead = $this->person(['employee', 'team_lead'], 'EMP963');
+        $member = $this->person(['employee'], 'EMP964');
+        Team::create(['reference' => 'TEAM-UR', 'name' => 'Urgent', 'lead_id' => $lead->id, 'status' => 'active', 'formed_on' => now()])
+            ->members()->attach($member->id);
+        $ceo = $this->person(['employee', 'ceo'], 'EMP965');
+        $anybody = $this->person(['employee'], 'EMP966');
+
+        $this->actingAs($lead->user);
+        $this->post('/tasks/eod/urgent', ['employee' => $member->id, 'date' => '2026-11-03'])->assertSessionHas('status_tone', 'success');
+
+        $this->actingAs($ceo->user);
+        $this->post('/tasks/eod/urgent', ['employee' => $anybody->id, 'date' => '2026-11-03'])->assertSessionHas('status_tone', 'success');
+
+        $this->assertSame(2, EodUrgentRequest::count());
+    }
+
+    public function test_somebody_who_has_filed_or_is_on_leave_cannot_be_marked(): void
+    {
+        Http::fake();
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $boss = $this->person(['employee', 'manager'], 'EMP967');
+        $filed = $this->person(['employee'], 'EMP968');
+        $filed->update(['reports_to' => $boss->id]);
+        $onLeave = $this->person(['employee'], 'EMP969');
+        $onLeave->update(['reports_to' => $boss->id]);
+        $this->approvedLeave($onLeave, '2026-11-03', '2026-11-03');
+
+        $this->actingAs($filed->user);
+        $this->post('/tasks/eod', [
+            'report_date' => '2026-11-03',
+            'extra' => [['project' => 'none', 'title' => 'Line', 'status' => 'completed']],
+        ]);
+
+        $this->actingAs($boss->user);
+        $this->post('/tasks/eod/urgent', ['employee' => $filed->id, 'date' => '2026-11-03']);
+        $this->post('/tasks/eod/urgent', ['employee' => $onLeave->id, 'date' => '2026-11-03']);
+
+        $this->assertSame(0, EodUrgentRequest::count());
+    }
+
+    public function test_filing_clears_the_notice_and_tells_whoever_marked_it_once(): void
+    {
+        Http::fake();
+        Carbon::setTestNow('2026-11-04 10:00:00');
+
+        $boss = $this->person(['employee', 'manager'], 'EMP970');
+        $ceo = $this->person(['employee', 'ceo'], 'EMP971');
+        $late = $this->person(['employee'], 'EMP972');
+        $late->update(['reports_to' => $boss->id]);
+
+        $this->actingAs($ceo->user);
+        $this->post('/tasks/eod/urgent', ['employee' => $late->id, 'date' => '2026-11-03']);
+
+        $this->actingAs($late->user);
+        $this->get('/tasks/eod?date=2026-11-03')->assertSee('needs this report');
+        $this->post('/tasks/eod', [
+            'report_date' => '2026-11-03',
+            'extra' => [['project' => 'none', 'title' => 'Line', 'status' => 'completed']],
+        ])->assertSessionHasNoErrors();
+
+        $this->get('/tasks/mine')->assertDontSee('File it now');
+
+        $report = EodReport::sole();
+        $this->assertTrue($report->recipients->contains('id', $ceo->id));
+
+        $told = Notification::where('user_id', $ceo->user_id)->where('kind', 'eod')->sole();
+        $this->assertStringContainsString('marked urgent', $told->title);
+        $this->assertSame(1, Notification::where('user_id', $boss->user_id)->where('kind', 'eod')->count());
+
+        $this->actingAs($ceo->user);
+        $this->get('/tasks/eod/'.$report->id)->assertOk()->assertSee('marked urgent by');
+    }
+
+    public function test_an_urgent_report_cannot_be_marked_before_the_start_date(): void
+    {
+        config(['tasks.eod_starts_on' => Carbon::today()->addMonth()->toDateString()]);
+
+        $boss = $this->person(['employee', 'manager'], 'EMP973');
+        $late = $this->person(['employee'], 'EMP974');
+        $late->update(['reports_to' => $boss->id]);
+
+        $this->actingAs($boss->user);
+        $this->post('/tasks/eod/urgent', ['employee' => $late->id, 'date' => Carbon::today()->toDateString()])->assertForbidden();
+    }
+
+    public function test_pages_still_open_before_the_update_has_been_applied(): void
+    {
+        Schema::drop('eod_urgent_requests');
+
+        $me = $this->person(['employee'], 'EMP975');
+
+        $this->actingAs($me->user);
+        $this->get('/tasks/mine')->assertOk();
+        $this->get('/tasks/eod')->assertOk();
+    }
+
+    /* ── before it starts ─────────────────────────────────────────────────── */
+
+    public function test_before_its_start_date_the_form_is_closed_and_tasks_finish_as_before(): void
+    {
+        config(['tasks.eod_starts_on' => Carbon::today()->addMonth()->toDateString()]);
+
+        $me = $this->person(['employee'], 'EMP930');
+        $task = $this->taskFor($me);
+
+        $this->actingAs($me->user);
+
+        $this->get('/tasks/eod')->assertOk()->assertSee('End of Day starts on')->assertDontSee('data-eod-form', false);
+
+        $this->post('/tasks/eod', [
+            'report_date' => Carbon::today()->toDateString(),
+            'assigned' => [$task->id => ['checked' => 1, 'status' => 'completed']],
+        ])->assertForbidden();
+
+        $this->assertSame('pending', $task->fresh()->status);
+
+        $this->get('/tasks/'.$task->reference)->assertOk()->assertSee('Mark Completed')->assertDontSee('Report in End of Day');
+        $this->get('/tasks/mine')->assertOk()->assertDontSee(route('tasks.eod'), false);
+    }
+
+    public function test_it_opens_by_itself_on_its_start_date(): void
+    {
+        config(['tasks.eod_starts_on' => '2026-12-01']);
+        Carbon::setTestNow('2026-12-01 09:00:00');
+
+        $me = $this->person(['employee'], 'EMP931');
+
+        $this->actingAs($me->user);
+
+        $this->get('/tasks/eod')->assertOk()->assertSee('data-eod-form', false);
+    }
+
+    public function test_a_day_before_the_start_date_cannot_be_filed(): void
+    {
+        config(['tasks.eod_starts_on' => '2026-12-01']);
+        Carbon::setTestNow('2026-12-03 09:00:00');
+
+        $me = $this->person(['employee'], 'EMP932');
+
+        $this->actingAs($me->user);
+
+        $this->post('/tasks/eod', [
+            'report_date' => '2026-11-30',
+            'extra' => [['project' => 'none', 'title' => 'Too early', 'status' => 'completed']],
+        ])->assertSessionHasErrors('report_date');
+    }
+
+    public function test_the_start_date_is_an_admin_setting(): void
+    {
+        $this->signInAsAdmin();
+
+        $this->get('/admin/settings')->assertOk()->assertSee('End of Day starts on');
+
+        $this->post('/admin/settings', ['key' => 'tasks.eod_starts_on', 'value' => '2027-01-04', 'reason' => 'Moved'])
+            ->assertRedirect();
+
+        CompanySettings::apply();
+
+        $this->assertSame('2027-01-04', EodPolicy::startsOn()->toDateString());
+    }
+
+    /* ── not filed yet ────────────────────────────────────────────────────── */
+
+    public function test_a_manager_sees_who_has_not_filed_among_those_they_are_waiting_on(): void
+    {
+        Carbon::setTestNow('2026-11-04 17:00:00');
+
+        $boss = $this->person(['employee', 'manager'], 'EMP933');
+
+        $filed = $this->person(['employee'], 'EMP934');
+        $filed->update(['reports_to' => $boss->id]);
+
+        $missing = $this->person(['employee'], 'EMP935');
+        $missing->update(['reports_to' => $boss->id]);
+
+        $inMyTeam = $this->person(['employee'], 'EMP936');
+        Team::create(['reference' => 'TEAM-NF', 'name' => 'Waiting', 'lead_id' => $boss->id, 'status' => 'active', 'formed_on' => now()])
+            ->members()->attach($inMyTeam->id);
+
+        $onLeave = $this->person(['employee'], 'EMP937');
+        $onLeave->update(['reports_to' => $boss->id]);
+        $this->approvedLeave($onLeave, '2026-11-03', '2026-11-05');
+
+        $joinedLater = $this->person(['employee'], 'EMP938');
+        $joinedLater->update(['reports_to' => $boss->id, 'joined_on' => '2026-11-20']);
+
+        $somebodyElses = $this->person(['employee'], 'EMP939');
+
+        $this->actingAs($filed->user);
+        $this->post('/tasks/eod', [
+            'report_date' => '2026-11-04',
+            'extra' => [['project' => 'none', 'title' => 'Line', 'status' => 'completed']],
+        ]);
+
+        $this->actingAs($boss->user);
+
+        $names = $this->get('/tasks/eod/team?date=2026-11-04')->assertOk()->viewData('notFiled')->pluck('id')->all();
+
+        $this->assertEqualsCanonicalizing([$missing->id, $inMyTeam->id], $names);
+        $this->assertNotContains($somebodyElses->id, $names);
+    }
+
+    public function test_the_ceo_is_waiting_on_everybody(): void
+    {
+        Carbon::setTestNow('2026-11-04 17:00:00');
+
+        $anyone = $this->person(['employee'], 'EMP941');
+
+        $this->actingAs($this->person(['ceo'], 'EMP942')->user);
+
+        $this->assertContains(
+            $anyone->id,
+            $this->get('/tasks/eod/team?date=2026-11-04')->viewData('notFiled')->pluck('id')->all(),
+        );
+    }
+
+    public function test_nobody_owes_a_report_for_a_week_off(): void
+    {
+        Carbon::setTestNow('2026-11-09 17:00:00');
+        config(['attendance.week_off' => [0]]);
+
+        $boss = $this->person(['employee', 'manager'], 'EMP943');
+        $this->person(['employee'], 'EMP944')->update(['reports_to' => $boss->id]);
+
+        $this->actingAs($boss->user);
+
+        // 8 November 2026 is a Sunday.
+        $this->get('/tasks/eod/team?date=2026-11-08')
+            ->assertOk()
+            ->assertSee('not a working day');
+    }
+
+    /* ── the reminder ─────────────────────────────────────────────────────── */
+
+    public function test_the_reminder_reaches_only_those_who_have_not_filed_and_only_once(): void
+    {
+        Carbon::setTestNow('2026-11-04 18:00:00');
+        Http::fake(['*' => Http::response('', 201)]);
+
+        $filed = $this->person(['employee'], 'EMP945');
+        $missing = $this->person(['employee'], 'EMP946');
+        $onLeave = $this->person(['employee'], 'EMP947');
+        $this->approvedLeave($onLeave, '2026-11-04', '2026-11-04');
+
+        $this->actingAs($filed->user);
+        $this->post('/tasks/eod', [
+            'report_date' => '2026-11-04',
+            'extra' => [['project' => 'none', 'title' => 'Line', 'status' => 'completed']],
+        ]);
+
+        $this->actingAs($missing->user);
+        $this->post('/push/subscribe', ['endpoint' => 'https://fcm.googleapis.com/fcm/send/missing']);
+
+        $this->artisan('eod:remind')->assertSuccessful();
+        $this->artisan('eod:remind')->assertSuccessful();
+
+        $reminded = Notification::where('kind', EodReminders::KIND)->pluck('user_id')->all();
+
+        $this->assertSame([$missing->user_id], $reminded);
+        Http::assertSentCount(1);
+
+        $this->getJson('/push/latest')->assertJsonPath('title', 'Your End of Day is not filed yet');
+    }
+
+    public function test_the_reminder_stays_quiet_before_the_start_date_and_on_a_week_off(): void
+    {
+        $this->person(['employee'], 'EMP948');
+
+        config(['tasks.eod_starts_on' => '2026-12-01']);
+        Carbon::setTestNow('2026-11-04 18:00:00');
+        $this->artisan('eod:remind')->assertSuccessful();
+
+        config(['tasks.eod_starts_on' => null, 'attendance.week_off' => [0]]);
+        Carbon::setTestNow('2026-11-08 18:00:00');
+        $this->artisan('eod:remind')->assertSuccessful();
+
+        $this->assertSame(0, Notification::where('kind', EodReminders::KIND)->count());
+    }
+
     /* ── filing ───────────────────────────────────────────────────────────── */
 
     public function test_ticking_an_assigned_task_completes_it_with_no_other_step(): void
@@ -408,6 +980,23 @@ class EodReportTest extends TestCase
         app(Rbac::class)->forget($user);
 
         return Employee::create(['user_id' => $user->id, 'joined_on' => Carbon::now()->subYear()]);
+    }
+
+    protected function approvedLeave(Employee $employee, string $from, string $to): void
+    {
+        DB::table('leave_requests')->insert([
+            'reference' => 'LV-'.fake()->unique()->numberBetween(1000, 9999),
+            'employee_id' => $employee->id,
+            'type' => 'casual',
+            'from_date' => $from,
+            'to_date' => $to,
+            'days' => 1,
+            'reason' => 'Away',
+            'status' => LeavePresenter::APPROVED,
+            'applied_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     /**

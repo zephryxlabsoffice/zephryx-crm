@@ -28,12 +28,20 @@
 
         <form class="hd-actions eod-date" method="GET" action="{{ route('tasks.eod') }}">
             <label class="form-field-lbl" for="eod-date">Report for</label>
-            <input id="eod-date" type="date" name="date" value="{{ $date }}" max="{{ now()->toDateString() }}" data-auto-submit>
+            <input id="eod-date" type="date" name="date" value="{{ $date }}" min="{{ $earliestDate }}" max="{{ now()->toDateString() }}" data-auto-submit>
             <noscript><button class="btn btn-outline btn-sm" type="submit">Open</button></noscript>
         </form>
     </div>
 
     @include('tasks.partials.section-tabs', ['sectionTab' => 'eod'])
+
+    @if ($urgentRequest && $urgentRequest->fulfilled_at === null)
+        @include('partials.notice', [
+            'tone' => 'warning',
+            'title' => 'Urgent: '.$urgentRequest->requesterName().' needs this report',
+            'message' => 'Send it as soon as you can. This notice clears once it is sent.',
+        ])
+    @endif
 
     @if ($report)
         @include('partials.notice', [
@@ -45,7 +53,7 @@
         @include('partials.notice', [
             'tone' => 'info',
             'title' => 'Filing for an earlier day: '.$displayDate->format('l j F Y'),
-            'message' => 'It will show as filed late. A task only changes if no later report mentions it.',
+            'message' => 'It will show as filed late. It can still finish a task, but it will not undo anything that has happened to a task since that day.',
         ])
     @endif
 

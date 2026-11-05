@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Domain;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Support\EodUrgent;
 use App\Support\Rbac\Rbac;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -201,6 +202,8 @@ class RbacSeeder extends Seeder
         'tasks.assign',
         // Reading every End of Day report, not only those sent to you.
         'tasks.eod.all',
+        // A project manager marking a missing report urgent, for people on their projects.
+        'tasks.eod.urgent',
         /*
          * Salary. `salary.view` is the sensitive read - seeing what a colleague
          * earns is itself the harm - and `salary.manage` is the write: adding a
@@ -342,6 +345,7 @@ class RbacSeeder extends Seeder
             'status' => 'Change the status of',
             'deactivate' => 'Close a record in',
             'identifiers' => 'See identity and bank details in',
+            'urgent' => 'Project managers mark reports urgent',
             default => ucfirst($action),
         };
 
@@ -422,7 +426,9 @@ class RbacSeeder extends Seeder
             'employee' => [
                 'name' => 'Employee',
                 'description' => 'The Employee base and nothing on top of it.',
-                'permissions' => $ownTeamsOnly,
+                // Only here, so one tick in Access Controls turns it off. It reaches
+                // nobody beyond the projects the person manages.
+                'permissions' => [...$ownTeamsOnly, EodUrgent::PROJECT_PERMISSION],
                 'ranks' => ['people' => 10, 'work' => 10, 'support' => 10, 'system' => 10],
             ],
 

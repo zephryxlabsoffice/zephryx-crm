@@ -3,6 +3,7 @@
 namespace App\Support\Admin;
 
 use App\Support\AttendancePolicy;
+use App\Support\EodPolicy;
 use App\Support\LeavePolicy;
 
 /**
@@ -64,6 +65,18 @@ class SettingsCatalogue
                     .'record every time it is read, including ones already in the past.',
                 'retroactive' => true,
                 'settings' => self::workingDay(),
+            ],
+
+            'tasks' => [
+                'label' => 'Tasks',
+                'note' => 'When the daily End of Day report begins.',
+                'retroactive' => false,
+                'settings' => [
+                    self::setting('tasks.eod_starts_on', 'End of Day starts on', 'date', EodPolicy::startsOn()?->toDateString(),
+                        'Before this date the End of Day form and Team Reports are closed, tasks are '
+                        .'finished from their own page, and nobody is reminded. Reports cannot be filed '
+                        .'for days before it. Blank means it is running now. A future date is fine.'),
+                ],
             ],
 
             'leave' => [

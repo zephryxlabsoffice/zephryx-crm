@@ -10,13 +10,17 @@
     $receivesReports = $mayViewTasks && (
         $rbac->can($sectionUser, 'tasks.assign')
         || $rbac->can($sectionUser, \App\Models\EodReport::VIEW_ALL_PERMISSION)
+        || ($rbac->can($sectionUser, \App\Support\EodUrgent::PROJECT_PERMISSION) && \App\Models\Project::whereIn('manager_id', \App\Models\Employee::where('user_id', $sectionUser->id)->select('id'))->exists())
         || \App\Models\Employee::whereIn('reports_to', \App\Models\Employee::where('user_id', $sectionUser->id)->select('id'))->exists()
+        || \App\Models\Team::whereIn('lead_id', \App\Models\Employee::where('user_id', $sectionUser->id)->select('id'))->exists()
     );
 
+    $eodIsLive = \App\Support\EodPolicy::isLive();
+
     $sectionTabs = array_filter([
-        'eod' => $hasDays ? ['End of Day', route('tasks.eod')] : null,
+        'eod' => $hasDays && $eodIsLive ? ['End of Day', route('tasks.eod')] : null,
         'mine' => $hasDays ? ['My Tasks', route('tasks.mine')] : null,
-        'eod-team' => $receivesReports ? ['Team Reports', route('tasks.eod.team')] : null,
+        'eod-team' => $receivesReports && $eodIsLive ? ['Team Reports', route('tasks.eod.team')] : null,
         'all' => $mayViewTasks ? ['All Tasks', route('tasks.index')] : null,
         'team' => $mayViewTasks ? ['Team Tasks', route('tasks.team')] : null,
     ]);

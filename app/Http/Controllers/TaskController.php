@@ -10,6 +10,7 @@ use App\Models\TaskComment;
 use App\Models\Team;
 use App\Support\Audit\AuditLog;
 use App\Support\Documents\DocumentStore;
+use App\Support\EodPolicy;
 use App\Support\Notifier;
 use App\Support\Rbac\Rbac;
 use App\Support\TaskDirectory;
@@ -532,7 +533,8 @@ class TaskController extends Controller
     {
         $employee = $this->employeeFor($request);
 
-        return $employee !== null
+        return EodPolicy::isLive()
+            && $employee !== null
             && $task->assignees->contains('id', $employee->id)
             && ! $task->team?->isLedBy($employee)
             && ! $this->rbac->can($request->user(), 'tasks.edit');
