@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -59,13 +60,14 @@ class TicketController extends Controller
 {
     protected const PER_PAGE = 8;
 
+    protected const MAX_FILES_ON_RAISE = 5;
+
     public function __construct(
         protected Rbac $rbac,
         protected AuditLog $audit,
         protected Notifier $notify,
         protected DocumentStore $documents,
-    ) {
-    }
+    ) {}
 
     /**
      * GET /tickets - every ticket, with a tab per queue.
@@ -188,6 +190,9 @@ class TicketController extends Controller
             'needsTriage' => in_array($record['status'], ['unassigned', 'escalated'], true),
             'mayTriage' => $this->rbac->can($request->user(), 'tickets.triage'),
             'mayConvertToTask' => $this->rbac->can($request->user(), 'tasks.create'),
+            'agents' => TicketDirectory::assignableFor($record['model'])
+                ->map(fn (Employee $e) => ['id' => $e->id, 'name' => (string) $e->user?->name])
+                ->all(),
         ] + $this->options());
     }
 
@@ -234,6 +239,16 @@ class TicketController extends Controller
             'project_id' => ['nullable', Rule::exists('projects', 'id')],
             'client_id' => ['nullable', 'required_if:type,client', Rule::exists('clients', 'id')],
             'supersedes' => ['nullable', 'string', 'max:32', Rule::exists('tickets', 'reference')],
+            'documents' => ['nullable', 'array', 'max:'.self::MAX_FILES_ON_RAISE],
+            'documents.*' => [
+                'file',
+                'mimes:'.implode(',', DocumentStore::ALLOWED),
+                'max:'.(int) (DocumentStore::MAX_BYTES / 1024),
+            ],
+        ], [
+            'documents.max' => 'Attach up to '.self::MAX_FILES_ON_RAISE.' files.',
+            'documents.*.mimes' => 'Attach a PDF, PNG or JPG.',
+            'documents.*.max' => 'Each file can be up to '.(DocumentStore::MAX_BYTES / 1024 / 1024).' MB.',
         ]);
 
         $supersedes = ($data['supersedes'] ?? null) !== null
@@ -261,6 +276,8 @@ class TicketController extends Controller
             request: $request,
         );
 
+        $notStored = $this->attachOnRaise($request, $ticket, $data['documents'] ?? []);
+
         // Support and the project manager first - see Notifier::ticketRaised.
         // A no-op for an internal ticket.
         $this->notify->ticketRaised($ticket->load('project.manager.user'), $request->user());
@@ -283,8 +300,53 @@ class TicketController extends Controller
 
         return redirect()
             ->route('tickets.show', ['ticket' => $ticket->reference])
-            ->with('status', 'Ticket raised. It is in the queue for triage.')
-            ->with('status_tone', 'success');
+            ->with('status', $notStored === []
+                ? 'Ticket raised. It is in the queue for triage.'
+                : 'Ticket raised, but these files could not be stored: '.implode(', ', $notStored).'. Add them from the ticket page.')
+            ->with('status_tone', $notStored === [] ? 'success' : 'warning');
+    }
+
+    /**
+     * The files chosen on the raise form. The ticket is already saved, so a file the
+     * store refuses is named back to the person rather than losing the ticket.
+     *
+     * @param  list<UploadedFile>  $files
+     * @return list<string> the names that could not be stored
+     */
+    protected function attachOnRaise(Request $request, Ticket $ticket, array $files): array
+    {
+        $notStored = [];
+
+        foreach ($files as $file) {
+            try {
+                $stored = $this->documents->put('tickets/'.$ticket->reference, $file);
+            } catch (Throwable $e) {
+                report($e);
+                $notStored[] = $file->getClientOriginalName();
+
+                continue;
+            }
+
+            TicketAttachment::create([
+                'ticket_id' => $ticket->id,
+                'uploaded_by' => $request->user()->id,
+                'uploaded_by_label' => $request->user()->name,
+                'document_path' => $stored['path'],
+                'document_name' => $stored['name'],
+                'document_bytes' => $stored['bytes'],
+            ]);
+
+            $this->audit->record(
+                action: AuditLog::TICKET_ATTACHMENT_ADDED,
+                actor: $request->user(),
+                entityType: 'ticket',
+                entityId: $ticket->reference,
+                after: $stored['name'].' attached',
+                request: $request,
+            );
+        }
+
+        return $notStored;
     }
 
     /**
@@ -459,7 +521,9 @@ class TicketController extends Controller
         }
 
         $data = $request->validate([
-            'assignee_id' => ['nullable', Rule::exists('employees', 'id')],
+            // Only somebody the form offered: support, Technical Associates, and a
+            // Manager on a ticket of their own. See TicketDirectory::assignableFor.
+            'assignee_id' => ['nullable', Rule::in(TicketDirectory::assignableFor($model)->pluck('id')->all())],
             'priority' => ['nullable', Rule::in(Ticket::PRIORITIES)],
             // Closed lists now (decided 2026-09-21) - both are master data,
             // and a category typed once as "Bug" and once as "bug" is a
@@ -467,6 +531,8 @@ class TicketController extends Controller
             'category' => ['nullable', Rule::in($this->categoryNames())],
             'department' => ['nullable', Rule::in($this->departmentNames())],
             'status' => ['nullable', Rule::in(Ticket::STATUSES)],
+        ], [
+            'assignee_id.in' => 'Choose somebody from the list.',
         ]);
 
         $before = $this->describe($model);
@@ -683,7 +749,8 @@ class TicketController extends Controller
     }
 
     /**
-     * Options for the triage selects.
+     * Options for the triage selects. Who a ticket can be given to depends on the
+     * ticket, so `show()` adds that list itself.
      *
      * Both categories and departments are master data now (decided
      * 2026-09-21) - `MasterDataItem::TICKET_CATEGORIES` is its own list, and
@@ -699,14 +766,6 @@ class TicketController extends Controller
         return [
             'categories' => $this->categoryNames(),
             'departments' => $this->departmentNames(),
-            'agents' => Employee::query()
-                ->with('user')
-                ->active()
-                ->get()
-                ->map(fn (Employee $e) => ['id' => $e->id, 'name' => (string) $e->user?->name])
-                ->sortBy('name')
-                ->values()
-                ->all(),
         ];
     }
 

@@ -8,6 +8,7 @@ use App\Models\Ticket;
 use App\Models\TicketComment;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * Tickets, read from the database.
@@ -182,6 +183,46 @@ class TicketDirectory
             ->get()
             ->sortBy(fn (Employee $employee) => Ticket::query()->open()->where('assignee_id', $employee->id)->count())
             ->first();
+    }
+
+    /**
+     * Who a ticket can be given to (owner, 2026-11-06): the support team, the
+     * Technical Associates, and a Manager only on a ticket of their own - their
+     * project, their client, or somebody who reports to them or is in a team they
+     * lead. Whoever holds it now stays on the list, so the form never drops them.
+     *
+     * @return Collection<int, Employee>
+     */
+    public static function assignableFor(Ticket $ticket): Collection
+    {
+        $ticket->loadMissing(['project', 'client', 'raiser.teams']);
+        $raiser = $ticket->raiser;
+
+        $managerIds = collect([$ticket->project?->manager_id, $raiser?->reports_to])
+            ->merge($raiser?->teams->pluck('lead_id') ?? [])
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+        $accountManagerUserId = $ticket->client?->account_manager_id;
+
+        return Employee::query()
+            ->with('user')
+            ->active()
+            ->where(fn (Builder $anyOf) => $anyOf
+                ->whereHas('user', fn (Builder $user) => $user->holdingRole('support'))
+                ->orWhereHas('designation', fn (Builder $designation) => $designation
+                    ->where('list', MasterDataItem::DESIGNATIONS)
+                    ->where('code', config('tickets.technical_designation_code')))
+                ->orWhere(fn (Builder $manager) => $manager
+                    ->whereHas('user', fn (Builder $user) => $user->holdingRole('manager'))
+                    ->where(fn (Builder $theirs) => $theirs
+                        ->whereIn('id', $managerIds)
+                        ->orWhere('user_id', $accountManagerUserId ?? 0)))
+                ->when($ticket->assignee_id !== null, fn (Builder $q) => $q->orWhere('id', $ticket->assignee_id)))
+            ->get()
+            ->sortBy(fn (Employee $employee) => (string) $employee->user?->name)
+            ->values();
     }
 
     public static function nextReference(): string
