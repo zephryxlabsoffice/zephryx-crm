@@ -16,7 +16,7 @@
         </div>
     </div>
 
-    <form class="an-form" method="POST" action="{{ route('tickets.store') }}">
+    <form class="an-form" method="POST" action="{{ route('tickets.store') }}" enctype="multipart/form-data">
         @csrf
 
         <section class="an-form-grid">
@@ -112,6 +112,18 @@
                                    placeholder="e.g. TKT-2026-014" value="{{ old('supersedes') }}">
                             <span class="pay-hint">If this continues an earlier ticket, reference it here - it will be closed automatically.</span>
                             @error('supersedes')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-field an-form-wide">
+                            <label class="form-field-lbl" for="ticket-documents">Attachments <span class="an-optional">(optional)</span></label>
+                            <input id="ticket-documents" name="documents[]" type="file" multiple accept="application/pdf,image/png,image/jpeg">
+                            <span class="pay-hint">Screenshots or documents: up to 5 files, PDF, PNG or JPG, 8 MB each.</span>
+                            @error('documents')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                            @error('documents.*')
                                 <span class="field-error">{{ $message }}</span>
                             @enderror
                         </div>

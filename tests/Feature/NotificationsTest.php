@@ -430,6 +430,7 @@ class NotificationsTest extends TestCase
          */
         $this->signInWith(['employee', 'ceo'], 'EMP972');
         $onIt = $this->makeEmployee('EMP973');
+        $onIt->user->roles()->sync(Role::where('role_key', 'support')->pluck('id'));
 
         $ticket = Ticket::create([
             'reference' => 'TKT-2026-901',

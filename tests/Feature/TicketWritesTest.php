@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Client;
 use App\Models\Employee;
+use App\Models\MasterDataItem;
+use App\Models\Project;
 use App\Models\Role;
 use App\Models\Task;
 use App\Models\Ticket;
@@ -15,6 +17,7 @@ use App\Support\TicketDirectory;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
@@ -192,6 +195,7 @@ class TicketWritesTest extends TestCase
     {
         $ticket = $this->aTicket();
         $agent = $this->anEmployee('EMP892', 'An Agent');
+        $agent->user->roles()->sync(Role::where('role_key', 'support')->pluck('id'));
 
         $this->signInAsEmployee(['employee', 'support'], 'EMP893');
 
@@ -215,6 +219,119 @@ class TicketWritesTest extends TestCase
         $this->assertNotNull($entry);
         $this->assertStringContainsString('unassigned', (string) $entry->before_json);
         $this->assertStringContainsString('An Agent', (string) $entry->after_json);
+    }
+
+    public function test_a_ticket_goes_only_to_support_technical_associates_or_its_own_manager(): void
+    {
+        $support = $this->anEmployee('EMP880', 'Support Person');
+        $support->user->roles()->sync(Role::where('role_key', 'support')->pluck('id'));
+
+        $it = MasterDataItem::firstOrCreate(
+            ['list' => MasterDataItem::DEPARTMENTS, 'code' => 'ITT'],
+            ['name' => 'IT Test', 'is_active' => true],
+        );
+        $technical = $this->anEmployee('EMP881', 'Technical Person');
+        $technical->update(['designation_id' => MasterDataItem::firstOrCreate(
+            ['list' => MasterDataItem::DESIGNATIONS, 'code' => config('tickets.technical_designation_code')],
+            ['name' => 'Technical Associate', 'department_id' => $it->id, 'is_active' => true],
+        )->id]);
+
+        $ownManager = $this->anEmployee('EMP882', 'Project Manager');
+        $otherManager = $this->anEmployee('EMP883', 'Other Manager');
+        foreach ([$ownManager, $otherManager] as $manager) {
+            $manager->user->roles()->sync(Role::where('role_key', 'manager')->pluck('id'));
+        }
+        $plain = $this->anEmployee('EMP884', 'Plain Employee');
+
+        $ticket = $this->aTicket(['project_id' => Project::create([
+            'reference' => 'PRJ-T880',
+            'name' => 'A Project',
+            'manager_id' => $ownManager->id,
+            'status' => 'in_progress',
+            'priority' => 'medium',
+        ])->id]);
+
+        $this->signInAsEmployee(['employee', 'support'], 'EMP885');
+
+        $offered = collect($this->get('/tickets/'.$ticket->reference)->viewData('agents'))->pluck('id')->all();
+
+        $this->assertEqualsCanonicalizing([$support->id, $technical->id, $ownManager->id], $offered);
+
+        foreach ([$plain, $otherManager] as $refused) {
+            $this->post('/tickets/'.$ticket->reference.'/triage', ['assignee_id' => $refused->id])
+                ->assertSessionHasErrors(['assignee_id' => 'Choose somebody from the list.']);
+        }
+        $this->assertNull($ticket->refresh()->assignee_id);
+
+        $this->post('/tickets/'.$ticket->reference.'/triage', ['assignee_id' => $ownManager->id])
+            ->assertSessionHasNoErrors();
+        $this->assertSame($ownManager->id, $ticket->refresh()->assignee_id);
+    }
+
+    public function test_a_manager_is_offered_for_their_clients_and_their_peoples_tickets(): void
+    {
+        $manager = $this->anEmployee('EMP886', 'A Manager');
+        $manager->user->roles()->sync(Role::where('role_key', 'manager')->pluck('id'));
+
+        $clientTicket = $this->aTicket();
+        $clientTicket->client->update(['account_manager_id' => $manager->user_id]);
+
+        $raiser = $this->anEmployee('EMP887', 'Reports To Them');
+        $raiser->update(['reports_to' => $manager->id]);
+        $internalTicket = $this->aTicket([
+            'reference' => 'TKT-TEST-002',
+            'type' => 'internal',
+            'client_id' => null,
+            'raised_by' => $raiser->id,
+        ]);
+
+        foreach ([$clientTicket, $internalTicket] as $ticket) {
+            $this->assertContains($manager->id, TicketDirectory::assignableFor($ticket->fresh())->pluck('id')->all());
+        }
+    }
+
+    public function test_raising_can_attach_a_file(): void
+    {
+        $this->signInAsEmployee();
+        $this->connectGoogleDrive();
+        $this->fakeDriveUpload();
+
+        $this->post('/tickets', $this->validPayload() + ['documents' => [
+            UploadedFile::fake()->create('screenshot.png', 20, 'image/png'),
+        ]])->assertRedirect()->assertSessionHasNoErrors()->assertSessionHas('status_tone', 'success');
+
+        $ticket = Ticket::firstOrFail();
+
+        $this->assertSame(['screenshot.png'], $ticket->attachments()->pluck('document_name')->all());
+        $this->assertSame(1, DB::table('audit_log')->where('action', AuditLog::TICKET_ATTACHMENT_ADDED)->count());
+    }
+
+    public function test_a_file_that_cannot_be_stored_is_named_and_the_ticket_is_kept(): void
+    {
+        $this->signInAsEmployee();
+        $this->connectGoogleDrive();
+        Http::fake([
+            'https://oauth2.googleapis.com/token' => Http::response(['access_token' => 'fake-token'], 200),
+            '*' => Http::response(['error' => 'unavailable'], 503),
+        ]);
+
+        $this->post('/tickets', $this->validPayload() + ['documents' => [
+            UploadedFile::fake()->create('screenshot.png', 20, 'image/png'),
+        ]])->assertRedirect()->assertSessionHas('status_tone', 'warning');
+
+        $this->assertStringContainsString('screenshot.png', (string) session('status'));
+        $this->assertSame(0, Ticket::firstOrFail()->attachments()->count());
+    }
+
+    public function test_raising_refuses_a_file_type_it_cannot_store(): void
+    {
+        $this->signInAsEmployee();
+
+        $this->post('/tickets', $this->validPayload() + ['documents' => [
+            UploadedFile::fake()->create('setup.exe', 20, 'application/octet-stream'),
+        ]])->assertSessionHasErrors(['documents.0' => 'Attach a PDF, PNG or JPG.']);
+
+        $this->assertSame(0, Ticket::count());
     }
 
     public function test_escalating_records_who_sent_it_back(): void
