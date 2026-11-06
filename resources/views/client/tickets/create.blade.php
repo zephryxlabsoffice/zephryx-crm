@@ -16,7 +16,7 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('client.tickets.store') }}">
+    <form method="POST" action="{{ route('client.tickets.store') }}" enctype="multipart/form-data">
         @csrf
 
         <section class="dash-grid">
@@ -70,6 +70,18 @@
                                         </option>
                                     @endforeach
                                 </select>
+                            </div>
+
+                            <div class="form-field cl-form-wide">
+                                <label class="form-field-lbl" for="tk-documents">Attachments <span class="an-optional">(optional)</span></label>
+                                <input id="tk-documents" name="documents[]" type="file" multiple accept="application/pdf,image/png,image/jpeg">
+                                <span class="pay-hint">Screenshots or documents: up to 5 files, PDF, PNG or JPG, 8 MB each.</span>
+                                @error('documents')
+                                    <span class="field-error">{{ $message }}</span>
+                                @enderror
+                                @error('documents.*')
+                                    <span class="field-error">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             {{--

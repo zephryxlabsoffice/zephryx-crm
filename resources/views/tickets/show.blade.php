@@ -31,43 +31,32 @@
         </div>
 
         <div class="hd-actions">
-            {{--
-                Both are the same write - a triage - with one field pre-filled,
-                rather than two endpoints that could disagree about what
-                resolving means. They are shown to whoever holds the triage
-                permission; everybody else reads the ticket and replies to it.
-            --}}
-            {{-- Closed is final (decided 2026-09-21): neither button is
-                 offered once a ticket is closed, and the controller refuses
-                 the write even if one were somehow posted anyway. --}}
-            @if ($mayTriage && $ticket['status'] !== 'closed')
-                @if ($ticket['status'] !== 'resolved')
-                    <form method="POST" action="{{ route('tickets.triage', ['ticket' => $ticket['id']]) }}">
-                        @csrf
-                        <input type="hidden" name="status" value="resolved">
-                        <input type="hidden" name="assignee_id" value="{{ $ticket['assignee_record']['employee_id'] ?? '' }}">
-                        <button class="btn btn-primary" type="submit">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            Mark Resolved
-                        </button>
-                    </form>
-                @endif
+            {{-- Who may do what is decided per ticket in App\Support\TicketWorkflow,
+                 and each route checks it again. Nobody decides their own ticket. --}}
+            @if ($mayTake)
+                <form method="POST" action="{{ route('tickets.take', ['ticket' => $ticket['id']]) }}">
+                    @csrf
+                    <button class="btn btn-outline" type="submit">Take this ticket</button>
+                </form>
+            @endif
 
-                @if ($ticket['status'] !== 'escalated')
-                    <form method="POST" action="{{ route('tickets.triage', ['ticket' => $ticket['id']]) }}">
-                        @csrf
-                        <input type="hidden" name="status" value="escalated">
-                        <input type="hidden" name="assignee_id" value="{{ $ticket['assignee_record']['employee_id'] ?? '' }}">
-                        <button class="btn btn-outline" type="submit">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M12 19V5"/><polyline points="5 12 12 5 19 12"/>
-                            </svg>
-                            Escalate
-                        </button>
-                    </form>
-                @endif
+            @if ($mayWorkOn)
+                <form method="POST" action="{{ route('tickets.resolve', ['ticket' => $ticket['id']]) }}">
+                    @csrf
+                    <button class="btn btn-primary" type="submit">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Mark Resolved
+                    </button>
+                </form>
+
+                <a class="btn btn-outline" href="#escalate">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 19V5"/><polyline points="5 12 12 5 19 12"/>
+                    </svg>
+                    Escalate
+                </a>
             @endif
         </div>
     </div>
@@ -77,6 +66,14 @@
             'tone' => 'info',
             'title' => 'This ticket is closed',
             'message' => 'Closed is final - raise a new ticket and reference this one if it continues.',
+        ])
+    @endif
+
+    @if ($isOwn)
+        @include('partials.notice', [
+            'tone' => 'info',
+            'title' => 'You raised this ticket',
+            'message' => 'You can reply and attach files. Somebody else assigns, escalates and resolves it.',
         ])
     @endif
 
@@ -92,7 +89,7 @@
         <div class="tkt-detail-main">
             @include('tickets.partials.header-card')
 
-            @if ($needsTriage)
+            @if ($needsTriage && $mayTriage)
                 @include('tickets.partials.triage')
             @endif
 
@@ -101,6 +98,10 @@
             @include('tickets.partials.thread')
 
             @include('tickets.partials.attachments')
+
+            @if ($mayWorkOn && $escalationTargets !== [])
+                @include('tickets.partials.escalate')
+            @endif
         </div>
 
         <aside class="rail">

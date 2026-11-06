@@ -108,6 +108,20 @@
                 --}}
             </section>
 
+            @if ($files !== [])
+                <section class="rail-card">
+                    <div class="rail-hd">
+                        <strong>Your files</strong>
+                    </div>
+
+                    @foreach ($files as $file)
+                        <div class="stat-row">
+                            <a class="dash-link" href="{{ route('client.tickets.attachments.download', ['ticket' => $ticket['id'], 'attachment' => $file['id']]) }}">{{ $file['name'] }}</a>
+                        </div>
+                    @endforeach
+                </section>
+            @endif
+
             @include('client.partials.help')
         </aside>
     </section>

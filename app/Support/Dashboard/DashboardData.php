@@ -32,6 +32,7 @@ use App\Support\SalaryPresenter;
 use App\Support\TaskDirectory;
 use App\Support\TeamDirectory;
 use App\Support\TicketDirectory;
+use App\Support\TicketWorkflow;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -202,7 +203,8 @@ class DashboardData
      */
     protected static function ticketsTile(): array
     {
-        $tickets = TicketDirectory::stats();
+        // Only the tickets this person can open (owner, 2026-11-06).
+        $tickets = TicketDirectory::stats(TicketWorkflow::visibleTo(Ticket::query(), auth()->user()));
 
         return self::tile(
             label: 'Open tickets',
@@ -508,10 +510,10 @@ class DashboardData
      */
     protected static function ticketQueue(): array
     {
-        $escalated = TicketDirectory::query()->escalated()->get()
+        $escalated = TicketWorkflow::visibleTo(TicketDirectory::query(), auth()->user())->escalated()->get()
             ->map(fn (Ticket $t) => TicketDirectory::row($t));
 
-        $unassigned = TicketDirectory::query()->unassigned()->get()
+        $unassigned = TicketWorkflow::visibleTo(TicketDirectory::query(), auth()->user())->unassigned()->get()
             ->map(fn (Ticket $t) => TicketDirectory::row($t));
 
         return [

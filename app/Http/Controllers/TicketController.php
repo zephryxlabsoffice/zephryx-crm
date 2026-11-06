@@ -17,6 +17,9 @@ use App\Support\Rbac\Rbac;
 use App\Support\TaskDirectory;
 use App\Support\TaskPresenter;
 use App\Support\TicketDirectory;
+use App\Support\TicketLifecycle;
+use App\Support\TicketWorkflow;
+use App\Support\WebPush;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -67,6 +70,7 @@ class TicketController extends Controller
         protected AuditLog $audit,
         protected Notifier $notify,
         protected DocumentStore $documents,
+        protected WebPush $push,
     ) {}
 
     /**
@@ -80,7 +84,7 @@ class TicketController extends Controller
 
         $filters = $this->filters($request);
 
-        $query = TicketDirectory::query($filters);
+        $query = TicketWorkflow::visibleTo(TicketDirectory::query($filters), $request->user());
 
         $query = match ($tab) {
             'unassigned' => $query->unassigned(),
@@ -91,7 +95,8 @@ class TicketController extends Controller
             default => $query,
         };
 
-        $counts = TicketDirectory::stats();
+        $visible = fn () => TicketWorkflow::visibleTo(Ticket::query(), $request->user());
+        $counts = TicketDirectory::stats($visible());
 
         return response()->view('tickets.index', [
             'activeNav' => 'tickets',
@@ -102,7 +107,7 @@ class TicketController extends Controller
                 'all' => $counts['total'],
                 'unassigned' => $counts['unassigned'],
                 'escalated' => $counts['escalated'],
-                'client' => Ticket::where('type', 'client')->count(),
+                'client' => $visible()->where('type', 'client')->count(),
                 'in_progress' => $counts['in_progress'],
                 'resolved' => $counts['resolved'],
             ],
@@ -157,7 +162,7 @@ class TicketController extends Controller
     public function escalated(Request $request): Response
     {
         $filters = $this->filters($request);
-        $query = TicketDirectory::query($filters)->escalated();
+        $query = TicketWorkflow::visibleTo(TicketDirectory::query($filters), $request->user())->escalated();
 
         return response()->view('tickets.escalated', [
             'activeNav' => 'tickets',
@@ -187,10 +192,22 @@ class TicketController extends Controller
             ])->all(),
             // Triage is offered when the ticket needs it - unassigned, or
             // escalated back for someone else to route.
-            'needsTriage' => in_array($record['status'], ['unassigned', 'escalated'], true),
-            'mayTriage' => $this->rbac->can($request->user(), 'tickets.triage'),
-            'mayConvertToTask' => $this->rbac->can($request->user(), 'tasks.create'),
-            'agents' => TicketDirectory::assignableFor($record['model'])
+            // Nobody is assigned yet. An escalated ticket has somebody on it now.
+            'needsTriage' => $record['model']->assignee_id === null && $record['status'] !== 'closed',
+            'mayTriage' => TicketWorkflow::mayTriage($record['model'], $request->user()),
+            'mayTake' => TicketWorkflow::mayTake($record['model'], $request->user()),
+            'mayWorkOn' => $mayWorkOn = TicketWorkflow::mayWorkOn($record['model'], $request->user()),
+            'isOwn' => TicketWorkflow::isOwn($record['model'], $viewer = $this->employeeFor($request)),
+            'escalationTargets' => $mayWorkOn && $viewer !== null
+                ? TicketWorkflow::escalationTargets($record['model'], $viewer)
+                    ->map(fn (Employee $e) => ['id' => $e->id, 'name' => (string) $e->user?->name])->all()
+                : [],
+            'suggestedEscalation' => $mayWorkOn && $viewer !== null
+                ? TicketWorkflow::suggestedEscalation($record['model'], $viewer)?->id
+                : null,
+            'mayConvertToTask' => $this->rbac->can($request->user(), 'tasks.create')
+                && TicketWorkflow::mayDecide($record['model'], $request->user()),
+            'agents' => TicketWorkflow::assignableFor($record['model'])
                 ->map(fn (Employee $e) => ['id' => $e->id, 'name' => (string) $e->user?->name])
                 ->all(),
         ] + $this->options());
@@ -406,6 +423,14 @@ class TicketController extends Controller
             request: $request,
         );
 
+        // The person who asked answering a resolved ticket: it was not solved.
+        if (TicketWorkflow::isOwn($model, $this->employeeFor($request))
+            && TicketLifecycle::reopenIfResolved($model, $request->user())) {
+            TicketLifecycle::tellRequester($model, TicketLifecycle::REOPENED, $request->user());
+        } elseif (! $comment->isInternal()) {
+            TicketLifecycle::tellRequester($model, TicketLifecycle::REPLY, $request->user());
+        }
+
         // Both staff readers, minus whoever wrote it. The note's text is never
         // carried - see Notifier::ticketCommented.
         $this->notify->ticketCommented($model->load(['assignee.user', 'raiser.user']), $comment, $request->user());
@@ -523,7 +548,7 @@ class TicketController extends Controller
         $data = $request->validate([
             // Only somebody the form offered: support, Technical Associates, and a
             // Manager on a ticket of their own. See TicketDirectory::assignableFor.
-            'assignee_id' => ['nullable', Rule::in(TicketDirectory::assignableFor($model)->pluck('id')->all())],
+            'assignee_id' => ['nullable', Rule::in(TicketWorkflow::assignableFor($model)->pluck('id')->all())],
             'priority' => ['nullable', Rule::in(Ticket::PRIORITIES)],
             // Closed lists now (decided 2026-09-21) - both are master data,
             // and a category typed once as "Bug" and once as "bug" is a
@@ -535,6 +560,8 @@ class TicketController extends Controller
             'assignee_id.in' => 'Choose somebody from the list.',
         ]);
 
+        abort_unless(TicketWorkflow::mayTriage($model, $request->user()), 403);
+
         $before = $this->describe($model);
 
         /*
@@ -544,6 +571,7 @@ class TicketController extends Controller
          * on the ticket again about work they have had for a week.
          */
         $assigneeBefore = $model->assignee_id;
+        $statusBefore = $model->status;
 
         $status = $data['status'] ?? null;
 
@@ -588,10 +616,154 @@ class TicketController extends Controller
 
         $this->notify->ticketAssigned($model, $assigneeBefore, $request->user());
 
+        if ($status !== ($statusBefore ?? null) && in_array($status, ['resolved', 'closed'], true)) {
+            TicketLifecycle::tellRequester($model, $status === 'resolved' ? TicketLifecycle::RESOLVED : TicketLifecycle::CLOSED, $request->user());
+        }
+
         return redirect()
             ->route('tickets.show', ['ticket' => $model->reference])
             ->with('status', 'Ticket updated.')
             ->with('status_tone', 'success');
+    }
+
+    /**
+     * POST /tickets/{ticket}/take - a System Administrator, the CEO, or one of the
+     * ticket's own Managers picks it up themselves (owner, 2026-11-06).
+     */
+    public function take(Request $request, string $ticket): RedirectResponse
+    {
+        $model = $this->find($ticket)['model'];
+
+        abort_unless(TicketWorkflow::mayTake($model, $request->user()), 403);
+
+        $before = $this->describe($model);
+        $assigneeBefore = $model->assignee_id;
+
+        $model->update([
+            'assignee_id' => $this->employeeFor($request)->id,
+            'status' => 'in_progress',
+            'resolved_at' => null,
+        ]);
+        $model->refresh()->load(['assignee.user', 'escalator.user']);
+
+        $this->audit->record(
+            action: AuditLog::TICKET_TAKEN,
+            actor: $request->user(),
+            entityType: 'ticket',
+            entityId: $model->reference,
+            before: $before,
+            after: $this->describe($model),
+            request: $request,
+        );
+
+        if ($assigneeBefore !== null && $assigneeBefore !== $model->assignee_id) {
+            $this->notify->ticketCommented($model->load('raiser.user'), $this->note($request, $model, $request->user()->name.' took this ticket.'), $request->user());
+        }
+
+        return redirect()
+            ->route('tickets.show', ['ticket' => $model->reference])
+            ->with('status', 'The ticket is yours now.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * POST /tickets/{ticket}/resolve - Support, or whoever has it.
+     */
+    public function resolve(Request $request, string $ticket): RedirectResponse
+    {
+        $model = $this->find($ticket)['model'];
+
+        abort_unless(TicketWorkflow::mayWorkOn($model, $request->user()), 403);
+
+        $before = $this->describe($model);
+
+        $model->update(['status' => 'resolved', 'resolved_at' => now()]);
+        $model->refresh()->load(['assignee.user', 'escalator.user']);
+
+        $this->audit->record(
+            action: AuditLog::TICKET_RESOLVED,
+            actor: $request->user(),
+            entityType: 'ticket',
+            entityId: $model->reference,
+            before: $before,
+            after: $this->describe($model),
+            request: $request,
+        );
+
+        TicketLifecycle::tellRequester($model, TicketLifecycle::RESOLVED, $request->user());
+
+        return redirect()
+            ->route('tickets.show', ['ticket' => $model->reference])
+            ->with('status', 'Resolved. It closes by itself in '.config('tickets.auto_close_after_days', 7).' days unless they reply.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * POST /tickets/{ticket}/escalate - Support, or whoever has it, cannot solve it
+     * and hands it on. The reason is kept as an internal note.
+     */
+    public function escalate(Request $request, string $ticket): RedirectResponse
+    {
+        $model = $this->find($ticket)['model'];
+        $escalator = $this->employeeFor($request);
+
+        abort_unless($escalator !== null && TicketWorkflow::mayWorkOn($model, $request->user()), 403);
+
+        $data = $request->validate([
+            'escalate_to' => ['required', Rule::in(TicketWorkflow::escalationTargets($model, $escalator)->pluck('id')->all())],
+            'reason' => ['required', 'string', 'max:1000'],
+        ], [
+            'escalate_to.required' => 'Choose who it goes to.',
+            'escalate_to.in' => 'Choose somebody from the list.',
+            'reason.required' => 'Say why it needs escalating, so the next person does not start from nothing.',
+        ]);
+
+        $before = $this->describe($model);
+        $assigneeBefore = $model->assignee_id;
+        $target = Employee::with('user')->findOrFail((int) $data['escalate_to']);
+
+        $model->update([
+            'assignee_id' => $target->id,
+            'status' => 'escalated',
+            'escalated_by' => $escalator->id,
+            'escalated_at' => now(),
+        ]);
+        $model->refresh()->load(['assignee.user', 'escalator.user']);
+
+        $this->note($request, $model, 'Escalated to '.$target->user?->name.': '.$data['reason']);
+
+        $this->audit->record(
+            action: AuditLog::TICKET_ESCALATED,
+            actor: $request->user(),
+            entityType: 'ticket',
+            entityId: $model->reference,
+            before: $before,
+            after: $this->describe($model),
+            request: $request,
+        );
+
+        $this->notify->ticketAssigned($model, $assigneeBefore, $request->user());
+        $this->push->sendTo([$target->user_id]);
+
+        return redirect()
+            ->route('tickets.show', ['ticket' => $model->reference])
+            ->with('status', 'Escalated to '.$target->user?->name.'.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * An internal note written by the system on somebody's behalf.
+     */
+    protected function note(Request $request, Ticket $ticket, string $body): TicketComment
+    {
+        return TicketComment::create([
+            'ticket_id' => $ticket->id,
+            'author_id' => $request->user()->id,
+            'author_label' => $request->user()->name,
+            'author_role' => $request->user()->display_role,
+            'body' => $body,
+            'visibility' => TicketComment::INTERNAL,
+        ]);
     }
 
     /**
@@ -680,7 +852,8 @@ class TicketController extends Controller
     {
         $found = TicketDirectory::find($reference);
 
-        abort_if($found === null, 404);
+        // A ticket this person may not see answers the same as one that does not exist.
+        abort_if($found === null || ! TicketWorkflow::canSee($found['model'], request()->user()), 404);
 
         return $found;
     }
@@ -713,7 +886,7 @@ class TicketController extends Controller
     protected function personalList(Request $request, callable $narrow, string $view): Response
     {
         $filters = $this->filters($request);
-        $query = $narrow(TicketDirectory::query($filters));
+        $query = $narrow(TicketWorkflow::visibleTo(TicketDirectory::query($filters), $request->user()));
 
         return response()->view($view, [
             'activeNav' => 'tickets',

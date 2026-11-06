@@ -93,6 +93,9 @@ Route::get('/tickets/{ticket}', [ClientTicketController::class, 'show'])
  * there is no branch that could be made to post an internal note.
  */
 Route::post('/tickets', [ClientTicketController::class, 'store'])->name('tickets.store');
+Route::get('/tickets/{ticket}/attachments/{attachment}/download', [ClientTicketController::class, 'downloadAttachment'])
+    ->where(['ticket' => '[A-Za-z0-9-]{1,32}', 'attachment' => '[0-9]+'])
+    ->name('tickets.attachments.download');
 Route::post('/tickets/{ticket}/comment', [ClientTicketController::class, 'comment'])
     ->where('ticket', '[A-Za-z0-9-]{1,32}')
     ->name('tickets.comment');
