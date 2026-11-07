@@ -77,9 +77,9 @@ class TicketLifecycle
         }
 
         $ticket->update([
-            'status' => $ticket->assignee_id === null ? 'unassigned' : 'open',
+            'status' => $ticket->assignee_id === null && $ticket->team_id === null ? 'unassigned' : 'open',
             'resolved_at' => null,
-        ]);
+        ] + (TicketWorkflow::ready() ? ['resolved_by' => null] : []));
 
         app(AuditLog::class)->record(
             action: AuditLog::TICKET_REOPENED,

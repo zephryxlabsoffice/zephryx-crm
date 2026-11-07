@@ -32,14 +32,8 @@
 
         <div class="hd-actions">
             {{-- Who may do what is decided per ticket in App\Support\TicketWorkflow,
-                 and each route checks it again. Nobody decides their own ticket. --}}
-            @if ($mayTake)
-                <form method="POST" action="{{ route('tickets.take', ['ticket' => $ticket['id']]) }}">
-                    @csrf
-                    <button class="btn btn-outline" type="submit">Take this ticket</button>
-                </form>
-            @endif
-
+                 and each route checks it again. Nobody decides their own ticket.
+                 No "take it first": resolving records who did (owner, 2026-11-07). --}}
             @if ($mayWorkOn)
                 <form method="POST" action="{{ route('tickets.resolve', ['ticket' => $ticket['id']]) }}">
                     @csrf

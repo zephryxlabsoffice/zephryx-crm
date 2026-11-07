@@ -44,12 +44,9 @@ class TechnicalTicketRoutingTest extends TestCase
             ['list' => MasterDataItem::DEPARTMENTS, 'code' => 'ITT'],
             ['name' => 'IT Test', 'is_active' => true],
         );
-        $designation = MasterDataItem::firstOrCreate(
-            ['list' => MasterDataItem::DESIGNATIONS, 'code' => config('tickets.technical_designation_code')],
-            ['name' => 'Technical Associate', 'department_id' => $it->id, 'is_active' => true],
-        );
 
-        return $this->employeeWith([], $designation, $it, $status);
+        // By role, not designation (owner, 2026-11-07).
+        return $this->employeeWith(['system_admin'], null, $it, $status);
     }
 
     protected function wasNotified(Employee $employee): bool

@@ -204,8 +204,9 @@ class RbacSeeder extends Seeder
         'tasks.eod.all',
         // A project manager marking a missing report urgent, for people on their projects.
         'tasks.eod.urgent',
-        // Taking any ticket oneself: the CEO and System Administrators (owner, 2026-11-06).
-        'tickets.take',
+        // IT tickets (Access, Network, Bug): the System Administrator sees and
+        // decides those, and only those (owner, 2026-11-07). See TicketWorkflow.
+        'tickets.it',
         /*
          * Salary. `salary.view` is the sensitive read - seeing what a colleague
          * earns is itself the harm - and `salary.manage` is the write: adding a
@@ -558,7 +559,8 @@ class RbacSeeder extends Seeder
                     // The Accounts pages, to sort out sign-in problems without
                     // the owner (owner, 2026-10-28).
                     'accounts.manage',
-                    'tickets.view.all', 'tickets.take',
+                    // IT tickets only, not every ticket (owner, 2026-11-07).
+                    'tickets.it',
                     // One of the three who may add and edit clients (owner,
                     // 2026-11-03).
                     'clients.view', 'clients.view.all', 'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
@@ -583,7 +585,7 @@ class RbacSeeder extends Seeder
                     'teams.create', 'teams.edit', 'teams.members',
                     'projects.create', 'projects.edit', 'projects.publish',
                     'tasks.create', 'tasks.edit', 'tasks.assign', 'tasks.eod.all',
-                    'tickets.view.all', 'tickets.take',
+                    'tickets.view.all',
                     'salary.manage', 'invoices.manage',
                     'attendance.roster',
                 ],

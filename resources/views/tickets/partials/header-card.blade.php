@@ -37,9 +37,11 @@
                     <span class="avatar {{ Avatar::tint($ticket['assignee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($ticket['assignee_record']['name']) }}</span>
                     <span class="tkt-person-text">
                         <strong>{{ $ticket['assignee_record']['name'] }}</strong>
-                        <span>{{ $ticket['assignee_record']['designation'] }}</span>
+                        <span>{{ $ticket['team'] ?? $ticket['assignee_record']['designation'] }}</span>
                     </span>
                 </span>
+            @elseif ($ticket['team'])
+                <span class="tkt-person-text"><strong>{{ $ticket['team'] }}</strong><span>Team</span></span>
             @else
                 <span class="tkt-unassigned">Nobody yet</span>
             @endif

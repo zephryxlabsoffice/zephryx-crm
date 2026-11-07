@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\MasterDataItem;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\Team;
 use App\Models\Ticket;
 use App\Models\TicketAttachment;
 use App\Models\TicketComment;
@@ -137,7 +138,10 @@ class TicketController extends Controller
 
         return $this->personalList(
             $request,
-            fn (Builder $q) => $q->where('assignee_id', $employee?->id ?? 0),
+            // A team's tickets too: every member sees them here (owner, 2026-11-07).
+            fn (Builder $q) => $q->where(fn (Builder $mine) => $mine
+                ->where('assignee_id', $employee?->id ?? 0)
+                ->when(TicketWorkflow::ready(), fn (Builder $team) => $team->orWhereIn('team_id', TicketWorkflow::teamIdsOf($employee)))),
             'tickets.assigned',
         );
     }
@@ -177,6 +181,8 @@ class TicketController extends Controller
     public function show(Request $request, string $ticket): Response
     {
         $record = $this->find($ticket);
+        $mayTriage = TicketWorkflow::mayTriage($record['model'], $request->user());
+        $options = $mayTriage ? TicketWorkflow::assignOptions($record['model'], $request->user()) : ['people' => collect(), 'teams' => collect()];
 
         return response()->view('tickets.show', [
             'activeNav' => 'tickets',
@@ -190,12 +196,10 @@ class TicketController extends Controller
                 'kind' => TaskPresenter::fileKind($a->document_name),
                 'size' => TaskPresenter::fileSize($a->document_bytes),
             ])->all(),
-            // Triage is offered when the ticket needs it - unassigned, or
-            // escalated back for someone else to route.
-            // Nobody is assigned yet. An escalated ticket has somebody on it now.
+            // Offered while no one person has it: unassigned, or given to a team
+            // whose lead is yet to pick a member.
             'needsTriage' => $record['model']->assignee_id === null && $record['status'] !== 'closed',
-            'mayTriage' => TicketWorkflow::mayTriage($record['model'], $request->user()),
-            'mayTake' => TicketWorkflow::mayTake($record['model'], $request->user()),
+            'mayTriage' => $mayTriage,
             'mayWorkOn' => $mayWorkOn = TicketWorkflow::mayWorkOn($record['model'], $request->user()),
             'isOwn' => TicketWorkflow::isOwn($record['model'], $viewer = $this->employeeFor($request)),
             'escalationTargets' => $mayWorkOn && $viewer !== null
@@ -207,8 +211,11 @@ class TicketController extends Controller
                 : null,
             'mayConvertToTask' => $this->rbac->can($request->user(), 'tasks.create')
                 && TicketWorkflow::mayDecide($record['model'], $request->user()),
-            'agents' => TicketWorkflow::assignableFor($record['model'])
+            'agents' => $options['people']
                 ->map(fn (Employee $e) => ['id' => $e->id, 'name' => (string) $e->user?->name])
+                ->all(),
+            'teams' => $options['teams']
+                ->map(fn (Team $t) => ['id' => $t->id, 'name' => $t->name])
                 ->all(),
         ] + $this->options());
     }
@@ -545,10 +552,15 @@ class TicketController extends Controller
                 ->with('status_tone', 'info');
         }
 
+        abort_unless(TicketWorkflow::mayTriage($model, $request->user()), 403);
+
+        $options = TicketWorkflow::assignOptions($model, $request->user());
+
         $data = $request->validate([
-            // Only somebody the form offered: support, Technical Associates, and a
-            // Manager on a ticket of their own. See TicketDirectory::assignableFor.
-            'assignee_id' => ['nullable', Rule::in(TicketWorkflow::assignableFor($model)->pluck('id')->all())],
+            // Only somebody, or a team, the form offered. Who that is depends on who
+            // is assigning - see TicketWorkflow::assignOptions.
+            'assignee_id' => ['nullable', Rule::in($options['people']->pluck('id')->all())],
+            'team_id' => ['nullable', Rule::in($options['teams']->pluck('id')->all())],
             'priority' => ['nullable', Rule::in(Ticket::PRIORITIES)],
             // Closed lists now (decided 2026-09-21) - both are master data,
             // and a category typed once as "Bug" and once as "bug" is a
@@ -558,9 +570,8 @@ class TicketController extends Controller
             'status' => ['nullable', Rule::in(Ticket::STATUSES)],
         ], [
             'assignee_id.in' => 'Choose somebody from the list.',
+            'team_id.in' => 'Choose a team from the list.',
         ]);
-
-        abort_unless(TicketWorkflow::mayTriage($model, $request->user()), 403);
 
         $before = $this->describe($model);
 
@@ -571,7 +582,9 @@ class TicketController extends Controller
          * on the ticket again about work they have had for a week.
          */
         $assigneeBefore = $model->assignee_id;
+        $teamBefore = $model->team_id;
         $statusBefore = $model->status;
+        $teamId = TicketWorkflow::ready() ? ($data['team_id'] ?? null) : null;
 
         $status = $data['status'] ?? null;
 
@@ -582,7 +595,7 @@ class TicketController extends Controller
              * asked, because "assign to Amit and leave it unassigned" is not a
              * state anybody means.
              */
-            $status = ($data['assignee_id'] ?? null) !== null
+            $status = (($data['assignee_id'] ?? null) !== null || $teamId !== null)
                 ? ($model->status === 'unassigned' ? 'open' : $model->status)
                 : $model->status;
         }
@@ -600,9 +613,14 @@ class TicketController extends Controller
                 ? ($this->employeeFor($request)?->id ?? $model->escalated_by)
                 : $model->escalated_by,
             'escalated_at' => $status === 'escalated' ? ($model->escalated_at ?? now()) : $model->escalated_at,
-        ]);
+        ] + (TicketWorkflow::ready() ? [
+            'team_id' => $teamId,
+            'resolved_by' => in_array($status, ['resolved', 'closed'], true)
+                ? ($model->resolved_by ?? $this->employeeFor($request)?->id)
+                : null,
+        ] : []));
 
-        $model->refresh()->load(['assignee.user', 'escalator.user']);
+        $model->refresh()->load(['assignee.user', 'escalator.user', 'team']);
 
         $this->audit->record(
             action: AuditLog::TICKET_TRIAGED,
@@ -616,6 +634,10 @@ class TicketController extends Controller
 
         $this->notify->ticketAssigned($model, $assigneeBefore, $request->user());
 
+        if ($model->team_id !== null && $model->team_id !== $teamBefore) {
+            $this->notify->ticketGivenToTeam($model, $request->user());
+        }
+
         if ($status !== ($statusBefore ?? null) && in_array($status, ['resolved', 'closed'], true)) {
             TicketLifecycle::tellRequester($model, $status === 'resolved' ? TicketLifecycle::RESOLVED : TicketLifecycle::CLOSED, $request->user());
         }
@@ -627,47 +649,9 @@ class TicketController extends Controller
     }
 
     /**
-     * POST /tickets/{ticket}/take - a System Administrator, the CEO, or one of the
-     * ticket's own Managers picks it up themselves (owner, 2026-11-06).
-     */
-    public function take(Request $request, string $ticket): RedirectResponse
-    {
-        $model = $this->find($ticket)['model'];
-
-        abort_unless(TicketWorkflow::mayTake($model, $request->user()), 403);
-
-        $before = $this->describe($model);
-        $assigneeBefore = $model->assignee_id;
-
-        $model->update([
-            'assignee_id' => $this->employeeFor($request)->id,
-            'status' => 'in_progress',
-            'resolved_at' => null,
-        ]);
-        $model->refresh()->load(['assignee.user', 'escalator.user']);
-
-        $this->audit->record(
-            action: AuditLog::TICKET_TAKEN,
-            actor: $request->user(),
-            entityType: 'ticket',
-            entityId: $model->reference,
-            before: $before,
-            after: $this->describe($model),
-            request: $request,
-        );
-
-        if ($assigneeBefore !== null && $assigneeBefore !== $model->assignee_id) {
-            $this->notify->ticketCommented($model->load('raiser.user'), $this->note($request, $model, $request->user()->name.' took this ticket.'), $request->user());
-        }
-
-        return redirect()
-            ->route('tickets.show', ['ticket' => $model->reference])
-            ->with('status', 'The ticket is yours now.')
-            ->with('status_tone', 'success');
-    }
-
-    /**
-     * POST /tickets/{ticket}/resolve - Support, or whoever has it.
+     * POST /tickets/{ticket}/resolve - straight away, by whoever may work on it
+     * (TicketWorkflow::mayWorkOn). There is no taking it first: the ticket
+     * records who resolved it (owner, 2026-11-07).
      */
     public function resolve(Request $request, string $ticket): RedirectResponse
     {
@@ -677,8 +661,9 @@ class TicketController extends Controller
 
         $before = $this->describe($model);
 
-        $model->update(['status' => 'resolved', 'resolved_at' => now()]);
-        $model->refresh()->load(['assignee.user', 'escalator.user']);
+        $model->update(['status' => 'resolved', 'resolved_at' => now()]
+            + (TicketWorkflow::ready() ? ['resolved_by' => $this->employeeFor($request)?->id] : []));
+        $model->refresh()->load(['assignee.user', 'escalator.user', 'resolver.user']);
 
         $this->audit->record(
             action: AuditLog::TICKET_RESOLVED,
@@ -974,6 +959,7 @@ class TicketController extends Controller
             $ticket->category,
             $ticket->department,
             $ticket->assignee?->user?->name ? 'with '.$ticket->assignee->user->name : 'unassigned',
+            $ticket->team?->name ? 'team '.$ticket->team->name : null,
         ]));
     }
 

@@ -362,6 +362,25 @@ class Notifier
     }
 
     /**
+     * A ticket was given to a team: its lead is told, and may give it to one of
+     * them (owner, 2026-11-07). The members find it under Assigned to me.
+     */
+    public function ticketGivenToTeam(Ticket $ticket, ?User $actor = null): void
+    {
+        $ticket->loadMissing('team.lead.user');
+
+        $this->send(
+            reader: $ticket->team?->lead?->user,
+            kind: 'ticket',
+            title: 'A ticket was given to '.$ticket->team?->name,
+            body: $ticket->reference.' - '.$ticket->subject,
+            route: 'tickets.show',
+            params: ['ticket' => $ticket->reference],
+            actor: $actor,
+        );
+    }
+
+    /**
      * Somebody replied on a ticket.
      *
      * ─────────────────────────────────────────────────────────────────────────

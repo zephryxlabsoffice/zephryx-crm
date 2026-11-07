@@ -5,9 +5,10 @@ namespace Tests\Feature;
 use App\Mail\TicketUpdateMail;
 use App\Models\Client;
 use App\Models\Employee;
-use App\Models\MasterDataItem;
+use App\Models\Notification;
 use App\Models\Project;
 use App\Models\Role;
+use App\Models\Team;
 use App\Models\Ticket;
 use App\Models\TicketAttachment;
 use App\Models\TicketComment;
@@ -86,55 +87,136 @@ class TicketWorkflowTest extends TestCase
 
         $this->post('/tickets/'.$ticket->reference.'/triage', ['priority' => 'high'])->assertForbidden();
         $this->post('/tickets/'.$ticket->reference.'/resolve')->assertForbidden();
-        $this->post('/tickets/'.$ticket->reference.'/take')->assertForbidden();
+        $this->post('/tickets/'.$ticket->reference.'/escalate', ['escalate_to' => 1, 'reason' => 'Mine.'])->assertForbidden();
         $this->post('/tickets/'.$ticket->reference.'/comment', ['body' => 'Any news?'])->assertRedirect();
 
         $this->assertSame('unassigned', $ticket->refresh()->status);
         $this->assertSame(1, $ticket->comments()->count());
     }
 
-    /* ── taking ───────────────────────────────────────────────────────────── */
+    /* ── resolving directly, and who may assign to whom ───────────────────── */
 
-    public function test_a_system_administrator_or_the_ceo_can_take_any_ticket_but_not_their_own(): void
+    public function test_the_ceo_and_a_manager_resolve_directly_and_the_ticket_says_who(): void
     {
+        $ceo = $this->person(['employee', 'ceo'], 'EMP708');
         $ticket = $this->clientTicket('TKT-W-007');
 
-        foreach (['system_admin' => 'EMP708', 'ceo' => 'EMP709'] as $role => $staffId) {
-            $taker = $this->person(['employee', $role], $staffId);
-            $this->actAs($taker);
+        $this->actAs($ceo);
+        $this->get('/tickets/'.$ticket->reference)->assertOk()->assertSee('Mark Resolved')->assertDontSee('Take this ticket');
+        $this->post('/tickets/'.$ticket->reference.'/resolve')->assertRedirect();
 
-            $this->post('/tickets/'.$ticket->reference.'/take')->assertRedirect();
-            $this->assertSame($taker->id, $ticket->refresh()->assignee_id);
-            $this->assertSame('in_progress', $ticket->status);
-        }
+        $this->assertSame('resolved', $ticket->refresh()->status);
+        $this->assertSame($ceo->id, $ticket->resolved_by);
+        $this->get('/tickets/'.$ticket->reference)->assertSee('Resolved it');
 
-        $ceo = Employee::whereHas('user', fn ($q) => $q->where('user_id', 'EMP709'))->firstOrFail();
-        $ownTicket = $this->internalTicket($ceo, 'TKT-W-008');
-        $this->post('/tickets/'.$ownTicket->reference.'/take')->assertForbidden();
-    }
-
-    public function test_a_manager_can_take_only_a_ticket_of_their_own(): void
-    {
-        $manager = $this->person(['employee', 'manager'], 'EMP710');
-        $theirs = $this->clientTicket('TKT-W-009', ['project_id' => $this->project($manager)->id]);
-        $notTheirs = $this->clientTicket('TKT-W-010', ['client_id' => $theirs->client_id]);
+        $manager = $this->person(['employee', 'manager'], 'EMP709');
+        $theirs = $this->clientTicket('TKT-W-008', ['project_id' => $this->project($manager)->id]);
+        $notTheirs = $this->clientTicket('TKT-W-009');
         $notTheirs->client->update(['account_manager_id' => null]);
 
         $this->actAs($manager);
+        $this->post('/tickets/'.$theirs->reference.'/resolve')->assertRedirect();
+        $this->assertSame($manager->id, $theirs->refresh()->resolved_by);
+        $this->post('/tickets/'.$notTheirs->reference.'/resolve')->assertNotFound();
+    }
 
-        $this->post('/tickets/'.$theirs->reference.'/take')->assertRedirect();
-        $this->assertSame($manager->id, $theirs->refresh()->assignee_id);
+    public function test_a_system_administrator_sees_and_decides_it_tickets_only(): void
+    {
+        $sysAdmin = $this->person(['employee', 'system_admin'], 'EMP710');
+        $otherAdmin = $this->person(['employee', 'system_admin'], 'EMP711');
+        $it = $this->clientTicket('TKT-W-010', ['category' => 'Network']);
+        $notIt = $this->clientTicket('TKT-W-011', ['category' => 'Billing']);
 
-        $this->post('/tickets/'.$notTheirs->reference.'/take')->assertNotFound();
+        $this->actAs($sysAdmin);
+
+        $this->get('/tickets/'.$notIt->reference)->assertNotFound();
+        $page = $this->get('/tickets/'.$it->reference)->assertOk()->assertSee('Mark Resolved');
+        $this->assertSame([$otherAdmin->id], collect($page->viewData('agents'))->pluck('id')->all());
+
+        $this->post('/tickets/'.$it->reference.'/triage', ['assignee_id' => $otherAdmin->id])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame($otherAdmin->id, $it->refresh()->assignee_id);
+        $this->assertSame('open', $it->status);
+    }
+
+    public function test_support_assigns_to_the_tickets_managers_it_and_teams_but_never_other_support(): void
+    {
+        $manager = $this->person(['employee', 'manager'], 'EMP712');
+        $sysAdmin = $this->person(['employee', 'system_admin'], 'EMP713');
+        $otherSupport = $this->person(['employee', 'support'], 'EMP714');
+        $team = $this->team('Development Team', $manager);
+        $project = $this->project($manager);
+
+        $it = $this->clientTicket('TKT-W-012', ['project_id' => $project->id, 'category' => 'Bug']);
+        $notIt = $this->clientTicket('TKT-W-013', ['project_id' => $project->id]);
+
+        $this->actAs($this->person(['employee', 'support'], 'EMP715'));
+
+        $onIt = $this->get('/tickets/'.$it->reference);
+        $this->assertEqualsCanonicalizing([$manager->id, $sysAdmin->id], collect($onIt->viewData('agents'))->pluck('id')->all());
+        $this->assertSame([$team->id], collect($onIt->viewData('teams'))->pluck('id')->all());
+
+        $this->assertSame([$manager->id], collect($this->get('/tickets/'.$notIt->reference)->viewData('agents'))->pluck('id')->all());
+
+        $this->post('/tickets/'.$notIt->reference.'/triage', ['assignee_id' => $otherSupport->id])
+            ->assertSessionHasErrors(['assignee_id' => 'Choose somebody from the list.']);
+    }
+
+    public function test_a_ticket_given_to_a_team_reaches_every_member_and_the_lead_picks_one(): void
+    {
+        $lead = $this->person(['employee', 'team_lead'], 'EMP716');
+        $member = $this->person(['employee'], 'EMP717');
+        $team = $this->team('Design Team', $lead, [$member]);
+        $ticket = $this->clientTicket('TKT-W-014');
+
+        $this->actAs($this->person(['employee', 'support'], 'EMP718'));
+        $this->post('/tickets/'.$ticket->reference.'/triage', ['team_id' => $team->id])->assertRedirect()->assertSessionHasNoErrors();
+
+        $ticket->refresh();
+        $this->assertSame($team->id, $ticket->team_id);
+        $this->assertNull($ticket->assignee_id);
+        $this->assertSame('open', $ticket->status);
+        $this->assertTrue(Notification::where('user_id', $lead->user_id)->where('kind', 'ticket')->exists());
+
+        $this->actAs($member);
+        $listed = collect($this->get('/tickets/assigned')->viewData('tickets')->items())->pluck('id')->all();
+        $this->assertSame([$ticket->reference], $listed);
+        $this->post('/tickets/'.$ticket->reference.'/triage', ['assignee_id' => $member->id])->assertForbidden();
+
+        $this->actAs($lead);
+        $this->post('/tickets/'.$ticket->reference.'/triage', ['assignee_id' => $member->id, 'team_id' => $team->id])
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame($member->id, $ticket->refresh()->assignee_id);
+
+        $this->actAs($member);
+        $this->post('/tickets/'.$ticket->reference.'/resolve')->assertRedirect();
+        $this->assertSame($member->id, $ticket->refresh()->resolved_by);
+    }
+
+    public function test_a_manager_assigns_only_within_their_own_teams_and_projects(): void
+    {
+        $manager = $this->person(['employee', 'manager'], 'EMP719');
+        $ownPerson = $this->person(['employee'], 'EMP720');
+        $stranger = $this->person(['employee'], 'EMP721');
+        $ownTeam = $this->team('Manager Team', $manager, [$ownPerson]);
+        $this->team('Someone Else Team', null, [$stranger]);
+        $this->person(['employee', 'support'], 'EMP722');
+
+        $ticket = $this->clientTicket('TKT-W-015', ['project_id' => $this->project($manager)->id]);
+
+        $this->actAs($manager);
+        $page = $this->get('/tickets/'.$ticket->reference);
+
+        $this->assertSame([$ownPerson->id], collect($page->viewData('agents'))->pluck('id')->all());
+        $this->assertSame([$ownTeam->id], collect($page->viewData('teams'))->pluck('id')->all());
     }
 
     /* ── escalating ───────────────────────────────────────────────────────── */
 
-    public function test_support_escalates_an_it_matter_to_a_technical_associate_with_a_reason(): void
+    public function test_support_escalates_an_it_matter_to_a_system_administrator_with_a_reason(): void
     {
-        $technical = $this->technicalAssociate('EMP711');
-        $ticket = $this->clientTicket('TKT-W-011', ['category' => 'Access']);
-        $support = $this->person(['employee', 'support'], 'EMP712');
+        $technical = $this->person(['employee', 'system_admin'], 'EMP723');
+        $ticket = $this->clientTicket('TKT-W-016', ['category' => 'Access']);
+        $support = $this->person(['employee', 'support'], 'EMP724');
 
         $this->actAs($support);
 
@@ -158,11 +240,11 @@ class TicketWorkflowTest extends TestCase
         $this->assertStringContainsString('Password reset did not help.', $note->body);
     }
 
-    public function test_whoever_has_it_escalates_to_their_seniors_and_the_ceos_own_ticket_skips_the_ceo(): void
+    public function test_whoever_has_it_escalates_to_their_seniors_and_the_ceos_own_ticket_stays_with_support(): void
     {
         $ceo = $this->person(['employee', 'ceo'], 'EMP713');
         $boss = $this->person(['employee', 'manager'], 'EMP714');
-        $worker = $this->technicalAssociate('EMP715');
+        $worker = $this->person(['employee'], 'EMP715');
         $worker->update(['reports_to' => $boss->id]);
         $sysAdmin = $this->person(['employee', 'system_admin'], 'EMP716');
 
@@ -180,8 +262,12 @@ class TicketWorkflowTest extends TestCase
 
         $ceosOwn = $this->internalTicket($ceo, 'TKT-W-013', ['assignee_id' => $boss->id, 'status' => 'open']);
         $offered = $this->get('/tickets/'.$ceosOwn->reference);
-        $this->assertSame($sysAdmin->id, $offered->viewData('suggestedEscalation'));
-        $this->assertNotContains($ceo->id, collect($offered->viewData('escalationTargets'))->pluck('id')->all());
+        // Not IT, so no System Administrator, and never the CEO: nothing is
+        // suggested, and Support assigns it (owner, 2026-11-07).
+        $this->assertNull($offered->viewData('suggestedEscalation'));
+        $targets = collect($offered->viewData('escalationTargets'))->pluck('id')->all();
+        $this->assertNotContains($ceo->id, $targets);
+        $this->assertNotContains($sysAdmin->id, $targets);
 
         $this->post('/tickets/'.$ceosOwn->reference.'/escalate', ['escalate_to' => $ceo->id, 'reason' => 'Up.'])
             ->assertSessionHasErrors(['escalate_to' => 'Choose somebody from the list.']);
@@ -291,21 +377,20 @@ class TicketWorkflowTest extends TestCase
         return Employee::create(['user_id' => $user->id, 'joined_on' => Carbon::now()->subYear()]);
     }
 
-    protected function technicalAssociate(string $staffId): Employee
+    /**
+     * @param  list<Employee>  $members
+     */
+    protected function team(string $name, ?Employee $lead, array $members = []): Team
     {
-        $it = MasterDataItem::firstOrCreate(
-            ['list' => MasterDataItem::DEPARTMENTS, 'code' => 'ITT'],
-            ['name' => 'IT Test', 'is_active' => true],
-        );
-        $designation = MasterDataItem::firstOrCreate(
-            ['list' => MasterDataItem::DESIGNATIONS, 'code' => config('tickets.technical_designation_code')],
-            ['name' => 'Technical Associate', 'department_id' => $it->id, 'is_active' => true],
-        );
+        $team = Team::create([
+            'reference' => 'TM-W'.fake()->unique()->numberBetween(100, 999),
+            'name' => $name,
+            'lead_id' => $lead?->id,
+            'status' => 'active',
+        ]);
+        $team->members()->attach(collect($members)->pluck('id')->all());
 
-        $employee = $this->person(['employee'], $staffId);
-        $employee->update(['designation_id' => $designation->id, 'department_id' => $it->id]);
-
-        return $employee;
+        return $team;
     }
 
     protected function actAs(Employee $employee): void
