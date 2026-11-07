@@ -11,7 +11,7 @@
 
     <div class="rail-list">
         <div class="rail-row">
-            <span class="avatar {{ Avatar::tint($request['employee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($request['employee_record']['name']) }}</span>
+            @include('partials.avatar', ['person' => $request['employee_record']])
             <div class="rail-body">
                 <strong>{{ $request['employee_record']['name'] }}</strong>
                 <span>{{ $request['employee_record']['designation'] }} · {{ $request['employee_record']['department'] }}</span>
@@ -20,7 +20,7 @@
 
         @if ($request['decider_record'])
             <div class="rail-row">
-                <span class="avatar {{ Avatar::tint($request['decider_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($request['decider_record']['name']) }}</span>
+                @include('partials.avatar', ['person' => $request['decider_record']])
                 <div class="rail-body">
                     <strong>{{ $request['decider_record']['name'] }}</strong>
                     <span>{{ $request['status'] === P::APPROVED ? 'Approved it' : 'Decided it' }}</span>

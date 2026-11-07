@@ -92,6 +92,17 @@
                             @enderror
                         </div>
 
+                        {{-- The employee's own ticket about the day (owner, 2026-11-07). --}}
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="entry-ticket">Their ticket <span class="an-optional">(optional)</span></label>
+                            <input id="entry-ticket" name="ticket_reference" type="text" maxlength="32"
+                                   placeholder="TKT-2026-001" value="{{ old('ticket_reference') }}">
+                            <span class="prose-quiet">The ticket they raised about this day. It is linked to the record, and the ticket notes the day was entered.</span>
+                            @error('ticket_reference')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
                         <button class="btn btn-primary" type="submit">Add the day</button>
                     </form>
                 </div>

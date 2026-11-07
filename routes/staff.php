@@ -210,6 +210,14 @@ Route::get('/employees/{employee}/photo', [EmployeeController::class, 'photo'])
     ->middleware('permission:employees.view')
     ->name('employees.photo');
 
+/*
+ * A colleague's photo beside their name anywhere in the staff side (owner,
+ * 2026-11-07): only the photo, for any staff member. See sharedPhoto.
+ */
+Route::get('/people/{employee}/photo', [EmployeeController::class, 'sharedPhoto'])
+    ->where('employee', '[A-Za-z0-9-]{1,32}')
+    ->name('people.photo');
+
 Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])
     ->where('employee', '[A-Za-z0-9-]{1,32}')
     ->middleware('permission:employees.edit')

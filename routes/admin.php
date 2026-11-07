@@ -5,11 +5,13 @@ use App\Http\Controllers\Admin\AccountController as AdminAccountController;
 use App\Http\Controllers\Admin\AuditController as AdminAuditController;
 use App\Http\Controllers\Admin\BackupsController as AdminBackupsController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\DesignationAccessController as AdminDesignationAccessController;
+use App\Http\Controllers\Admin\DiagnosticsController as AdminDiagnosticsController;
 use App\Http\Controllers\Admin\IntegrationsController as AdminIntegrationsController;
 use App\Http\Controllers\Admin\MaintenanceController as AdminMaintenanceController;
-use App\Http\Controllers\Admin\DesignationAccessController as AdminDesignationAccessController;
 use App\Http\Controllers\Admin\MasterDataController as AdminMasterDataController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\SupportMailController as AdminSupportMailController;
 use App\Http\Controllers\Admin\UpdatesController as AdminUpdatesController;
 use App\Http\Controllers\Auth\MyDevicesController;
 use Illuminate\Support\Facades\Route;
@@ -217,6 +219,16 @@ Route::post('/integrations/test', [AdminIntegrationsController::class, 'test'])-
 Route::post('/integrations/disconnect', [AdminIntegrationsController::class, 'disconnect'])->name('integrations.disconnect');
 
 /*
+ * The support mailbox (owner, 2026-11-06): a one-time Google sign-in so mail to
+ * support@ becomes tickets. See SupportMailController.
+ */
+Route::post('/integrations/support-mail', [AdminSupportMailController::class, 'save'])->name('integrations.support-mail.save');
+Route::get('/integrations/support-mail/connect', [AdminSupportMailController::class, 'connect'])->name('integrations.support-mail.connect');
+Route::get('/integrations/support-mail/callback', [AdminSupportMailController::class, 'callback'])->name('integrations.support-mail.callback');
+Route::post('/integrations/support-mail/check', [AdminSupportMailController::class, 'check'])->name('integrations.support-mail.check');
+Route::post('/integrations/support-mail/disconnect', [AdminSupportMailController::class, 'disconnect'])->name('integrations.support-mail.disconnect');
+
+/*
  * Database backups (2026-10-27). Taking one is a POST like every other admin
  * act; the download name is checked against the pattern the backup writes,
  * so it cannot be used to fetch any other file.
@@ -233,6 +245,13 @@ Route::get('/backups/{file}', [AdminBackupsController::class, 'download'])
  */
 Route::get('/updates', [AdminUpdatesController::class, 'index'])->name('updates');
 Route::post('/updates', [AdminUpdatesController::class, 'store'])->name('updates.store');
+
+/*
+ * Diagnostics (owner, 2026-11-07): what went wrong for people, and a download of
+ * it with the server log. See App\Support\Diagnostics.
+ */
+Route::get('/diagnostics', [AdminDiagnosticsController::class, 'index'])->name('diagnostics');
+Route::get('/diagnostics/download', [AdminDiagnosticsController::class, 'download'])->name('diagnostics.download');
 
 /*
  * Maintenance mode (2026-10-28): closes the site to everybody but this panel.

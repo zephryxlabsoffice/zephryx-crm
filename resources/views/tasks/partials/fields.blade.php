@@ -52,7 +52,7 @@
                 <div class="task-assignees">
                     @foreach ($task['assignee_records'] as $person)
                         <div class="task-assignee-row">
-                            <span class="avatar {{ Avatar::tint($person['name']) }}" aria-hidden="true">{{ Avatar::initials($person['name']) }}</span>
+                            @include('partials.avatar', ['person' => $person])
                             <span class="field-stack">
                                 <a href="{{ route('employees.show', ['employee' => $person['user_id']]) }}">{{ $person['name'] }}</a>
                                 <span class="sub">{{ $person['designation'] }}</span>

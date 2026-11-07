@@ -207,6 +207,8 @@ class RbacSeeder extends Seeder
         // IT tickets (Access, Network, Bug): the System Administrator sees and
         // decides those, and only those (owner, 2026-11-07). See TicketWorkflow.
         'tickets.it',
+        // Attendance tickets: HR sees and decides those (owner, 2026-11-07).
+        'tickets.hr',
         /*
          * Salary. `salary.view` is the sensitive read - seeing what a colleague
          * earns is itself the harm - and `salary.manage` is the write: adding a
@@ -504,6 +506,9 @@ class RbacSeeder extends Seeder
                     ...$staffReading, 'employees.view', 'attendance.view', 'attendance.view.all',
                     'attendance.reject', 'leave.approve', 'salary.view', 'announcements.post',
                     'announcements.holiday',
+                    // Attendance tickets: a missed check-in, a check-out that
+                    // failed (owner, 2026-11-07).
+                    'tickets.hr',
                     // People operations means the people themselves: HR is who
                     // adds somebody, corrects their record and closes it when
                     // they leave.

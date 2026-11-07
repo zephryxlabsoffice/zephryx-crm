@@ -48,7 +48,7 @@
             <div class="kpi-lbl">Team Lead</div>
             @if ($team['lead_record'])
                 <div class="kpi-person">
-                    <span class="avatar {{ Avatar::tint($team['lead_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($team['lead_record']['name']) }}</span>
+                    @include('partials.avatar', ['person' => $team['lead_record']])
                     <strong>{{ $team['lead_record']['name'] }}</strong>
                 </div>
                 <span class="kpi-sub">{{ $team['lead_record']['designation'] }}</span>

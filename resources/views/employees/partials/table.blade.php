@@ -66,7 +66,7 @@
                                 @if ($employee['has_photo'])
                                     <img class="avatar" src="{{ route('employees.photo', ['employee' => $employee['user_id']]) }}" alt="" width="34" height="34" loading="lazy">
                                 @else
-                                    <span class="avatar {{ Avatar::tint($employee['name']) }}" aria-hidden="true">{{ Avatar::initials($employee['name']) }}</span>
+                                    @include('partials.avatar', ['person' => $employee])
                                 @endif
                                 <span class="emp-name-text">
                                     <strong>{{ $employee['name'] }}</strong>

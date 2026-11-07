@@ -29,7 +29,7 @@
             <div class="kpi-lbl">Project Manager</div>
             @if ($project['manager_record'])
                 <div class="kpi-person">
-                    <span class="avatar {{ Avatar::tint($project['manager_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($project['manager_record']['name']) }}</span>
+                    @include('partials.avatar', ['person' => $project['manager_record']])
                     <strong>{{ $project['manager_record']['name'] }}</strong>
                 </div>
                 <span class="kpi-sub">{{ $project['manager_record']['designation'] }}</span>

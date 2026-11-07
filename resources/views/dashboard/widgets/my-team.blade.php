@@ -29,9 +29,7 @@
             @if ($w['people']->isNotEmpty())
                 <div class="dash-people">
                     @foreach ($w['people'] as $person)
-                        <span class="avatar {{ Avatar::tint($person['name']) }}" title="{{ $person['name'] }}">
-                            {{ Avatar::initials($person['name']) }}
-                        </span>
+                        @include('partials.avatar', ['person' => $person, 'title' => true])
                     @endforeach
                 </div>
             @endif

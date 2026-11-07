@@ -22,6 +22,10 @@
 @section('message')
     You were signed out for security after a period of inactivity, so that form
     was not submitted. Sign in again and it will take you back.
+    @if ($diagnosticCode = \App\Support\Diagnostics::lastCode())
+        <br><br>
+        Reference <strong>{{ $diagnosticCode }}</strong>.
+    @endif
 @endsection
 
 @section('actions')

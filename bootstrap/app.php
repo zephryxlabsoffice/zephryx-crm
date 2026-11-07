@@ -8,12 +8,15 @@ use App\Http\Middleware\RestoreRememberedSession;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\TrackSignedInDevice;
 use App\Http\Middleware\VerifyHost;
+use App\Support\Diagnostics;
 use App\Support\Shell;
 use App\Support\Theme;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -90,4 +93,23 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        /*
+         * Diagnostics (owner, 2026-11-07): every reported error gets a code the
+         * person sees and can quote on a ticket. The normal log entry still
+         * happens - this only adds to it.
+         */
+        $exceptions->report(function (Throwable $e): void {
+            Diagnostics::recordException($e);
+        });
+
+        // An expired page is not reported, so it is caught on its way out.
+        $exceptions->render(function (Throwable $e, Request $request) {
+            if ($e instanceof TokenMismatchException
+                || ($e instanceof HttpExceptionInterface && $e->getStatusCode() === 419)) {
+                Diagnostics::recordException($e, Diagnostics::EXPIRED, 419);
+            }
+
+            return null;
+        });
     })->create();

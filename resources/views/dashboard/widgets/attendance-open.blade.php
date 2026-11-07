@@ -38,9 +38,7 @@
                         <tr>
                             <td>
                                 <a class="row-link person-row" href="{{ route('attendance.show', $record['id']) }}">
-                                    <div class="avatar {{ Avatar::tint($record['employee_record']['name']) }}" aria-hidden="true">
-                                        {{ Avatar::initials($record['employee_record']['name']) }}
-                                    </div>
+                                    @include('partials.avatar', ['person' => $record['employee_record']])
                                     <div class="person-body">
                                         <strong>{{ $record['employee_record']['name'] }}</strong>
                                         <span>In at {{ AP::time($record['date'], $record['check_in']) }}</span>

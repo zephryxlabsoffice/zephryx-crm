@@ -35,7 +35,7 @@
         <div class="rail-list">
             @foreach ($openRecords->take(6) as $record)
                 <a class="rail-row" href="{{ route('attendance.show', ['record' => $record['id']]) }}">
-                    <span class="avatar {{ Avatar::tint($record['employee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($record['employee_record']['name']) }}</span>
+                    @include('partials.avatar', ['person' => $record['employee_record']])
                     <span class="rail-body">
                         <strong>{{ $record['employee_record']['name'] }}</strong>
                         <span>In at {{ P::time($record['date'], $record['check_in']) }} · no check-out</span>

@@ -142,6 +142,19 @@ class TicketLifecycle
      */
     protected static function requesterAddresses(Ticket $ticket): Collection
     {
+        $addresses = self::accountAddresses($ticket);
+
+        // A ticket that came by email from somebody with no account here.
+        return $addresses->isEmpty() && filled($ticket->requester_email)
+            ? collect([$ticket->requester_email])
+            : $addresses;
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    protected static function accountAddresses(Ticket $ticket): Collection
+    {
         if ($ticket->type !== 'client') {
             return collect([$ticket->raiser?->user?->status === 'active' ? $ticket->raiser->user->email : null])
                 ->filter()

@@ -108,7 +108,40 @@ class EmployeeDirectory
             // Whether there is a photo to draw. The file itself is served by
             // employees.photo, behind employees.view, never from a public path.
             'has_photo' => $employee->profile?->photo_path !== null,
+            // For partials/avatar: the photo beside their name on any page
+            // (owner, 2026-11-07). Versioned, so a new photo is a new URL.
+            'photo_url' => self::photoUrl($employee),
         ];
+    }
+
+    /**
+     * Where a person's photo is served from, for partials/avatar, or null when
+     * they have none. Versioned by the file, so a new photo is a new URL.
+     */
+    /**
+     * The same, by account: a thread lists one author many times, so it is looked
+     * up once per request.
+     */
+    public static function photoUrlForUser(?int $userId): ?string
+    {
+        if ($userId === null) {
+            return null;
+        }
+
+        return once(function () use ($userId) {
+            $employee = Employee::with(['user', 'profile'])->where('user_id', $userId)->first();
+
+            return $employee === null ? null : self::photoUrl($employee);
+        });
+    }
+
+    public static function photoUrl(Employee $employee): ?string
+    {
+        $path = $employee->profile?->photo_path;
+
+        return $path === null || $employee->user?->user_id === null
+            ? null
+            : route('people.photo', ['employee' => $employee->user->user_id, 'v' => substr(md5($path), 0, 8)]);
     }
 
     /**
@@ -213,6 +246,7 @@ class EmployeeDirectory
                 'name' => (string) $e->user?->name,
                 'designation' => (string) $e->designation?->name,
                 'when' => $e->joined_on->diffForHumans(),
+                'photo_url' => self::photoUrl($e),
             ])
             ->all();
     }
@@ -228,6 +262,7 @@ class EmployeeDirectory
             array_map(
                 fn (array $m) => [
                     'name' => $m['employee']['name'],
+                    'photo_url' => $m['employee']['photo_url'] ?? null,
                     'date' => $m['day_month'],
                     'countdown' => $m['label'],
                 ],

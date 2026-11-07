@@ -35,7 +35,7 @@
                 <ul class="sl-gap-list">
                     @foreach ($missing as $person)
                         <li>
-                            <span class="avatar {{ Avatar::tint($person['name']) }}" aria-hidden="true">{{ Avatar::initials($person['name']) }}</span>
+                            @include('partials.avatar', ['person' => $person])
                             <span class="sl-gap-person">
                                 <strong>{{ $person['name'] }}</strong>
                                 <span>{{ $person['user_id'] }} · {{ $person['department'] }}</span>
@@ -57,7 +57,7 @@
                 <ul class="sl-gap-list">
                     @foreach ($withoutBanking as $person)
                         <li>
-                            <span class="avatar {{ Avatar::tint($person['name']) }}" aria-hidden="true">{{ Avatar::initials($person['name']) }}</span>
+                            @include('partials.avatar', ['person' => $person])
                             <span class="sl-gap-person">
                                 <strong>{{ $person['name'] }}</strong>
                                 <span>{{ $person['user_id'] }} · joined {{ P::date($person['joined']) }}</span>

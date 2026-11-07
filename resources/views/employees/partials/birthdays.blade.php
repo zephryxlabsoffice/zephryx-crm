@@ -8,7 +8,7 @@
     <div class="rail-list">
         @forelse ($birthdays as $person)
             <div class="person-row">
-                <span class="avatar {{ Avatar::tint($person['name']) }}" aria-hidden="true">{{ Avatar::initials($person['name']) }}</span>
+                @include('partials.avatar', ['person' => $person])
                 <div class="person-body">
                     <strong>{{ $person['name'] }}</strong>
                     <span>{{ $person['date'] }}</span>

@@ -80,6 +80,17 @@
         ])
     @endif
 
+    @if ($record['corrected_ticket'] ?? null)
+        {{-- A technical issue, corrected under the employee's ticket (owner, 2026-11-07). --}}
+        @include('partials.notice', [
+            'tone' => 'info',
+            'title' => 'Corrected for a technical issue under '.$record['corrected_ticket']
+                .($record['corrected_by'] ? ' by '.$record['corrected_by'] : '')
+                .($record['corrected_at'] ? ' on '.P::date($record['corrected_at']) : ''),
+            'message' => $record['correction_reason'] ?? '',
+        ])
+    @endif
+
     @if ($entered)
         @include('partials.notice', [
             'tone' => 'info',

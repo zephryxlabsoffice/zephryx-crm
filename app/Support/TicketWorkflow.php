@@ -48,7 +48,11 @@ class TicketWorkflow
     /** Routing, assigning and resolving. Support, Managers and the CEO. */
     public const TRIAGE = 'tickets.triage';
 
-    /** IT tickets, and only those. The System Administrator (owner, 2026-11-07). */
+    /**
+     * IT tickets, and only those: the System Administrator. Attendance tickets go
+     * the same way to HR (`tickets.hr`), and a newly raised one goes straight to
+     * them. Both are desks in config/tickets.php (owner, 2026-11-07).
+     */
     public const IT = 'tickets.it';
 
     protected static ?bool $ready = null;
@@ -67,17 +71,45 @@ class TicketWorkflow
         return $user === null ? null : Employee::where('user_id', $user->id)->first();
     }
 
-    public static function isIt(Ticket $ticket): bool
+    /**
+     * The desk a category belongs to: IT to the System Administrator, Attendance
+     * to HR. See config/tickets.php.
+     *
+     * @return array{permission: string, role: string, categories: list<string>, route_on_raise: bool}|null
+     */
+    public static function deskFor(?string $category): ?array
     {
-        return in_array($ticket->category, self::itCategories(), true);
+        if ($category === null) {
+            return null;
+        }
+
+        foreach ((array) config('tickets.desks', []) as $desk) {
+            if (in_array($category, $desk['categories'], true)) {
+                return $desk;
+            }
+        }
+
+        return null;
     }
 
     /**
-     * @return list<string>
+     * @return array{permission: string, role: string, categories: list<string>, route_on_raise: bool}|null
      */
-    public static function itCategories(): array
+    public static function deskOf(Ticket $ticket): ?array
     {
-        return (array) config('tickets.technical_categories', []);
+        return self::deskFor($ticket->category);
+    }
+
+    /**
+     * Who on a ticket's desk is offered or suggested: everybody holding its role.
+     *
+     * @return list<int>
+     */
+    protected static function deskPeople(Ticket $ticket): array
+    {
+        $desk = self::deskOf($ticket);
+
+        return $desk === null ? [] : self::holdersOf($desk['role']);
     }
 
     /**
@@ -106,7 +138,11 @@ class TicketWorkflow
         $employee = self::employeeFor($user);
         $employeeId = $employee?->id ?? 0;
         $triages = $rbac->can($user, self::TRIAGE);
-        $handlesIt = $rbac->can($user, self::IT);
+        $deskCategories = collect((array) config('tickets.desks', []))
+            ->filter(fn (array $desk) => $rbac->can($user, $desk['permission']))
+            ->flatMap(fn (array $desk) => $desk['categories'])
+            ->values()
+            ->all();
         $ready = self::ready();
         $teamIds = $ready ? self::teamIdsOf($employee) : [];
 
@@ -118,7 +154,7 @@ class TicketWorkflow
                 ->orWhere('resolved_by', $employeeId)
                 ->orWhereIn('team_id', $teamIds))
             ->orWhereHas('client', fn (Builder $client) => $client->where('account_manager_id', $user->id))
-            ->when($handlesIt, fn (Builder $q) => $q->orWhereIn('category', self::itCategories()))
+            ->when($deskCategories !== [], fn (Builder $q) => $q->orWhereIn('category', $deskCategories))
             ->when($triages, fn (Builder $managed) => $managed
                 ->orWhereHas('project', fn (Builder $project) => $project->where('manager_id', $employeeId))
                 ->orWhereHas('raiser', fn (Builder $raiser) => $raiser
@@ -157,7 +193,7 @@ class TicketWorkflow
         }
 
         return app(Rbac::class)->can($user, self::TRIAGE)
-            || self::handlesAsIt($ticket, $user)
+            || self::handlesAsDesk($ticket, $user)
             || self::leadsTeamOf($ticket, self::employeeFor($user));
     }
 
@@ -175,14 +211,16 @@ class TicketWorkflow
         $employee = self::employeeFor($user);
 
         return app(Rbac::class)->can($user, self::TRIAGE)
-            || self::handlesAsIt($ticket, $user)
+            || self::handlesAsDesk($ticket, $user)
             || ($employee !== null && $ticket->assignee_id === $employee->id)
             || self::inTeamOf($ticket, $employee);
     }
 
-    public static function handlesAsIt(Ticket $ticket, ?User $user): bool
+    public static function handlesAsDesk(Ticket $ticket, ?User $user): bool
     {
-        return self::isIt($ticket) && app(Rbac::class)->can($user, self::IT);
+        $desk = self::deskOf($ticket);
+
+        return $desk !== null && app(Rbac::class)->can($user, $desk['permission']);
     }
 
     /**
@@ -255,8 +293,8 @@ class TicketWorkflow
             $people = $people->merge($managers === [] ? self::holdersOf('manager') : $managers);
             $everyTeam = true;
 
-            if (self::isIt($ticket)) {
-                $people = $people->merge(self::holdersOf('system_admin'));
+            if (self::deskOf($ticket) !== null) {
+                $people = $people->merge(self::deskPeople($ticket));
             }
         }
 
@@ -274,8 +312,8 @@ class TicketWorkflow
                 ->merge($theirTeams->pluck('lead_id'));
         }
 
-        if (self::handlesAsIt($ticket, $user)) {
-            $people = $people->merge(self::holdersOf('system_admin'));
+        if (self::handlesAsDesk($ticket, $user)) {
+            $people = $people->merge(self::deskPeople($ticket));
             $everyTeam = true;
         }
 
@@ -315,7 +353,7 @@ class TicketWorkflow
         $escalator->loadMissing('teams');
 
         $ids = collect(self::managersFor($ticket))
-            ->merge(self::isIt($ticket) ? self::holdersOf('system_admin') : [])
+            ->merge(self::deskPeople($ticket))
             ->merge([$escalator->reports_to])
             ->merge($escalator->teams->pluck('lead_id'))
             ->merge(self::holdersOf('ceo'))
@@ -355,8 +393,8 @@ class TicketWorkflow
 
         $candidates = $fromSupport
             ? [
-                self::isIt($ticket) ? TicketDirectory::technicalAgent()?->id : null,
-                ...(self::isIt($ticket) ? self::holdersOf('system_admin') : []),
+                self::deskOf($ticket) === null ? null : TicketDirectory::agentFor(self::deskOf($ticket)['role'])?->id,
+                ...self::deskPeople($ticket),
                 $ticket->project?->manager_id,
                 $ticket->client?->account_manager_id === null
                     ? null

@@ -41,9 +41,7 @@
                         <tr>
                             <td>
                                 <a class="row-link person-row" href="{{ route('leave.show', $request['id']) }}">
-                                    <div class="avatar {{ Avatar::tint($request['employee_record']['name']) }}" aria-hidden="true">
-                                        {{ Avatar::initials($request['employee_record']['name']) }}
-                                    </div>
+                                    @include('partials.avatar', ['person' => $request['employee_record']])
                                     <div class="person-body">
                                         <strong>{{ $request['employee_record']['name'] }}</strong>
                                         <span>{{ \App\Support\LeavePolicy::label($request['type']) }}</span>

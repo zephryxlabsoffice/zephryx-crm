@@ -17,16 +17,32 @@
 return [
 
     /*
-    | The designation a client's "technical issue" goes straight to, by its
-    | code in Admin > Master data. If nobody active holds it, the ticket joins
-    | the normal queue instead, so it can never be lost.
-    */
-    'technical_designation_code' => 'TECHASST',
-
-    /*
-    | Categories Support escalates to a Technical Associate by default.
+    | IT tickets: a System Administrator sees and decides these (owner,
+    | 2026-11-07). A client's technical issue goes straight to one.
     */
     'technical_categories' => ['Access', 'Network', 'Bug'],
+
+    /*
+    | Desks: a role that sees and decides the tickets of some categories, and
+    | only those, by category name. `route_on_raise` sends a newly raised ticket
+    | of that category straight to one of them instead of to Support.
+    |
+    | IT to the System Administrator, attendance to HR (owner, 2026-11-07).
+    */
+    'desks' => [
+        'it' => [
+            'permission' => 'tickets.it',
+            'role' => 'system_admin',
+            'categories' => ['Access', 'Network', 'Bug'],
+            'route_on_raise' => false,
+        ],
+        'hr' => [
+            'permission' => 'tickets.hr',
+            'role' => 'hr',
+            'categories' => ['Attendance'],
+            'route_on_raise' => true,
+        ],
+    ],
 
     /*
     | A resolved ticket closes by itself this many days later, unless the person

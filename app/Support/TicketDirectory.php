@@ -88,6 +88,10 @@ class TicketDirectory
             'team' => $ticket->team?->name,
             'resolver_record' => $ticket->resolver ? EmployeeDirectory::row($ticket->resolver) : null,
             'resolved_at' => $ticket->resolved_at,
+            // Email to ticket: where it came from, and who sent it when they
+            // have no account here (owner, 2026-11-06).
+            'source' => $ticket->source,
+            'requester' => $ticket->requester_email === null ? null : trim(($ticket->requester_name ?? '').' <'.$ticket->requester_email.'>'),
             'project_record' => $ticket->project ? ProjectDirectory::row($ticket->project) : null,
             // Set once a ticket becomes a task - see
             // TicketController::convertToTask. Read from the relation rather
@@ -171,16 +175,25 @@ class TicketDirectory
     }
 
     /**
-     * The System Administrator an IT ticket goes to: whoever has the fewest open
+     * The System Administrator an IT ticket goes to.
+     */
+    public static function technicalAgent(): ?Employee
+    {
+        return self::agentFor('system_admin');
+    }
+
+    /**
+     * The holder of a desk's role a ticket goes to: whoever has the fewest open
      * tickets. By role, not designation (owner, 2026-11-07), and never the CEO,
      * who may hold the role too.
      */
-    public static function technicalAgent(): ?Employee
+    public static function agentFor(string $roleKey, ?Employee $notThem = null): ?Employee
     {
         return Employee::query()
             ->with(['user', 'department'])
             ->active()
-            ->whereHas('user', fn (Builder $user) => $user->holdingRole('system_admin'))
+            ->when($notThem !== null, fn (Builder $q) => $q->whereKeyNot($notThem->id))
+            ->whereHas('user', fn (Builder $user) => $user->holdingRole($roleKey))
             ->whereDoesntHave('user', fn (Builder $user) => $user->holdingRole('ceo'))
             ->orderBy('id')
             ->get()

@@ -9,6 +9,7 @@ use App\Models\TicketAttachment;
 use App\Models\TicketComment;
 use App\Support\Audit\AuditLog;
 use App\Support\ClientPortal;
+use App\Support\Diagnostics;
 use App\Support\Documents\DocumentStore;
 use App\Support\Notifier;
 use App\Support\TicketDirectory;
@@ -230,6 +231,9 @@ class TicketController extends PortalController
         // No actor: the client is not a staff account and has no bell to be
         // excluded from, the same reasoning as the comment route below.
         $this->notify->ticketRaised($ticket->load(['project.manager.user', 'assignee.user']), null);
+
+        // What went wrong for them lately, for whoever picks it up (staff only).
+        Diagnostics::attachTo($ticket, $request->user());
 
         return redirect()
             ->route('client.tickets.show', ['ticket' => $ticket->reference])

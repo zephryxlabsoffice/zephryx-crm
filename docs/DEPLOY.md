@@ -251,6 +251,29 @@ reminds nobody twice, so it can be set up before that date.
 /usr/bin/php <site folder>/zephryx-crm/artisan eod:remind >> <site folder>/zephryx-crm/storage/logs/cron.log 2>&1
 ```
 
+**Email to ticket:** a third Cron Job, every five minutes (`*/5 * * * *`). It does
+nothing until the support mailbox is connected in Admin → Integrations.
+
+```
+/usr/bin/php <site folder>/zephryx-crm/artisan tickets:fetch-mail >> <site folder>/zephryx-crm/storage/logs/cron.log 2>&1
+```
+
+Connecting the support mailbox, once (Google Cloud, the same project as the
+service account):
+
+1. **APIs & Services → Library**: enable the **Gmail API**.
+2. **OAuth consent screen**: User type **Internal**, app name "Zephryx CRM",
+   support email contact@. Internal means only company accounts can sign in and
+   Google does not need to review it.
+3. **Credentials → Create credentials → OAuth client ID**: type **Web
+   application**, and under Authorised redirect URIs paste the address shown on
+   Admin → Integrations (`…/admin/integrations/support-mail/callback`).
+4. Copy the client ID and secret into Admin → Integrations → Support mailbox, and
+   Save.
+5. Press **Sign in with Google** and sign in as **contact@**. It asks only to read
+   mail.
+6. Send a test email to support@ and press **Check now**.
+
 **Restoring:** phpMyAdmin → the CRM database → Import → the `.sql.gz` file.
 It only works with the same `APP_KEY`, so keep that copy of `.env` safe.
 

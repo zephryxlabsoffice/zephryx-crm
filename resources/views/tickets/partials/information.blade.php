@@ -53,7 +53,7 @@
             </div>
             <div class="info-row">
                 <span>Raised by</span>
-                <span>{{ $ticket['client'] ?? ($ticket['raiser_record']['name'] ?? 'Unknown') }}</span>
+                <span>{{ $ticket['client'] ?? ($ticket['raiser_record']['name'] ?? ($ticket['requester'] ?? 'Unknown')) }}@if (($ticket['source'] ?? null) === 'email') (by email)@endif</span>
             </div>
         </div>
     </div>

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\EmployeeDirectory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -45,6 +46,8 @@ class TaskComment extends Model
             'author' => $this->author_label,
             'at' => $this->created_at,
             'body' => $this->body,
+            // The author's photo beside it (owner, 2026-11-07).
+            'photo_url' => EmployeeDirectory::photoUrlForUser($this->author_id),
         ];
     }
 }

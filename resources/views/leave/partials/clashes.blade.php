@@ -39,7 +39,7 @@
                     $clashType = LeavePolicy::type($clash['type']);
                 @endphp
                 <li class="lv-clash">
-                    <span class="avatar {{ Avatar::tint($clash['employee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($clash['employee_record']['name']) }}</span>
+                    @include('partials.avatar', ['person' => $clash['employee_record']])
 
                     <span class="lv-clash-body">
                         <strong>{{ $clash['employee_record']['name'] }}</strong>

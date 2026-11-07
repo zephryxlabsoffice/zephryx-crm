@@ -2,8 +2,10 @@
 
 use App\Support\AnnouncementDelivery;
 use App\Support\Backups\Backups;
+use App\Support\Diagnostics;
 use App\Support\EodReminders;
 use App\Support\Launch;
+use App\Support\SupportMail\SupportMailIntake;
 use App\Support\TicketLifecycle;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -20,6 +22,15 @@ Artisan::command('eod:remind', function (EodReminders $reminders) {
 })->purpose('Remind anybody who has not filed their End of Day report today');
 
 /*
+ * Email to ticket (owner, 2026-11-06): mail to support@ becomes a ticket. Its own
+ * cPanel Cron Job, every five minutes. See docs/DEPLOY.md and SupportMailIntake.
+ */
+Artisan::command('tickets:fetch-mail', function (SupportMailIntake $intake) {
+    $counts = $intake->run();
+    $this->info("Support mail: {$counts['tickets']} new tickets, {$counts['replies']} replies, {$counts['ignored']} ignored, {$counts['failed']} failed.");
+})->purpose('Turn new mail to the support address into tickets and replies');
+
+/*
  * The daily database backup (2026-10-27). Run by a cPanel Cron Job once a
  * day - see docs/DEPLOY.md. Also available as Admin → Backups → Back up now.
  * Exit code 1 on failure so cPanel's cron email reports it.
@@ -30,6 +41,8 @@ Artisan::command('backup:database', function (Backups $backups) {
     AnnouncementDelivery::deliverDueQuietly();
     // Resolved tickets nobody answered within the week. See TicketLifecycle.
     TicketLifecycle::closeStaleResolvedQuietly();
+    // Diagnostics are kept a month. See App\Support\Diagnostics.
+    Diagnostics::prune();
 
     try {
         $status = $backups->run();

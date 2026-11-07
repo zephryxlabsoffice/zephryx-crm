@@ -99,7 +99,7 @@
                         <td role="cell" data-label="Manager">
                             @if ($item['manager_record'])
                                 <span class="pm-cell">
-                                    <span class="avatar {{ Avatar::tint($item['manager_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($item['manager_record']['name']) }}</span>
+                                    @include('partials.avatar', ['person' => $item['manager_record']])
                                     <strong>{{ $item['manager_record']['name'] }}</strong>
                                 </span>
                             @else

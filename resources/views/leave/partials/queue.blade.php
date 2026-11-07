@@ -89,7 +89,7 @@
                         <td role="cell" class="cell-lead" data-label="Employee">
                             <a class="row-link" href="{{ $url }}">
                                 <span class="name-cell">
-                                    <span class="avatar {{ Avatar::tint($item['employee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($item['employee_record']['name']) }}</span>
+                                    @include('partials.avatar', ['person' => $item['employee_record']])
                                     <span class="name-cell-text">
                                         <strong>{{ $item['employee_record']['name'] }}</strong>
                                         <span>{{ $item['employee'] }} · {{ $item['employee_record']['department'] }}</span>

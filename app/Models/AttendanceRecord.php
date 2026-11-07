@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * One person's one day.
@@ -20,6 +21,7 @@ class AttendanceRecord extends Model
         'employee_id', 'date', 'check_in', 'check_out',
         'rejected_at', 'rejected_by', 'rejection_reason',
         'marked_present_at', 'marked_present_by', 'marked_present_reason',
+        'corrected_ticket_id', 'corrected_by', 'corrected_at', 'correction_reason',
     ];
 
     protected function casts(): array
@@ -28,6 +30,7 @@ class AttendanceRecord extends Model
             'date' => 'date',
             'rejected_at' => 'datetime',
             'marked_present_at' => 'datetime',
+            'corrected_at' => 'datetime',
         ];
     }
 
@@ -59,6 +62,32 @@ class AttendanceRecord extends Model
     }
 
     /**
+     * The ticket a technical-issue correction was made under (owner, 2026-11-07).
+     *
+     * @return BelongsTo<Ticket, $this>
+     */
+    public function correctedTicket(): BelongsTo
+    {
+        return $this->belongsTo(Ticket::class, 'corrected_ticket_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function correctedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'corrected_by');
+    }
+
+    /**
+     * False between uploading v1.16.0 and applying its migration.
+     */
+    public static function correctionsReady(): bool
+    {
+        return Schema::hasColumn('attendance_records', 'corrected_ticket_id');
+    }
+
+    /**
      * The id the pages and URLs carry.
      */
     public function reference(): string
@@ -74,7 +103,7 @@ class AttendanceRecord extends Model
     /**
      * Pull a reference apart, or null if it is not one.
      *
-     * @return array{0: string, 1: string}|null  [date, staff id]
+     * @return array{0: string, 1: string}|null [date, staff id]
      */
     public static function parseReference(string $reference): ?array
     {
@@ -108,6 +137,10 @@ class AttendanceRecord extends Model
             'marked_present_at' => $this->marked_present_at,
             'marked_present_by' => $this->markedPresentBy?->name,
             'marked_present_reason' => $this->marked_present_reason,
+            'corrected_ticket' => $this->correctedTicket?->reference,
+            'corrected_by' => $this->correctedBy?->name,
+            'corrected_at' => $this->corrected_at,
+            'correction_reason' => $this->correction_reason,
         ];
     }
 
