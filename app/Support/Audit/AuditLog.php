@@ -226,6 +226,10 @@ class AuditLog
     // A never-closed day HR marked present, with a reason (v1.2.1).
     public const ATTENDANCE_MARKED_PRESENT = 'attendance.marked_present';
 
+    // A never-closed day corrected for a technical issue, under the ticket the
+    // employee raised about it (owner, 2026-11-07).
+    public const ATTENDANCE_CORRECTED = 'attendance.corrected';
+
     /*
      * A past day HR filled in for somebody who could not check in themselves
      * (decided 2026-10-27). The record row looks like any other, so this entry

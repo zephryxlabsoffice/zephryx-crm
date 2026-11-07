@@ -5,9 +5,10 @@ use App\Http\Controllers\Admin\AccountController as AdminAccountController;
 use App\Http\Controllers\Admin\AuditController as AdminAuditController;
 use App\Http\Controllers\Admin\BackupsController as AdminBackupsController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\DesignationAccessController as AdminDesignationAccessController;
+use App\Http\Controllers\Admin\DiagnosticsController as AdminDiagnosticsController;
 use App\Http\Controllers\Admin\IntegrationsController as AdminIntegrationsController;
 use App\Http\Controllers\Admin\MaintenanceController as AdminMaintenanceController;
-use App\Http\Controllers\Admin\DesignationAccessController as AdminDesignationAccessController;
 use App\Http\Controllers\Admin\MasterDataController as AdminMasterDataController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\UpdatesController as AdminUpdatesController;
@@ -233,6 +234,13 @@ Route::get('/backups/{file}', [AdminBackupsController::class, 'download'])
  */
 Route::get('/updates', [AdminUpdatesController::class, 'index'])->name('updates');
 Route::post('/updates', [AdminUpdatesController::class, 'store'])->name('updates.store');
+
+/*
+ * Diagnostics (owner, 2026-11-07): what went wrong for people, and a download of
+ * it with the server log. See App\Support\Diagnostics.
+ */
+Route::get('/diagnostics', [AdminDiagnosticsController::class, 'index'])->name('diagnostics');
+Route::get('/diagnostics/download', [AdminDiagnosticsController::class, 'download'])->name('diagnostics.download');
 
 /*
  * Maintenance mode (2026-10-28): closes the site to everybody but this panel.

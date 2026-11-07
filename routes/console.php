@@ -2,6 +2,7 @@
 
 use App\Support\AnnouncementDelivery;
 use App\Support\Backups\Backups;
+use App\Support\Diagnostics;
 use App\Support\EodReminders;
 use App\Support\Launch;
 use App\Support\TicketLifecycle;
@@ -30,6 +31,8 @@ Artisan::command('backup:database', function (Backups $backups) {
     AnnouncementDelivery::deliverDueQuietly();
     // Resolved tickets nobody answered within the week. See TicketLifecycle.
     TicketLifecycle::closeStaleResolvedQuietly();
+    // Diagnostics are kept a month. See App\Support\Diagnostics.
+    Diagnostics::prune();
 
     try {
         $status = $backups->run();

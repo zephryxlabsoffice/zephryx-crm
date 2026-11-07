@@ -171,16 +171,25 @@ class TicketDirectory
     }
 
     /**
-     * The System Administrator an IT ticket goes to: whoever has the fewest open
+     * The System Administrator an IT ticket goes to.
+     */
+    public static function technicalAgent(): ?Employee
+    {
+        return self::agentFor('system_admin');
+    }
+
+    /**
+     * The holder of a desk's role a ticket goes to: whoever has the fewest open
      * tickets. By role, not designation (owner, 2026-11-07), and never the CEO,
      * who may hold the role too.
      */
-    public static function technicalAgent(): ?Employee
+    public static function agentFor(string $roleKey, ?Employee $notThem = null): ?Employee
     {
         return Employee::query()
             ->with(['user', 'department'])
             ->active()
-            ->whereHas('user', fn (Builder $user) => $user->holdingRole('system_admin'))
+            ->when($notThem !== null, fn (Builder $q) => $q->whereKeyNot($notThem->id))
+            ->whereHas('user', fn (Builder $user) => $user->holdingRole($roleKey))
             ->whereDoesntHave('user', fn (Builder $user) => $user->holdingRole('ceo'))
             ->orderBy('id')
             ->get()

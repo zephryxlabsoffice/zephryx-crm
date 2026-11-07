@@ -21,4 +21,9 @@
 @section('message')
     This is our fault, not yours. The problem has been recorded. Try again in a
     moment, and let an administrator know if it keeps happening.
+    @if ($diagnosticCode = \App\Support\Diagnostics::lastCode())
+        <br><br>
+        Reference <strong>{{ $diagnosticCode }}</strong>. If it keeps happening, raise a
+        ticket and mention it: we can see exactly what went wrong.
+    @endif
 @endsection

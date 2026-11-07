@@ -113,6 +113,8 @@ class MasterDataSeeder extends Seeder
             ['Feature request', 'FEATURE'],
             // A client asking for a change to their project (owner, 2026-11-06).
             ['Change request', 'CHANGE'],
+            // Goes straight to HR (owner, 2026-11-07).
+            ['Attendance', 'ATTEND'],
         ]);
     }
 

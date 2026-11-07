@@ -12,6 +12,7 @@ use App\Models\Ticket;
 use App\Models\TicketAttachment;
 use App\Models\TicketComment;
 use App\Support\Audit\AuditLog;
+use App\Support\Diagnostics;
 use App\Support\Documents\DocumentStore;
 use App\Support\Notifier;
 use App\Support\Rbac\Rbac;
@@ -263,6 +264,7 @@ class TicketController extends Controller
             'project_id' => ['nullable', Rule::exists('projects', 'id')],
             'client_id' => ['nullable', 'required_if:type,client', Rule::exists('clients', 'id')],
             'supersedes' => ['nullable', 'string', 'max:32', Rule::exists('tickets', 'reference')],
+            'category' => ['nullable', Rule::in($this->categoryNames())],
             'documents' => ['nullable', 'array', 'max:'.self::MAX_FILES_ON_RAISE],
             'documents.*' => [
                 'file',
@@ -279,6 +281,11 @@ class TicketController extends Controller
             ? Ticket::where('reference', $data['supersedes'])->first()
             : null;
 
+        // A desk's category that routes on raise (Attendance) goes straight to
+        // one of that desk, never the person raising it (owner, 2026-11-07).
+        $desk = TicketWorkflow::deskFor($data['category'] ?? null);
+        $agent = ($desk['route_on_raise'] ?? false) ? TicketDirectory::agentFor($desk['role'], $employee) : null;
+
         $ticket = Ticket::create([
             'reference' => TicketDirectory::nextReference(),
             'type' => $data['type'],
@@ -287,7 +294,9 @@ class TicketController extends Controller
             'raised_by' => $data['type'] === 'internal' ? $employee?->id : null,
             'client_id' => $data['type'] === 'client' ? $data['client_id'] : null,
             'project_id' => $data['project_id'] ?? null,
-            'status' => 'unassigned',
+            'category' => $data['category'] ?? null,
+            'assignee_id' => $agent?->id,
+            'status' => $agent === null ? 'unassigned' : 'open',
             'supersedes_ticket_id' => $supersedes?->id,
         ]);
 
@@ -304,7 +313,14 @@ class TicketController extends Controller
 
         // Support and the project manager first - see Notifier::ticketRaised.
         // A no-op for an internal ticket.
-        $this->notify->ticketRaised($ticket->load('project.manager.user'), $request->user());
+        if ($agent === null) {
+            $this->notify->ticketRaised($ticket->load('project.manager.user'), $request->user());
+        } else {
+            $this->notify->ticketAssigned($ticket->load('assignee.user'), null, $request->user());
+        }
+
+        // What went wrong for them lately, for whoever picks it up.
+        Diagnostics::attachTo($ticket, $request->user());
 
         if ($supersedes !== null && $supersedes->status !== 'closed') {
             $supersedes->update([
@@ -325,7 +341,7 @@ class TicketController extends Controller
         return redirect()
             ->route('tickets.show', ['ticket' => $ticket->reference])
             ->with('status', $notStored === []
-                ? 'Ticket raised. It is in the queue for triage.'
+                ? ($agent === null ? 'Ticket raised. It is in the queue for triage.' : 'Ticket raised and sent to '.$agent->user?->name.'.')
                 : 'Ticket raised, but these files could not be stored: '.implode(', ', $notStored).'. Add them from the ticket page.')
             ->with('status_tone', $notStored === [] ? 'success' : 'warning');
     }

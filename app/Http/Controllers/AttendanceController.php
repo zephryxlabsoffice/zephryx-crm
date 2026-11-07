@@ -7,11 +7,14 @@ use App\Models\CompOff;
 use App\Models\Employee;
 use App\Models\SundayRoster;
 use App\Models\Team;
+use App\Models\Ticket;
+use App\Models\TicketComment;
 use App\Support\AttendanceDirectory;
 use App\Support\AttendancePolicy;
 use App\Support\AttendancePresenter as P;
 use App\Support\Audit\AuditLog;
 use App\Support\CompOffPolicy;
+use App\Support\Diagnostics;
 use App\Support\EmployeeDirectory;
 use App\Support\Holidays;
 use App\Support\Rbac\Rbac;
@@ -279,6 +282,9 @@ class AttendanceController extends Controller
             ->first();
 
         if ($record === null) {
+            // "It would not let me check out" (owner, 2026-11-07): kept, with a code.
+            Diagnostics::record(Diagnostics::REFUSED, 'Check-out refused: no check-in for '.Carbon::today()->format('d M Y').'.');
+
             return redirect()
                 ->route('attendance.mine')
                 ->with('status', 'There is no check-in for today to close.')
@@ -716,6 +722,10 @@ class AttendanceController extends Controller
             ]);
         }
 
+        if (filled($request->input('ticket_reference'))) {
+            return $this->correctUnderTicket($request, $record, $found);
+        }
+
         if (! $found['auto_rejected'] || $model->rejected_at !== null) {
             return redirect()
                 ->route('attendance.show', ['record' => $record])
@@ -750,6 +760,124 @@ class AttendanceController extends Controller
             ->route('attendance.show', ['record' => $record])
             ->with('status', 'Marked present, with a warning.')
             ->with('status_tone', 'success');
+    }
+
+    /**
+     * A day that was never checked out of because of a technical issue, corrected
+     * under the ticket the employee raised about it (owner, 2026-11-07).
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * THE ONE CASE A MISSING CHECK-OUT IS FILLED IN
+     *
+     * Forgetting to check out stays "Present (warning)", with no hours. But
+     * when the system failed them it was not their fault: HR enters the real
+     * check-out, the day counts with its hours, and both the record and the
+     * ticket say so, for whoever reads either later. The ticket must be one
+     * the employee raised, so one ticket cannot excuse somebody else's day.
+     * A day already marked "Present (warning)" can be corrected the same way.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * @param  array<string, mixed>  $found
+     */
+    protected function correctUnderTicket(Request $request, string $record, array $found): RedirectResponse
+    {
+        $model = $found['model'];
+
+        if (! AttendanceRecord::correctionsReady()
+            || ! ($found['auto_rejected'] || $found['marked_present'])
+            || $model->rejected_at !== null) {
+            return redirect()
+                ->route('attendance.show', ['record' => $record])
+                ->with('status', 'Only a day that was never checked out of can be corrected under a ticket.')
+                ->with('status_tone', 'info');
+        }
+
+        $data = $request->validate([
+            'present_reason' => ['required', 'string', 'min:10', 'max:1000'],
+            'ticket_reference' => ['required', 'string', 'max:32'],
+            'check_out' => ['required', 'date_format:H:i'],
+        ], [
+            'present_reason.required' => 'Say what went wrong.',
+            'present_reason.min' => 'Say a little more - at least 10 characters.',
+            'check_out.required' => 'Enter the time they actually left.',
+        ]);
+
+        $ticket = $this->ticketOf($data['ticket_reference'], $model->employee, 'ticket_reference');
+        $checkIn = Carbon::parse($model->date->toDateString().' '.$found['check_in']);
+
+        if (! Carbon::parse($model->date->toDateString().' '.$data['check_out'])->greaterThan($checkIn)) {
+            throw ValidationException::withMessages([
+                'check_out' => 'The check-out has to be after the check-in at '.$checkIn->format('g:i A').'.',
+            ]);
+        }
+
+        $before = $found['marked_present'] ? 'Present (warning): never checked out' : 'Rejected: never checked out';
+
+        $model->update([
+            'check_out' => $data['check_out'],
+            'marked_present_at' => null,
+            'marked_present_by' => null,
+            'marked_present_reason' => null,
+            'corrected_ticket_id' => $ticket->id,
+            'corrected_by' => $request->user()->id,
+            'corrected_at' => Carbon::now(),
+            'correction_reason' => $data['present_reason'],
+        ]);
+
+        $this->audit->record(
+            action: AuditLog::ATTENDANCE_CORRECTED,
+            actor: $request->user(),
+            entityType: 'attendance',
+            entityId: $record,
+            before: $before,
+            after: 'Checked out '.$data['check_out'].' under '.$ticket->reference.': '.$data['present_reason'],
+            request: $request,
+        );
+
+        $this->noteOnTicket($request, $ticket, 'Attendance for '.$model->date->format('d M Y').' corrected by '
+            .$request->user()->name.': check-out '.$data['check_out'].' entered, so the day counts with its hours ('.$record.').');
+
+        $this->earnCompOffIfDue($request, $model->employee, $model->fresh());
+
+        return redirect()
+            ->route('attendance.show', ['record' => $record])
+            ->with('status', 'Corrected under '.$ticket->reference.'. The day counts with its hours.')
+            ->with('status_tone', 'success');
+    }
+
+    /**
+     * The ticket a correction cites: it must exist and be the employee's own.
+     */
+    protected function ticketOf(string $reference, Employee $employee, string $field): Ticket
+    {
+        $ticket = Ticket::where('reference', strtoupper(trim($reference)))->first();
+
+        if ($ticket === null) {
+            throw ValidationException::withMessages([$field => 'There is no ticket '.trim($reference).'.']);
+        }
+
+        if ($ticket->raised_by !== $employee->id) {
+            throw ValidationException::withMessages([
+                $field => 'That ticket was not raised by '.$employee->user?->name.'. Use the one they raised about this day.',
+            ]);
+        }
+
+        return $ticket;
+    }
+
+    /**
+     * An internal note on the ticket, so it records what was done about it.
+     */
+    protected function noteOnTicket(Request $request, Ticket $ticket, string $body): void
+    {
+        TicketComment::create([
+            'ticket_id' => $ticket->id,
+            'author_id' => $request->user()->id,
+            'author_label' => $request->user()->name,
+            'author_role' => $request->user()->display_role,
+            'body' => $body,
+            'visibility' => TicketComment::INTERNAL,
+        ]);
     }
 
     /* ══════════════════════════════════════════════════════════════════════
@@ -807,6 +935,8 @@ class AttendanceController extends Controller
             'check_in' => ['required', 'date_format:H:i'],
             'check_out' => ['required', 'date_format:H:i', 'after:check_in'],
             'reason' => ['required', 'string', 'min:10', 'max:1000'],
+            // The employee's own ticket about it, when they raised one (owner, 2026-11-07).
+            'ticket_reference' => ['nullable', 'string', 'max:32'],
         ], [
             'date.before' => 'Only a past day can be entered. Today is recorded by checking in.',
             'check_out.after' => 'The check-out has to be after the check-in.',
@@ -839,12 +969,21 @@ class AttendanceController extends Controller
             ]);
         }
 
+        $ticket = filled($data['ticket_reference'] ?? null) && AttendanceRecord::correctionsReady()
+            ? $this->ticketOf($data['ticket_reference'], $employee, 'ticket_reference')
+            : null;
+
         $record = AttendanceRecord::create([
             'employee_id' => $employee->id,
             'date' => $data['date'],
             'check_in' => $data['check_in'],
             'check_out' => $data['check_out'],
-        ]);
+        ] + ($ticket === null ? [] : [
+            'corrected_ticket_id' => $ticket->id,
+            'corrected_by' => $request->user()->id,
+            'corrected_at' => Carbon::now(),
+            'correction_reason' => $data['reason'],
+        ]));
 
         $reference = $record->fresh('employee.user')->reference();
 
@@ -853,9 +992,15 @@ class AttendanceController extends Controller
             actor: $request->user(),
             entityType: 'attendance',
             entityId: $reference,
-            after: 'Entered by HR, '.$data['check_in'].'–'.$data['check_out'].': '.$data['reason'],
+            after: 'Entered by HR, '.$data['check_in'].'–'.$data['check_out'].': '.$data['reason']
+                .($ticket === null ? '' : ' ('.$ticket->reference.')'),
             request: $request,
         );
+
+        if ($ticket !== null) {
+            $this->noteOnTicket($request, $ticket, 'Attendance for '.Carbon::parse($data['date'])->format('d M Y').' entered by '
+                .$request->user()->name.', '.$data['check_in'].' to '.$data['check_out'].' ('.$reference.').');
+        }
 
         $earned = $this->earnCompOffIfDue($request, $employee, $record->fresh());
 
@@ -886,6 +1031,10 @@ class AttendanceController extends Controller
     protected function requireEmployee(Request $request): Employee
     {
         $employee = $this->employeeFor($request);
+
+        if ($employee === null || ! $employee->attendsWork()) {
+            Diagnostics::record(Diagnostics::REFUSED, 'Attendance refused: '.($employee === null ? 'no employment record' : 'not tracked by attendance').'.', 403);
+        }
 
         abort_if($employee === null, 403);
         abort_unless($employee->attendsWork(), 403);
@@ -953,10 +1102,13 @@ class AttendanceController extends Controller
                 && ! $found['auto_rejected'],
             // Except by marking it present (v1.2.1): the day counts, with a
             // warning, and the missing check-out stays missing.
+            // Or, for a technical issue, by correcting it under the employee's
+            // ticket - also a day already marked present (owner, 2026-11-07).
             'canMarkPresent' => $this->rbac->can($request->user(), 'attendance.reject')
                 && ! $own
-                && $found['auto_rejected']
+                && ($found['auto_rejected'] || ($found['marked_present'] && AttendanceRecord::correctionsReady()))
                 && $found['rejected_at'] === null,
+            'mayCorrectUnderTicket' => AttendanceRecord::correctionsReady(),
             // A day HR typed in looks like any other row; the log is what says
             // so, and the page has to say it too.
             'entered' => $this->audit->entriesFor('attendance', $record)

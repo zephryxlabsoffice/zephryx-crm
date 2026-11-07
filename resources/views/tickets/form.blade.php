@@ -76,6 +76,21 @@
                             @enderror
                         </div>
 
+                        {{-- Optional. Attendance goes straight to HR (owner, 2026-11-07). --}}
+                        <div class="form-field">
+                            <label class="form-field-lbl" for="ticket-category">What is it about <span class="an-optional">(optional)</span></label>
+                            <select id="ticket-category" name="category">
+                                <option value="">Not sure</option>
+                                @foreach ($categories as $option)
+                                    <option value="{{ $option }}" @selected(old('category', request('category')) === $option)>{{ $option }}</option>
+                                @endforeach
+                            </select>
+                            <span class="prose-quiet">A missed check-in or a check-out that failed? Choose Attendance, and it goes straight to HR.</span>
+                            @error('category')
+                                <span class="field-error">{{ $message }}</span>
+                            @enderror
+                        </div>
+
                         <div class="form-field">
                             <label class="form-field-lbl" for="ticket-client">Client <span class="an-optional">(client tickets only)</span></label>
                             <select id="ticket-client" name="client_id">
