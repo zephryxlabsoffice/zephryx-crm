@@ -21,6 +21,13 @@
             <span>{{ $ticket['raiser_record']['designation'] }}</span>
         </span>
     </span>
+@elseif ($ticket['requester'] ?? null)
+    <span class="tkt-person">
+        <span class="tkt-person-text">
+            <strong>{{ $ticket['requester'] }}</strong>
+            <span>Unknown sender, by email</span>
+        </span>
+    </span>
 @else
     <span class="tkt-unassigned">Unknown</span>
 @endif

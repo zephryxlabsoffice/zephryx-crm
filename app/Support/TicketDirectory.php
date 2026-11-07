@@ -88,6 +88,10 @@ class TicketDirectory
             'team' => $ticket->team?->name,
             'resolver_record' => $ticket->resolver ? EmployeeDirectory::row($ticket->resolver) : null,
             'resolved_at' => $ticket->resolved_at,
+            // Email to ticket: where it came from, and who sent it when they
+            // have no account here (owner, 2026-11-06).
+            'source' => $ticket->source,
+            'requester' => $ticket->requester_email === null ? null : trim(($ticket->requester_name ?? '').' <'.$ticket->requester_email.'>'),
             'project_record' => $ticket->project ? ProjectDirectory::row($ticket->project) : null,
             // Set once a ticket becomes a task - see
             // TicketController::convertToTask. Read from the relation rather

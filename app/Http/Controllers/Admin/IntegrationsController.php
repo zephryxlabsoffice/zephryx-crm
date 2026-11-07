@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\GoogleConnection;
+use App\Models\SupportMailbox;
 use App\Support\Audit\AuditLog;
 use App\Support\Google\DriveClient;
 use App\Support\Google\GoogleAuth;
@@ -11,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Throwable;
 
@@ -45,6 +47,15 @@ class IntegrationsController extends Controller
         return response()->view('admin.integrations.index', [
             'activeNav' => 'integrations',
             'connection' => GoogleConnection::current(),
+            // Email to ticket (owner, 2026-11-06). Never the secret or the token.
+            'mailboxReady' => SupportMailbox::ready(),
+            'mailbox' => SupportMailbox::ready() ? SupportMailbox::current() : null,
+            'mailboxCallback' => route('admin.integrations.support-mail.callback'),
+            'recentMail' => SupportMailbox::ready()
+                ? DB::table('support_mail_messages')->leftJoin('tickets', 'tickets.id', '=', 'support_mail_messages.ticket_id')
+                    ->orderByDesc('support_mail_messages.id')->limit(10)
+                    ->get(['support_mail_messages.*', 'tickets.reference as ticket_reference'])
+                : collect(),
         ]);
     }
 

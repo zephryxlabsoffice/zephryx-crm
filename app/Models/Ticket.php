@@ -26,6 +26,8 @@ class Ticket extends Model
         'project_id', 'assignee_id', 'status', 'priority', 'category', 'department',
         'escalated_by', 'escalated_at', 'resolved_at', 'converted_task_id',
         'supersedes_ticket_id', 'team_id', 'resolved_by',
+        // Email to ticket (owner, 2026-11-06): where it came from, and who sent it.
+        'source', 'requester_email', 'requester_name', 'mail_thread_id',
     ];
 
     protected function casts(): array

@@ -158,4 +158,6 @@
             </section>
         </aside>
     </section>
+
+    @include('admin.integrations.support-mail')
 @endsection

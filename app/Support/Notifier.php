@@ -335,6 +335,29 @@ class Notifier
     }
 
     /**
+     * An email to support@ became a ticket that is not a client's: Support is told
+     * (owner, 2026-11-06). A client's goes through ticketRaised instead.
+     */
+    public function ticketArrivedByEmail(Ticket $ticket, bool $knownSender): void
+    {
+        $support = Employee::query()
+            ->whereHas('user', fn ($q) => $q->holdingRole('support'))
+            ->with('user')
+            ->get();
+
+        foreach ($support as $employee) {
+            $this->send(
+                reader: $employee->user,
+                kind: 'ticket',
+                title: $knownSender ? 'A new ticket arrived by email' : 'An email from an unknown sender',
+                body: $ticket->reference.' - '.$ticket->subject,
+                route: 'tickets.show',
+                params: ['ticket' => $ticket->reference],
+            );
+        }
+    }
+
+    /**
      * A ticket came out of triage with somebody's name on it.
      *
      * Only when the assignee actually changed. Triage is one write covering

@@ -230,6 +230,13 @@ class AuditLog
     // employee raised about it (owner, 2026-11-07).
     public const ATTENDANCE_CORRECTED = 'attendance.corrected';
 
+    // The support mailbox, read into tickets (owner, 2026-11-06).
+    public const SUPPORT_MAIL_SAVED = 'support_mail.saved';
+
+    public const SUPPORT_MAIL_CONNECTED = 'support_mail.connected';
+
+    public const SUPPORT_MAIL_DISCONNECTED = 'support_mail.disconnected';
+
     /*
      * A past day HR filled in for somebody who could not check in themselves
      * (decided 2026-10-27). The record row looks like any other, so this entry

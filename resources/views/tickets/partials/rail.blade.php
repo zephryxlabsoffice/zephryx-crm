@@ -14,7 +14,7 @@
                 @include('partials.nav-icon', ['icon' => $ticket['client'] ? 'clients' : 'employees'])
             </div>
             <div class="rail-body">
-                <strong>{{ $ticket['client'] ?? ($ticket['raiser_record']['name'] ?? 'Unknown') }}</strong>
+                <strong>{{ $ticket['client'] ?? ($ticket['raiser_record']['name'] ?? ($ticket['requester'] ?? 'Unknown')) }}</strong>
                 <span>Raised this ticket</span>
             </div>
         </div>

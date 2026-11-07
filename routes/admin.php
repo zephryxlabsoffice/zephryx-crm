@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\IntegrationsController as AdminIntegrationsContro
 use App\Http\Controllers\Admin\MaintenanceController as AdminMaintenanceController;
 use App\Http\Controllers\Admin\MasterDataController as AdminMasterDataController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\SupportMailController as AdminSupportMailController;
 use App\Http\Controllers\Admin\UpdatesController as AdminUpdatesController;
 use App\Http\Controllers\Auth\MyDevicesController;
 use Illuminate\Support\Facades\Route;
@@ -216,6 +217,16 @@ Route::get('/integrations', [AdminIntegrationsController::class, 'index'])->name
 Route::post('/integrations/connect', [AdminIntegrationsController::class, 'connect'])->name('integrations.connect');
 Route::post('/integrations/test', [AdminIntegrationsController::class, 'test'])->name('integrations.test');
 Route::post('/integrations/disconnect', [AdminIntegrationsController::class, 'disconnect'])->name('integrations.disconnect');
+
+/*
+ * The support mailbox (owner, 2026-11-06): a one-time Google sign-in so mail to
+ * support@ becomes tickets. See SupportMailController.
+ */
+Route::post('/integrations/support-mail', [AdminSupportMailController::class, 'save'])->name('integrations.support-mail.save');
+Route::get('/integrations/support-mail/connect', [AdminSupportMailController::class, 'connect'])->name('integrations.support-mail.connect');
+Route::get('/integrations/support-mail/callback', [AdminSupportMailController::class, 'callback'])->name('integrations.support-mail.callback');
+Route::post('/integrations/support-mail/check', [AdminSupportMailController::class, 'check'])->name('integrations.support-mail.check');
+Route::post('/integrations/support-mail/disconnect', [AdminSupportMailController::class, 'disconnect'])->name('integrations.support-mail.disconnect');
 
 /*
  * Database backups (2026-10-27). Taking one is a POST like every other admin
