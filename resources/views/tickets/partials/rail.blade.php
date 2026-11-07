@@ -21,7 +21,7 @@
 
         @if ($ticket['assignee_record'])
             <div class="rail-row">
-                <span class="avatar {{ Avatar::tint($ticket['assignee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($ticket['assignee_record']['name']) }}</span>
+                @include('partials.avatar', ['person' => $ticket['assignee_record']])
                 <div class="rail-body">
                     <strong>{{ $ticket['assignee_record']['name'] }}</strong>
                     <span>Handling it</span>
@@ -43,7 +43,7 @@
 
         @if ($ticket['resolver_record'] && in_array($ticket['status'], ['resolved', 'closed'], true))
             <div class="rail-row">
-                <span class="avatar {{ Avatar::tint($ticket['resolver_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($ticket['resolver_record']['name']) }}</span>
+                @include('partials.avatar', ['person' => $ticket['resolver_record']])
                 <div class="rail-body">
                     <strong>{{ $ticket['resolver_record']['name'] }}</strong>
                     <span>Resolved it{{ $ticket['resolved_at'] ? ' on '.P::date($ticket['resolved_at']) : '' }}</span>
@@ -53,7 +53,7 @@
 
         @if ($ticket['escalator_record'])
             <div class="rail-row">
-                <span class="avatar {{ Avatar::tint($ticket['escalator_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($ticket['escalator_record']['name']) }}</span>
+                @include('partials.avatar', ['person' => $ticket['escalator_record']])
                 <div class="rail-body">
                     <strong>{{ $ticket['escalator_record']['name'] }}</strong>
                     <span>Escalated it</span>

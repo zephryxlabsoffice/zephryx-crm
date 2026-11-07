@@ -134,7 +134,7 @@
                             <td role="cell" data-label="Escalated by">
                                 @if ($item['escalator_record'])
                                     <span class="tkt-person">
-                                        <span class="avatar {{ Avatar::tint($item['escalator_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($item['escalator_record']['name']) }}</span>
+                                        @include('partials.avatar', ['person' => $item['escalator_record']])
                                         <span class="tkt-person-text">
                                             <strong>{{ $item['escalator_record']['name'] }}</strong>
                                             <span>{{ $item['escalator_record']['designation'] }}</span>
@@ -151,7 +151,7 @@
                                 @if ($item['resolver_record'] && in_array($item['status'], ['resolved', 'closed'], true))
                                     {{-- Who solved it (owner, 2026-11-07). --}}
                                     <span class="tkt-person">
-                                        <span class="avatar {{ Avatar::tint($item['resolver_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($item['resolver_record']['name']) }}</span>
+                                        @include('partials.avatar', ['person' => $item['resolver_record']])
                                         <span class="tkt-person-text">
                                             <strong>{{ $item['resolver_record']['name'] }}</strong>
                                             <span>Resolved it</span>
@@ -159,7 +159,7 @@
                                     </span>
                                 @elseif ($item['assignee_record'])
                                     <span class="tkt-person">
-                                        <span class="avatar {{ Avatar::tint($item['assignee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($item['assignee_record']['name']) }}</span>
+                                        @include('partials.avatar', ['person' => $item['assignee_record']])
                                         <span class="tkt-person-text">
                                             <strong>{{ $item['assignee_record']['name'] }}</strong>
                                             <span>{{ $item['team'] ?? $item['assignee_record']['designation'] }}</span>

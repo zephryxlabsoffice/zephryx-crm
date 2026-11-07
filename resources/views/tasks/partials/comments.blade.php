@@ -22,7 +22,7 @@
         <ol class="thread">
             @foreach ($comments as $comment)
                 <li class="thread-item">
-                    <span class="avatar thread-avatar {{ Avatar::tint($comment['author']) }}" aria-hidden="true">{{ Avatar::initials($comment['author']) }}</span>
+                    @include('partials.avatar', ['person' => ['name' => $comment['author'], 'photo_url' => $comment['photo_url'] ?? null], 'class' => 'thread-avatar'])
 
                     <div class="thread-body">
                         <div class="thread-head">

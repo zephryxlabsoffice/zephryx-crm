@@ -23,7 +23,7 @@
             @foreach ($absences as $absence)
                 @php $leaveType = LeavePolicy::type($absence['type']); @endphp
                 <li class="rail-row">
-                    <span class="avatar {{ Avatar::tint($absence['employee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($absence['employee_record']['name']) }}</span>
+                    @include('partials.avatar', ['person' => $absence['employee_record']])
                     <div class="rail-body">
                         <strong>{{ $absence['employee_record']['name'] }}</strong>
                         <span>{{ P::range($absence) }}</span>

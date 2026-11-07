@@ -34,7 +34,7 @@
             <span class="lbl">Assigned to</span>
             @if ($ticket['assignee_record'])
                 <span class="tkt-person">
-                    <span class="avatar {{ Avatar::tint($ticket['assignee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($ticket['assignee_record']['name']) }}</span>
+                    @include('partials.avatar', ['person' => $ticket['assignee_record']])
                     <span class="tkt-person-text">
                         <strong>{{ $ticket['assignee_record']['name'] }}</strong>
                         <span>{{ $ticket['team'] ?? $ticket['assignee_record']['designation'] }}</span>

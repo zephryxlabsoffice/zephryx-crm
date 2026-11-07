@@ -25,7 +25,7 @@
         <ul class="rail-list">
             @foreach ($upcoming as $milestone)
                 <li class="rail-row">
-                    <span class="avatar {{ Avatar::tint($milestone['employee']['name']) }}" aria-hidden="true">{{ Avatar::initials($milestone['employee']['name']) }}</span>
+                    @include('partials.avatar', ['person' => $milestone['employee']])
 
                     <div class="rail-body">
                         <strong>{{ $milestone['employee']['name'] }}</strong>

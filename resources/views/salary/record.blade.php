@@ -64,7 +64,7 @@
         <div class="ms-main">
             <div class="card">
                 <div class="sl-slip-person">
-                    <span class="avatar {{ Avatar::tint($record['employee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($record['employee_record']['name']) }}</span>
+                    @include('partials.avatar', ['person' => $record['employee_record']])
                     <div class="sl-slip-person-body">
                         <strong>{{ $record['employee_record']['name'] }}</strong>
                         <span>{{ $record['employee'] }} · {{ $record['employee_record']['designation'] }} · {{ $record['employee_record']['department'] }}</span>

@@ -15,7 +15,7 @@
 <article class="card an-card @if ($announcement['pinned']) is-pinned @endif @if ($isMilestone) is-milestone @endif">
     <div class="an-card-hd">
         @if ($isMilestone)
-            <span class="avatar {{ Avatar::tint($announcement['employee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($announcement['employee_record']['name']) }}</span>
+            @include('partials.avatar', ['person' => $announcement['employee_record']])
         @else
             <span class="an-card-ic {{ $cat['tone'] }}" aria-hidden="true">
                 @include('partials.nav-icon', ['icon' => $cat['icon']])

@@ -85,7 +85,7 @@
                     <tr role="row">
                         <td role="cell" class="cell-lead" data-label="Member">
                             <a class="row-link emp-name" href="{{ route('employees.show', ['employee' => $member['user_id']]) }}">
-                                <span class="avatar {{ Avatar::tint($member['name']) }}" aria-hidden="true">{{ Avatar::initials($member['name']) }}</span>
+                                @include('partials.avatar', ['person' => $member])
                                 <span class="emp-name-text">
                                     <strong>{{ $member['name'] }}</strong>
                                     <span>{{ $member['user_id'] }}</span>

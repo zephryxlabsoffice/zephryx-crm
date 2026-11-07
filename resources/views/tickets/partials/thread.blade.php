@@ -34,7 +34,7 @@
             @foreach ($comments as $comment)
                 @php $internal = P::isInternal($comment); @endphp
                 <li class="thread-item @if ($internal) is-internal @endif">
-                    <span class="avatar thread-avatar {{ Avatar::tint($comment['author']) }}" aria-hidden="true">{{ Avatar::initials($comment['author']) }}</span>
+                    @include('partials.avatar', ['person' => ['name' => $comment['author'], 'photo_url' => $comment['photo_url'] ?? null], 'class' => 'thread-avatar'])
 
                     <div class="thread-body">
                         <div class="thread-head">

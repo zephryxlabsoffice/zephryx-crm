@@ -82,7 +82,7 @@
                         <td role="cell" data-label="Team lead">
                             @if ($team['lead_record'])
                                 <span class="lead-cell">
-                                    <span class="avatar {{ Avatar::tint($team['lead_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($team['lead_record']['name']) }}</span>
+                                    @include('partials.avatar', ['person' => $team['lead_record']])
                                     <span class="lead-cell-text">
                                         <strong>{{ $team['lead_record']['name'] }}</strong>
                                         <span>{{ $team['lead_record']['designation'] }}</span>

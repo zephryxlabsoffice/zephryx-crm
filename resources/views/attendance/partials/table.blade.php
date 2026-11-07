@@ -77,7 +77,7 @@
                     <tr role="row">
                         <td role="cell" class="cell-lead" data-label="Employee">
                             <span class="name-cell">
-                                <span class="avatar {{ Avatar::tint($row['employee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($row['employee_record']['name']) }}</span>
+                                @include('partials.avatar', ['person' => $row['employee_record']])
                                 <span class="name-cell-text">
                                     <strong>{{ $row['employee_record']['name'] }}</strong>
                                     <span>{{ $row['employee'] }}</span>

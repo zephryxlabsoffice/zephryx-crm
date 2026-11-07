@@ -15,7 +15,7 @@
     </span>
 @elseif ($ticket['raiser_record'])
     <span class="tkt-person">
-        <span class="avatar {{ Avatar::tint($ticket['raiser_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($ticket['raiser_record']['name']) }}</span>
+        @include('partials.avatar', ['person' => $ticket['raiser_record']])
         <span class="tkt-person-text">
             <strong>{{ $ticket['raiser_record']['name'] }}</strong>
             <span>{{ $ticket['raiser_record']['designation'] }}</span>

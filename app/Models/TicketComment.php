@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\EmployeeDirectory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -56,6 +57,8 @@ class TicketComment extends Model
             'visibility' => $this->visibility,
             'at' => $this->created_at,
             'body' => $this->body,
+            // The author's photo beside it, staff side only (owner, 2026-11-07).
+            'photo_url' => EmployeeDirectory::photoUrlForUser($this->author_id),
         ];
     }
 }

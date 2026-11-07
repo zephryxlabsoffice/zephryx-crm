@@ -14,7 +14,7 @@
     </div>
 
     <div class="person-row">
-        <span class="avatar {{ Avatar::tint($record['employee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($record['employee_record']['name']) }}</span>
+        @include('partials.avatar', ['person' => $record['employee_record']])
         <span class="person-body">
             <strong>{{ $record['employee_record']['name'] }}</strong>
             <span>{{ $record['employee_record']['designation'] }}</span>

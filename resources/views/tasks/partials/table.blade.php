@@ -110,7 +110,7 @@
                                     $extra = count($item['assignee_records']) - 1;
                                 @endphp
                                 <span class="assignee-cell">
-                                    <span class="avatar {{ Avatar::tint($first['name']) }}" aria-hidden="true">{{ Avatar::initials($first['name']) }}</span>
+                                    @include('partials.avatar', ['person' => $first])
                                     <span class="stack-cell">
                                         <strong>{{ $first['name'] }}{{ $extra > 0 ? ' +'.$extra : '' }}</strong>
                                         <span>{{ $item['team_record']['name'] ?? 'No team' }}</span>

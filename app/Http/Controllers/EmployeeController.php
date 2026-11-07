@@ -9,11 +9,11 @@ use App\Models\EmployeeDocument;
 use App\Models\EmployeeProfile;
 use App\Models\EmployeeSalaryStructure as SalaryStructureModel;
 use App\Models\MasterDataItem;
-use App\Support\Admin\MasterDataDirectory;
 use App\Models\ProfileChangeRequest;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Admin\AccessDirectory;
+use App\Support\Admin\MasterDataDirectory;
 use App\Support\Audit\AuditLog;
 use App\Support\Auth\PasswordResets;
 use App\Support\Auth\SecurityLock;
@@ -99,7 +99,7 @@ class EmployeeController extends Controller
      * nobody can see past cannot be used to make somebody more senior than
      * the person granting it.
      *
-     * @return \Illuminate\Support\Collection<string, array<string, mixed>>
+     * @return Collection<string, array<string, mixed>>
      */
     protected function assignableRoles(Request $request): Collection
     {
@@ -453,6 +453,28 @@ class EmployeeController extends Controller
         abort_if($path === null || ! $this->documents->exists($path), 404);
 
         return $this->documents->stream($path);
+    }
+
+    /**
+     * GET /people/{employee}/photo - a colleague's face, wherever their name is
+     * shown: tickets, tasks, teams, leave (owner, 2026-11-07, "not showing
+     * everywhere"). Any staff member, because a name on those pages is already
+     * visible to them; the photo is all this returns, nothing else of the record.
+     *
+     * Cached a day by the browser: a list of twenty people must not mean twenty
+     * file reads on every page. The URL carries a version from the photo's path,
+     * so a new photo is a new URL and shows at once.
+     */
+    public function sharedPhoto(string $employee): StreamedResponse
+    {
+        $path = $this->find($employee)->profile?->photo_path;
+
+        abort_if($path === null || ! $this->documents->exists($path), 404);
+
+        $response = $this->documents->stream($path);
+        $response->headers->set('Cache-Control', 'private, max-age=86400');
+
+        return $response;
     }
 
     /**
