@@ -23,4 +23,15 @@ return [
     */
     'technical_designation_code' => 'TECHASST',
 
+    /*
+    | Categories Support escalates to a Technical Associate by default.
+    */
+    'technical_categories' => ['Access', 'Network', 'Bug'],
+
+    /*
+    | A resolved ticket closes by itself this many days later, unless the person
+    | who raised it replies first (owner, 2026-11-06).
+    */
+    'auto_close_after_days' => 7,
+
 ];

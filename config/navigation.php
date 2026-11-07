@@ -42,7 +42,7 @@ return [
     ['key' => 'teams',         'label' => 'Teams',          'icon' => 'teams',         'route' => 'teams.index',   'permission' => 'teams.view'],
     ['key' => 'projects',      'label' => 'Projects',       'icon' => 'projects',      'route' => 'projects.index', 'permission' => 'projects.view'],
     ['key' => 'tasks',         'label' => 'Tasks',          'icon' => 'tasks',         'route' => 'tasks.index',   'permission' => 'tasks.view', 'opens' => [['permission' => 'tasks.self', 'route' => 'tasks.mine'], ['permission' => 'tasks.view', 'route' => 'tasks.index']]],
-    ['key' => 'tickets',       'label' => 'Tickets',        'icon' => 'tickets',       'route' => 'tickets.index', 'permission' => 'tickets.view'],
+    ['key' => 'tickets',       'label' => 'Tickets',        'icon' => 'tickets',       'route' => 'tickets.index', 'permission' => 'tickets.view', 'opens' => [['permission' => 'tickets.view.all', 'route' => 'tickets.index'], ['permission' => 'tickets.triage', 'route' => 'tickets.index'], ['permission' => 'tickets.view', 'route' => 'tickets.mine']]],
     ['key' => 'invoices',      'label' => 'Invoices',       'icon' => 'invoices',      'route' => 'invoices.index', 'permission' => 'invoices.view'],
     ['key' => 'salary',        'label' => 'Salary',         'icon' => 'salary',        'route' => 'salary.index',  'permission' => 'salary.view'],
     ['key' => 'attendance',    'label' => 'Attendance',     'icon' => 'attendance',    'route' => 'attendance.index', 'permission' => 'attendance.view', 'opens' => [['permission' => 'attendance.view', 'route' => 'attendance.index'], ['permission' => 'attendance.self', 'route' => 'attendance.mine']]],

@@ -148,14 +148,25 @@
 
                         @if (in_array('assignee', $columns, true))
                             <td role="cell" data-label="Assigned to">
-                                @if ($item['assignee_record'])
+                                @if ($item['resolver_record'] && in_array($item['status'], ['resolved', 'closed'], true))
+                                    {{-- Who solved it (owner, 2026-11-07). --}}
+                                    <span class="tkt-person">
+                                        <span class="avatar {{ Avatar::tint($item['resolver_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($item['resolver_record']['name']) }}</span>
+                                        <span class="tkt-person-text">
+                                            <strong>{{ $item['resolver_record']['name'] }}</strong>
+                                            <span>Resolved it</span>
+                                        </span>
+                                    </span>
+                                @elseif ($item['assignee_record'])
                                     <span class="tkt-person">
                                         <span class="avatar {{ Avatar::tint($item['assignee_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($item['assignee_record']['name']) }}</span>
                                         <span class="tkt-person-text">
                                             <strong>{{ $item['assignee_record']['name'] }}</strong>
-                                            <span>{{ $item['assignee_record']['designation'] }}</span>
+                                            <span>{{ $item['team'] ?? $item['assignee_record']['designation'] }}</span>
                                         </span>
                                     </span>
+                                @elseif ($item['team'])
+                                    <span class="tkt-person-text"><strong>{{ $item['team'] }}</strong><span>Team</span></span>
                                 @else
                                     <span class="tkt-unassigned">Nobody yet</span>
                                 @endif

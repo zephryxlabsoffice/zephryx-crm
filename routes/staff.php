@@ -527,9 +527,23 @@ Route::post('/tickets/{ticket}/comment', [TicketController::class, 'comment'])
     ->where('ticket', '[A-Za-z0-9-]{1,32}')
     ->middleware('permission:tickets.view')
     ->name('tickets.comment');
+/*
+ * Resolving, escalating and assigning (owner, 2026-11-06 and 2026-11-07). Who may is
+ * decided per ticket in TicketWorkflow - a System Administrator assigns an IT
+ * ticket, a team lead their team's - so the route only asks that they can see
+ * tickets at all.
+ */
+Route::post('/tickets/{ticket}/resolve', [TicketController::class, 'resolve'])
+    ->where('ticket', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:tickets.view')
+    ->name('tickets.resolve');
+Route::post('/tickets/{ticket}/escalate', [TicketController::class, 'escalate'])
+    ->where('ticket', '[A-Za-z0-9-]{1,32}')
+    ->middleware('permission:tickets.view')
+    ->name('tickets.escalate');
 Route::post('/tickets/{ticket}/triage', [TicketController::class, 'triage'])
     ->where('ticket', '[A-Za-z0-9-]{1,32}')
-    ->middleware('permission:tickets.triage')
+    ->middleware('permission:tickets.view')
     ->name('tickets.triage');
 
 /*

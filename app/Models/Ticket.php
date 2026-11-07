@@ -25,7 +25,7 @@ class Ticket extends Model
         'reference', 'type', 'subject', 'description', 'raised_by', 'client_id',
         'project_id', 'assignee_id', 'status', 'priority', 'category', 'department',
         'escalated_by', 'escalated_at', 'resolved_at', 'converted_task_id',
-        'supersedes_ticket_id',
+        'supersedes_ticket_id', 'team_id', 'resolved_by',
     ];
 
     protected function casts(): array
@@ -74,6 +74,27 @@ class Ticket extends Model
     public function escalator(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'escalated_by');
+    }
+
+    /**
+     * The team it was given to (owner, 2026-11-07): every member sees it and may
+     * resolve it, and the lead may give it to one of them.
+     *
+     * @return BelongsTo<Team, $this>
+     */
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(Team::class);
+    }
+
+    /**
+     * Who marked it resolved.
+     *
+     * @return BelongsTo<Employee, $this>
+     */
+    public function resolver(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'resolved_by');
     }
 
     /**

@@ -204,6 +204,9 @@ class RbacSeeder extends Seeder
         'tasks.eod.all',
         // A project manager marking a missing report urgent, for people on their projects.
         'tasks.eod.urgent',
+        // IT tickets (Access, Network, Bug): the System Administrator sees and
+        // decides those, and only those (owner, 2026-11-07). See TicketWorkflow.
+        'tickets.it',
         /*
          * Salary. `salary.view` is the sensitive read - seeing what a colleague
          * earns is itself the harm - and `salary.manage` is the write: adding a
@@ -264,6 +267,9 @@ class RbacSeeder extends Seeder
         'clients.view.all',
         'teams.view.all',
         'employees.identifiers',
+        // Every ticket. Without it, a person sees their own, and a Manager their
+        // projects', clients' and people's (owner, 2026-11-06). See TicketWorkflow.
+        'tickets.view.all',
     ];
 
     /**
@@ -521,7 +527,7 @@ class RbacSeeder extends Seeder
             'support' => [
                 'name' => 'Support Associate',
                 'description' => 'The ticket queue, and the clients behind it.',
-                'permissions' => [...$staffReading, 'clients.view', 'clients.view.all', 'tickets.triage'],
+                'permissions' => [...$staffReading, 'clients.view', 'clients.view.all', 'tickets.triage', 'tickets.view.all'],
                 'ranks' => ['people' => 10, 'work' => 20, 'support' => 70, 'system' => 20],
             ],
 
@@ -553,6 +559,8 @@ class RbacSeeder extends Seeder
                     // The Accounts pages, to sort out sign-in problems without
                     // the owner (owner, 2026-10-28).
                     'accounts.manage',
+                    // IT tickets only, not every ticket (owner, 2026-11-07).
+                    'tickets.it',
                     // One of the three who may add and edit clients (owner,
                     // 2026-11-03).
                     'clients.view', 'clients.view.all', 'clients.create', 'clients.edit', 'clients.status', 'clients.invite',
@@ -577,6 +585,7 @@ class RbacSeeder extends Seeder
                     'teams.create', 'teams.edit', 'teams.members',
                     'projects.create', 'projects.edit', 'projects.publish',
                     'tasks.create', 'tasks.edit', 'tasks.assign', 'tasks.eod.all',
+                    'tickets.view.all',
                     'salary.manage', 'invoices.manage',
                     'attendance.roster',
                 ],
@@ -594,7 +603,7 @@ class RbacSeeder extends Seeder
                 'description' => 'Read-only, and no Employee base - so no personal records at all (§2.1).',
                 'permissions' => [
                     'clients.view', 'clients.view.all', 'employees.view', 'teams.view', 'teams.view.all', 'projects.view', 'tasks.view',
-                    'tickets.view', 'invoices.view', 'meetings.view', 'announcements.view',
+                    'tickets.view', 'tickets.view.all', 'invoices.view', 'meetings.view', 'announcements.view',
                     'reports.view', 'dashboard.view', 'support.view',
                 ],
                 'ranks' => [],

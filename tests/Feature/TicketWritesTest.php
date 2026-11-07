@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Support\Audit\AuditLog;
 use App\Support\Rbac\Rbac;
 use App\Support\TicketDirectory;
+use App\Support\TicketWorkflow;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -96,7 +97,7 @@ class TicketWritesTest extends TestCase
     public function test_a_reply_is_public_unless_somebody_says_otherwise(): void
     {
         $ticket = $this->aTicket();
-        $this->signInAsEmployee();
+        $this->signInAsEmployee(['employee', 'support']);
 
         $this->post('/tickets/'.$ticket->reference.'/comment', ['body' => 'Looking at it now.'])
             ->assertRedirect();
@@ -109,7 +110,7 @@ class TicketWritesTest extends TestCase
     public function test_an_internal_note_is_stored_as_one(): void
     {
         $ticket = $this->aTicket();
-        $this->signInAsEmployee();
+        $this->signInAsEmployee(['employee', 'support']);
 
         $this->post('/tickets/'.$ticket->reference.'/comment', [
             'body' => 'They are on an ancient browser and will not upgrade.',
@@ -126,7 +127,7 @@ class TicketWritesTest extends TestCase
          * own audience and there is no call that returns a thread without one.
          */
         $ticket = $this->aTicket();
-        $this->signInAsEmployee();
+        $this->signInAsEmployee(['employee', 'support']);
 
         $this->post('/tickets/'.$ticket->reference.'/comment', ['body' => 'We have reproduced it.']);
         $this->post('/tickets/'.$ticket->reference.'/comment', [
@@ -154,7 +155,7 @@ class TicketWritesTest extends TestCase
             'staff_kind' => 'employee',
             'status' => 'active',
         ]);
-        $user->roles()->sync(Role::whereIn('role_key', ['employee'])->pluck('id'));
+        $user->roles()->sync(Role::whereIn('role_key', ['employee', 'support'])->pluck('id'));
         Employee::create(['user_id' => $user->id, 'joined_on' => Carbon::now()->subYear()]);
 
         $this->actingAs($user);
@@ -171,7 +172,7 @@ class TicketWritesTest extends TestCase
         $ticket = $this->aTicket();
         $ticket->forceFill(['updated_at' => Carbon::now()->subWeek()])->saveQuietly();
 
-        $this->signInAsEmployee();
+        $this->signInAsEmployee(['employee', 'support']);
 
         $this->post('/tickets/'.$ticket->reference.'/comment', ['body' => 'Any update on this?']);
 
@@ -188,14 +189,18 @@ class TicketWritesTest extends TestCase
         $this->signInAsEmployee();
 
         $this->get('/tickets/escalated')->assertForbidden();
-        $this->post('/tickets/'.$ticket->reference.'/triage', ['priority' => 'high'])->assertForbidden();
+        // Somebody else's ticket is not there at all for them (owner, 2026-11-06).
+        $this->post('/tickets/'.$ticket->reference.'/triage', ['priority' => 'high'])->assertNotFound();
     }
 
     public function test_support_may_triage_and_it_records_what_changed(): void
     {
         $ticket = $this->aTicket();
+        // Support gives it to the ticket's own Manager, here the client's account
+        // manager, never to another Support person (owner, 2026-11-07).
         $agent = $this->anEmployee('EMP892', 'An Agent');
-        $agent->user->roles()->sync(Role::where('role_key', 'support')->pluck('id'));
+        $agent->user->roles()->sync(Role::where('role_key', 'manager')->pluck('id'));
+        $ticket->client->update(['account_manager_id' => $agent->user_id]);
 
         $this->signInAsEmployee(['employee', 'support'], 'EMP893');
 
@@ -221,7 +226,7 @@ class TicketWritesTest extends TestCase
         $this->assertStringContainsString('An Agent', (string) $entry->after_json);
     }
 
-    public function test_a_ticket_goes_only_to_support_technical_associates_or_its_own_manager(): void
+    public function test_support_gives_a_ticket_only_to_its_own_manager_or_for_it_a_system_administrator(): void
     {
         $support = $this->anEmployee('EMP880', 'Support Person');
         $support->user->roles()->sync(Role::where('role_key', 'support')->pluck('id'));
@@ -231,10 +236,8 @@ class TicketWritesTest extends TestCase
             ['name' => 'IT Test', 'is_active' => true],
         );
         $technical = $this->anEmployee('EMP881', 'Technical Person');
-        $technical->update(['designation_id' => MasterDataItem::firstOrCreate(
-            ['list' => MasterDataItem::DESIGNATIONS, 'code' => config('tickets.technical_designation_code')],
-            ['name' => 'Technical Associate', 'department_id' => $it->id, 'is_active' => true],
-        )->id]);
+        $technical->user->roles()->sync(Role::where('role_key', 'system_admin')->pluck('id'));
+        $technical->update(['department_id' => $it->id]);
 
         $ownManager = $this->anEmployee('EMP882', 'Project Manager');
         $otherManager = $this->anEmployee('EMP883', 'Other Manager');
@@ -243,21 +246,25 @@ class TicketWritesTest extends TestCase
         }
         $plain = $this->anEmployee('EMP884', 'Plain Employee');
 
-        $ticket = $this->aTicket(['project_id' => Project::create([
+        $ticket = $this->aTicket(['category' => 'Bug', 'project_id' => Project::create([
             'reference' => 'PRJ-T880',
+            'started_on' => Carbon::today()->subMonth(),
+            'deadline' => Carbon::today()->addMonth(),
+            'client_id' => Client::firstOrCreate(['name' => 'A Client'], ['reference' => 'CLT901', 'status' => 'active'])->id,
             'name' => 'A Project',
             'manager_id' => $ownManager->id,
             'status' => 'in_progress',
             'priority' => 'medium',
         ])->id]);
 
-        $this->signInAsEmployee(['employee', 'support'], 'EMP885');
+        $triager = $this->signInAsEmployee(['employee', 'support'], 'EMP885');
 
         $offered = collect($this->get('/tickets/'.$ticket->reference)->viewData('agents'))->pluck('id')->all();
 
-        $this->assertEqualsCanonicalizing([$support->id, $technical->id, $ownManager->id], $offered);
+        // Never another Support person, the triager included (owner, 2026-11-07).
+        $this->assertEqualsCanonicalizing([$technical->id, $ownManager->id], $offered);
 
-        foreach ([$plain, $otherManager] as $refused) {
+        foreach ([$plain, $otherManager, $support] as $refused) {
             $this->post('/tickets/'.$ticket->reference.'/triage', ['assignee_id' => $refused->id])
                 ->assertSessionHasErrors(['assignee_id' => 'Choose somebody from the list.']);
         }
@@ -286,7 +293,7 @@ class TicketWritesTest extends TestCase
         ]);
 
         foreach ([$clientTicket, $internalTicket] as $ticket) {
-            $this->assertContains($manager->id, TicketDirectory::assignableFor($ticket->fresh())->pluck('id')->all());
+            $this->assertContains($manager->id, TicketWorkflow::managersFor($ticket->fresh()));
         }
     }
 
@@ -407,7 +414,7 @@ class TicketWritesTest extends TestCase
     public function test_a_closed_ticket_refuses_a_reply(): void
     {
         $ticket = $this->aTicket(['status' => 'closed']);
-        $this->signInAsEmployee();
+        $this->signInAsEmployee(['employee', 'support']);
 
         $this->post('/tickets/'.$ticket->reference.'/comment', ['body' => 'One more thing.'])
             ->assertRedirect('/tickets/'.$ticket->reference);
@@ -440,7 +447,7 @@ class TicketWritesTest extends TestCase
     public function test_a_file_can_be_attached_to_a_ticket(): void
     {
         $ticket = $this->aTicket();
-        $this->signInAsEmployee();
+        $this->signInAsEmployee(['employee', 'support']);
         $this->connectGoogleDrive();
         $this->fakeDriveUpload();
 
@@ -456,7 +463,7 @@ class TicketWritesTest extends TestCase
     {
         $ticket = $this->aTicket();
         $other = $this->aTicket(['reference' => 'TKT-TEST-902']);
-        $this->signInAsEmployee();
+        $this->signInAsEmployee(['employee', 'support']);
         $this->connectGoogleDrive();
         $this->fakeDriveUpload();
 
@@ -487,7 +494,7 @@ class TicketWritesTest extends TestCase
     public function test_converting_creates_a_task_and_links_it(): void
     {
         $ticket = $this->aTicket(['subject' => 'Fix the broken footer link', 'priority' => 'high']);
-        $this->signInAsEmployee(['employee', 'manager']);
+        $this->signInAsEmployee(['employee', 'manager', 'support']);
 
         $this->post('/tickets/'.$ticket->reference.'/convert-to-task', [
             'due_on' => Carbon::now()->addWeek()->toDateString(),
@@ -517,7 +524,7 @@ class TicketWritesTest extends TestCase
     public function test_a_ticket_cannot_be_converted_twice(): void
     {
         $ticket = $this->aTicket();
-        $this->signInAsEmployee(['employee', 'manager']);
+        $this->signInAsEmployee(['employee', 'manager', 'support']);
 
         $this->post('/tickets/'.$ticket->reference.'/convert-to-task', [
             'due_on' => Carbon::now()->addWeek()->toDateString(),

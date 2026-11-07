@@ -309,6 +309,14 @@ class AuditLog
 
     public const TICKET_CLOSED = 'ticket.closed';
 
+    public const TICKET_TAKEN = 'ticket.taken';
+
+    public const TICKET_RESOLVED = 'ticket.resolved';
+
+    public const TICKET_ESCALATED = 'ticket.escalated';
+
+    public const TICKET_REOPENED = 'ticket.reopened';
+
     /*
      * Invoices. Every one of these is a financial act, and the cancellation is
      * the one somebody will eventually be asked to account for - which is why

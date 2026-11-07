@@ -60,6 +60,16 @@ class Team extends Model
     }
 
     /**
+     * The projects this team works on.
+     *
+     * @return BelongsToMany<Project, $this>
+     */
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'project_teams')->withTimestamps();
+    }
+
+    /**
      * The teams this person leads or belongs to. All a Team Lead sees without
      * `teams.view.all` (owner, 2026-11-03).
      *

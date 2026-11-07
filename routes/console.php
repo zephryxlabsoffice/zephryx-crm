@@ -4,6 +4,7 @@ use App\Support\AnnouncementDelivery;
 use App\Support\Backups\Backups;
 use App\Support\EodReminders;
 use App\Support\Launch;
+use App\Support\TicketLifecycle;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
@@ -27,6 +28,8 @@ Artisan::command('backup:database', function (Backups $backups) {
     // Also the only timer for scheduled announcements. First, and on its own, so a
     // failed backup does not also stop people being told. See AnnouncementDelivery.
     AnnouncementDelivery::deliverDueQuietly();
+    // Resolved tickets nobody answered within the week. See TicketLifecycle.
+    TicketLifecycle::closeStaleResolvedQuietly();
 
     try {
         $status = $backups->run();

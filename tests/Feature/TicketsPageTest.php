@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Ticket;
 use App\Support\TicketDirectory;
+use App\Support\TicketPresenter;
 use Tests\TestCase;
 
 /**
@@ -15,7 +16,6 @@ use Tests\TestCase;
  */
 class TicketsPageTest extends TestCase
 {
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,6 +28,7 @@ class TicketsPageTest extends TestCase
          */
         $this->signInAsStaff();
     }
+
     /**
      * The demo tickets and their threads, as real rows.
      *
@@ -103,9 +104,9 @@ class TicketsPageTest extends TestCase
     {
         // Failing towards secrecy: a missing or unrecognised visibility must
         // never default to something a client can read.
-        $this->assertTrue(\App\Support\TicketPresenter::isInternal(['body' => 'x']));
-        $this->assertTrue(\App\Support\TicketPresenter::isInternal(['visibility' => 'draft']));
-        $this->assertFalse(\App\Support\TicketPresenter::isInternal(['visibility' => 'public']));
+        $this->assertTrue(TicketPresenter::isInternal(['body' => 'x']));
+        $this->assertTrue(TicketPresenter::isInternal(['visibility' => 'draft']));
+        $this->assertFalse(TicketPresenter::isInternal(['visibility' => 'public']));
     }
 
     public function test_internal_notes_are_labelled_in_words_not_only_colour(): void
@@ -180,9 +181,12 @@ class TicketsPageTest extends TestCase
     {
         $this->withDemoData();
 
-        // Unassigned and escalated both need routing.
+        // Unassigned needs routing.
         $this->get('/tickets/TKT-2026-149')->assertSee('Triage this ticket', false);
-        $this->get('/tickets/TKT-2026-148')->assertSee('Review and reassign', false);
+
+        // Escalated goes to a named person now (owner, 2026-11-06), so a ticket
+        // escalated to somebody is theirs to work, not back in a queue.
+        $this->get('/tickets/TKT-2026-148')->assertDontSee('Review and reassign', false);
 
         // One already with someone does not.
         $this->get('/tickets/TKT-2026-152')->assertDontSee('Triage this ticket', false);

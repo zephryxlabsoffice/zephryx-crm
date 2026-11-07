@@ -29,6 +29,28 @@
             </div>
         @endif
 
+        @if ($ticket['team'])
+            <div class="rail-row">
+                <div class="rail-ic tone-accent" aria-hidden="true">
+                    @include('partials.nav-icon', ['icon' => 'teams'])
+                </div>
+                <div class="rail-body">
+                    <strong>{{ $ticket['team'] }}</strong>
+                    <span>Team on it</span>
+                </div>
+            </div>
+        @endif
+
+        @if ($ticket['resolver_record'] && in_array($ticket['status'], ['resolved', 'closed'], true))
+            <div class="rail-row">
+                <span class="avatar {{ Avatar::tint($ticket['resolver_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($ticket['resolver_record']['name']) }}</span>
+                <div class="rail-body">
+                    <strong>{{ $ticket['resolver_record']['name'] }}</strong>
+                    <span>Resolved it{{ $ticket['resolved_at'] ? ' on '.P::date($ticket['resolved_at']) : '' }}</span>
+                </div>
+            </div>
+        @endif
+
         @if ($ticket['escalator_record'])
             <div class="rail-row">
                 <span class="avatar {{ Avatar::tint($ticket['escalator_record']['name']) }}" aria-hidden="true">{{ Avatar::initials($ticket['escalator_record']['name']) }}</span>

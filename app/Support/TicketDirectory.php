@@ -3,12 +3,10 @@
 namespace App\Support;
 
 use App\Models\Employee;
-use App\Models\MasterDataItem;
 use App\Models\Ticket;
 use App\Models\TicketComment;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 
 /**
  * Tickets, read from the database.
@@ -40,7 +38,7 @@ class TicketDirectory
         $search = ($filters['search'] ?? '') !== '' ? $filters['search'] : null;
 
         return Ticket::query()
-            ->with(['raiser.user', 'assignee.user', 'assignee.designation', 'escalator.user', 'client', 'project.client'])
+            ->with(['raiser.user', 'assignee.user', 'assignee.designation', 'escalator.user', 'client', 'project.client', 'team', 'resolver.user'])
             ->when($search, fn (Builder $q, string $term) => $q->where(function (Builder $q) use ($term) {
                 $like = '%'.str_replace(['%', '_'], ['\%', '\_'], $term).'%';
 
@@ -86,6 +84,10 @@ class TicketDirectory
             'raiser_record' => $ticket->raiser ? EmployeeDirectory::row($ticket->raiser) : null,
             'assignee_record' => $ticket->assignee ? EmployeeDirectory::row($ticket->assignee) : null,
             'escalator_record' => $ticket->escalator ? EmployeeDirectory::row($ticket->escalator) : null,
+            // Given to a team, and who resolved it (owner, 2026-11-07).
+            'team' => $ticket->team?->name,
+            'resolver_record' => $ticket->resolver ? EmployeeDirectory::row($ticket->resolver) : null,
+            'resolved_at' => $ticket->resolved_at,
             'project_record' => $ticket->project ? ProjectDirectory::row($ticket->project) : null,
             // Set once a ticket becomes a task - see
             // TicketController::convertToTask. Read from the relation rather
@@ -106,7 +108,7 @@ class TicketDirectory
         $ticket = Ticket::query()
             ->with([
                 'raiser.user', 'assignee.user', 'assignee.designation', 'escalator.user',
-                'client', 'project.client', 'convertedTask', 'supersedes', 'attachments',
+                'client', 'project.client', 'convertedTask', 'supersedes', 'attachments', 'team', 'resolver.user',
             ])
             ->where('reference', $reference)
             ->first();
@@ -169,16 +171,17 @@ class TicketDirectory
     }
 
     /**
-     * The next reference - year-scoped, from the highest existing one.
+     * The System Administrator an IT ticket goes to: whoever has the fewest open
+     * tickets. By role, not designation (owner, 2026-11-07), and never the CEO,
+     * who may hold the role too.
      */
     public static function technicalAgent(): ?Employee
     {
         return Employee::query()
             ->with(['user', 'department'])
             ->active()
-            ->whereHas('designation', fn (Builder $designation) => $designation
-                ->where('list', MasterDataItem::DESIGNATIONS)
-                ->where('code', config('tickets.technical_designation_code')))
+            ->whereHas('user', fn (Builder $user) => $user->holdingRole('system_admin'))
+            ->whereDoesntHave('user', fn (Builder $user) => $user->holdingRole('ceo'))
             ->orderBy('id')
             ->get()
             ->sortBy(fn (Employee $employee) => Ticket::query()->open()->where('assignee_id', $employee->id)->count())
@@ -186,45 +189,8 @@ class TicketDirectory
     }
 
     /**
-     * Who a ticket can be given to (owner, 2026-11-06): the support team, the
-     * Technical Associates, and a Manager only on a ticket of their own - their
-     * project, their client, or somebody who reports to them or is in a team they
-     * lead. Whoever holds it now stays on the list, so the form never drops them.
-     *
-     * @return Collection<int, Employee>
+     * The next reference - year-scoped, from the highest existing one.
      */
-    public static function assignableFor(Ticket $ticket): Collection
-    {
-        $ticket->loadMissing(['project', 'client', 'raiser.teams']);
-        $raiser = $ticket->raiser;
-
-        $managerIds = collect([$ticket->project?->manager_id, $raiser?->reports_to])
-            ->merge($raiser?->teams->pluck('lead_id') ?? [])
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
-        $accountManagerUserId = $ticket->client?->account_manager_id;
-
-        return Employee::query()
-            ->with('user')
-            ->active()
-            ->where(fn (Builder $anyOf) => $anyOf
-                ->whereHas('user', fn (Builder $user) => $user->holdingRole('support'))
-                ->orWhereHas('designation', fn (Builder $designation) => $designation
-                    ->where('list', MasterDataItem::DESIGNATIONS)
-                    ->where('code', config('tickets.technical_designation_code')))
-                ->orWhere(fn (Builder $manager) => $manager
-                    ->whereHas('user', fn (Builder $user) => $user->holdingRole('manager'))
-                    ->where(fn (Builder $theirs) => $theirs
-                        ->whereIn('id', $managerIds)
-                        ->orWhere('user_id', $accountManagerUserId ?? 0)))
-                ->when($ticket->assignee_id !== null, fn (Builder $q) => $q->orWhere('id', $ticket->assignee_id)))
-            ->get()
-            ->sortBy(fn (Employee $employee) => (string) $employee->user?->name)
-            ->values();
-    }
-
     public static function nextReference(): string
     {
         $prefix = 'TKT-'.Carbon::today()->year.'-';

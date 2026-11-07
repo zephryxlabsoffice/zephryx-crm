@@ -2,21 +2,28 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Models\Client;
 use App\Models\Project;
 use App\Models\Ticket;
+use App\Models\TicketAttachment;
 use App\Models\TicketComment;
 use App\Support\Audit\AuditLog;
 use App\Support\ClientPortal;
+use App\Support\Documents\DocumentStore;
 use App\Support\Notifier;
 use App\Support\TicketDirectory;
+use App\Support\TicketLifecycle;
 use App\Support\TicketPresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 /**
  * The client's support tickets.
@@ -47,7 +54,13 @@ class TicketController extends PortalController
 {
     protected const PER_PAGE = 10;
 
-    public function __construct(protected AuditLog $audit, protected Notifier $notify) {}
+    protected const MAX_FILES_ON_RAISE = 5;
+
+    public function __construct(
+        protected AuditLog $audit,
+        protected Notifier $notify,
+        protected DocumentStore $documents,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -91,6 +104,10 @@ class TicketController extends PortalController
             'ticket' => $record,
             // Client-audience comments only, pinned inside ClientPortal.
             'comments' => ClientPortal::ticketComments($client, $ticket),
+            // Only what this client uploaded. Staff files may be internal.
+            'files' => $this->clientFiles($client, $record['model'])
+                ->map(fn (TicketAttachment $a) => ['id' => $a->id, 'name' => $a->document_name])
+                ->all(),
         ]);
     }
 
@@ -148,6 +165,16 @@ class TicketController extends PortalController
             'description' => ['required', 'string', 'max:5000'],
             'project' => ['nullable', 'string', 'max:32'],
             'issue_type' => ['nullable', Rule::in(['general', 'technical'])],
+            'documents' => ['nullable', 'array', 'max:'.self::MAX_FILES_ON_RAISE],
+            'documents.*' => [
+                'file',
+                'mimes:'.implode(',', DocumentStore::ALLOWED),
+                'max:'.(int) (DocumentStore::MAX_BYTES / 1024),
+            ],
+        ], [
+            'documents.max' => 'Attach up to '.self::MAX_FILES_ON_RAISE.' files.',
+            'documents.*.mimes' => 'Attach a PDF, PNG or JPG.',
+            'documents.*.max' => 'Each file can be up to '.(DocumentStore::MAX_BYTES / 1024 / 1024).' MB.',
         ]);
 
         /*
@@ -197,6 +224,8 @@ class TicketController extends PortalController
             request: $request,
         );
 
+        $notStored = $this->attachOnRaise($request, $client->name, $ticket, $data['documents'] ?? []);
+
         // Support and the project manager first - see Notifier::ticketRaised.
         // No actor: the client is not a staff account and has no bell to be
         // excluded from, the same reasoning as the comment route below.
@@ -204,10 +233,11 @@ class TicketController extends PortalController
 
         return redirect()
             ->route('client.tickets.show', ['ticket' => $ticket->reference])
-            ->with('status', $technicalAgent === null
+            ->with('status', ($technicalAgent === null
                 ? 'Raised. Somebody will pick it up and you will see their reply here.'
                 : 'Raised and sent to our technical team. You will see their reply here.')
-            ->with('status_tone', 'success');
+                .($notStored === [] ? '' : ' These files could not be added: '.implode(', ', $notStored).'. Please send them as a reply.'))
+            ->with('status_tone', $notStored === [] ? 'success' : 'warning');
     }
 
     /**
@@ -259,6 +289,11 @@ class TicketController extends PortalController
         // staff queue is ordered on it - a client's reply has to count.
         $record['model']->touch();
 
+        // Answering a resolved ticket means it was not solved after all.
+        if (TicketLifecycle::reopenIfResolved($record['model'], $request->user())) {
+            TicketLifecycle::tellRequester($record['model'], TicketLifecycle::REOPENED);
+        }
+
         $this->audit->record(
             action: AuditLog::TICKET_COMMENTED,
             actor: $request->user(),
@@ -281,6 +316,79 @@ class TicketController extends PortalController
             ->route('client.tickets.show', ['ticket' => $record['model']->reference])
             ->with('status', 'Reply posted.')
             ->with('status_tone', 'success');
+    }
+
+    /**
+     * GET /client/tickets/{ticket}/attachments/{attachment}/download - only a file
+     * this client uploaded, on this client's own ticket. Anything else is a 404.
+     */
+    public function downloadAttachment(Request $request, string $ticket, int $attachment): StreamedResponse
+    {
+        $client = $this->requireActiveClient($request);
+        $record = ClientPortal::ticket($client, $ticket);
+
+        abort_if($record === null, 404);
+
+        $file = $this->clientFiles($client, $record['model'])->firstWhere('id', $attachment);
+
+        abort_if($file === null, 404);
+
+        return $this->documents->download($file->document_path, $file->document_name);
+    }
+
+    /**
+     * @return Collection<int, TicketAttachment>
+     */
+    protected function clientFiles(Client $client, Ticket $ticket): Collection
+    {
+        return TicketAttachment::query()
+            ->where('ticket_id', $ticket->id)
+            ->whereIn('uploaded_by', $client->accounts()->select('id'))
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
+     * The files chosen on the raise form. The ticket is already saved, so a file the
+     * store refuses is named back rather than losing the ticket.
+     *
+     * @param  list<UploadedFile>  $files
+     * @return list<string>
+     */
+    protected function attachOnRaise(Request $request, string $clientName, Ticket $ticket, array $files): array
+    {
+        $notStored = [];
+
+        foreach ($files as $file) {
+            try {
+                $stored = $this->documents->put('tickets/'.$ticket->reference, $file);
+            } catch (Throwable $e) {
+                report($e);
+                $notStored[] = $file->getClientOriginalName();
+
+                continue;
+            }
+
+            TicketAttachment::create([
+                'ticket_id' => $ticket->id,
+                'uploaded_by' => $request->user()->id,
+                'uploaded_by_label' => $clientName,
+                'document_path' => $stored['path'],
+                'document_name' => $stored['name'],
+                'document_bytes' => $stored['bytes'],
+            ]);
+
+            $this->audit->record(
+                action: AuditLog::TICKET_ATTACHMENT_ADDED,
+                actor: $request->user(),
+                entityType: 'ticket',
+                entityId: $ticket->reference,
+                after: $stored['name'].' attached by '.$clientName,
+                request: $request,
+            );
+        }
+
+        return $notStored;
     }
 
     /**

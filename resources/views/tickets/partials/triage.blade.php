@@ -21,8 +21,10 @@
             @if ($ticket['status'] === 'escalated')
                 {{ $ticket['escalator_record']['name'] ?? 'Someone' }} escalated this because they could
                 not resolve it. Route it to whoever can.
+            @elseif ($ticket['team'])
+                Given to {{ $ticket['team'] }}. Anybody in the team can resolve it, or give it to one of them.
             @else
-                Nobody has picked this up. Set what it is and who should handle it.
+                Nobody has picked this up. Set what it is, and give it to a person, a team, or both.
             @endif
         </p>
     </div>
@@ -68,7 +70,25 @@
                     <option value="{{ $agent['id'] }}" @selected(($ticket['assignee_record']['employee_id'] ?? null) === $agent['id'])>{{ $agent['name'] }}</option>
                 @endforeach
             </select>
+            @error('assignee_id')
+                <span class="field-error">{{ $message }}</span>
+            @enderror
         </div>
+
+        @if ($teams !== [])
+            <div class="triage-field">
+                <label class="triage-lbl" for="triage-team">Team</label>
+                <select id="triage-team" name="team_id">
+                    <option value="">No team</option>
+                    @foreach ($teams as $team)
+                        <option value="{{ $team['id'] }}" @selected($ticket['team'] === $team['name'])>{{ $team['name'] }}</option>
+                    @endforeach
+                </select>
+                @error('team_id')
+                    <span class="field-error">{{ $message }}</span>
+                @enderror
+            </div>
+        @endif
 
         <div class="triage-actions">
             {{-- Behind `tickets.triage`, and audited with what the ticket said
